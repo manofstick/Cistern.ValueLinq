@@ -26,14 +26,9 @@ namespace Cistern.ValueLinq
     struct FastEnumeratorToEnumeratorNode
         : INode
     {
-        public CreationType CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
-            where Head : INode
-            where Tail : INodes
-                => throw new InvalidOperationException();
+        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> _) => throw new InvalidOperationException();
 
-        public CreationType CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, in Enumerator enumerator)
-            where Enumerator : IFastEnumerator<EnumeratorElement>
-            where Tail : INodes
+        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
                 => (CreationType)(object)(new FastEnumeratorToEnumerator<EnumeratorElement, Enumerator>(in enumerator));
     }
 }

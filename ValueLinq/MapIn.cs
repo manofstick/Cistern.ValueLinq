@@ -41,10 +41,10 @@ namespace Cistern.ValueLinq
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => ((IEnumerable<U>)this).GetEnumerator();
 
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
-        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, in Enumerator enumerator)
+        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
         {
-            var x = new MapInNodeEnumerator<EnumeratorElement, U, Enumerator>(in enumerator, (InFunc<EnumeratorElement, U>)(object)_map);
-            return tail.CreateObject<CreationType, U, MapInNodeEnumerator<EnumeratorElement, U, Enumerator>>(in x);
+            var nextEnumerator = new MapInNodeEnumerator<EnumeratorElement, U, Enumerator>(in enumerator, (InFunc<EnumeratorElement, U>)(object)_map);
+            return tail.CreateObject<CreationType, U, MapInNodeEnumerator<EnumeratorElement, U, Enumerator>>(ref nextEnumerator);
         }
     }
 }

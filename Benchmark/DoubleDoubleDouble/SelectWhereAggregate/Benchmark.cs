@@ -13,7 +13,6 @@ namespace Cistern.Benchmarks.DoubleDoubleDouble.SelectWhereAggregate
         [Params(0, 1, 10, 100, 1000, 1000000)]
         public int Length { get; set; } = 0;
 
-        //This is run before each iteration of a test
         [GlobalSetup]
         public void SetupData()
         {

@@ -48,6 +48,7 @@ namespace Cistern.ValueLinq
         {
             if (typeof(T) == typeof(int))    return Nodes<T>.Aggregation<IValueEnumerable<T>, SumInt>(ref inner);
             if (typeof(T) == typeof(double)) return Nodes<T>.Aggregation<IValueEnumerable<T>, SumDouble>(ref inner);
+
             throw new InvalidOperationException();
         }
 

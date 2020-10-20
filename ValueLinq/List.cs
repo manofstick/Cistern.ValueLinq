@@ -40,11 +40,10 @@ namespace Cistern.ValueLinq
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
         {
             var enumerator = new ListFastEnumerator<T>(_list);
-            return nodes.CreateObject<CreationType, T, ListFastEnumerator<T>>(in enumerator);
+            return nodes.CreateObject<CreationType, T, ListFastEnumerator<T>>(ref enumerator);
         }
 
-        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, in Enumerator enumerator)
-            => throw new InvalidOperationException();
+        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
 
         public List<T>.Enumerator GetEnumerator() => _list.GetEnumerator();
 

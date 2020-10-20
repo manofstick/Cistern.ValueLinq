@@ -47,7 +47,7 @@ namespace Cistern.ValueLinq
             where Tail : INodes
         {
             var enumerator = new ArrayFastEnumerator<T>(array);
-            return nodes.CreateObject<CreationType, T, ArrayFastEnumerator<T>>(in enumerator);
+            return nodes.CreateObject<CreationType, T, ArrayFastEnumerator<T>>(ref enumerator);
         }
 
         private static CreationType AsEnumerator<Head, Tail, CreationType>(IEnumerator<T> enumerator, ref Nodes<Head, Tail> nodes)
@@ -55,7 +55,7 @@ namespace Cistern.ValueLinq
             where Tail : INodes
         {
             var e = new EnumerableFastEnumerator<T>(enumerator);
-            return nodes.CreateObject<CreationType, T, EnumerableFastEnumerator<T>>(in e);
+            return nodes.CreateObject<CreationType, T, EnumerableFastEnumerator<T>>(ref e);
         }
 
         private static CreationType AsList<Head, Tail, CreationType>(List<T> list, ref Nodes<Head, Tail> nodes)
@@ -63,11 +63,10 @@ namespace Cistern.ValueLinq
             where Tail : INodes
         {
             var enumerator = new ListFastEnumerator<T>(list);
-            return nodes.CreateObject<CreationType, T, ListFastEnumerator<T>>(in enumerator);
+            return nodes.CreateObject<CreationType, T, ListFastEnumerator<T>>(ref enumerator);
         }
 
-        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, in Enumerator enumerator)
-            => throw new InvalidOperationException();
+        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
 
         public ValueEnumerator<T> GetEnumerator() => Nodes<T>.CreateValueEnumerator(in this);
         IEnumerator<T> IEnumerable<T>.GetEnumerator() => _enumerable.GetEnumerator();

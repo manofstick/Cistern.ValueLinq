@@ -9,23 +9,21 @@ namespace Cistern.ValueLinq
             where Head : INode
             where Tail : INodes;
 
-        CreationType CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, in Enumerator enumerator)
+        CreationType CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
             where Enumerator : IFastEnumerator<EnumeratorElement>
             where Tail : INodes;
     }
 
     public interface INodes
     {
-        CreationType CreateObject<CreationType, EnumeratorElement, Enumerator>(in Enumerator enumerator)
+        CreationType CreateObject<CreationType, EnumeratorElement, Enumerator>(ref Enumerator enumerator)
             where Enumerator : IFastEnumerator<EnumeratorElement>;
     }
 
     struct NodesEnd
         : INodes
     {
-        public CreationType CreateObject<CreationType, EnumeratorElement, Enumerator>(in Enumerator enumerator)
-            where Enumerator : IFastEnumerator<EnumeratorElement>
-                => throw new InvalidOperationException();
+        CreationType INodes.CreateObject<CreationType, EnumeratorElement, Enumerator>(ref Enumerator _) => throw new InvalidOperationException();
     }
 
     public struct Nodes<Head, Tail>
@@ -38,9 +36,9 @@ namespace Cistern.ValueLinq
 
         public Nodes(in Head head, in Tail tail) => (_head, _tail) = (head, tail);
 
-        public CreationType CreateObject<CreationType, EnumeratorElement, Enumerator>(in Enumerator enumerator)
+        public CreationType CreateObject<CreationType, EnumeratorElement, Enumerator>(ref Enumerator enumerator)
             where Enumerator : IFastEnumerator<EnumeratorElement>
-                => _head.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref _tail, in enumerator);
+                => _head.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref _tail, ref enumerator);
     }
 
     static class Nodes<T>
@@ -64,8 +62,8 @@ namespace Cistern.ValueLinq
             where Head : INode
             where Tail : INodes
         {
-            var x = new Nodes<Head, Tail>(in head, in tail);
-            return next.CreateObjectDescent<T, Head, Tail>(ref x);
+            var nodes = new Nodes<Head, Tail>(in head, in tail);
+            return next.CreateObjectDescent<T, Head, Tail>(ref nodes);
         }
 
         public static T Aggregation<Enumerable, Aggregator>(ref Enumerable inner)
