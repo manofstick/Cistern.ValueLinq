@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using NetFabric.Hyperlinq;
 
-namespace AnotherBenchmark
+namespace Cistern.Benchmarks.DoubleDoubleDouble.SelectWhereAggregate
 {
     public partial class Benchmark
     {

@@ -5,7 +5,14 @@ VisualStudioVersion = 16.0.30523.141
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cistern.ValueLinq", "ValueLinq\Cistern.ValueLinq.csproj", "{F6F69FE9-E0E9-480A-AB8B-C7381F823969}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmark", "Benchmark\Benchmark.csproj", "{40EED1CF-EC15-43BA-A62B-4CD1EAE766D2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cistern.Benchmarks", "Benchmark\Cistern.Benchmarks.csproj", "{40EED1CF-EC15-43BA-A62B-4CD1EAE766D2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{74FFB1B3-9EAC-449C-A51A-7141207E91E4}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		LICENSE = LICENSE
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,27 +1,15 @@
 ﻿using BenchmarkDotNet.Running;
 using System;
 
-namespace AnotherBenchmark
+namespace Cistern.Benchmarks
 {
     public class Program
     {
         public static void Main(string[] args)
         {
-            var check = new Benchmark();
+            DoubleDoubleDouble.SelectWhereAggregate.Benchmark.Validate();
 
-            check.Length = 100;
-            check.SetupData();
-
-            var a = check.Linq();
-            var b = check.LinqAF();
-            var c = check.ValueLinq();
-            var d = check.ValueLinqByRef();
-            var e = d;// check.HyperLinq();
-
-            if (a != b || b != c || c != d || d != e)
-                throw new System.Exception($"({a} != {b} || {b} != {c} || {c} != {d}) || {d} != {e}");
-
-            var summary = BenchmarkRunner.Run<Benchmark>();
+            var summary = BenchmarkRunner.Run<DoubleDoubleDouble.SelectWhereAggregate.Benchmark>();
         }
     }
 }
