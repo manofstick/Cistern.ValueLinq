@@ -10,21 +10,29 @@ namespace Cistern.ValueLinq.Aggregation
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator enumerator)
         {
-            checked
+            try
             {
-                try
-                {
-                    var initialSize = enumerator.InitialSize;
-                    var list = initialSize.HasValue ? new List<EnumeratorElement>(initialSize.Value) : new List<EnumeratorElement>();
-                    while (enumerator.TryGetNext(out var current))
-                        list.Add(current);
-                    return (CreationType)(object)list;
-                }
-                finally
-                {
-                    enumerator.Dispose();
-                }
+                var list = CreateList<EnumeratorElement>(enumerator.InitialSize);
+                PopulateList(ref enumerator, list);
+                return (CreationType)(object)list;
             }
+            finally
+            {
+                enumerator.Dispose();
+            }
+        }
+        private static void PopulateList<EnumeratorElement, Enumerator>(ref Enumerator enumerator, List<EnumeratorElement> list) where Enumerator : IFastEnumerator<EnumeratorElement>
+        {
+            while (enumerator.TryGetNext(out var current))
+                list.Add(current);
+        }
+
+        private static List<EnumeratorElement> CreateList<EnumeratorElement>(Nullable<int> size)
+        {
+            if (size.HasValue)
+                return new List<EnumeratorElement>(size.Value);
+
+            return new List<EnumeratorElement>();
         }
     }
 }

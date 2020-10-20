@@ -36,11 +36,7 @@ namespace Cistern.ValueLinq
         public static FilterInNode<T, ArrayNode<T>> Where<T>(this T[] inner, InFunc<T, bool> f) => inner.OfArray().Where(f);
 
         public static List<T> ToList<T>(this IValueEnumerable<T> inner) => Nodes<List<T>>.Aggregation<IValueEnumerable<T>, ToList>(ref inner);
-        public static List<T> ToList<T>(this IEnumerable<T> inner)
-        {
-            var enumerableNode = inner.OfEnumerable();
-            return Nodes<List<T>>.Aggregation<EnumerableNode<T>, ToList>(ref enumerableNode);
-        }
+        public static List<T> ToList<T>(this IEnumerable<T> inner) => new List<T>(inner);
         public static int Count<Inner>(this Inner inner) where Inner : INode => Nodes<int>.Aggregation<Inner, Count>(ref inner);
         public static int Count<T>(this IEnumerable<T> inner) => inner.OfEnumerable().Count();
 

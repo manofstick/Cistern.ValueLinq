@@ -8,8 +8,11 @@ namespace Cistern.Benchmarks
         public static void Main(string[] args)
         {
             DoubleDoubleDouble.SelectWhereAggregate.Benchmark.Validate();
+            DoubleDoubleDouble.WhereSelectAggregate.Benchmark.Validate();
+            Double.ToList.Benchmark.Validate();
+            Double.SelectToList.Benchmark.Validate();
 
-            var summary = BenchmarkRunner.Run<DoubleDoubleDouble.WhereSelectAggregate.Benchmark>();
+            var summary = BenchmarkRunner.Run<Double.SelectToList.Benchmark>();
         }
     }
 }

@@ -17,13 +17,13 @@ namespace Cistern.ValueLinq
 
         public bool TryGetNext(out T current)
         {
-            if (!_enumerator.MoveNext())
+            if (_enumerator.MoveNext())
             {
-                current = default;
-                return false;
+                current = _enumerator.Current;
+                return true;
             }
-            current = _enumerator.Current;
-            return true;
+            current = default;
+            return false;
         }
     }
 
