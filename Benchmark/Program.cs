@@ -9,7 +9,7 @@ namespace Cistern.Benchmarks
         {
             DoubleDoubleDouble.SelectWhereAggregate.Benchmark.Validate();
 
-            var summary = BenchmarkRunner.Run<DoubleDoubleDouble.SelectWhereAggregate.Benchmark>();
+            var summary = BenchmarkRunner.Run<DoubleDoubleDouble.WhereSelectAggregate.Benchmark>();
         }
     }
 }
