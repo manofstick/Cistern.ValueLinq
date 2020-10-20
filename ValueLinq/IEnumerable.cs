@@ -29,6 +29,7 @@ namespace Cistern.ValueLinq
 
     public struct EnumerableNode<T>
         : IValueEnumerable<T>
+        , ITryFastToListInner<T>
     {
         private readonly IEnumerable<T> _enumerable;
 
@@ -37,9 +38,9 @@ namespace Cistern.ValueLinq
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) =>
             _enumerable switch
             {
-                List<T> list  => AsList<Head, Tail, CreationType>(list, ref nodes),
-                T[]     array => AsArray<Head, Tail, CreationType>(array, ref nodes),
-                _             => AsEnumerator<Head, Tail, CreationType>(_enumerable.GetEnumerator(), ref nodes)
+                List<T> list => AsList<Head, Tail, CreationType>(list, ref nodes),
+                T[] array    => AsArray<Head, Tail, CreationType>(array, ref nodes),
+                _            => AsEnumerator<Head, Tail, CreationType>(_enumerable.GetEnumerator(), ref nodes)
             };
 
         private static CreationType AsArray<Head, Tail, CreationType>(T[] array, ref Nodes<Head, Tail> nodes)
@@ -71,5 +72,40 @@ namespace Cistern.ValueLinq
         public ValueEnumerator<T> GetEnumerator() => Nodes<T>.CreateValueEnumerator(in this);
         IEnumerator<T> IEnumerable<T>.GetEnumerator() => _enumerable.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => _enumerable.GetEnumerator();
+
+        List<U> ITryFastToListInner<T>.MaybeMapToList<U>(Func<T, U> map) =>
+            _enumerable switch
+            {
+                List<T> list => EnumerableNode.ToList(list,        map),
+                T[] array    => EnumerableNode.ToList(array,       map),
+                _            => EnumerableNode.ToList(_enumerable, map),
+            };
+    }
+
+    static class EnumerableNode
+    {
+        public static List<U> ToList<T,U>(IEnumerable<T> enumerable, Func<T, U> map)
+        {
+            var newList = new List<U>();
+            foreach (var item in enumerable)
+                newList.Add(map(item));
+            return newList;
+        }
+
+        public static List<U> ToList<T, U>(T[] array, Func<T, U> map)
+        {
+            var newList = new List<U>(array.Length);
+            foreach (var item in array)
+                newList.Add(map(item));
+            return newList;
+        }
+
+        public static List<U> ToList<T, U>(List<T> list, Func<T, U> map)
+        {
+            var newList = new List<U>(list.Count);
+            for(var i=0; i < list.Count; ++i)
+                newList.Add(map(list[i]));
+            return newList;
+        }
     }
 }

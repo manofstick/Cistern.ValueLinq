@@ -30,6 +30,7 @@ namespace Cistern.ValueLinq
 
     public struct MapNode<T, U, NodeT>
         : IValueEnumerable<U>
+        , ITryFastToListOuter<U>
         where NodeT : INode
     {
         private NodeT _nodeT;
@@ -48,5 +49,7 @@ namespace Cistern.ValueLinq
             var nextEnumerator = new MapNodeEnumerator<EnumeratorElement, U, Enumerator>(in enumerator, (Func<EnumeratorElement, U>)(object)_map);
             return tail.CreateObject<CreationType, U, MapNodeEnumerator<EnumeratorElement, U, Enumerator>>(ref nextEnumerator);
         }
+
+        List<U> ITryFastToListOuter<U>.MaybeToList() => _nodeT is ITryFastToListInner<T> toList ? toList.MaybeMapToList(_map) : null;
     }
 }
