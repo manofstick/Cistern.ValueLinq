@@ -48,6 +48,7 @@ namespace Cistern.ValueLinq
 
         public List<T>.Enumerator GetEnumerator() => _list.GetEnumerator();
 
+        ValueEnumerator<T> IValueEnumerable<T>.GetEnumerator() => Nodes<T>.CreateValueEnumerator(in this);
         IEnumerator<T> IEnumerable<T>.GetEnumerator() => _list.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => _list.GetEnumerator();
     }

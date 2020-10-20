@@ -34,21 +34,13 @@ namespace Cistern.ValueLinq
 
         public EnumerableNode(IEnumerable<T> enumerable) => _enumerable = enumerable;
 
-        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
-        {
-            if (_enumerable is List<T> list)
+        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) =>
+            _enumerable switch
             {
-                return AsList<Head, Tail, CreationType>(list, ref nodes);
-            }
-            else if (_enumerable is T[] array)
-            {
-                return AsArray<Head, Tail, CreationType>(array, ref nodes);
-            }
-            else
-            {
-                return AsEnumerator<Head, Tail, CreationType>(_enumerable.GetEnumerator(), ref nodes);
-            }
-        }
+                List<T> list  => AsList<Head, Tail, CreationType>(list, ref nodes),
+                T[]     array => AsArray<Head, Tail, CreationType>(array, ref nodes),
+                _             => AsEnumerator<Head, Tail, CreationType>(_enumerable.GetEnumerator(), ref nodes)
+            };
 
         private static CreationType AsArray<Head, Tail, CreationType>(T[] array, ref Nodes<Head, Tail> nodes)
             where Head : INode
@@ -77,7 +69,8 @@ namespace Cistern.ValueLinq
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, in Enumerator enumerator)
             => throw new InvalidOperationException();
 
-        public IEnumerator<T> GetEnumerator() => _enumerable.GetEnumerator();
+        public ValueEnumerator<T> GetEnumerator() => Nodes<T>.CreateValueEnumerator(in this);
+        IEnumerator<T> IEnumerable<T>.GetEnumerator() => _enumerable.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => _enumerable.GetEnumerator();
     }
 }

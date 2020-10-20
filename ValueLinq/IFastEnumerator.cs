@@ -7,5 +7,10 @@
         int? InitialSize { get; }
     }
 
-    public interface IValueEnumerable<T> : System.Collections.Generic.IEnumerable<T>, INode {}
+    public interface IValueEnumerable<T> 
+        : System.Collections.Generic.IEnumerable<T>
+        , INode
+    {
+        new ValueEnumerator<T> GetEnumerator();
+    }
 }

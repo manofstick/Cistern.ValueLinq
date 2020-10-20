@@ -46,8 +46,8 @@ namespace Cistern.ValueLinq
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, in Enumerator enumerator)
             => throw new InvalidOperationException();
 
-        public IEnumerator<T> GetEnumerator() => ((IEnumerable<T>)_array).GetEnumerator();
-
+        public ValueEnumerator<T> GetEnumerator() => Nodes<T>.CreateValueEnumerator(in this); 
+        IEnumerator<T> IEnumerable<T>.GetEnumerator() => ((IEnumerable<T>)_array).GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<T>)_array).GetEnumerator();
     }
 }
