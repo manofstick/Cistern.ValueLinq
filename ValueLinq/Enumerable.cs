@@ -29,10 +29,10 @@ namespace Cistern.ValueLinq
         public static ValueEnumerable<T, FilterInNode<T, EnumerableNode<T>>> Where<T>(this IEnumerable<T> inner, InFunc<T, bool> f) => inner.OfEnumerable().Where(f);
 
         public static List<T> ToList<T, Inner>(in this ValueEnumerable<T, Inner> inner) where Inner : INode =>
-            inner.Node.CheckForOptimization<IOptimizedCreateCollectionOuter<T>>() switch
+            inner.Node.CheckForOptimization<T, Optimizations.ToList, List<T>>(new Optimizations.ToList(), out var list) switch
             {
-                null => Nodes<List<T>>.Aggregation<Inner, ToList>(in inner.Node),
-                var fast => fast.ToList(),
+                false => Nodes<List<T>>.Aggregation<Inner, ToList>(in inner.Node),
+                true => list,
             };
 
         public static List<T> ToList<T>(this IEnumerable<T> inner) => new List<T>(inner);

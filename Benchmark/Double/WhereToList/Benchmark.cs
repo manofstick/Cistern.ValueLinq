@@ -44,13 +44,21 @@ namespace Cistern.Benchmarks.Double.WhereToList
             check.Length = 100;
             check.SetupData();
 
-            var a = check.Linq();
-            var b = check.LinqAF();
-            var c = check.CisternValueLinq();
-            var d = check.CisternLinq();
+            var baseline = check.Linq();
+#if LINQAF
+            var linqaf = check.LinqAF();
+            if (!Enumerable.SequenceEqual(baseline, linqaf)) throw new Exception();
+#endif
 
-            if (!Enumerable.SequenceEqual(a, b) || !Enumerable.SequenceEqual(b, c) || !Enumerable.SequenceEqual(c, d))
-                throw new Exception($"({a} != {b} || {b} != {c} || {c} != {d})");
+            var cisternvaluelinq = check.CisternValueLinq();
+            if (!Enumerable.SequenceEqual(baseline, cisternvaluelinq)) throw new Exception();
+
+#if CISTERNLINQ
+            var cisternlinq = check.CisternLinq();
+            if (!Enumerable.SequenceEqual(cisternlinq, baseline)) throw new Exception();
+#endif
+
+            // check.HyperLinq(); // doesn't support Aggregate
         }
     }
 }

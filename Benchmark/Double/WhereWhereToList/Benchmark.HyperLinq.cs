@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using NetFabric.Hyperlinq;
 
-namespace Cistern.Benchmarks.Double.ToList
+namespace Cistern.Benchmarks.Double.WhereWhereToList
 {
 #if HYPERLINQ
     partial class Benchmark

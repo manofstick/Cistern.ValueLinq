@@ -32,15 +32,24 @@ namespace Cistern.Benchmarks.DoubleDoubleDouble.SelectWhereAggregate
             check.Length = 100;
             check.SetupData();
 
-            var a = check.Linq();
-            var b = check.LinqAF();
-            var c = check.CisternValueLinq();
-            var d = check.CisternValueLinqByRef();
-            var e = check.CisternLinq();
-            // check.HyperLinq(); // doesn't support Aggregate
+            var baseline = check.Linq();
+#if LINQAF
+            var linqaf = check.LinqAF();
+            if (baseline != linqaf) throw new Exception();
+#endif
 
-            if (a != b || b != c || c != d)
-                throw new Exception($"({a} != {b} || {b} != {c} || {c} != {d})");
+            var cisternvaluelinq = check.CisternValueLinq();
+            if (baseline != cisternvaluelinq) throw new Exception();
+
+            var cisternvaluelinqbyref = check.CisternValueLinqByRef();
+            if (baseline != cisternvaluelinqbyref) throw new Exception();
+
+#if CISTERNLINQ
+            var cisternlinq = check.CisternLinq();
+            if (cisternlinq != baseline) throw new Exception();
+#endif
+
+            // check.HyperLinq(); // doesn't support Aggregate
         }
     }
 }

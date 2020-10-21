@@ -30,7 +30,6 @@ namespace Cistern.ValueLinq.Nodes
 
     public struct MapNode<T, U, NodeT>
         : INode
-        , IOptimizedCreateCollectionOuter<U>
         where NodeT : INode
     {
         private NodeT _nodeT;
@@ -46,15 +45,24 @@ namespace Cistern.ValueLinq.Nodes
             return tail.CreateObject<CreationType, U, MapNodeEnumerator<EnumeratorElement, U, Enumerator>>(ref nextEnumerator);
         }
 
-        List<U> IOptimizedCreateCollectionOuter<U>.ToList() => (_nodeT as IOptimizedCreateCollectionInner<T>).ToList(_map);
-
-        TOptimization INode.CheckForOptimization<TOptimization>()
+        bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result)
         {
-            if (typeof(TOptimization) == typeof(IOptimizedCreateCollectionOuter<U>) && _nodeT is IOptimizedCreateCollectionInner<T>)
+            if (typeof(TRequest) == typeof(Optimizations.ToList))
             {
-                return (TOptimization)(object)(this);
+                return _nodeT.CheckForOptimization<TOuter, Optimizations.ToListSelect<T, U>, TResult>(new Optimizations.ToListSelect<T, U>(_map), out result);
             }
-            return null;
+
+            if (typeof(TRequest) == typeof(Optimizations.ToListSelect<U, TOuter>))
+            {
+                var fromRequest = (Optimizations.ToListSelect<U, TOuter>)(object)request;
+                var u2Outer = fromRequest.Map;
+                var t2u = _map;
+                TOuter t2Outer(T t) => u2Outer(t2u(t));
+                return _nodeT.CheckForOptimization<TOuter, Optimizations.ToListSelect<T, TOuter>, TResult>(new Optimizations.ToListSelect<T, TOuter>(t2Outer), out result);
+            }
+
+            result = default;
+            return false;
         }
     }
 }

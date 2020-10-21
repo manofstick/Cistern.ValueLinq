@@ -28,7 +28,6 @@ namespace Cistern.ValueLinq.Containers
 
     public struct EnumerableNode<T>
         : INode
-        , IOptimizedCreateCollectionInner<T>
     {
         private readonly IEnumerable<T> _enumerable;
 
@@ -44,23 +43,45 @@ namespace Cistern.ValueLinq.Containers
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
 
-        TOptimization INode.CheckForOptimization<TOptimization>() => null;
-
-        List<U> IOptimizedCreateCollectionInner<T>.ToList<U>(Func<T, U> map) =>
-            _enumerable switch
+        bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result)
+        {
+            if (typeof(TRequest) == typeof(Optimizations.ToListSelect<T, TOuter>))
             {
-                List<T> list => EnumerableNode.ToList(list,        map),
-                T[] array    => EnumerableNode.ToList(array,       map),
+                var toListSelect = (Optimizations.ToListSelect<T, TOuter>)(object)request;
+                result = (TResult)(object)ToList(toListSelect.Map);
+                return true;
+            }
+
+            if (typeof(TRequest) == typeof(Optimizations.ToListWhere<T>))
+            {
+                var toListWhere = (Optimizations.ToListWhere<T>)(object)request;
+                result = (TResult)(object)ToList(toListWhere.Filter);
+                return true;
+            }
+
+            result = default;
+            return false;
+        }
+
+        private readonly List<TOuter> ToList<TOuter>(Func<T, TOuter> map)
+        {
+            return _enumerable switch
+            {
+                List<T> list => EnumerableNode.ToList(list, map),
+                T[] array    => EnumerableNode.ToList(array, map),
                 _            => EnumerableNode.ToList(_enumerable, map),
             };
+        }
 
-        List<T> IOptimizedCreateCollectionInner<T>.ToList(Func<T, bool> filter) =>
-            _enumerable switch
+        private readonly List<T> ToList(Func<T, bool> filter)
+        {
+            return _enumerable switch
             {
-                List<T> list => EnumerableNode.ToList(list,        filter),
-                T[] array    => EnumerableNode.ToList(array,       filter),
+                List<T> list => EnumerableNode.ToList(list, filter),
+                T[] array    => EnumerableNode.ToList(array, filter),
                 _            => EnumerableNode.ToList(_enumerable, filter),
             };
+        }
     }
 
     static class EnumerableNode

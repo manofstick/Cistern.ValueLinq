@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Cistern.Benchmarks.Double.SelectWhereToList
+namespace Cistern.Benchmarks.Double.WhereWhereToList
 {
     [MemoryDiagnoser]
     public partial class Benchmark

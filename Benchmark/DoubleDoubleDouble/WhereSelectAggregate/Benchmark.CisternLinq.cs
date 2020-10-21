@@ -3,6 +3,7 @@ using Cistern.Linq;
 
 namespace Cistern.Benchmarks.DoubleDoubleDouble.WhereSelectAggregate
 {
+#if CISTERNLINQ
     partial class Benchmark
     {
         [Benchmark]
@@ -15,4 +16,5 @@ namespace Cistern.Benchmarks.DoubleDoubleDouble.WhereSelectAggregate
                 .Aggregate((0.0, 0.0, 0.0), ((double x, double y, double z) a, (double x, double y, double z) d) => (a.x + d.x, a.y + d.y, a.z + d.z));
         }
     }
+#endif
 }

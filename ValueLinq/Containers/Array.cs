@@ -31,7 +31,6 @@ namespace Cistern.ValueLinq.Containers
 
     public struct ArrayNode<T>
         : INode
-        , IOptimizedCreateCollectionInner<T>
     {
         private readonly T[] _array;
 
@@ -45,9 +44,6 @@ namespace Cistern.ValueLinq.Containers
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
 
-        TOptimization INode.CheckForOptimization<TOptimization>() => null;
-
-        List<U> IOptimizedCreateCollectionInner<T>.ToList<U>(Func<T, U> map) => EnumerableNode.ToList(_array, map);
-        List<T> IOptimizedCreateCollectionInner<T>.ToList(Func<T, bool> filter) => EnumerableNode.ToList(_array, filter);
+        bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
     }
 }

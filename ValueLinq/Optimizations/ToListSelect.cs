@@ -2,9 +2,9 @@
 
 namespace Cistern.ValueLinq.Optimizations
 {
-    struct SelectToList<T, U>
+    struct ToListSelect<T, U>
     {
         public  readonly Func<T, U> Map;
-        public SelectToList(Func<T, U> map) => Map = map;
+        public ToListSelect(Func<T, U> map) => Map = map;
     }
 }

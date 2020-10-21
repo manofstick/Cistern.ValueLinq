@@ -2,13 +2,13 @@
 using LinqAF;
 using System.Collections.Generic;
 
-namespace Cistern.Benchmarks.Double.WhereSelectToList
+namespace Cistern.Benchmarks.Double.SelectSelectToList
 {
 #if LINQAF
     partial class Benchmark
     {
         [Benchmark]
-        public List<double> LinqAF() => _double.Where(x => x > 0).Select(x => x + 1).ToList();
+        public List<int> LinqAF() => _double.Select(x => (float)x).Select(x => (int)x).ToList();
     }
 #endif
 }

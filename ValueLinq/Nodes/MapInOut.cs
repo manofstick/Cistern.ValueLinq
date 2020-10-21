@@ -41,6 +41,6 @@
             return tail.CreateObject<CreationType, U, MapInOutNodeEnumerator<EnumeratorElement, U, Enumerator>>(ref nextEnumerator);
         }
 
-        TOptimization INode.CheckForOptimization<TOptimization>() => null;
+        bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
     }
 }

@@ -28,7 +28,6 @@ namespace Cistern.ValueLinq.Nodes
 
     public struct FilterNode<T, NodeT>
         : INode
-        , IOptimizedCreateCollectionOuter<T>
         where NodeT : INode
     {
         private NodeT _nodeT;
@@ -46,15 +45,24 @@ namespace Cistern.ValueLinq.Nodes
             return tail.CreateObject<CreationType, EnumeratorElement, FilterNodeEnumerator<EnumeratorElement, Enumerator>>(ref nextEnumerator);
         }
 
-        TOptimization INode.CheckForOptimization<TOptimization>()
+        bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result)
         {
-            if (typeof(TOptimization) == typeof(IOptimizedCreateCollectionOuter<T>) && _nodeT is IOptimizedCreateCollectionInner<T>)
+            if (typeof(TRequest) == typeof(Optimizations.ToList))
             {
-                return (TOptimization)(object)(this);
+                return _nodeT.CheckForOptimization<TOuter, Optimizations.ToListWhere<T>, TResult>(new Optimizations.ToListWhere<T>(_filter), out result);
             }
-            return null;
-        }
 
-        public System.Collections.Generic.List<T> ToList() => (_nodeT as IOptimizedCreateCollectionInner<T>).ToList(_filter);
+            if (typeof(TRequest) == typeof(Optimizations.ToListWhere<T>))
+            {
+                var fromRequest = (Optimizations.ToListWhere<T>)(object)request;
+                var outer = fromRequest.Filter;
+                var inner = _filter;
+                bool combined(T t) => inner(t) && outer(t);
+                return _nodeT.CheckForOptimization<TOuter, Optimizations.ToListWhere<T>, TResult>(new Optimizations.ToListWhere<T>(combined), out result);
+            }
+
+            result = default;
+            return false;
+        }
     }
 }

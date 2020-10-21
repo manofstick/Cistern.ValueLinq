@@ -5,6 +5,7 @@ using NetFabric.Hyperlinq;
 
 namespace Cistern.Benchmarks.DoubleDoubleDouble.SelectWhereAggregate
 {
+#if HYPERLINQ
     public partial class Benchmark
     {
 //#if true
@@ -41,4 +42,5 @@ namespace Cistern.Benchmarks.DoubleDoubleDouble.SelectWhereAggregate
 //        }
 //#endif
     }
+#endif
 }

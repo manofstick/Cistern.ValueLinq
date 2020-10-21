@@ -14,7 +14,7 @@ namespace Cistern.ValueLinq
             where Enumerator : IFastEnumerator<EnumeratorElement>
             where Tail : INodes;
 
-        T CheckForOptimization<T>() where T : class;
+        bool CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result);
     }
 
     public interface INodes

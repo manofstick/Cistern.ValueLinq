@@ -44,13 +44,21 @@ namespace Cistern.Benchmarks.Double.Sum
             check.Length = 100;
             check.SetupData();
 
-            var a = check.Linq();
-            var b = check.LinqAF();
-            var c = check.CisternValueLinq();
-            var d = check.CisternLinq();
+            var baseline = check.Linq();
+#if LINQAF
+            var linqaf = check.LinqAF();
+            if (baseline != linqaf) throw new Exception();
+#endif
 
-            if (a != b || b != c || c != d)
-                throw new Exception($"({a} != {b} || {b} != {c} || {c} != {d})");
+            var cisternvaluelinq = check.CisternValueLinq();
+            if (baseline != cisternvaluelinq) throw new Exception();
+
+#if CISTERNLINQ
+            var cisternlinq = check.CisternLinq();
+            if (cisternlinq != baseline) throw new Exception();
+#endif
+
+            // check.HyperLinq(); // doesn't support Aggregate
         }
     }
 }

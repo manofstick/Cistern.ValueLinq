@@ -35,6 +35,6 @@ namespace Cistern.ValueLinq.Aggregation
             return new List<EnumeratorElement>();
         }
 
-        T INode.CheckForOptimization<T>() => null;
+        bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
     }
 }

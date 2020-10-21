@@ -31,7 +31,6 @@ namespace Cistern.ValueLinq.Containers
 
     public struct ListNode<T>
         : INode
-        , IOptimizedCreateCollectionInner<T>
     {
         private readonly List<T> _list;
 
@@ -47,9 +46,6 @@ namespace Cistern.ValueLinq.Containers
 
         public List<T>.Enumerator GetEnumerator() => _list.GetEnumerator();
 
-        TOptimization INode.CheckForOptimization<TOptimization>() => null;
-
-        List<U> IOptimizedCreateCollectionInner<T>.ToList<U>(Func<T, U> map) => EnumerableNode.ToList(_list, map);
-        List<T> IOptimizedCreateCollectionInner<T>.ToList(Func<T, bool> filter) => EnumerableNode.ToList(_list, filter);
+        bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
     }
 }

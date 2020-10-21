@@ -12,12 +12,14 @@ namespace Cistern.Benchmarks
             DoubleDoubleDouble.WhereSelectAggregate.Benchmark.SanityCheck();
             Double.ToList.Benchmark.SanityCheck();
             Double.SelectToList.Benchmark.SanityCheck();
+            Double.SelectSelectToList.Benchmark.SanityCheck();
             Double.WhereToList.Benchmark.SanityCheck();
             Double.SelectWhereToList.Benchmark.SanityCheck();
             Double.WhereSelectToList.Benchmark.SanityCheck();
+            Double.WhereWhereToList.Benchmark.SanityCheck();
             Double.Sum.Benchmark.SanityCheck();
 
-            var summary = BenchmarkRunner.Run<Double.WhereSelectToList.Benchmark>();
+            var summary = BenchmarkRunner.Run<Double.WhereWhereToList.Benchmark>();
         }
     }
 }

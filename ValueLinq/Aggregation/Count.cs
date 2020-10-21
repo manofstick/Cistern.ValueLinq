@@ -29,6 +29,6 @@ namespace Cistern.ValueLinq.Aggregation
             }
         }
 
-        T INode.CheckForOptimization<T>() => null;
+        bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
     }
 }

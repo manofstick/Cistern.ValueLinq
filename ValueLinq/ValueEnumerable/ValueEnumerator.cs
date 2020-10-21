@@ -24,6 +24,6 @@ namespace Cistern.ValueLinq.ValueEnumerable
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
                 => (CreationType)(object)(new ValueEnumerator<EnumeratorElement>(enumerator));
 
-        T INode.CheckForOptimization<T>() => null;
+        bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
     }
 }

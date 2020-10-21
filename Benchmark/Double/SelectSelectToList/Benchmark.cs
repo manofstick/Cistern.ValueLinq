@@ -3,17 +3,25 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Cistern.Benchmarks.Double.SelectWhereToList
+namespace Cistern.Benchmarks.Double.SelectSelectToList
 {
     [MemoryDiagnoser]
     public partial class Benchmark
     {
         IEnumerable<double> _double;
 
+#if LONG
         [Params(0, 1, 10, 100, 1000, 1000000)]
+#else
+        [Params(0, 1, 10, 100)]
+#endif
         public int Length { get; set; } = 0;
 
+#if true
         [Params(ContainerTypes.Array, ContainerTypes.Enumerable, ContainerTypes.List)]
+#else
+        [Params(ContainerTypes.Array)]
+#endif
         public ContainerTypes ContainerType { get; set; } = ContainerTypes.Enumerable;
 
         [GlobalSetup]
