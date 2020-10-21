@@ -6,7 +6,7 @@ namespace Cistern.Benchmarks.DoubleDoubleDouble.WhereSelectAggregate
     partial class Benchmark
     {
         [Benchmark]
-        public (double, double, double) CisternLinq()
+        public (double x, double y, double z) CisternLinq()
         {
             return
                 _doubledoubledoubles

@@ -10,9 +10,9 @@ namespace Cistern.Benchmarks.DoubleDoubleDouble.SelectWhereAggregate
         {
             return
                 _doubledoubledoubles
-                .Select(((double x, double y, double z) d) => (d.x * d.x, d.y * d.y, d.z * d.z))
-                .Where(((double x, double y, double z) d) => d.x > 0.25 && d.y > 0.25 && d.z > 0.25)
-                .Aggregate((0.0, 0.0, 0.0), ((double x, double y, double z) a, (double x, double y, double z) d) => (a.x + d.x, a.y + d.y, a.z + d.z));
+                .Select(((double x, double y, double z) d) => (x:d.x * d.x, y:d.y * d.y, z:d.z * d.z))
+                .Where(d => d.x > 0.25 && d.y > 0.25 && d.z > 0.25)
+                .Aggregate((x:0.0, y:0.0, z:0.0), (a, d) => (a.x + d.x, a.y + d.y, a.z + d.z));
         }
     }
 }

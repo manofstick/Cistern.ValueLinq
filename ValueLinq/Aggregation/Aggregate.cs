@@ -30,5 +30,7 @@ namespace Cistern.ValueLinq.Aggregation
                 }
             }
         }
+
+        TOptimization INode.CheckForOptimization<TOptimization>() => null;
     }
 }

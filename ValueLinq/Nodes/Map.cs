@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Cistern.ValueLinq
+namespace Cistern.ValueLinq.Nodes
 {
     struct MapNodeEnumerator<TIn, TOut, TInEnumerator>
         : IFastEnumerator<TOut>
@@ -29,18 +29,14 @@ namespace Cistern.ValueLinq
     }
 
     public struct MapNode<T, U, NodeT>
-        : IValueEnumerable<U>
-        , ITryFastToListOuter<U>
+        : INode
+        , IOptimizedCreateCollectionOuter<U>
         where NodeT : INode
     {
         private NodeT _nodeT;
         private Func<T, U> _map;
 
         public MapNode(in NodeT nodeT, Func<T, U> map) => (_nodeT, _map) = (nodeT, map);
-
-        public ValueEnumerator<U> GetEnumerator() => Nodes<U>.CreateValueEnumerator(in this);
-        IEnumerator<U> IEnumerable<U>.GetEnumerator() => Nodes<U>.CreateEnumerator(in this);
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => ((IEnumerable<U>)this).GetEnumerator();
 
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
 
@@ -50,6 +46,15 @@ namespace Cistern.ValueLinq
             return tail.CreateObject<CreationType, U, MapNodeEnumerator<EnumeratorElement, U, Enumerator>>(ref nextEnumerator);
         }
 
-        List<U> ITryFastToListOuter<U>.MaybeToList() => _nodeT is ITryFastToListInner<T> toList ? toList.MaybeMapToList(_map) : null;
+        List<U> IOptimizedCreateCollectionOuter<U>.ToList() => (_nodeT as IOptimizedCreateCollectionInner<T>).ToList(_map);
+
+        TOptimization INode.CheckForOptimization<TOptimization>()
+        {
+            if (typeof(TOptimization) == typeof(IOptimizedCreateCollectionOuter<U>) && _nodeT is IOptimizedCreateCollectionInner<T>)
+            {
+                return (TOptimization)(object)(this);
+            }
+            return null;
+        }
     }
 }

@@ -7,12 +7,17 @@ namespace Cistern.Benchmarks
     {
         public static void Main(string[] args)
         {
-            DoubleDoubleDouble.SelectWhereAggregate.Benchmark.Validate();
-            DoubleDoubleDouble.WhereSelectAggregate.Benchmark.Validate();
-            Double.ToList.Benchmark.Validate();
-            Double.SelectToList.Benchmark.Validate();
+            // For some sanity checking
+            DoubleDoubleDouble.SelectWhereAggregate.Benchmark.SanityCheck();
+            DoubleDoubleDouble.WhereSelectAggregate.Benchmark.SanityCheck();
+            Double.ToList.Benchmark.SanityCheck();
+            Double.SelectToList.Benchmark.SanityCheck();
+            Double.WhereToList.Benchmark.SanityCheck();
+            Double.SelectWhereToList.Benchmark.SanityCheck();
+            Double.WhereSelectToList.Benchmark.SanityCheck();
+            Double.Sum.Benchmark.SanityCheck();
 
-            var summary = BenchmarkRunner.Run<Double.SelectToList.Benchmark>();
+            var summary = BenchmarkRunner.Run<Double.WhereSelectToList.Benchmark>();
         }
     }
 }

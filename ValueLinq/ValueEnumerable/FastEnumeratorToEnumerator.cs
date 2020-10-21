@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Cistern.ValueLinq
+namespace Cistern.ValueLinq.ValueEnumerable
 {
     class FastEnumeratorToEnumerator<T, TEnumerator>
         : IEnumerator<T>
@@ -30,5 +30,7 @@ namespace Cistern.ValueLinq
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
                 => (CreationType)(object)(new FastEnumeratorToEnumerator<EnumeratorElement, Enumerator>(in enumerator));
+
+        T INode.CheckForOptimization<T>() => null;
     }
 }

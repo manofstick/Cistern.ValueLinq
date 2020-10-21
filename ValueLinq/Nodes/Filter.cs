@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 
-namespace Cistern.ValueLinq
+namespace Cistern.ValueLinq.Nodes
 {
     struct FilterNodeEnumerator<TIn, TInEnumerator>
         : IFastEnumerator<TIn>
@@ -28,7 +27,8 @@ namespace Cistern.ValueLinq
     }
 
     public struct FilterNode<T, NodeT>
-        : IValueEnumerable<T>
+        : INode
+        , IOptimizedCreateCollectionOuter<T>
         where NodeT : INode
     {
         private NodeT _nodeT;
@@ -36,9 +36,6 @@ namespace Cistern.ValueLinq
 
         public FilterNode(in NodeT nodeT, Func<T, bool> filter) => (_nodeT, _filter) = (nodeT, filter);
 
-        public ValueEnumerator<T> GetEnumerator() => Nodes<T>.CreateValueEnumerator(in this);
-        IEnumerator<T> IEnumerable<T>.GetEnumerator() => Nodes<T>.CreateEnumerator(in this);
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => ((IEnumerable<T>)this).GetEnumerator();
 
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
             => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
@@ -48,5 +45,16 @@ namespace Cistern.ValueLinq
             var nextEnumerator = new FilterNodeEnumerator<EnumeratorElement, Enumerator>(in enumerator, (Func<EnumeratorElement, bool>)(object)_filter);
             return tail.CreateObject<CreationType, EnumeratorElement, FilterNodeEnumerator<EnumeratorElement, Enumerator>>(ref nextEnumerator);
         }
+
+        TOptimization INode.CheckForOptimization<TOptimization>()
+        {
+            if (typeof(TOptimization) == typeof(IOptimizedCreateCollectionOuter<T>) && _nodeT is IOptimizedCreateCollectionInner<T>)
+            {
+                return (TOptimization)(object)(this);
+            }
+            return null;
+        }
+
+        public System.Collections.Generic.List<T> ToList() => (_nodeT as IOptimizedCreateCollectionInner<T>).ToList(_filter);
     }
 }

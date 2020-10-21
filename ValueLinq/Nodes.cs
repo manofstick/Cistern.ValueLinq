@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Cistern.ValueLinq.ValueEnumerable;
+using System;
 using System.Collections.Generic;
 
 namespace Cistern.ValueLinq
@@ -12,6 +13,8 @@ namespace Cistern.ValueLinq
         CreationType CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
             where Enumerator : IFastEnumerator<EnumeratorElement>
             where Tail : INodes;
+
+        T CheckForOptimization<T>() where T : class;
     }
 
     public interface INodes
@@ -66,7 +69,7 @@ namespace Cistern.ValueLinq
             return next.CreateObjectDescent<T, Head, Tail>(ref nodes);
         }
 
-        public static T Aggregation<Enumerable, Aggregator>(ref Enumerable inner)
+        public static T Aggregation<Enumerable, Aggregator>(in Enumerable inner)
             where Enumerable : INode
             where Aggregator : INode
         {

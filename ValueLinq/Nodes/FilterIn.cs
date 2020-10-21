@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Cistern.ValueLinq
+﻿namespace Cistern.ValueLinq.Nodes
 {
     struct FilterInNodeEnumerator<TIn, TInEnumerator>
         : IFastEnumerator<TIn>
@@ -27,17 +25,13 @@ namespace Cistern.ValueLinq
     }
 
     public struct FilterInNode<T, NodeT>
-        : IValueEnumerable<T>
+        : INode
         where NodeT : INode
     {
         private NodeT _nodeT;
         private InFunc<T, bool> _filter;
 
         public FilterInNode(in NodeT nodeT, InFunc<T, bool> filter) => (_nodeT, _filter) = (nodeT, filter);
-
-        public ValueEnumerator<T> GetEnumerator() => Nodes<T>.CreateValueEnumerator(in this);
-        IEnumerator<T> IEnumerable<T>.GetEnumerator() => Nodes<T>.CreateEnumerator(in this);
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => ((IEnumerable<T>)this).GetEnumerator();
 
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
 
@@ -46,5 +40,7 @@ namespace Cistern.ValueLinq
             var nextEnumerator = new FilterInNodeEnumerator<EnumeratorElement, Enumerator>(in enumerator, (InFunc<EnumeratorElement, bool>)(object)_filter);
             return tail.CreateObject<CreationType, EnumeratorElement, FilterInNodeEnumerator<EnumeratorElement, Enumerator>>(ref nextEnumerator);
         }
+
+        TOptimization INode.CheckForOptimization<TOptimization>() => null;
     }
 }

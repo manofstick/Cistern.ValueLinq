@@ -37,7 +37,7 @@ namespace Cistern.Benchmarks.Double.SelectToList
                 yield return (double)i;
         }
 
-        internal static void Validate()
+        internal static void SanityCheck()
         {
             var check = new Benchmark();
 

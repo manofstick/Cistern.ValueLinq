@@ -24,6 +24,8 @@ namespace Cistern.ValueLinq.Aggregation
                 }
             }
         }
+
+        T INode.CheckForOptimization<T>() => null;
     }
     struct SumDouble
         : INode
@@ -47,5 +49,7 @@ namespace Cistern.ValueLinq.Aggregation
                 }
             }
         }
+
+        T INode.CheckForOptimization<T>() => null;
     }
 }

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Cistern.ValueLinq
+﻿namespace Cistern.ValueLinq.Nodes
 {
     struct MapInNodeEnumerator<TIn, TOut, TInEnumerator>
         : IFastEnumerator<TOut>
@@ -28,7 +26,7 @@ namespace Cistern.ValueLinq
     }
 
     public struct MapInNode<T, U, NodeT>
-        : IValueEnumerable<U>
+        : INode
         where NodeT : INode
     {
         private NodeT _nodeT;
@@ -36,15 +34,13 @@ namespace Cistern.ValueLinq
 
         public MapInNode(in NodeT nodeT, InFunc<T, U> map) => (_nodeT, _map) = (nodeT, map);
 
-        public ValueEnumerator<U> GetEnumerator() => Nodes<U>.CreateValueEnumerator(in this);
-        IEnumerator<U> IEnumerable<U>.GetEnumerator() => Nodes<U>.CreateEnumerator(in this);
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => ((IEnumerable<U>)this).GetEnumerator();
-
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
         {
             var nextEnumerator = new MapInNodeEnumerator<EnumeratorElement, U, Enumerator>(in enumerator, (InFunc<EnumeratorElement, U>)(object)_map);
             return tail.CreateObject<CreationType, U, MapInNodeEnumerator<EnumeratorElement, U, Enumerator>>(ref nextEnumerator);
         }
+
+        TOptimization INode.CheckForOptimization<TOptimization>() => null;
     }
 }

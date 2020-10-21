@@ -25,7 +25,7 @@ namespace Cistern.Benchmarks.DoubleDoubleDouble.SelectWhereAggregate
                 .ToList();
         }
 
-        internal static void Validate()
+        internal static void SanityCheck()
         {
             var check = new Benchmark();
 

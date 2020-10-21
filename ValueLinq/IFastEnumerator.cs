@@ -10,20 +10,14 @@ namespace Cistern.ValueLinq
         int? InitialSize { get; }
     }
 
-    public interface IValueEnumerable<T> 
-        : IEnumerable<T>
-        , INode
+    interface IOptimizedCreateCollectionOuter<T>
     {
-        new ValueEnumerator<T> GetEnumerator();
+        List<T> ToList();
     }
 
-    interface ITryFastToListOuter<T>
-    {
-        List<T> MaybeToList();
-    }
-
-    interface ITryFastToListInner<T>
+    interface IOptimizedCreateCollectionInner<T>
     { 
-        List<U> MaybeMapToList<U>(Func<T,U> map);
+        List<U> ToList<U>(Func<T,U> map);
+        List<T> ToList(Func<T, bool> map);
     }
 }

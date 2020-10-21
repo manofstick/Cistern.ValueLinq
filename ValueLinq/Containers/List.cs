@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 
-namespace Cistern.ValueLinq
+namespace Cistern.ValueLinq.Containers
 {
     struct ListFastEnumerator<T>
         : IFastEnumerator<T>
@@ -31,7 +30,8 @@ namespace Cistern.ValueLinq
     }
 
     public struct ListNode<T>
-        : IValueEnumerable<T>
+        : INode
+        , IOptimizedCreateCollectionInner<T>
     {
         private readonly List<T> _list;
 
@@ -47,8 +47,9 @@ namespace Cistern.ValueLinq
 
         public List<T>.Enumerator GetEnumerator() => _list.GetEnumerator();
 
-        ValueEnumerator<T> IValueEnumerable<T>.GetEnumerator() => Nodes<T>.CreateValueEnumerator(in this);
-        IEnumerator<T> IEnumerable<T>.GetEnumerator() => _list.GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => _list.GetEnumerator();
+        TOptimization INode.CheckForOptimization<TOptimization>() => null;
+
+        List<U> IOptimizedCreateCollectionInner<T>.ToList<U>(Func<T, U> map) => EnumerableNode.ToList(_list, map);
+        List<T> IOptimizedCreateCollectionInner<T>.ToList(Func<T, bool> filter) => EnumerableNode.ToList(_list, filter);
     }
 }

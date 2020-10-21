@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Cistern.ValueLinq
+namespace Cistern.ValueLinq.ValueEnumerable
 {
     public struct ValueEnumerator<T>
     {
@@ -23,5 +23,7 @@ namespace Cistern.ValueLinq
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
                 => (CreationType)(object)(new ValueEnumerator<EnumeratorElement>(enumerator));
+
+        T INode.CheckForOptimization<T>() => null;
     }
 }

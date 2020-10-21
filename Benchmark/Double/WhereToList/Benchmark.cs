@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Cistern.Benchmarks.Double.ToList
+namespace Cistern.Benchmarks.Double.WhereToList
 {
     [MemoryDiagnoser]
     public partial class Benchmark
@@ -13,12 +13,22 @@ namespace Cistern.Benchmarks.Double.ToList
         [Params(0, 1, 10, 100, 1000, 1000000)]
         public int Length { get; set; } = 0;
 
+        [Params(ContainerTypes.Array, ContainerTypes.Enumerable, ContainerTypes.List)]
+        public ContainerTypes ContainerType { get; set; } = ContainerTypes.Enumerable;
+
         [GlobalSetup]
         public void SetupData()
         {
-            var r = new Random(42);
+            var data = Create(Length);
 
-            _double = Create(Length);
+            _double = ContainerType switch
+            {
+                ContainerTypes.Enumerable => data,
+                ContainerTypes.Array => data.ToArray(),
+                ContainerTypes.List => data.ToList(),
+
+                _ => throw new Exception("Unknown ContainerType")
+            };
         }
 
         private static IEnumerable<double> Create(int size)

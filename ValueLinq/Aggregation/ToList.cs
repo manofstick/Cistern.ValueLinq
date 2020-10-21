@@ -34,5 +34,7 @@ namespace Cistern.ValueLinq.Aggregation
 
             return new List<EnumeratorElement>();
         }
+
+        T INode.CheckForOptimization<T>() => null;
     }
 }

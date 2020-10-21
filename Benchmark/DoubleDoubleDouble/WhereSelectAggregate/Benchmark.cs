@@ -8,7 +8,7 @@ namespace Cistern.Benchmarks.DoubleDoubleDouble.WhereSelectAggregate
     [MemoryDiagnoser]
     public partial class Benchmark
     {
-        List<(double, double, double)> _doubledoubledoubles;
+        List<(double x, double y, double z)> _doubledoubledoubles;
 
         [Params(0, 1, 10, 100, 1000, 1000000)]
         public int Length { get; set; } = 0;
@@ -25,7 +25,7 @@ namespace Cistern.Benchmarks.DoubleDoubleDouble.WhereSelectAggregate
                 .ToList();
         }
 
-        internal static void Validate()
+        internal static void SanityCheck()
         {
             var check = new Benchmark();
 
