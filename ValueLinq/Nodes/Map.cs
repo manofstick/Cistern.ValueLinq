@@ -61,6 +61,12 @@ namespace Cistern.ValueLinq.Nodes
                 return _nodeT.CheckForOptimization<TOuter, Optimizations.ToListSelect<T, TOuter>, TResult>(new Optimizations.ToListSelect<T, TOuter>(t2Outer), out result);
             }
 
+            if (typeof(TRequest) == typeof(Optimizations.ToListWhere<TOuter>))
+            {
+                var fromRequest = (Optimizations.ToListWhere<U>)(object)request;
+                return _nodeT.CheckForOptimization<U, Optimizations.ToListSelectWhere<T, U>, TResult>(new Optimizations.ToListSelectWhere<T, U>(_map, fromRequest.Filter), out result);
+            }
+
             result = default;
             return false;
         }

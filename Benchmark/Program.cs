@@ -19,7 +19,7 @@ namespace Cistern.Benchmarks
             Double.WhereWhereToList.Benchmark.SanityCheck();
             Double.Sum.Benchmark.SanityCheck();
 
-            var summary = BenchmarkRunner.Run<Double.WhereWhereToList.Benchmark>();
+            var summary = BenchmarkRunner.Run<Double.SelectWhereToList.Benchmark>();
         }
     }
 }

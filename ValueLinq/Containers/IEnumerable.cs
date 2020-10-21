@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Cistern.ValueLinq.Nodes;
+using System;
 using System.Collections.Generic;
 
 namespace Cistern.ValueLinq.Containers
@@ -59,6 +60,13 @@ namespace Cistern.ValueLinq.Containers
                 return true;
             }
 
+            if (typeof(TRequest) == typeof(Optimizations.ToListSelectWhere<T, TOuter>))
+            {
+                var toListSelectWhere = (Optimizations.ToListSelectWhere<T, TOuter>)(object)request;
+                result = (TResult)(object)ToList(toListSelectWhere.Map, toListSelectWhere.Filter);
+                return true;
+            }
+
             result = default;
             return false;
         }
@@ -70,6 +78,16 @@ namespace Cistern.ValueLinq.Containers
                 List<T> list => EnumerableNode.ToList(list, map),
                 T[] array    => EnumerableNode.ToList(array, map),
                 _            => EnumerableNode.ToList(_enumerable, map),
+            };
+        }
+
+        private readonly List<TOuter> ToList<TOuter>(Func<T, TOuter> map, Func<TOuter, bool> filter)
+        {
+            return _enumerable switch
+            {
+                List<T> list => EnumerableNode.ToList(list, map, filter),
+                T[] array    => EnumerableNode.ToList(array, map, filter),
+                _            => EnumerableNode.ToList(_enumerable, map, filter),
             };
         }
 
@@ -132,6 +150,42 @@ namespace Cistern.ValueLinq.Containers
             var newList = new List<U>(list.Count);
             for(var i=0; i < list.Count; ++i)
                 newList.Add(map(list[i]));
+            return newList;
+        }
+
+        public static List<U> ToList<T, U>(IEnumerable<T> enumerable, Func<T, U> map, Func<U, bool> filter)
+        {
+            var newList = new List<U>();
+            foreach (var item in enumerable)
+            {
+                var mapped = map(item);
+                if (filter(mapped))
+                    newList.Add(mapped);
+            }
+            return newList;
+        }
+
+        public static List<U> ToList<T, U>(T[] array, Func<T, U> map, Func<U, bool> filter)
+        {
+            var newList = new List<U>();
+            for (var i = 0; i < array.Length; ++i)
+            {
+                var mapped = map(array[i]);
+                if (filter(mapped))
+                    newList.Add(mapped);
+            }
+            return newList;
+        }
+
+        public static List<U> ToList<T, U>(List<T> list, Func<T, U> map, Func<U, bool> filter)
+        {
+            var newList = new List<U>();
+            for (var i = 0; i < list.Count; ++i)
+            {
+                var mapped = map(list[i]);
+                if (filter(mapped))
+                    newList.Add(mapped);
+            }
             return newList;
         }
 
