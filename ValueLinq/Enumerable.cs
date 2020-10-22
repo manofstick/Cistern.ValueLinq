@@ -55,5 +55,8 @@ namespace Cistern.ValueLinq
 
         public static int Count<T>(this IEnumerable<T> inner) => inner.OfEnumerable().Count();
         public static int Count<T, Inner>(in this ValueEnumerable<T, Inner> inner) where Inner : INode => Nodes<int>.Aggregation<Inner, Count>(in inner.Node);
+
+        public static ValueEnumerable<T, EmptyNode<T>> Empty<T>() => new ValueEnumerable<T, EmptyNode<T>>(new EmptyNode<T>());
+
     }
 }
