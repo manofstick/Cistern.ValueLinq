@@ -2,7 +2,7 @@
 
 namespace Cistern.ValueLinq.Nodes
 {
-    struct MapiNodeEnumerator<TIn, TOut, TInEnumerator>
+    struct SelectiNodeEnumerator<TIn, TOut, TInEnumerator>
         : IFastEnumerator<TOut>
         where TInEnumerator : IFastEnumerator<TIn>
     {
@@ -10,7 +10,7 @@ namespace Cistern.ValueLinq.Nodes
         private Func<TIn, int, TOut> _map;
         private int _i;
 
-        public MapiNodeEnumerator(in TInEnumerator enumerator, Func<TIn, int, TOut> map) => (_enumerator, _map, _i) = (enumerator, map, 0);
+        public SelectiNodeEnumerator(in TInEnumerator enumerator, Func<TIn, int, TOut> map) => (_enumerator, _map, _i) = (enumerator, map, 0);
 
         public int? InitialSize => _enumerator.InitialSize;
 
@@ -28,14 +28,14 @@ namespace Cistern.ValueLinq.Nodes
         }
     }
 
-    public struct MapiNode<T, U, NodeT>
+    public struct SelectiNode<T, U, NodeT>
         : INode
         where NodeT : INode
     {
         private NodeT _nodeT;
         private Func<T, int, U> _map;
 
-        public MapiNode(in NodeT nodeT, Func<T, int, U> selector)
+        public SelectiNode(in NodeT nodeT, Func<T, int, U> selector)
         {
             if (selector == null)
                 throw new ArgumentNullException(nameof(selector));
@@ -47,8 +47,8 @@ namespace Cistern.ValueLinq.Nodes
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
         {
-            var nextEnumerator = new MapiNodeEnumerator<EnumeratorElement, U, Enumerator>(in enumerator, (Func<EnumeratorElement, int, U>)(object)_map);
-            return tail.CreateObject<CreationType, U, MapiNodeEnumerator<EnumeratorElement, U, Enumerator>>(ref nextEnumerator);
+            var nextEnumerator = new SelectiNodeEnumerator<EnumeratorElement, U, Enumerator>(in enumerator, (Func<EnumeratorElement, int, U>)(object)_map);
+            return tail.CreateObject<CreationType, U, SelectiNodeEnumerator<EnumeratorElement, U, Enumerator>>(ref nextEnumerator);
         }
 
         bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false;}

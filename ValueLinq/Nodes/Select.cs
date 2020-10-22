@@ -1,16 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace Cistern.ValueLinq.Nodes
 {
-    struct MapNodeEnumerator<TIn, TOut, TInEnumerator>
+    struct SelectNodeEnumerator<TIn, TOut, TInEnumerator>
         : IFastEnumerator<TOut>
         where TInEnumerator : IFastEnumerator<TIn>
     {
         private TInEnumerator _enumerator;
         private Func<TIn, TOut> _map;
 
-        public MapNodeEnumerator(in TInEnumerator enumerator, Func<TIn, TOut> map) => (_enumerator, _map) = (enumerator, map);
+        public SelectNodeEnumerator(in TInEnumerator enumerator, Func<TIn, TOut> map) => (_enumerator, _map) = (enumerator, map);
 
         public int? InitialSize => _enumerator.InitialSize;
 
@@ -28,14 +27,14 @@ namespace Cistern.ValueLinq.Nodes
         }
     }
 
-    public struct MapNode<T, U, NodeT>
+    public struct SelectNode<T, U, NodeT>
         : INode
         where NodeT : INode
     {
         private NodeT _nodeT;
         private Func<T, U> _map;
 
-        public MapNode(in NodeT nodeT, Func<T, U> selector)
+        public SelectNode(in NodeT nodeT, Func<T, U> selector)
         {
             if (selector == null)
                 throw new ArgumentNullException("selector");
@@ -47,8 +46,8 @@ namespace Cistern.ValueLinq.Nodes
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
         {
-            var nextEnumerator = new MapNodeEnumerator<EnumeratorElement, U, Enumerator>(in enumerator, (Func<EnumeratorElement, U>)(object)_map);
-            return tail.CreateObject<CreationType, U, MapNodeEnumerator<EnumeratorElement, U, Enumerator>>(ref nextEnumerator);
+            var nextEnumerator = new SelectNodeEnumerator<EnumeratorElement, U, Enumerator>(in enumerator, (Func<EnumeratorElement, U>)(object)_map);
+            return tail.CreateObject<CreationType, U, SelectNodeEnumerator<EnumeratorElement, U, Enumerator>>(ref nextEnumerator);
         }
 
         bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result)

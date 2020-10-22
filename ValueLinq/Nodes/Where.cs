@@ -2,14 +2,14 @@
 
 namespace Cistern.ValueLinq.Nodes
 {
-    struct FilterNodeEnumerator<TIn, TInEnumerator>
+    struct WhereNodeEnumerator<TIn, TInEnumerator>
         : IFastEnumerator<TIn>
         where TInEnumerator : IFastEnumerator<TIn>
     {
         private TInEnumerator _enumerator;
         private Func<TIn, bool> _filter;
 
-        public FilterNodeEnumerator(in TInEnumerator enumerator, Func<TIn, bool> filter) => (_enumerator, _filter) = (enumerator, filter);
+        public WhereNodeEnumerator(in TInEnumerator enumerator, Func<TIn, bool> filter) => (_enumerator, _filter) = (enumerator, filter);
 
         public int? InitialSize => _enumerator.InitialSize == 0 ? (int?)0 : null;
 
@@ -26,14 +26,14 @@ namespace Cistern.ValueLinq.Nodes
         }
     }
 
-    public struct FilterNode<T, NodeT>
+    public struct WhereNode<T, NodeT>
         : INode
         where NodeT : INode
     {
         private NodeT _nodeT;
         private Func<T, bool> _filter;
 
-        public FilterNode(in NodeT nodeT, Func<T, bool> predicate)
+        public WhereNode(in NodeT nodeT, Func<T, bool> predicate)
         {
             if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
@@ -41,14 +41,13 @@ namespace Cistern.ValueLinq.Nodes
             (_nodeT, _filter) = (nodeT, predicate);
         }
 
-
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
             => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
         {
-            var nextEnumerator = new FilterNodeEnumerator<EnumeratorElement, Enumerator>(in enumerator, (Func<EnumeratorElement, bool>)(object)_filter);
-            return tail.CreateObject<CreationType, EnumeratorElement, FilterNodeEnumerator<EnumeratorElement, Enumerator>>(ref nextEnumerator);
+            var nextEnumerator = new WhereNodeEnumerator<EnumeratorElement, Enumerator>(in enumerator, (Func<EnumeratorElement, bool>)(object)_filter);
+            return tail.CreateObject<CreationType, EnumeratorElement, WhereNodeEnumerator<EnumeratorElement, Enumerator>>(ref nextEnumerator);
         }
 
         bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result)

@@ -13,23 +13,23 @@ namespace Cistern.ValueLinq
         public static ValueEnumerable<T, ArrayNode<T>> OfArray<T>(this T[] array) => new ValueEnumerable<T, ArrayNode<T>>(new ArrayNode<T>(array));
         public static ValueEnumerable<T, ListNode<T>> OfList<T>(this List<T> list) => new ValueEnumerable<T, ListNode<T>>(new ListNode<T>(list));
 
-        public static ValueEnumerable<U, MapNode<T, U, TPrior>> Select<T, U, TPrior>(in this ValueEnumerable<T, TPrior> prior, Func<T, U> f) where TPrior : INode => new ValueEnumerable<U, MapNode<T, U, TPrior>>(new MapNode<T, U, TPrior>(in prior.Node, f));
-        public static ValueEnumerable<U, MapNode<T, U, EnumerableNode<T>>> Select<T, U>(this IEnumerable<T> inner, Func<T, U> f) => inner.OfEnumerable().Select(f);
+        public static ValueEnumerable<U, SelectNode<T, U, TPrior>> Select<T, U, TPrior>(in this ValueEnumerable<T, TPrior> prior, Func<T, U> f) where TPrior : INode => new ValueEnumerable<U, SelectNode<T, U, TPrior>>(new SelectNode<T, U, TPrior>(in prior.Node, f));
+        public static ValueEnumerable<U, SelectNode<T, U, EnumerableNode<T>>> Select<T, U>(this IEnumerable<T> inner, Func<T, U> f) => inner.OfEnumerable().Select(f);
 
-        public static ValueEnumerable<U, MapInNode<T, U, TPrior>> Select<T, U, TPrior>(in this ValueEnumerable<T, TPrior> prior, InFunc<T, U> f) where TPrior : INode => new ValueEnumerable<U, MapInNode<T, U, TPrior>>(new MapInNode<T, U, TPrior>(in prior.Node, f));
-        public static ValueEnumerable<U, MapInNode<T, U, EnumerableNode<T>>> Select<T, U>(this IEnumerable<T> inner, InFunc<T, U> f) => inner.OfEnumerable().Select(f);
+        public static ValueEnumerable<U, Select_InNode<T, U, TPrior>> Select<T, U, TPrior>(in this ValueEnumerable<T, TPrior> prior, InFunc<T, U> f) where TPrior : INode => new ValueEnumerable<U, Select_InNode<T, U, TPrior>>(new Select_InNode<T, U, TPrior>(in prior.Node, f));
+        public static ValueEnumerable<U, Select_InNode<T, U, EnumerableNode<T>>> Select<T, U>(this IEnumerable<T> inner, InFunc<T, U> f) => inner.OfEnumerable().Select(f);
 
         public static ValueEnumerable<U, MapInOutNode<T, U, TPrior>> Select<T, U, TPrior>(in this ValueEnumerable<T, TPrior> prior, InOutFunc<T, U> f) where TPrior : INode => new ValueEnumerable<U, MapInOutNode<T, U, TPrior>>(new MapInOutNode<T, U, TPrior>(in prior.Node, f));
         public static ValueEnumerable<U, MapInOutNode<T, U, EnumerableNode<T>>> Select<T, U>(this IEnumerable<T> inner, InOutFunc<T, U> f) => inner.OfEnumerable().Select(f);
 
-        public static ValueEnumerable<U, MapiNode<T, U, TPrior>> Select<T, U, TPrior>(in this ValueEnumerable<T, TPrior> prior, Func<T, int, U> f) where TPrior : INode => new ValueEnumerable<U, MapiNode<T, U, TPrior>>(new MapiNode<T, U, TPrior>(in prior.Node, f));
-        public static ValueEnumerable<U, MapiNode<T, U, EnumerableNode<T>>> Select<T, U>(this IEnumerable<T> inner, Func<T, int, U> f) => inner.OfEnumerable().Select(f);
+        public static ValueEnumerable<U, SelectiNode<T, U, TPrior>> Select<T, U, TPrior>(in this ValueEnumerable<T, TPrior> prior, Func<T, int, U> f) where TPrior : INode => new ValueEnumerable<U, SelectiNode<T, U, TPrior>>(new SelectiNode<T, U, TPrior>(in prior.Node, f));
+        public static ValueEnumerable<U, SelectiNode<T, U, EnumerableNode<T>>> Select<T, U>(this IEnumerable<T> inner, Func<T, int, U> f) => inner.OfEnumerable().Select(f);
 
-        public static ValueEnumerable<T, FilterNode<T, TPrior>> Where<T, TPrior>(in this ValueEnumerable<T, TPrior> prior, Func<T, bool> f) where TPrior : INode => new ValueEnumerable<T, FilterNode<T, TPrior>>(new FilterNode<T, TPrior>(in prior.Node, f));
-        public static ValueEnumerable<T, FilterNode<T, EnumerableNode<T>>> Where<T>(this IEnumerable<T> inner, Func<T, bool> f) => inner.OfEnumerable().Where(f);
+        public static ValueEnumerable<T, WhereNode<T, TPrior>> Where<T, TPrior>(in this ValueEnumerable<T, TPrior> prior, Func<T, bool> f) where TPrior : INode => new ValueEnumerable<T, WhereNode<T, TPrior>>(new WhereNode<T, TPrior>(in prior.Node, f));
+        public static ValueEnumerable<T, WhereNode<T, EnumerableNode<T>>> Where<T>(this IEnumerable<T> inner, Func<T, bool> f) => inner.OfEnumerable().Where(f);
 
-        public static ValueEnumerable<T, FilterInNode<T, TPrior>> Where<T, TPrior>(in this ValueEnumerable<T, TPrior> prior, InFunc<T, bool> f) where TPrior : INode => new ValueEnumerable<T, FilterInNode<T, TPrior>>(new FilterInNode<T, TPrior>(in prior.Node, f));
-        public static ValueEnumerable<T, FilterInNode<T, EnumerableNode<T>>> Where<T>(this IEnumerable<T> inner, InFunc<T, bool> f) => inner.OfEnumerable().Where(f);
+        public static ValueEnumerable<T, Where_InNode<T, TPrior>> Where<T, TPrior>(in this ValueEnumerable<T, TPrior> prior, InFunc<T, bool> f) where TPrior : INode => new ValueEnumerable<T, Where_InNode<T, TPrior>>(new Where_InNode<T, TPrior>(in prior.Node, f));
+        public static ValueEnumerable<T, Where_InNode<T, EnumerableNode<T>>> Where<T>(this IEnumerable<T> inner, InFunc<T, bool> f) => inner.OfEnumerable().Where(f);
 
         public static List<T> ToList<T, Inner>(in this ValueEnumerable<T, Inner> inner) where Inner : INode =>
             inner.Node.CheckForOptimization<T, Optimizations.ToList_XXX, List<T>>(new Optimizations.ToList_XXX(), out var list) switch
