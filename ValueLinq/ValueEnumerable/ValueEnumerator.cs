@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 namespace Cistern.ValueLinq.ValueEnumerable
 {
     public struct ValueEnumerator<T>
+        : IDisposable
     {
         private FastEnumerator<T> _enumerator;
         private T _current;

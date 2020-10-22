@@ -31,7 +31,12 @@ namespace Cistern.ValueLinq.Containers
     {
         private readonly IEnumerable<T> _enumerable;
 
-        public EnumerableNode(IEnumerable<T> enumerable) => _enumerable = enumerable;
+        public EnumerableNode(IEnumerable<T> source)
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+            _enumerable = source;
+        }
 
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) =>
             _enumerable switch

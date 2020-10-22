@@ -20,7 +20,7 @@ namespace Cistern.ValueLinq.ValueEnumerable
 
         public bool MoveNext() => _enumerator.TryGetNext(out _current);
 
-        public void Reset() => throw new NotImplementedException();
+        public void Reset() => throw new NotSupportedException();
     }
 
     struct FastEnumeratorToEnumeratorNode

@@ -35,7 +35,13 @@ namespace Cistern.ValueLinq.Nodes
         private NodeT _nodeT;
         private Func<T, U> _map;
 
-        public MapNode(in NodeT nodeT, Func<T, U> map) => (_nodeT, _map) = (nodeT, map);
+        public MapNode(in NodeT nodeT, Func<T, U> selector)
+        {
+            if (selector == null)
+                throw new ArgumentNullException("selector");
+
+            (_nodeT, _map) = (nodeT, selector);
+        }
 
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
 
