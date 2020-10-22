@@ -19,9 +19,6 @@ namespace Cistern.ValueLinq
         public static ValueEnumerable<U, Select_InNode<T, U, TPrior>> Select<T, U, TPrior>(in this ValueEnumerable<T, TPrior> prior, InFunc<T, U> f) where TPrior : INode => new ValueEnumerable<U, Select_InNode<T, U, TPrior>>(new Select_InNode<T, U, TPrior>(in prior.Node, f));
         public static ValueEnumerable<U, Select_InNode<T, U, EnumerableNode<T>>> Select<T, U>(this IEnumerable<T> inner, InFunc<T, U> f) => inner.OfEnumerable().Select(f);
 
-        public static ValueEnumerable<U, MapInOutNode<T, U, TPrior>> Select<T, U, TPrior>(in this ValueEnumerable<T, TPrior> prior, InOutFunc<T, U> f) where TPrior : INode => new ValueEnumerable<U, MapInOutNode<T, U, TPrior>>(new MapInOutNode<T, U, TPrior>(in prior.Node, f));
-        public static ValueEnumerable<U, MapInOutNode<T, U, EnumerableNode<T>>> Select<T, U>(this IEnumerable<T> inner, InOutFunc<T, U> f) => inner.OfEnumerable().Select(f);
-
         public static ValueEnumerable<U, SelectiNode<T, U, TPrior>> Select<T, U, TPrior>(in this ValueEnumerable<T, TPrior> prior, Func<T, int, U> f) where TPrior : INode => new ValueEnumerable<U, SelectiNode<T, U, TPrior>>(new SelectiNode<T, U, TPrior>(in prior.Node, f));
         public static ValueEnumerable<U, SelectiNode<T, U, EnumerableNode<T>>> Select<T, U>(this IEnumerable<T> inner, Func<T, int, U> f) => inner.OfEnumerable().Select(f);
 
