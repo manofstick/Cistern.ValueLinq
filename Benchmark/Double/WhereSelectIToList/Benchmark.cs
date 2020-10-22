@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Cistern.Benchmarks.Double.Sum
+namespace Cistern.Benchmarks.Double.WhereSelectIToList
 {
     [MemoryDiagnoser]
     public partial class Benchmark
@@ -11,11 +11,9 @@ namespace Cistern.Benchmarks.Double.Sum
         IEnumerable<double> _double;
 
         [Params(0, 1, 10, 100, 1000, 1000000)]
-        //[Params(1000000)]
         public int Length { get; set; } = 0;
 
         [Params(ContainerTypes.Array, ContainerTypes.Enumerable, ContainerTypes.List)]
-        //[Params(ContainerTypes.Enumerable)]
         public ContainerTypes ContainerType { get; set; } = ContainerTypes.Enumerable;
 
         [GlobalSetup]
@@ -47,24 +45,17 @@ namespace Cistern.Benchmarks.Double.Sum
             check.SetupData();
 
             var baseline = check.Linq();
-
-            var baseline_foreach = check.Linq_Foreach();
-            if (baseline != baseline_foreach) throw new Exception();
-
 #if LINQAF
             var linqaf = check.LinqAF();
-            if (baseline != linqaf) throw new Exception();
+            if (!Enumerable.SequenceEqual(baseline, linqaf)) throw new Exception();
 #endif
 
             var cisternvaluelinq = check.CisternValueLinq();
-            if (baseline != cisternvaluelinq) throw new Exception();
-
-            var cisternvaluelinq_foreach = check.CisternValueLinq_Foreach();
-            if (baseline != cisternvaluelinq_foreach) throw new Exception();
+            if (!Enumerable.SequenceEqual(baseline, cisternvaluelinq)) throw new Exception();
 
 #if CISTERNLINQ
             var cisternlinq = check.CisternLinq();
-            if (cisternlinq != baseline) throw new Exception();
+            if (!Enumerable.SequenceEqual(cisternlinq, baseline)) throw new Exception();
 #endif
 
             // check.HyperLinq(); // doesn't support Aggregate

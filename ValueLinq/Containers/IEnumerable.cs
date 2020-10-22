@@ -1,5 +1,4 @@
-﻿using Cistern.ValueLinq.Nodes;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace Cistern.ValueLinq.Containers
@@ -37,33 +36,41 @@ namespace Cistern.ValueLinq.Containers
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) =>
             _enumerable switch
             {
-                List<T> list => EnumerableNode.AsList<T, Head, Tail, CreationType>(list, ref nodes),
-                T[] array    => EnumerableNode.AsArray<T, Head, Tail, CreationType>(array, ref nodes),
-                _            => EnumerableNode.AsEnumerator<T, Head, Tail, CreationType>(_enumerable.GetEnumerator(), ref nodes)
+                T[] { Length : 0 } => EmptyNode.Create<T, Head, Tail, CreationType>(ref nodes),
+                T[] array          => ArrayNode.Create<T, Head, Tail, CreationType>(array, ref nodes),
+                List<T> list       => ListNode.Create<T, Head, Tail, CreationType>(list, ref nodes),
+                _                  => EnumerableNode.Create<T, Head, Tail, CreationType>(_enumerable.GetEnumerator(), ref nodes)
             };
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
 
         bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result)
         {
-            if (typeof(TRequest) == typeof(Optimizations.ToListSelect<T, TOuter>))
+            if (typeof(TRequest) == typeof(Optimizations.ToList_Select_XXX<T, TOuter>))
             {
-                var toListSelect = (Optimizations.ToListSelect<T, TOuter>)(object)request;
+                var toListSelect = (Optimizations.ToList_Select_XXX<T, TOuter>)(object)request;
                 result = (TResult)(object)ToList(toListSelect.Map);
                 return true;
             }
 
-            if (typeof(TRequest) == typeof(Optimizations.ToListWhere<T>))
+            if (typeof(TRequest) == typeof(Optimizations.ToList_Where_XXX<T>))
             {
-                var toListWhere = (Optimizations.ToListWhere<T>)(object)request;
+                var toListWhere = (Optimizations.ToList_Where_XXX<T>)(object)request;
                 result = (TResult)(object)ToList(toListWhere.Filter);
                 return true;
             }
 
-            if (typeof(TRequest) == typeof(Optimizations.ToListSelectWhere<T, TOuter>))
+            if (typeof(TRequest) == typeof(Optimizations.ToList_Where_Select_XXX<T, TOuter>))
             {
-                var toListSelectWhere = (Optimizations.ToListSelectWhere<T, TOuter>)(object)request;
+                var toListSelectWhere = (Optimizations.ToList_Where_Select_XXX<T, TOuter>)(object)request;
                 result = (TResult)(object)ToList(toListSelectWhere.Map, toListSelectWhere.Filter);
+                return true;
+            }
+
+            if (typeof(TRequest) == typeof(Optimizations.ToList_Select_Where_XXX<T, TOuter>))
+            {
+                var toListSelectWhere = (Optimizations.ToList_Select_Where_XXX<T, TOuter>)(object)request;
+                result = (TResult)(object)ToList(toListSelectWhere.Filter, toListSelectWhere.Map);
                 return true;
             }
 
@@ -75,8 +82,8 @@ namespace Cistern.ValueLinq.Containers
         {
             return _enumerable switch
             {
-                List<T> list => EnumerableNode.ToList(list, map),
-                T[] array    => EnumerableNode.ToList(array, map),
+                T[] array    => ArrayNode.ToList(array, map),
+                List<T> list => ListNode.ToList(list, map),
                 _            => EnumerableNode.ToList(_enumerable, map),
             };
         }
@@ -85,9 +92,19 @@ namespace Cistern.ValueLinq.Containers
         {
             return _enumerable switch
             {
-                List<T> list => EnumerableNode.ToList(list, map, filter),
-                T[] array    => EnumerableNode.ToList(array, map, filter),
+                T[] array    => ArrayNode.ToList(array, map, filter),
+                List<T> list => ListNode.ToList(list, map, filter),
                 _            => EnumerableNode.ToList(_enumerable, map, filter),
+            };
+        }
+
+        private readonly List<TOuter> ToList<TOuter>(Func<T, bool> filter, Func<T, TOuter> map)
+        {
+            return _enumerable switch
+            {
+                T[] array    => ArrayNode.ToList(array, filter, map),
+                List<T> list => ListNode.ToList(list, filter, map),
+                _            => EnumerableNode.ToList(_enumerable, filter, map),
             };
         }
 
@@ -95,8 +112,8 @@ namespace Cistern.ValueLinq.Containers
         {
             return _enumerable switch
             {
-                List<T> list => EnumerableNode.ToList(list, filter),
-                T[] array    => EnumerableNode.ToList(array, filter),
+                T[] array    => ArrayNode.ToList(array, filter),
+                List<T> list => ListNode.ToList(list, filter),
                 _            => EnumerableNode.ToList(_enumerable, filter),
             };
         }
@@ -104,15 +121,7 @@ namespace Cistern.ValueLinq.Containers
 
     static class EnumerableNode
     {
-        public static CreationType AsArray<T, Head, Tail, CreationType>(T[] array, ref Nodes<Head, Tail> nodes)
-            where Head : INode
-            where Tail : INodes
-        {
-            var enumerator = new ArrayFastEnumerator<T>(array);
-            return nodes.CreateObject<CreationType, T, ArrayFastEnumerator<T>>(ref enumerator);
-        }
-
-        public static CreationType AsEnumerator<T, Head, Tail, CreationType>(IEnumerator<T> enumerator, ref Nodes<Head, Tail> nodes)
+        public static CreationType Create<T, Head, Tail, CreationType>(IEnumerator<T> enumerator, ref Nodes<Head, Tail> nodes)
             where Head : INode
             where Tail : INodes
         {
@@ -120,36 +129,11 @@ namespace Cistern.ValueLinq.Containers
             return nodes.CreateObject<CreationType, T, EnumerableFastEnumerator<T>>(ref e);
         }
 
-        public static CreationType AsList<T, Head, Tail, CreationType>(List<T> list, ref Nodes<Head, Tail> nodes)
-            where Head : INode
-            where Tail : INodes
-        {
-            var enumerator = new ListFastEnumerator<T>(list);
-            return nodes.CreateObject<CreationType, T, ListFastEnumerator<T>>(ref enumerator);
-        }
-
-
         public static List<U> ToList<T,U>(IEnumerable<T> enumerable, Func<T, U> map)
         {
             var newList = new List<U>();
             foreach (var item in enumerable)
                 newList.Add(map(item));
-            return newList;
-        }
-
-        public static List<U> ToList<T, U>(T[] array, Func<T, U> map)
-        {
-            var newList = new List<U>(array.Length);
-            for(var i=0; i < array.Length; ++i)
-                newList.Add(map(array[i]));
-            return newList;
-        }
-
-        public static List<U> ToList<T, U>(List<T> list, Func<T, U> map)
-        {
-            var newList = new List<U>(list.Count);
-            for(var i=0; i < list.Count; ++i)
-                newList.Add(map(list[i]));
             return newList;
         }
 
@@ -165,26 +149,13 @@ namespace Cistern.ValueLinq.Containers
             return newList;
         }
 
-        public static List<U> ToList<T, U>(T[] array, Func<T, U> map, Func<U, bool> filter)
+        public static List<U> ToList<T, U>(IEnumerable<T> enumerable, Func<T, bool> filter, Func<T, U> map)
         {
             var newList = new List<U>();
-            for (var i = 0; i < array.Length; ++i)
+            foreach (var item in enumerable)
             {
-                var mapped = map(array[i]);
-                if (filter(mapped))
-                    newList.Add(mapped);
-            }
-            return newList;
-        }
-
-        public static List<U> ToList<T, U>(List<T> list, Func<T, U> map, Func<U, bool> filter)
-        {
-            var newList = new List<U>();
-            for (var i = 0; i < list.Count; ++i)
-            {
-                var mapped = map(list[i]);
-                if (filter(mapped))
-                    newList.Add(mapped);
+                if (filter(item))
+                    newList.Add(map(item));
             }
             return newList;
         }
@@ -195,24 +166,6 @@ namespace Cistern.ValueLinq.Containers
             foreach (var item in enumerable)
                 if (map(item))
                     newList.Add(item);
-            return newList;
-        }
-
-        public static List<T> ToList<T>(T[] array, Func<T, bool> map)
-        {
-            var newList = new List<T>();
-            foreach (var item in array)
-                if (map(item))
-                    newList.Add(item);
-            return newList;
-        }
-
-        public static List<T> ToList<T>(List<T> list, Func<T, bool> map)
-        {
-            var newList = new List<T>();
-            for (var i = 0; i < list.Count; ++i)
-                if (map(list[i]))
-                    newList.Add(list[i]);
             return newList;
         }
     }

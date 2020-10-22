@@ -1,13 +1,14 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace Cistern.ValueLinq.ValueEnumerable
 {
     public struct ValueEnumerator<T>
     {
-        private IFastEnumerator<T> _enumerator;
+        private FastEnumerator<T> _enumerator;
         private T _current;
 
-        internal ValueEnumerator(IFastEnumerator<T> enumerator) => (_enumerator, _current) = (enumerator, default);
+        internal ValueEnumerator(FastEnumerator<T> enumerator) => (_enumerator, _current) = (enumerator, default);
 
         public T Current => _current;
 
@@ -22,7 +23,7 @@ namespace Cistern.ValueLinq.ValueEnumerable
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> _) => throw new InvalidOperationException();
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
-                => (CreationType)(object)(new ValueEnumerator<EnumeratorElement>(enumerator));
+                => (CreationType)(object)(new ValueEnumerator<EnumeratorElement>(new FastEnumerator<Enumerator, EnumeratorElement>(enumerator)));
 
         bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
     }

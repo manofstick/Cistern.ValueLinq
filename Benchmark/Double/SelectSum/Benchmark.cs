@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Cistern.Benchmarks.Double.Sum
+namespace Cistern.Benchmarks.Double.SelectSum
 {
     [MemoryDiagnoser]
     public partial class Benchmark
@@ -54,6 +54,9 @@ namespace Cistern.Benchmarks.Double.Sum
 #if LINQAF
             var linqaf = check.LinqAF();
             if (baseline != linqaf) throw new Exception();
+
+            var linqaf_foreach = check.LinqAF_Foreach();
+            if (baseline != linqaf_foreach) throw new Exception();
 #endif
 
             var cisternvaluelinq = check.CisternValueLinq();

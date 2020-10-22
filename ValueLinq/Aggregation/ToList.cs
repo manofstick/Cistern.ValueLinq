@@ -21,7 +21,8 @@ namespace Cistern.ValueLinq.Aggregation
                 enumerator.Dispose();
             }
         }
-        private static void PopulateList<EnumeratorElement, Enumerator>(ref Enumerator enumerator, List<EnumeratorElement> list) where Enumerator : IFastEnumerator<EnumeratorElement>
+        private static void PopulateList<EnumeratorElement, Enumerator>(ref Enumerator enumerator, List<EnumeratorElement> list)
+            where Enumerator : IFastEnumerator<EnumeratorElement>
         {
             while (enumerator.TryGetNext(out var current))
                 list.Add(current);

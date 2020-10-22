@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Cistern.ValueLinq.ValueEnumerable
 {
-    class FastEnumeratorToEnumerator<T, TEnumerator>
+    sealed class FastEnumeratorToEnumerator<T, TEnumerator>
         : IEnumerator<T>
         where TEnumerator : IFastEnumerator<T>
     {

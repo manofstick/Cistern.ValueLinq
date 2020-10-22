@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace Cistern.ValueLinq
 {
-    public static class Enumerable
+    public static partial class Enumerable
     {
         public static ValueEnumerable<T, EnumerableNode<T>> OfEnumerable<T>(this IEnumerable<T> enumerable) => new ValueEnumerable<T, EnumerableNode<T>>(new EnumerableNode<T>(enumerable));
         public static ValueEnumerable<T, ArrayNode<T>> OfArray<T>(this T[] array) => new ValueEnumerable<T, ArrayNode<T>>(new ArrayNode<T>(array));
@@ -22,6 +22,9 @@ namespace Cistern.ValueLinq
         public static ValueEnumerable<U, MapInOutNode<T, U, TPrior>> Select<T, U, TPrior>(in this ValueEnumerable<T, TPrior> prior, InOutFunc<T, U> f) where TPrior : INode => new ValueEnumerable<U, MapInOutNode<T, U, TPrior>>(new MapInOutNode<T, U, TPrior>(in prior.Node, f));
         public static ValueEnumerable<U, MapInOutNode<T, U, EnumerableNode<T>>> Select<T, U>(this IEnumerable<T> inner, InOutFunc<T, U> f) => inner.OfEnumerable().Select(f);
 
+        public static ValueEnumerable<U, MapiNode<T, U, TPrior>> Select<T, U, TPrior>(in this ValueEnumerable<T, TPrior> prior, Func<T, int, U> f) where TPrior : INode => new ValueEnumerable<U, MapiNode<T, U, TPrior>>(new MapiNode<T, U, TPrior>(in prior.Node, f));
+        public static ValueEnumerable<U, MapiNode<T, U, EnumerableNode<T>>> Select<T, U>(this IEnumerable<T> inner, Func<T, int, U> f) => inner.OfEnumerable().Select(f);
+
         public static ValueEnumerable<T, FilterNode<T, TPrior>> Where<T, TPrior>(in this ValueEnumerable<T, TPrior> prior, Func<T, bool> f) where TPrior : INode => new ValueEnumerable<T, FilterNode<T, TPrior>>(new FilterNode<T, TPrior>(in prior.Node, f));
         public static ValueEnumerable<T, FilterNode<T, EnumerableNode<T>>> Where<T>(this IEnumerable<T> inner, Func<T, bool> f) => inner.OfEnumerable().Where(f);
 
@@ -29,7 +32,7 @@ namespace Cistern.ValueLinq
         public static ValueEnumerable<T, FilterInNode<T, EnumerableNode<T>>> Where<T>(this IEnumerable<T> inner, InFunc<T, bool> f) => inner.OfEnumerable().Where(f);
 
         public static List<T> ToList<T, Inner>(in this ValueEnumerable<T, Inner> inner) where Inner : INode =>
-            inner.Node.CheckForOptimization<T, Optimizations.ToList, List<T>>(new Optimizations.ToList(), out var list) switch
+            inner.Node.CheckForOptimization<T, Optimizations.ToList_XXX, List<T>>(new Optimizations.ToList_XXX(), out var list) switch
             {
                 false => Nodes<List<T>>.Aggregation<Inner, ToList>(in inner.Node),
                 true => list,
