@@ -72,8 +72,13 @@ namespace Cistern.ValueLinq
         public static T Aggregation<Enumerable, Aggregator>(in Enumerable inner)
             where Enumerable : INode
             where Aggregator : INode
+                => Aggregation<Enumerable, Aggregator>(inner, default);
+
+        public static T Aggregation<Enumerable, Aggregator>(in Enumerable inner, in Aggregator aggregator)
+            where Enumerable : INode
+            where Aggregator : INode
         {
-            var nodes = new Nodes<Aggregator, NodesEnd>();
+            var nodes = new Nodes<Aggregator, NodesEnd>(aggregator, new NodesEnd());
             return inner.CreateObjectDescent<T, Aggregator, NodesEnd>(ref nodes);
         }
     }

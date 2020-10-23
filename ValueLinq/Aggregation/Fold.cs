@@ -2,13 +2,13 @@
 
 namespace Cistern.ValueLinq.Aggregation
 {
-    struct Aggregate<T, TAccumulate>
+    struct Fold<T, TAccumulate>
         : INode
     {
         private TAccumulate _seed;
         private Func<TAccumulate, T, TAccumulate> _func;
 
-        public Aggregate(TAccumulate seed, Func<TAccumulate, T, TAccumulate> func)
+        public Fold(TAccumulate seed, Func<TAccumulate, T, TAccumulate> func)
         {
             if (func == null)
                 throw new ArgumentNullException(nameof(func));

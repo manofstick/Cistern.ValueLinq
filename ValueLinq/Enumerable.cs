@@ -38,13 +38,21 @@ namespace Cistern.ValueLinq
 #if TEMP_DISABLED
         public static List<T> ToList<T>(this IEnumerable<T> inner) => new List<T>(inner);
 #endif
+        public static T Aggregate<T, Inner>(in this ValueEnumerable<T, Inner> source, Func<T, T, T> func)
+            where Inner : INode
+        {
+            var aggregate = new Reduce<T>(func);
+            return Nodes<T>.Aggregation(in source.Node, in aggregate);
+        }
+        public static TSource Aggregate<TSource>(this IEnumerable<TSource> source, Func<TSource, TSource, TSource> func) => source.OfEnumerable().Aggregate(func);
+
         public static TAccumulate Aggregate<T, TAccumulate, Inner>(in this ValueEnumerable<T, Inner> source, TAccumulate seed, Func<TAccumulate, T, TAccumulate> func)
             where Inner : INode
         {
-            var aggregate = new Aggregate<T, TAccumulate>(seed, func);
-            var nodes = new Nodes<Aggregate<T, TAccumulate>, NodesEnd>(in aggregate, new NodesEnd());
-            return source.Node.CreateObjectDescent<TAccumulate, Aggregate<T, TAccumulate>, NodesEnd>(ref nodes);
+            var aggregate = new Fold<T, TAccumulate>(seed, func);
+            return Nodes<TAccumulate>.Aggregation(in source.Node, in aggregate);
         }
+        public static TAccumulate Aggregate<TSource, TAccumulate>(this IEnumerable<TSource> source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func) => source.OfEnumerable().Aggregate(seed, func);
 
         public static int Sum(this IEnumerable<int> inner) => inner.OfEnumerable().Sum();
         public static int Sum<Inner>(in this ValueEnumerable<int, Inner> inner) where Inner : INode => Nodes<int>.Aggregation<Inner, SumInt>(in inner.Node);
