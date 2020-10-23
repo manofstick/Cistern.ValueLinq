@@ -44,6 +44,7 @@ namespace Cistern.ValueLinq.Containers
                 T[] { Length : 0 } => EmptyNode.Create<T, Head, Tail, CreationType>(ref nodes),
                 T[] array          => ArrayNode.Create<T, Head, Tail, CreationType>(array, ref nodes),
                 List<T> list       => ListNode.Create<T, Head, Tail, CreationType>(list, ref nodes),
+                INode node         => node.CreateObjectDescent<CreationType, Head, Tail>(ref nodes),
                 _                  => EnumerableNode.Create<T, Head, Tail, CreationType>(_enumerable.GetEnumerator(), ref nodes)
             };
 
