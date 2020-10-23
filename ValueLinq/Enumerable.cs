@@ -87,6 +87,14 @@ namespace Cistern.ValueLinq
                 true => list,
             };
 
+        public static T Last<T, Inner>(in this ValueEnumerable<T, Inner> inner) where Inner : INode =>
+            inner.Node.CheckForOptimization<T, Optimizations.Last, T>(new Optimizations.Last(), out var last) switch
+            {
+                false => Nodes<T>.Aggregation<Inner, Last<T>>(in inner.Node),
+                true => last,
+            };
+        public static TSource Last<TSource>(this IEnumerable<TSource> source) => source.OfEnumerable().Last();
+
 #if TEMP_DISABLED
         public static List<T> ToList<T>(this IEnumerable<T> inner) => new List<T>(inner);
 #endif

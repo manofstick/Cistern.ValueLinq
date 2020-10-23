@@ -9,23 +9,23 @@ namespace Cistern.ValueLinq.Aggregation
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator enumerator)
         {
-            checked
+            try
             {
-                try
-                {
-                    var initialSize = enumerator.InitialSize;
-                    if (initialSize.HasValue)
-                        return (CreationType)(object)initialSize.Value;
+                var initialSize = enumerator.InitialSize;
+                if (initialSize.HasValue)
+                    return (CreationType)(object)initialSize.Value;
 
-                    var count = 0;
-                    while (enumerator.TryGetNext(out var _))
-                        ++count; ;
-                    return (CreationType)(object)count;
-                }
-                finally
+                var count = 0;
+                checked
                 {
-                    enumerator.Dispose();
+                    while (enumerator.TryGetNext(out var _))
+                        ++count;
                 }
+                return (CreationType)(object)count;
+            }
+            finally
+            {
+                enumerator.Dispose();
             }
         }
 

@@ -19,24 +19,21 @@ namespace Cistern.ValueLinq.Aggregation
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator enumerator)
         {
-            checked
+            try
             {
-                try
-                {
-                    var f = (Func<EnumeratorElement, EnumeratorElement, EnumeratorElement>)(object)_func;
+                var f = (Func<EnumeratorElement, EnumeratorElement, EnumeratorElement>)(object)_func;
 
-                    if (!enumerator.TryGetNext(out var state))
-                        throw new InvalidOperationException();
+                if (!enumerator.TryGetNext(out var state))
+                    throw new InvalidOperationException();
 
-                    while (enumerator.TryGetNext(out var current))
-                        state = f(state, current);
+                while (enumerator.TryGetNext(out var current))
+                    state = f(state, current);
 
-                    return (CreationType)(object)state;
-                }
-                finally
-                {
-                    enumerator.Dispose();
-                }
+                return (CreationType)(object)state;
+            }
+            finally
+            {
+                enumerator.Dispose();
             }
         }
 

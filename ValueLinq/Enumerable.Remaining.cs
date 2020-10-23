@@ -67,7 +67,7 @@ namespace Cistern.ValueLinq
         public static IEnumerable<TResult> Join<TOuter, TInner, TKey, TResult>(this IEnumerable<TOuter> outer, IEnumerable<TInner> inner, Func<TOuter, TKey> outerKeySelector, Func<TInner, TKey> innerKeySelector, Func<TOuter, TInner, TResult> resultSelector) => System.Linq.Enumerable.Join<TOuter, TInner, TKey, TResult>(outer, inner, outerKeySelector, innerKeySelector, resultSelector);
         public static IEnumerable<TResult> Join<TOuter, TInner, TKey, TResult>(this IEnumerable<TOuter> outer, IEnumerable<TInner> inner, Func<TOuter, TKey> outerKeySelector, Func<TInner, TKey> innerKeySelector, Func<TOuter, TInner, TResult> resultSelector, IEqualityComparer<TKey> comparer) => System.Linq.Enumerable.Join<TOuter, TInner, TKey, TResult>(outer, inner, outerKeySelector, innerKeySelector, resultSelector, comparer);
         public static TSource Last<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) => System.Linq.Enumerable.Last<TSource>(source, predicate);
-        public static TSource Last<TSource>(this IEnumerable<TSource> source) => System.Linq.Enumerable.Last<TSource>(source);
+//        public static TSource Last<TSource>(this IEnumerable<TSource> source) => System.Linq.Enumerable.Last<TSource>(source);
         public static TSource LastOrDefault<TSource>(this IEnumerable<TSource> source) => System.Linq.Enumerable.LastOrDefault<TSource>(source);
         public static TSource LastOrDefault<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) => System.Linq.Enumerable.LastOrDefault<TSource>(source, predicate);
         public static long LongCount<TSource>(this IEnumerable<TSource> source) => System.Linq.Enumerable.LongCount<TSource>(source);
