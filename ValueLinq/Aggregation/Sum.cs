@@ -5,8 +5,9 @@ namespace Cistern.ValueLinq.Aggregation
     struct SumInt
         : INode
     {
-        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => throw new NotImplementedException();
-        
+        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+            => Impl.CreateObjectDescent<CreationType>();
+
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator enumerator)
         {
             checked
@@ -25,7 +26,8 @@ namespace Cistern.ValueLinq.Aggregation
             }
         }
 
-        bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
+        bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result)
+            => Impl.CheckForOptimization(out result);
     }
     struct SumDouble
         : INode
