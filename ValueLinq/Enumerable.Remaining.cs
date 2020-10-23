@@ -7,8 +7,8 @@ namespace Cistern.ValueLinq
     {
 //        public static TSource Aggregate<TSource>(this IEnumerable<TSource> source, Func<TSource, TSource, TSource> func) => System.Linq.Enumerable.Aggregate<TSource>(source, func);
 //        public static TAccumulate Aggregate<TSource, TAccumulate>(this IEnumerable<TSource> source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func) => System.Linq.Enumerable.Aggregate<TSource, TAccumulate>(source, seed, func);
-        public static TResult Aggregate<TSource, TAccumulate, TResult>(this IEnumerable<TSource> source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func, Func<TAccumulate, TResult> resultSelector) => System.Linq.Enumerable.Aggregate<TSource, TAccumulate, TResult>(source, seed, func, resultSelector);
-        public static bool All<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) => System.Linq.Enumerable.All<TSource>(source, predicate);
+//        public static TResult Aggregate<TSource, TAccumulate, TResult>(this IEnumerable<TSource> source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func, Func<TAccumulate, TResult> resultSelector) => System.Linq.Enumerable.Aggregate<TSource, TAccumulate, TResult>(source, seed, func, resultSelector);
+//        public static bool All<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) => System.Linq.Enumerable.All<TSource>(source, predicate);
         public static bool Any<TSource>(this IEnumerable<TSource> source) => System.Linq.Enumerable.Any<TSource>(source);
         public static bool Any<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) => System.Linq.Enumerable.Any<TSource>(source, predicate);
         public static IEnumerable<TSource> Append<TSource>(this IEnumerable<TSource> source, TSource element) => System.Linq.Enumerable.Append<TSource>(source, element);
