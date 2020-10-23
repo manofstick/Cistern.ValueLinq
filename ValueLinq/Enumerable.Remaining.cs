@@ -123,7 +123,7 @@ namespace Cistern.ValueLinq
         public static System.Linq.IOrderedEnumerable<TSource> OrderByDescending<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, IComparer<TKey> comparer) => System.Linq.Enumerable.OrderByDescending<TSource, TKey>(source, keySelector, comparer);
         public static IEnumerable<TSource> Prepend<TSource>(this IEnumerable<TSource> source, TSource element) => System.Linq.Enumerable.Prepend<TSource>(source, element);
 //        public static IEnumerable<int> Range(int start, int count) => System.Linq.Enumerable.Range(start, count);
-        public static IEnumerable<TResult> Repeat<TResult>(TResult element, int count) => System.Linq.Enumerable.Repeat(element, count);
+//        public static IEnumerable<TResult> Repeat<TResult>(TResult element, int count) => System.Linq.Enumerable.Repeat(element, count);
         public static IEnumerable<TSource> Reverse<TSource>(this IEnumerable<TSource> source) => System.Linq.Enumerable.Reverse<TSource>(source);
 //        public static IEnumerable<TResult> Select<TSource, TResult>(this IEnumerable<TSource> source, Func<TSource, TResult> selector) => System.Linq.Enumerable.Select<TSource, TResult>(source, selector);
 //        public static IEnumerable<TResult> Select<TSource, TResult>(this IEnumerable<TSource> source, Func<TSource, int, TResult> selector) => System.Linq.Enumerable.Select<TSource, TResult>(source, selector);

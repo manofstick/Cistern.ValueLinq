@@ -2,9 +2,13 @@
 {
     public interface IFastEnumerator<T>
     {
-        bool TryGetNext(out T current);
-        void Dispose();
+        /// <summary>
+        /// Valid prior to iterating, undefined afterwards
+        /// </summary>
         int? InitialSize { get; }
+        bool TryGetNext(out T current);
+
+        void Dispose();
     }
 
     abstract class FastEnumerator<EnumeratorElement>
