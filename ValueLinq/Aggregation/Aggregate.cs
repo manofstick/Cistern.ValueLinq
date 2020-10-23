@@ -8,7 +8,13 @@ namespace Cistern.ValueLinq.Aggregation
         private TAccumulate _seed;
         private Func<TAccumulate, T, TAccumulate> _func;
 
-        public Aggregate(TAccumulate seed, Func<TAccumulate, T, TAccumulate> func) => (_seed, _func) = (seed, func);
+        public Aggregate(TAccumulate seed, Func<TAccumulate, T, TAccumulate> func)
+        {
+            if (func == null)
+                throw new ArgumentNullException(nameof(func));
+
+            (_seed, _func) = (seed, func);
+        }
 
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => throw new NotImplementedException();
 

@@ -362,7 +362,7 @@ namespace Cistern.ValueLinq.Tests
             Assert.Equal(expected, covariantOrdered);
         }
 
-        [Fact]
+        [Fact(Skip ="CISTERN.VALUELINQ: Not available")]
         public void CanObtainFromCovariantIOrderedQueryable()
         {
             // If an ordered queryable is cast covariantly and then has ThenBy() called on it,

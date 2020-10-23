@@ -157,7 +157,7 @@ namespace Cistern.ValueLinq.Tests
                 {
                     for (int k = 0; k < EnumerableCount; k++) // k is how much bits we shift by, and also the item that gets appended/prepended.
                     {
-                        var nextRange = Enumerable.Range(k, 1);
+                        IEnumerable<int> nextRange = Enumerable.Range(k, 1);
                         bool prepend = ((i >> k) & 1) != 0;
                         bool forceCollection = ((j >> k) & 1) != 0;
 
