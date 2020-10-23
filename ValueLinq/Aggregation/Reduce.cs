@@ -7,13 +7,7 @@ namespace Cistern.ValueLinq.Aggregation
     {
         private Func<T, T, T> _func;
 
-        public Reduce(Func<T, T, T> func)
-        {
-            if (func == null)
-                throw new ArgumentNullException(nameof(func));
-
-            _func = func;
-        }
+        public Reduce(Func<T, T, T> func) => _func = func;
 
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
             => Impl.CreateObjectDescent<CreationType>();

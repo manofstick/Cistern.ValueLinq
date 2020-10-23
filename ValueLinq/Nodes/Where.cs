@@ -33,13 +33,7 @@ namespace Cistern.ValueLinq.Nodes
         private NodeT _nodeT;
         private Func<T, bool> _filter;
 
-        public WhereNode(in NodeT nodeT, Func<T, bool> predicate)
-        {
-            if (predicate == null)
-                throw new ArgumentNullException(nameof(predicate));
-
-            (_nodeT, _filter) = (nodeT, predicate);
-        }
+        public WhereNode(in NodeT nodeT, Func<T, bool> predicate) => (_nodeT, _filter) = (nodeT, predicate);
 
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
             => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
