@@ -9,8 +9,8 @@ namespace Cistern.ValueLinq
 //        public static TAccumulate Aggregate<TSource, TAccumulate>(this IEnumerable<TSource> source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func) => System.Linq.Enumerable.Aggregate<TSource, TAccumulate>(source, seed, func);
 //        public static TResult Aggregate<TSource, TAccumulate, TResult>(this IEnumerable<TSource> source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func, Func<TAccumulate, TResult> resultSelector) => System.Linq.Enumerable.Aggregate<TSource, TAccumulate, TResult>(source, seed, func, resultSelector);
 //        public static bool All<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) => System.Linq.Enumerable.All<TSource>(source, predicate);
-        public static bool Any<TSource>(this IEnumerable<TSource> source) => System.Linq.Enumerable.Any<TSource>(source);
-        public static bool Any<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) => System.Linq.Enumerable.Any<TSource>(source, predicate);
+//        public static bool Any<TSource>(this IEnumerable<TSource> source) => System.Linq.Enumerable.Any<TSource>(source);
+//        public static bool Any<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) => System.Linq.Enumerable.Any<TSource>(source, predicate);
         public static IEnumerable<TSource> Append<TSource>(this IEnumerable<TSource> source, TSource element) => System.Linq.Enumerable.Append<TSource>(source, element);
         public static IEnumerable<TSource> AsEnumerable<TSource>(this IEnumerable<TSource> source) => System.Linq.Enumerable.AsEnumerable<TSource>(source);
         public static double Average<TSource>(this IEnumerable<TSource> source, Func<TSource, int> selector) => System.Linq.Enumerable.Average<TSource>(source, selector);
