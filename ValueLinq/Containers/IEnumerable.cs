@@ -12,7 +12,7 @@ namespace Cistern.ValueLinq.Containers
 
         public int? InitialSize => null;
 
-        public void Dispose() { }
+        public void Dispose() { _enumerator.Dispose(); }
 
         public bool TryGetNext(out T current)
         {
