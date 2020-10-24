@@ -32,9 +32,11 @@ namespace Cistern.ValueLinq.Aggregation
             static List<EnumeratorElement> DoToList(ref Enumerator enumerator)
             {
                 var list =
-                    enumerator.InitialSize.HasValue
-                        ? new List<EnumeratorElement>(enumerator.InitialSize.Value)
-                        : new List<EnumeratorElement>();
+                    enumerator.InitialSize switch
+                    {
+                        (_, var size) => new List<EnumeratorElement>(size),
+                        _ => new List<EnumeratorElement>()
+                    };
 
                 while (enumerator.TryGetNext(out var current))
                     list.Add(current);

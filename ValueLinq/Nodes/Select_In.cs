@@ -9,7 +9,12 @@
 
         public Select_InNodeEnumerator(in TInEnumerator enumerator, InFunc<TIn, TOut> map) => (_enumerator, _map) = (enumerator, map);
 
-        public int? InitialSize => _enumerator.InitialSize;
+        public (bool, int)? InitialSize =>
+            _enumerator.InitialSize switch
+            {
+                null => null,
+                (_, var size) => (false, size)
+            };
 
         public void Dispose() => _enumerator.Dispose();
 

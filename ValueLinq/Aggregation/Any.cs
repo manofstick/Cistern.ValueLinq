@@ -16,9 +16,12 @@ namespace Cistern.ValueLinq.Aggregation
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator enumerator) =>
             (CreationType)(object)(
-                _maybePredicate == null
-                    ? Impl.Any<EnumeratorElement, Enumerator>(ref enumerator)
-                    : Impl.Any(ref enumerator, (Func<EnumeratorElement, bool>)(object)_maybePredicate));
+                (enumerator.InitialSize, _maybePredicate) switch
+                {
+                    ((_, 0), _) => false,
+                    (_, null) => Impl.Any<EnumeratorElement, Enumerator>(ref enumerator),
+                    (_, var predicate) => Impl.Any(ref enumerator, (Func<EnumeratorElement, bool>)(object)predicate)
+                });
 
         bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result)
             => Impl.CheckForOptimization(out result);

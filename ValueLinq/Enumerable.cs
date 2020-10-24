@@ -168,10 +168,9 @@ namespace Cistern.ValueLinq
         public static double Sum(this IEnumerable<double> inner) => inner.OfEnumerable().Sum();
         public static double Sum<Inner>(in this ValueEnumerable<double, Inner> inner) where Inner : INode => Nodes<double>.Aggregation<Inner, SumDouble>(in inner.Node);
 
-#if TEMP_DISABLED
         public static int Count<T>(this IEnumerable<T> inner) => inner.OfEnumerable().Count();
-#endif
         public static int Count<T, Inner>(in this ValueEnumerable<T, Inner> inner) where Inner : INode => Nodes<int>.Aggregation<Inner, Count>(in inner.Node);
+
         public static ValueEnumerable<T, EmptyNode<T>> Empty<T>() => new ValueEnumerable<T, EmptyNode<T>>(new EmptyNode<T>());
 
         public static ValueEnumerable<int, RangeNode> Range(int start, int count) => new ValueEnumerable<int, RangeNode>(new RangeNode(start, count));

@@ -7,7 +7,7 @@ namespace Cistern.ValueLinq
         /// <summary>
         /// Valid prior to iterating, undefined afterwards
         /// </summary>
-        int? InitialSize { get; }
+        (bool NoSelect, int Count)? InitialSize { get; }
         bool TryGetNext(out T current);
 
         void Dispose();

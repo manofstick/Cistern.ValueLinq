@@ -11,7 +11,7 @@ namespace Cistern.ValueLinq.Containers
 
         public ArrayFastEnumerator(T[] array) => (_array, _idx) = (array, -1);
 
-        public int? InitialSize => _array.Length;
+        public (bool, int)? InitialSize => (true, _array.Length);
 
         public void Dispose() { }
 

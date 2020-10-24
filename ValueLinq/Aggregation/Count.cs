@@ -20,19 +20,22 @@
         {
             try
             {
-                return DoCount(enumerator);
+                return DoCount(ref enumerator);
             }
             finally
             {
                 enumerator.Dispose();
             }
 
-            static int DoCount(Enumerator enumerator)
-            {
-                var initialSize = enumerator.InitialSize;
-                if (initialSize.HasValue)
-                    return initialSize.Value;
+            static int DoCount(ref Enumerator enumerator) =>
+                enumerator.InitialSize switch
+                {
+                    (NoSelect:true, var size) => size,
+                    _ => IterateElements(ref enumerator)
+                };
 
+            static int IterateElements(ref Enumerator enumerator)
+            { 
                 var count = 0;
                 checked
                 {

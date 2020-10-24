@@ -9,7 +9,12 @@
 
         public Where_InNodeEnumerator(in TInEnumerator enumerator, InFunc<TIn, bool> filter) => (_enumerator, _filter) = (enumerator, filter);
 
-        public int? InitialSize => null;
+        public (bool, int)? InitialSize =>
+            _enumerator.InitialSize switch
+            {
+                (var flag, 0) => (flag, 0),
+                var other => other
+            };
 
         public void Dispose() => _enumerator.Dispose();
 

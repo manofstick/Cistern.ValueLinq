@@ -38,7 +38,7 @@ namespace Cistern.ValueLinq
         public static bool Contains<TSource>(this IEnumerable<TSource> source, TSource value) => System.Linq.Enumerable.Contains<TSource>(source, value);
         public static bool Contains<TSource>(this IEnumerable<TSource> source, TSource value, IEqualityComparer<TSource> comparer) => System.Linq.Enumerable.Contains<TSource>(source, value, comparer);
         public static int Count<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) => System.Linq.Enumerable.Count<TSource>(source, predicate);
-        public static int Count<TSource>(this IEnumerable<TSource> source) => System.Linq.Enumerable.Count<TSource>(source);
+//        public static int Count<TSource>(this IEnumerable<TSource> source) => System.Linq.Enumerable.Count<TSource>(source);
         public static IEnumerable<TSource> DefaultIfEmpty<TSource>(this IEnumerable<TSource> source, TSource defaultValue) => System.Linq.Enumerable.DefaultIfEmpty<TSource>(source, defaultValue);
         public static IEnumerable<TSource> DefaultIfEmpty<TSource>(this IEnumerable<TSource> source) => System.Linq.Enumerable.DefaultIfEmpty<TSource>(source);
         public static IEnumerable<TSource> Distinct<TSource>(this IEnumerable<TSource> source) => System.Linq.Enumerable.Distinct<TSource>(source);

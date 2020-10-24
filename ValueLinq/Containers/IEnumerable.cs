@@ -10,7 +10,7 @@ namespace Cistern.ValueLinq.Containers
 
         public EnumerableFastEnumerator(IEnumerator<T> enumerator) => _enumerator = enumerator;
 
-        public int? InitialSize => null;
+        public (bool, int)? InitialSize => null;
 
         public void Dispose() { _enumerator.Dispose(); }
 

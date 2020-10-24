@@ -10,7 +10,7 @@ namespace Cistern.ValueLinq.Containers
 
         public RangeFastEnumerator(int current, int max) => (_current, _max) = (current, max);
 
-        public int? InitialSize => _max-_current+1;
+        public (bool, int)? InitialSize => (true, _max-_current+1);
 
         public void Dispose() { }
 

@@ -453,7 +453,7 @@ namespace Cistern.ValueLinq.Tests
             int[] source = new[] { 1, 2, 3, 4, 5 };
             Func<int, bool> evenPredicate = (value) => value % 2 == 0;
 
-            IEnumerable<int> result = source.Where(evenPredicate).Where(evenPredicate);
+            var result = source.Where(evenPredicate).Where(evenPredicate);
 
             Assert.Equal(2, result.Count());
             Assert.Equal(2, result.ElementAt(0));

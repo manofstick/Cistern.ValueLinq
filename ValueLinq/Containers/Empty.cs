@@ -6,7 +6,7 @@ namespace Cistern.ValueLinq.Containers
     struct EmptyFastEnumerator<T>
         : IFastEnumerator<T>
     {
-        public int? InitialSize => 0;
+        public (bool, int)? InitialSize => (true, 0);
 
         public void Dispose() { }
 

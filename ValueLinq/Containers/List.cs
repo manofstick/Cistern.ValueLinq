@@ -11,7 +11,7 @@ namespace Cistern.ValueLinq.Containers
 
         public ListFastEnumerator(List<T> list) => (_list, _idx) = (list, -1);
 
-        public int? InitialSize => _list.Count;
+        public (bool, int)? InitialSize => (true, _list.Count);
 
         public void Dispose() { }
 
