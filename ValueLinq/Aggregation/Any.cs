@@ -9,7 +9,7 @@ namespace Cistern.ValueLinq.Aggregation
     {
         private readonly Func<T, bool>? _maybePredicate;
 
-        public Any(Func<T, bool> predicate) => _maybePredicate = predicate;
+        public Any(Func<T, bool>? predicate) => _maybePredicate = predicate;
 
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
             => Impl.CreateObjectDescent<CreationType>();
