@@ -19,6 +19,7 @@ namespace Cistern.ValueLinq.Aggregation
                 (enumerator.InitialSize, _maybePredicate) switch
                 {
                     ((_, 0), _) => false,
+                    ((_, var _), null) => true,
                     (_, null) => Impl.Any<EnumeratorElement, Enumerator>(ref enumerator),
                     (_, var predicate) => Impl.Any(ref enumerator, (Func<EnumeratorElement, bool>)(object)predicate)
                 });

@@ -104,8 +104,14 @@ namespace Cistern.ValueLinq
             => source.OfEnumerable().Aggregate(seed, func, resultSelector);
         public static bool All<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate)
             => source.OfEnumerable().All(predicate);
-        public static bool Any<TSource>(this IEnumerable<TSource> source)
-            => source.OfEnumerable().Any();
+        public static bool Any<TSource>(this IEnumerable<TSource> source) =>
+            source switch
+            {
+                ICollection<TSource> c => c.Count > 0,
+                IReadOnlyCollection<TSource> c => c.Count > 0,
+                _ => source.OfEnumerable().Any()
+            };
+
         public static bool Any<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate)
             => source.OfEnumerable().Any(predicate);
 
