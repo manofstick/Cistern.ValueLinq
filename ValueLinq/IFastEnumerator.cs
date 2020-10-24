@@ -1,4 +1,6 @@
-﻿namespace Cistern.ValueLinq
+﻿using Cistern.ValueLinq.Containers;
+
+namespace Cistern.ValueLinq
 {
     public interface IFastEnumerator<T>
     {
@@ -15,6 +17,8 @@
     {
         public abstract void Dispose();
         public abstract bool TryGetNext(out EnumeratorElement current);
+
+        public static readonly FastEnumerator<EnumeratorElement> Empty = new FastEnumerator<EmptyFastEnumerator<EnumeratorElement>, EnumeratorElement>(default);
     }
 
     sealed class FastEnumerator<Enumerator, EnumeratorElement>
