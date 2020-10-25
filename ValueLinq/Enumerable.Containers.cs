@@ -23,12 +23,20 @@ namespace Cistern.ValueLinq
             return new ValueEnumerable<T, ArrayNode<T>>(new ArrayNode<T>(source));
         }
 
-        public static ValueEnumerable<T, ListNode<T>> OfList<T>(this List<T> source)
+        public static ValueEnumerable<T, ListByIndexNode<T>> OfListByIndex<T>(this List<T> source)
         {
             if (source == null)
                 throw new ArgumentNullException(nameof(source));
 
-            return new ValueEnumerable<T, ListNode<T>>(new ListNode<T>(source));
+            return new ValueEnumerable<T, ListByIndexNode<T>>(new ListByIndexNode<T>(source));
+        }
+
+        public static ValueEnumerable<T, ListByIndexNode<T>> OfListByEnumerator<T>(this List<T> source)
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+
+            return new ValueEnumerable<T, ListByIndexNode<T>>(new ListByIndexNode<T>(source));
         }
 
         public static ValueEnumerable<T, EmptyNode<T>> Empty<T>() => new ValueEnumerable<T, EmptyNode<T>>(new EmptyNode<T>());

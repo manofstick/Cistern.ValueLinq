@@ -825,7 +825,7 @@ namespace Cistern.ValueLinq.Tests
             Assert.Throws<NotSupportedException>(() => enumerator.Reset());
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: Contentious issue I think! I could user List<T>.Enumerator under the hood, but slower (vs indexing)... have to decide...")]
+        [Fact]
         public void Where_SourceThrowsOnConcurrentModification()
         {
             List<int> source = new List<int>() { 1, 2, 3, 4, 5 };

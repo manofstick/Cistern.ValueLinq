@@ -698,7 +698,7 @@ namespace Cistern.ValueLinq.Tests
             Assert.Equal("1", enumerator.Current);
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: Contentious issue I think! I could user List<T>.Enumerator under the hood, but slower (vs indexing)... have to decide...")]
+        [Fact]
         public void Select_SourceListGetsModifiedDuringIteration_ExceptionIsPropagated()
         {
             List<int> source = new List<int>() { 1, 2, 3, 4, 5 };

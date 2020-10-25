@@ -38,7 +38,11 @@ namespace Cistern.ValueLinq.Containers
             {
                 T[] { Length : 0 } => EmptyNode.Create<T, Head, Tail, CreationType>(ref nodes),
                 T[] array          => ArrayNode.Create<T, Head, Tail, CreationType>(array, ref nodes),
-                List<T> list       => ListNode.Create<T, Head, Tail, CreationType>(list, ref nodes),
+#if USE_LIST_BY_INDEX
+                List<T> list       => ListByIndexNode.Create<T, Head, Tail, CreationType>(list, ref nodes),
+#else
+                List<T> list       => ListByEnumeratorNode.Create<T, Head, Tail, CreationType>(list, ref nodes),
+#endif
                 INode node         => node.CreateObjectDescent<CreationType, Head, Tail>(ref nodes),
                 _                  => EnumerableNode.Create<T, Head, Tail, CreationType>(_enumerable.GetEnumerator(), ref nodes)
             };
@@ -84,7 +88,7 @@ namespace Cistern.ValueLinq.Containers
             return _enumerable switch
             {
                 T[] array    => ArrayNode.ToList(array, map),
-                List<T> list => ListNode.ToList(list, map),
+                List<T> list => ListByIndexNode.ToList(list, map),
                 _            => EnumerableNode.ToList(_enumerable, map),
             };
         }
@@ -94,7 +98,7 @@ namespace Cistern.ValueLinq.Containers
             return _enumerable switch
             {
                 T[] array    => ArrayNode.ToList(array, map, filter),
-                List<T> list => ListNode.ToList(list, map, filter),
+                List<T> list => ListByIndexNode.ToList(list, map, filter),
                 _            => EnumerableNode.ToList(_enumerable, map, filter),
             };
         }
@@ -104,7 +108,7 @@ namespace Cistern.ValueLinq.Containers
             return _enumerable switch
             {
                 T[] array    => ArrayNode.ToList(array, filter, map),
-                List<T> list => ListNode.ToList(list, filter, map),
+                List<T> list => ListByIndexNode.ToList(list, filter, map),
                 _            => EnumerableNode.ToList(_enumerable, filter, map),
             };
         }
@@ -114,7 +118,7 @@ namespace Cistern.ValueLinq.Containers
             return _enumerable switch
             {
                 T[] array    => ArrayNode.ToList(array, filter),
-                List<T> list => ListNode.ToList(list, filter),
+                List<T> list => ListByIndexNode.ToList(list, filter),
                 _            => EnumerableNode.ToList(_enumerable, filter),
             };
         }
