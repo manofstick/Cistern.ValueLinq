@@ -205,7 +205,7 @@ namespace Cistern.ValueLinq.Tests
             }
         }
 
-        [Theory(Skip = "CISTERN.VALUELINQ: Need to grok what's going here...")]
+        [Theory]
         [MemberData(nameof(ManyConcatsData))]
         public void ManyConcats(IEnumerable<IEnumerable<int>> sources)
         {
@@ -222,7 +222,7 @@ namespace Cistern.ValueLinq.Tests
             }
         }
 
-        [Theory(Skip = "CISTERN.VALUELINQ: Need to grok what's going here...")]
+        [Theory]
         [MemberData(nameof(ManyConcatsData))]
         public void ManyConcatsRunOnce(IEnumerable<IEnumerable<int>> sources)
         {
@@ -240,10 +240,10 @@ namespace Cistern.ValueLinq.Tests
 
         public static IEnumerable<object[]> ManyConcatsData()
         {
-            yield return new object[] { Enumerable.Repeat(Enumerable.Empty<int>(), 256) };
-            yield return new object[] { Enumerable.Repeat(Enumerable.Repeat(6, 1), 256) };
+            yield return new object[] { Enumerable.Repeat((IEnumerable<int>)Enumerable.Empty<int>(), 256) };
+            yield return new object[] { Enumerable.Repeat((IEnumerable<int>)Enumerable.Repeat(6, 1), 256) };
             // Make sure Concat doesn't accidentally swap around the sources, e.g. [3, 4], [1, 2] should not become [1..4]
-            yield return new object[] { Enumerable.Range(0, 500).Select(i => Enumerable.Repeat(i, 1)).Reverse() };
+            yield return new object[] { (IEnumerable<object>)Enumerable.Range(0, 500).Select(i => (IEnumerable<int>)Enumerable.Repeat(i, 1)).Reverse() };
         }
 
         [Fact(Skip = "CISTERN.VALUELINQ Need to create a Concat which utilises ICollection.Count")]
