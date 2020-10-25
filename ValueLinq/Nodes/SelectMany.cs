@@ -1,5 +1,6 @@
 ﻿using Cistern.ValueLinq.ValueEnumerable;
 using System;
+using System.Linq;
 
 namespace Cistern.ValueLinq.Nodes
 {
@@ -73,8 +74,28 @@ namespace Cistern.ValueLinq.Nodes
 
         bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result)
         {
+            if (typeof(TRequest) == typeof(Optimizations.Count))
+            {
+                result = (TResult)(object)Count();
+                return true;
+            }
+
             result = default;
             return false;
+        }
+
+        private readonly int Count()
+        {
+            checked
+            {
+                var e = Nodes<T>.CreateValueEnumerator(_nodeT).FastEnumerator;
+                var count = 0;
+                while (e.TryGetNext(out var item))
+                {
+                    count += Enumerable.Count(_map(item));
+                }
+                return count;
+            }
         }
     }
 }

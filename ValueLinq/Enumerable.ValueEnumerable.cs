@@ -112,8 +112,7 @@ namespace Cistern.ValueLinq
         public static int Sum<Inner>(in this ValueEnumerable<int, Inner> inner) where Inner : INode => Nodes<int>.Aggregation<Inner, SumInt>(in inner.Node);
         public static double Sum<Inner>(in this ValueEnumerable<double, Inner> inner) where Inner : INode => Nodes<double>.Aggregation<Inner, SumDouble>(in inner.Node);
 
-        public static int Count<T, Inner>(in this ValueEnumerable<T, Inner> inner) where Inner : INode =>
-            Enumerable.Count<T, Inner>(inner.Node);
+        public static int Count<T, Inner>(in this ValueEnumerable<T, Inner> inner) where Inner : INode => Enumerable.Count<T, Inner>(in inner.Node);
 
         public static ValueEnumerable<TResult, SelectManyNode<TSource, TResult, NodeT, NodeU>> SelectMany<TSource, TResult, NodeT, NodeU>(in this ValueEnumerable<TSource, NodeT> prior, Func<TSource, ValueEnumerable<TResult, NodeU>> selector)
             where NodeT : INode
