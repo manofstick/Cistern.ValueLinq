@@ -70,8 +70,19 @@ namespace Cistern.ValueLinq.Containers
 
         bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result)
         {
+            if (typeof(TRequest) == typeof(Optimizations.Count))
+            {
+                result = (TResult)(object)(Count());
+                return true;
+            }
+
             result = default;
             return false;
+        }
+
+        private readonly int Count()
+        {
+            checked { return Enumerable.Count<T, Start>(_start) + Enumerable.Count<T, Finish>(_finish); }
         }
     }
 

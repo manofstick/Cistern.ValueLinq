@@ -243,10 +243,10 @@ namespace Cistern.ValueLinq.Tests
             yield return new object[] { Enumerable.Repeat((IEnumerable<int>)Enumerable.Empty<int>(), 256) };
             yield return new object[] { Enumerable.Repeat((IEnumerable<int>)Enumerable.Repeat(6, 1), 256) };
             // Make sure Concat doesn't accidentally swap around the sources, e.g. [3, 4], [1, 2] should not become [1..4]
-            yield return new object[] { (IEnumerable<object>)Enumerable.Range(0, 500).Select(i => (IEnumerable<int>)Enumerable.Repeat(i, 1)).Reverse() };
+            yield return new object[] { Enumerable.Range(0, 500).Select(i => (IEnumerable<int>)Enumerable.Repeat(i, 1)).Reverse() };
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ Need to create a Concat which utilises ICollection.Count")]
+        [Fact(Skip = "CISTERN.VALUELINQ fixed Count(), but ToArray and ToList still need optimization")]
         public void CountOfConcatIteratorShouldThrowExceptionOnIntegerOverflow()
         {
             var supposedlyLargeCollection = new DelegateBasedCollection<int> { CountWorker = () => int.MaxValue };

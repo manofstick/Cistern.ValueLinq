@@ -51,6 +51,9 @@ namespace Cistern.ValueLinq.Containers
 
         bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result)
         {
+            if (_enumerable is INode node)
+                return node.CheckForOptimization<TOuter, TRequest, TResult>(in request, out result);
+
             if (typeof(TRequest) == typeof(Optimizations.ToList_Select_XXX<T, TOuter>))
             {
                 var toListSelect = (Optimizations.ToList_Select_XXX<T, TOuter>)(object)request;
@@ -79,8 +82,37 @@ namespace Cistern.ValueLinq.Containers
                 return true;
             }
 
+            if (typeof(TRequest) == typeof(Optimizations.Count))
+            {
+                result = (TResult)(object)Count();
+                return true;
+            }
+
             result = default;
             return false;
+        }
+
+        private int Count() =>
+            _enumerable switch
+            {
+                ICollection<T> c => c.Count,
+                IReadOnlyCollection<T> c => c.Count,
+                System.Collections.ICollection c => c.Count,
+                var other => IterateCount(other)
+            };
+
+        private static int IterateCount(IEnumerable<T> ts)
+        {
+            checked
+            {
+                int count = 0;
+                using (var e = ts.GetEnumerator())
+                {
+                    while (e.MoveNext())
+                        ++count;
+                    return count;
+                }
+            }
         }
 
         private readonly List<TOuter> ToList<TOuter>(Func<T, TOuter> map)
