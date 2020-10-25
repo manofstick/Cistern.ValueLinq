@@ -4,6 +4,7 @@ using Cistern.ValueLinq.Nodes;
 using Cistern.ValueLinq.ValueEnumerable;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace Cistern.ValueLinq
 {
@@ -122,5 +123,10 @@ namespace Cistern.ValueLinq
 
             return new ValueEnumerable<TResult, SelectManyNode<TSource, TResult, NodeT, NodeU>>(new SelectManyNode<TSource, TResult, NodeT, NodeU>(in prior.Node, selector));
         }
+
+        public static ValueEnumerable<T, ConcatNode<T, First, Second>> Concat<T, First, Second>(in this ValueEnumerable<T, First> first, in ValueEnumerable<T, Second> second)
+            where First : INode
+            where Second : INode
+            => new ValueEnumerable<T, ConcatNode<T, First, Second>>(new ConcatNode<T, First, Second>(first.Node, second.Node));
     }
 }

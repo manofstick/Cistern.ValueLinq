@@ -77,5 +77,16 @@ namespace Cistern.ValueLinq
 
             return source.OfEnumerable().SelectMany(src => selector(src).OfEnumerable());
         }
+
+
+        public static IEnumerable<T> Concat<T>(this IEnumerable<T> first, IEnumerable<T> second)
+        {
+            if (first == null)
+                throw new ArgumentNullException(nameof(first));
+            if (second == null)
+                throw new ArgumentNullException(nameof(second));
+
+            return first.OfEnumerable().Concat(second.OfEnumerable());
+        }
     }
 }
