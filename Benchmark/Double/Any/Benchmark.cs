@@ -3,20 +3,24 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+#nullable enable
+
 namespace Cistern.Benchmarks.Double.Any
 {
     [MemoryDiagnoser]
     public partial class Benchmark
     {
-        IEnumerable<double> _double;
+        IEnumerable<double>? _double;
+        Func<double, bool>? _filter;
 
-        [Params(0, 10000)]
-        //[Params(1000000)]
+        [Params(0, 1, 10, 100)]
         public int Length { get; set; } = 0;
 
         [Params(ContainerTypes.Array, ContainerTypes.Enumerable, ContainerTypes.List)]
-        //[Params(ContainerTypes.Enumerable)]
         public ContainerTypes ContainerType { get; set; } = ContainerTypes.Enumerable;
+
+        [Params(FilterTypes.None, FilterTypes.FirstHalf, FilterTypes.LastHalf, FilterTypes.Interleaved, FilterTypes.All)]
+        public FilterTypes FilterType { get; set; } = FilterTypes.None;
 
         [GlobalSetup]
         public void SetupData()
@@ -26,11 +30,13 @@ namespace Cistern.Benchmarks.Double.Any
             _double = ContainerType switch
             {
                 ContainerTypes.Enumerable => data,
-                ContainerTypes.Array => data.ToArray(),
-                ContainerTypes.List => data.ToList(),
+                ContainerTypes.Array      => data.ToArray(),
+                ContainerTypes.List       => data.ToList(),
 
                 _ => throw new Exception("Unknown ContainerType")
             };
+
+            _filter = Filter(FilterType, Length);
         }
 
         private static IEnumerable<double> Create(int size)
@@ -38,6 +44,18 @@ namespace Cistern.Benchmarks.Double.Any
             for (var i = 0; i < size; ++i)
                 yield return (double)i;
         }
+
+        private static Func<double, bool>? Filter(FilterTypes filterType, int size) =>
+            filterType switch
+            {
+                FilterTypes.All         => null,
+                FilterTypes.Interleaved => x => ((int)x & 1) == 1,
+                FilterTypes.FirstHalf   => x => x < size / 2,
+                FilterTypes.LastHalf    => x => x >= size / 2,
+                FilterTypes.None        => _ => false,
+
+                _ => throw new ArgumentOutOfRangeException(nameof(filterType)),
+            };
 
         internal static void SanityCheck()
         {
@@ -61,8 +79,6 @@ namespace Cistern.Benchmarks.Double.Any
             var cisternlinq = check.CisternLinq();
             if (cisternlinq != baseline) throw new Exception();
 #endif
-
-            // check.HyperLinq(); // doesn't support Aggregate
         }
     }
 }

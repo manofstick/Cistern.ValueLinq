@@ -6,6 +6,9 @@ namespace Cistern.Benchmarks.Double.Any
     partial class Benchmark
     {
         [Benchmark(Baseline = true)]
-        public bool Linq() => _double.Any();
+        public bool Linq() =>
+            _filter == null
+                ? _double.Any()
+                : _double.Any(_filter);
     }
 }

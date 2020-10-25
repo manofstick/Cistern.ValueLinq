@@ -7,7 +7,10 @@ namespace Cistern.Benchmarks.Double.Any
     partial class Benchmark
     {
         [Benchmark]
-        public bool LinqAF() => _double.Any();
+        public bool LinqAF() =>
+            _filter == null
+                ? _double.Any()
+                : _double.Any(_filter);
     }
 #endif
 }
