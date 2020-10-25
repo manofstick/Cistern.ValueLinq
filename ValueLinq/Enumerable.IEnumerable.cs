@@ -55,9 +55,15 @@ namespace Cistern.ValueLinq
 
         public static TSource Last<TSource>(this IEnumerable<TSource> source) => source.OfEnumerable().Last();
 
-#if TEMP_DISABLED
-        public static List<T> ToList<T>(this IEnumerable<T> inner) => new List<T>(inner);
-#endif
+        public static List<T> ToList<T>(this IEnumerable<T> source)
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+
+            return source is INode
+                ? source.OfEnumerable().ToList()
+                : new List<T>(source);
+        }
 
         public static int Sum(this IEnumerable<int> inner) => inner.OfEnumerable().Sum();
         public static double Sum(this IEnumerable<double> inner) => inner.OfEnumerable().Sum();
