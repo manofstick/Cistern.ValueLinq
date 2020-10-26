@@ -4,5 +4,5 @@ using System.Text;
 
 namespace Cistern.ValueLinq.Optimizations
 {
-    struct Last {}
+    struct TryLast {}
 }

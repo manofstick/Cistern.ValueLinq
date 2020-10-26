@@ -102,10 +102,18 @@ namespace Cistern.ValueLinq
             };
 
         public static T Last<T, Inner>(in this ValueEnumerable<T, Inner> inner) where Inner : INode =>
-            inner.Node.CheckForOptimization<T, Optimizations.Last, T>(new Optimizations.Last(), out var last) switch
+            (inner.Node.CheckForOptimization<T, Optimizations.TryLast, (bool, T)>(new Optimizations.TryLast(), out var maybeLast), maybeLast) switch
             {
-                false => Nodes<T>.Aggregation<Inner, Last<T>>(in inner.Node),
-                true => last,
+                (true, (true, var last)) => last,
+                _ => Nodes<T>.Aggregation<Inner, Last<T>>(in inner.Node),
+            };
+
+        public static T LastOrDefault<T, Inner>(in this ValueEnumerable<T, Inner> inner) where Inner : INode =>
+            (inner.Node.CheckForOptimization<T, Optimizations.TryLast, (bool, T)>(new Optimizations.TryLast(), out var maybeLast), maybeLast) switch
+            {
+                (true, (true, var last)) => last,
+                (true, (false, _)) => default,
+                _ => Nodes<T>.Aggregation<Inner, LastOrDefault<T>>(in inner.Node),
             };
 
 

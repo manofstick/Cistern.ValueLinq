@@ -55,6 +55,7 @@ namespace Cistern.ValueLinq
         public static ValueEnumerable<T, Where_InNode<T, EnumerableNode<T>>> Where<T>(this IEnumerable<T> inner, InFunc<T, bool> f) => inner.OfEnumerable().Where(f);
 
         public static TSource Last<TSource>(this IEnumerable<TSource> source) => source.OfEnumerable().Last();
+        public static TSource LastOrDefault<TSource>(this IEnumerable<TSource> source) => source.OfEnumerable().LastOrDefault();
 
         public static List<T> ToList<T>(this IEnumerable<T> source)
         {
