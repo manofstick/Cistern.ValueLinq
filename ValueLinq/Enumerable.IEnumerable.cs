@@ -23,6 +23,7 @@ namespace Cistern.ValueLinq
         public static bool Any<TSource>(this IEnumerable<TSource> source)
             => source switch
             {
+                System.Collections.ICollection c => c.Count > 0,
                 ICollection<TSource> c => c.Count > 0,
                 IReadOnlyCollection<TSource> c => c.Count > 0,
                 _ => source.OfEnumerable().Any()

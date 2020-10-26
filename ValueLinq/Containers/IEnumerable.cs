@@ -33,19 +33,29 @@ namespace Cistern.ValueLinq.Containers
 
         public EnumerableNode(IEnumerable<T> source) => _enumerable = source;
 
-        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) =>
-            _enumerable switch
+        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+        {
+            if (_enumerable is System.Collections.ICollection)
             {
-                T[] { Length : 0 } => EmptyNode.Create<T, Head, Tail, CreationType>(ref nodes),
-                T[] array          => ArrayNode.Create<T, Head, Tail, CreationType>(array, ref nodes),
+                if (_enumerable is T[] array)
+                {
+                    return ArrayNode.Create<T, Head, Tail, CreationType>(array, ref nodes);
+                }
+                if (_enumerable is List<T> list)
+                {
 #if USE_LIST_BY_INDEX
-                List<T> list       => ListByIndexNode.Create<T, Head, Tail, CreationType>(list, ref nodes),
+                    return ListByIndexNode.Create<T, Head, Tail, CreationType>(list, ref nodes),
 #else
-                List<T> list       => ListByEnumeratorNode.Create<T, Head, Tail, CreationType>(list, ref nodes),
+                    return ListByEnumeratorNode.Create<T, Head, Tail, CreationType>(list, ref nodes);
 #endif
-                INode node         => node.CreateObjectDescent<CreationType, Head, Tail>(ref nodes),
-                _                  => EnumerableNode.Create<T, Head, Tail, CreationType>(_enumerable.GetEnumerator(), ref nodes)
-            };
+                }
+            }
+            else if (_enumerable is INode node)
+            {
+                return node.CreateObjectDescent<CreationType, Head, Tail>(ref nodes);
+            }
+            return EnumerableNode.Create<T, Head, Tail, CreationType>(_enumerable.GetEnumerator(), ref nodes);
+        }
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
 
@@ -95,9 +105,9 @@ namespace Cistern.ValueLinq.Containers
         private int Count() =>
             _enumerable switch
             {
+                System.Collections.ICollection c => c.Count,
                 ICollection<T> c => c.Count,
                 IReadOnlyCollection<T> c => c.Count,
-                System.Collections.ICollection c => c.Count,
                 var other => IterateCount(other)
             };
 
