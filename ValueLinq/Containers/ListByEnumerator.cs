@@ -6,10 +6,10 @@ namespace Cistern.ValueLinq.Containers
     struct ListByEnumeratorFastEnumerator<T>
         : IFastEnumerator<T>
     {
-        private List<T>.Enumerator _idx;
+        private List<T>.Enumerator _enumerator;
         private readonly int _count;
 
-        public ListByEnumeratorFastEnumerator(List<T> list) => (_idx, _count) = (list.GetEnumerator(), list.Count);
+        public ListByEnumeratorFastEnumerator(List<T> list) => (_enumerator, _count) = (list.GetEnumerator(), list.Count);
 
         public (bool, int)? InitialSize => (true, _count);
 
@@ -17,12 +17,12 @@ namespace Cistern.ValueLinq.Containers
 
         public bool TryGetNext(out T current)
         {
-            if (!_idx.MoveNext())
+            if (!_enumerator.MoveNext())
             {
                 current = default;
                 return false;
             }
-            current = _idx.Current;
+            current = _enumerator.Current;
             return true;
         }
     }
@@ -34,9 +34,11 @@ namespace Cistern.ValueLinq.Containers
 
         public ListByEnumeratorNode(List<T> list) => _list = list;
 
-        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => ListByIndexNode.Create<T, Head, Tail, CreationType>(_list, ref nodes);
+        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+            => ListByEnumeratorNode.Create<T, Head, Tail, CreationType>(_list, ref nodes);
 
-        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
+        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __)
+            => throw new InvalidOperationException();
 
         public List<T>.Enumerator GetEnumerator() => _list.GetEnumerator();
 
