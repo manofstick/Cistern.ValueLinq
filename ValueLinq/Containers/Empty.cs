@@ -30,6 +30,13 @@ namespace Cistern.ValueLinq.Containers
                 result = (TResult)(object)new List<TOuter>();
                 return true;
             }
+
+            if (typeof(TRequest) == typeof(Optimizations.Count))
+            {
+                result = (TResult)(object)0;
+                return true;
+            }
+
             result = default;
             return false;
         }
