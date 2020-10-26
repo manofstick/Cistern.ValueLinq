@@ -8,7 +8,15 @@ using System.Collections.Generic;
 using System.Reflection;
 using Xunit;
 
-namespace Cistern.ValueLinq.Tests
+#if CISTERN_LINQ
+using Cistern.Linq;
+#elif CISTERN_VALUELINQ
+using Cistern.ValueLinq;
+#else
+using System.Linq;
+#endif
+
+namespace Linqs.Tests
 {
     // Enumerable contains several *EnumerableDebugView* types that aren't referenced
     // within the assembly but that are accessed via reflection by other tools.

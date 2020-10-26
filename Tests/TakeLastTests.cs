@@ -4,9 +4,17 @@
 
 using System.Collections.Generic;
 using Xunit;
-using static Cistern.ValueLinq.Tests.SkipTakeData;
+using static Linqs.Tests.SkipTakeData;
 
-namespace Cistern.ValueLinq.Tests
+#if CISTERN_LINQ
+using Cistern.Linq;
+#elif CISTERN_VALUELINQ
+using Cistern.ValueLinq;
+#else
+using System.Linq;
+#endif
+
+namespace Linqs.Tests
 {
     public class TakeLastTests : EnumerableTests
     {

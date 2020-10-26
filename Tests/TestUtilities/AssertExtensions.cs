@@ -7,7 +7,14 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Sdk;
+
+#if CISTERN_LINQ
+using Cistern.Linq;
+#elif CISTERN_VALUELINQ
+using Cistern.ValueLinq;
+#else
 using System.Linq;
+#endif
 
 namespace System
 {

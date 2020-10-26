@@ -8,7 +8,15 @@ using System.Reflection;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Cistern.ValueLinq.Tests
+#if CISTERN_LINQ
+using Cistern.Linq;
+#elif CISTERN_VALUELINQ
+using Cistern.ValueLinq;
+#else
+using System.Linq;
+#endif
+
+namespace Linqs.Tests
 {
     public class SkipTests : EnumerableTests
     {

@@ -2,13 +2,21 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Cistern.ValueLinq.Tests.TestUtilities;
+using Linqs.Tests.TestUtilities;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Xunit;
 
-namespace Cistern.ValueLinq.Tests
+#if CISTERN_LINQ
+using Cistern.Linq;
+#elif CISTERN_VALUELINQ
+using Cistern.ValueLinq;
+#else
+using System.Linq;
+#endif
+
+namespace Linqs.Tests
 {
     public class ConcatTests : EnumerableTests
     {
