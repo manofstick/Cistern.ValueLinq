@@ -13,6 +13,9 @@ namespace Cistern.ValueLinq.Aggregation
 
         bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result)
             => Impl.CheckForOptimization(out result);
+
+        TResult INode.CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum)
+            => Impl.CreateObjectViaFastEnumerator<TResult>();
     }
 
     static partial class Impl

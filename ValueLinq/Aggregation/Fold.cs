@@ -2,6 +2,7 @@
 
 namespace Cistern.ValueLinq.Aggregation
 {
+#if OLD_WAY
     struct Fold<T, TAccumulate>
         : INode
     {
@@ -18,6 +19,9 @@ namespace Cistern.ValueLinq.Aggregation
 
         bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result)
             => Impl.CheckForOptimization(out result);
+
+        TResult INode.CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum)
+            => Impl.CreateObjectViaFastEnumerator<TResult>();
     }
 
     static partial class Impl
@@ -42,4 +46,26 @@ namespace Cistern.ValueLinq.Aggregation
             }
         }
     }
+#endif
+
+    struct FoldForward<T, TAccumulate>
+        : IForwardEnumerator<T>
+    {
+        private TAccumulate _accumulate;
+        private Func<TAccumulate, T, TAccumulate> _func;
+
+        public FoldForward(Func<TAccumulate, T, TAccumulate> func, TAccumulate seed) => (_func, _accumulate) = (func, seed);
+
+        TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_accumulate;
+
+        void IForwardEnumerator<T>.Init(int? size) { }
+
+        bool IForwardEnumerator<T>.ProcessNext(T input)
+        {
+            _accumulate = _func(_accumulate, input);
+            return true;
+        }
+    }
+
+
 }

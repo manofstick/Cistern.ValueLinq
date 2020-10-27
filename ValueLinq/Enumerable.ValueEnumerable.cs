@@ -26,8 +26,11 @@ namespace Cistern.ValueLinq
             if (func == null)
                 throw new ArgumentNullException(nameof(func));
 
+            return source.Node.CreateObjectViaFastEnumerator<T, TAccumulate, FoldForward<T, TAccumulate>>(new FoldForward<T, TAccumulate>(func, seed));
+#if OLD_WAY
             var aggregate = new Fold<T, TAccumulate>(seed, func);
             return Nodes<TAccumulate>.Aggregation(in source.Node, in aggregate);
+#endif
         }
 
         public static TResult Aggregate<T, TAccumulate, TResult, Inner>(in this ValueEnumerable<T, Inner> source, TAccumulate seed, Func<TAccumulate, T, TAccumulate> func, Func<TAccumulate, TResult> resultSelector)
@@ -38,8 +41,11 @@ namespace Cistern.ValueLinq
             if (resultSelector == null)
                 throw new ArgumentNullException(nameof(resultSelector));
 
+#if OLD_WAY
             var aggregate = new Fold<T, TAccumulate>(seed, func);
             return resultSelector(Nodes<TAccumulate>.Aggregation(in source.Node, in aggregate));
+#endif
+            return resultSelector(source.Node.CreateObjectViaFastEnumerator<T, TAccumulate, FoldForward<T, TAccumulate>>(new FoldForward<T, TAccumulate>(func, seed)));
         }
 
         public static bool All<T, Inner>(in this ValueEnumerable<T, Inner> source, Func<T, bool> predicate)

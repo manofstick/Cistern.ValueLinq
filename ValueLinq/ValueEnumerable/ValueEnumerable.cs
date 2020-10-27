@@ -18,5 +18,6 @@ namespace Cistern.ValueLinq.ValueEnumerable
         bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result) => Node.CheckForOptimization<TOuter, TRequest, TResult>(in request, out result);
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator) => Node.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref tail, ref enumerator);
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => Node.CreateObjectDescent<CreationType, Head, Tail>(ref nodes);
+        TResult INode.CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) => throw new System.NotImplementedException();
     }
 }

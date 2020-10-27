@@ -9,5 +9,8 @@ namespace Cistern.ValueLinq.Aggregation
 
         public static bool CheckForOptimization<TResult>(out TResult _)
             => throw new InvalidOperationException("Aggregation objects shouldn't be partipating in Optimization check");
+
+        public static TResult CreateObjectViaFastEnumerator<TResult>()
+            => throw new InvalidOperationException("Aggregation objects shouldn't be partipating in Optimization check");
     }
 }

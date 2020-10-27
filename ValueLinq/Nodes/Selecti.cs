@@ -51,5 +51,10 @@ namespace Cistern.ValueLinq.Nodes
         }
 
         bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false;}
+
+        public TResult CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
+        {
+            throw new NotImplementedException();
+        }
     }
 }

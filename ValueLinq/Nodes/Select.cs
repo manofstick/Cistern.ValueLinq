@@ -74,5 +74,25 @@ namespace Cistern.ValueLinq.Nodes
             result = default;
             return false;
         }
+
+        TResult INode.CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) =>
+            _nodeT.CreateObjectViaFastEnumerator<T, TResult, SelectFoward<T, TIn, FEnumerator>>(new SelectFoward<T, TIn, FEnumerator>(fenum, (Func<T, TIn>)(object)_map));
     }
+
+    struct SelectFoward<T, U, Next>
+        : IForwardEnumerator<T>
+        where Next : IForwardEnumerator<U>
+    {
+        Next _next;
+        Func<T, U> _selector;
+
+        public SelectFoward(in Next prior, Func<T, U> predicate) => (_next, _selector) = (prior, predicate);
+
+        public TResult GetResult<TResult>() => _next.GetResult<TResult>();
+
+        public void Init(int? size) => _next.Init(size);
+
+        public bool ProcessNext(T input) => _next.ProcessNext(_selector(input));
+    }
+
 }

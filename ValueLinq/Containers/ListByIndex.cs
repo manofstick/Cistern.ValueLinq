@@ -75,6 +75,9 @@ namespace Cistern.ValueLinq.Containers
             result = default;
             return false;
         }
+
+        TResult INode.CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) 
+            => ListByIndexNode.FastEnumerate<TIn, TResult, FEnumerator>((List<TIn>)(object)_list, fenum);
     }
 
     static class ListByIndexNode
@@ -125,6 +128,17 @@ namespace Cistern.ValueLinq.Containers
                 if (map(list[i]))
                     newList.Add(list[i]);
             return newList;
+        }
+
+        internal static TResult FastEnumerate<TIn, TResult, FEnumerator>(List<TIn> list, FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
+        {
+            fenum.Init(null);
+            for(var i=0; i < list.Count; ++i)
+            {
+                if (!fenum.ProcessNext(list[i]))
+                    break;
+            }
+            return fenum.GetResult<TResult>();
         }
     }
 

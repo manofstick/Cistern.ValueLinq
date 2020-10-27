@@ -59,5 +59,10 @@ namespace Cistern.ValueLinq.Containers
             result = default;
             return false;
         }
+
+        public TResult CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
+        {
+            throw new NotImplementedException();
+        }
     }
 }

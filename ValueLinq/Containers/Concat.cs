@@ -84,6 +84,11 @@ namespace Cistern.ValueLinq.Containers
         {
             checked { return Enumerable.Count<T, Start>(_start) + Enumerable.Count<T, Finish>(_finish); }
         }
+
+        public TResult CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
+        {
+            throw new NotImplementedException();
+        }
     }
 
     static class ConcatNode

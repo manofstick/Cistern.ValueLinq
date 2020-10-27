@@ -28,5 +28,6 @@ namespace Cistern.ValueLinq.ValueEnumerable
                 => (CreationType)(object)(new ValueEnumerator<EnumeratorElement>(new FastEnumerator<Enumerator, EnumeratorElement>(enumerator)));
 
         bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
+        TResult INode.CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) => throw new NotImplementedException();
     }
 }

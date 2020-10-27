@@ -47,5 +47,25 @@
         }
 
         bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
+
+        TResult INode.CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) =>
+            _nodeT.CreateObjectViaFastEnumerator<T, TResult, Select_InFoward<T, TIn, FEnumerator>>(new Select_InFoward<T, TIn, FEnumerator>(fenum, (InFunc<T, TIn>)(object)_map));
     }
+
+    struct Select_InFoward<T, U, Next>
+        : IForwardEnumerator<T>
+        where Next : IForwardEnumerator<U>
+    {
+        Next _next;
+        InFunc<T, U> _selector;
+
+        public Select_InFoward(in Next prior, InFunc<T, U> predicate) => (_next, _selector) = (prior, predicate);
+
+        public TResult GetResult<TResult>() => _next.GetResult<TResult>();
+
+        public void Init(int? size) => _next.Init(size);
+
+        public bool ProcessNext(T input) => _next.ProcessNext(_selector(in input));
+    }
+
 }

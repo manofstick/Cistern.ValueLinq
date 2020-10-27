@@ -164,6 +164,14 @@ namespace Cistern.ValueLinq.Containers
                 _            => EnumerableNode.ToList(_enumerable, filter),
             };
         }
+
+        TResult INode.CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) =>
+            (IEnumerable<TIn>)(object)_enumerable switch
+            {
+                TIn[] array => ArrayNode.FastEnumerate<TIn, TResult, FEnumerator>(array, fenum),
+                List<TIn> list => ListByIndexNode.FastEnumerate<TIn, TResult, FEnumerator>(list, fenum),
+                var e => EnumerableNode.FastEnumerate<TIn, TResult, FEnumerator>(e, fenum),
+            };
     }
 
     static class EnumerableNode
@@ -214,6 +222,17 @@ namespace Cistern.ValueLinq.Containers
                 if (map(item))
                     newList.Add(item);
             return newList;
+        }
+
+        internal static TResult FastEnumerate<TIn, TResult, FEnumerator>(IEnumerable<TIn> e, FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
+        {
+            fenum.Init(null);
+            foreach (var item in e)
+            {
+                if (!fenum.ProcessNext(item))
+                    break;
+            }
+            return fenum.GetResult<TResult>();
         }
     }
 }
