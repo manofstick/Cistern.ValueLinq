@@ -10,7 +10,7 @@ namespace Cistern.Benchmarks.Double.SelectSelectToList
     {
         IEnumerable<double> _double;
 
-#if LONG
+#if true
         [Params(0, 1, 10, 100, 1000, 1000000)]
 #else
         [Params(0, 1, 10, 100)]
@@ -50,6 +50,7 @@ namespace Cistern.Benchmarks.Double.SelectSelectToList
             var check = new Benchmark();
 
             check.Length = 100;
+            check.ContainerType = ContainerTypes.Enumerable;
             check.SetupData();
 
             var baseline = check.Linq();

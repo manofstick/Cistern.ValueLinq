@@ -8,21 +8,39 @@ namespace Cistern.Benchmarks.DoubleDoubleDouble.SelectWhereAggregate
     [MemoryDiagnoser]
     public partial class Benchmark
     {
-        List<(double, double, double)> _doubledoubledoubles;
+        IEnumerable<(double, double, double)> _doubledoubledoubles;
 
         [Params(0, 1, 10, 100, 1000, 1000000)]
         public int Length { get; set; } = 0;
 
+#if true
+        [Params(ContainerTypes.Array, ContainerTypes.Enumerable, ContainerTypes.List)]
+#else
+        [Params(ContainerTypes.Array)]
+#endif
+        public ContainerTypes ContainerType { get; set; } = ContainerTypes.Enumerable;
+
+
         [GlobalSetup]
         public void SetupData()
         {
-            var r = new Random(42);
+            var data = CreateData();
 
-            _doubledoubledoubles =
-                Enumerable
-                .Range(0, Length)
-                .Select(x => (r.NextDouble(), r.NextDouble(), r.NextDouble()))
-                .ToList();
+            _doubledoubledoubles = ContainerType switch
+            {
+                ContainerTypes.Enumerable => data,
+                ContainerTypes.Array => data.ToArray(),
+                ContainerTypes.List => data.ToList(),
+
+                _ => throw new Exception("Unknown ContainerType")
+            };
+        }
+
+        private IEnumerable<(double, double, double)> CreateData()
+        {
+            var r = new Random(42);
+            for(var i=0; i < Length; ++i)
+                yield return (r.NextDouble(), r.NextDouble(), r.NextDouble());
         }
 
         internal static void SanityCheck()
