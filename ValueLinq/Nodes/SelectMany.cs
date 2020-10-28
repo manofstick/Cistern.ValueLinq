@@ -99,8 +99,39 @@ namespace Cistern.ValueLinq.Nodes
         }
 
         public TResult CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
+            => _nodeT.CreateObjectViaFastEnumerator<T, TResult, SelectManyFoward<T, TIn, NodeU, FEnumerator>>(new SelectManyFoward<T, TIn, NodeU, FEnumerator>(fenum, (Func<T, ValueEnumerable<TIn, NodeU>>)(object) _map));
+    }
+
+    struct SelectManyFoward<T, U, NodeU, Next>
+        : IForwardEnumerator<T>
+        where Next : IForwardEnumerator<U>
+        where NodeU : INode
+    {
+        Next _next;
+        private Func<T, ValueEnumerable<U, NodeU>> _getEnumerable;
+
+        public SelectManyFoward(in Next prior, Func<T, ValueEnumerable<U, NodeU>> predicate) => (_next, _getEnumerable) = (prior, predicate);
+
+        public TResult GetResult<TResult>() => _next.GetResult<TResult>();
+
+        public void Init(int? size) => _next.Init(size);
+
+        public bool ProcessNext(T input)
         {
-            throw new NotImplementedException();
+            // TODO: think of cheaper pass through mechanism
+            var enumerator =
+                _getEnumerable(input)
+                .GetEnumerator()
+                .FastEnumerator;
+
+            while (enumerator.TryGetNext(out var current))
+            {
+                if (!_next.ProcessNext(current))
+                    return false;
+            }
+
+            return true;
         }
     }
+
 }

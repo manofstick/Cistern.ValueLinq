@@ -72,7 +72,7 @@ namespace Cistern.ValueLinq
 
         public static int Count<T>(this IEnumerable<T> inner) => inner.OfEnumerable().Count();
 
-        public static IEnumerable<TResult> SelectMany<TSource, TResult>(this IEnumerable<TSource> source, Func<TSource, IEnumerable<TResult>> selector)
+        public static ValueEnumerable<TResult, SelectManyNode<TSource, TResult, EnumerableNode<TSource>, EnumerableNode<TResult>>> SelectMany<TSource, TResult>(this IEnumerable<TSource> source, Func<TSource, IEnumerable<TResult>> selector)
         {
             if (selector == null)
                 throw new ArgumentNullException(nameof(selector));
