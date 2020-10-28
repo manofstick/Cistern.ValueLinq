@@ -63,7 +63,7 @@
 
         public TResult GetResult<TResult>() => _next.GetResult<TResult>();
 
-        public void Init(int? size) => _next.Init(size);
+        public void Init(int? size) => _next.Init(null);
 
         public bool ProcessNext(T input)
         {

@@ -2,6 +2,7 @@
 
 namespace Cistern.ValueLinq.Aggregation
 {
+#if OLD_WAY
     struct SumInt
         : INode
     {
@@ -61,4 +62,40 @@ namespace Cistern.ValueLinq.Aggregation
         TResult INode.CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum)
             => Impl.CreateObjectViaFastEnumerator<TResult>();
     }
+#endif
+    struct SumIntForward
+        : IForwardEnumerator<int>
+    {
+        private int _sum;
+
+        public void Init(int? size) { }
+
+        public TResult GetResult<TResult>() => (TResult)(object)_sum;
+
+        public bool ProcessNext(int input)
+        {
+            checked
+            {
+                _sum += input;
+                return true;
+            }
+        }
+    }
+
+    struct SumDoubleForward
+        : IForwardEnumerator<double>
+    {
+        private double _sum;
+
+        public TResult GetResult<TResult>() => (TResult)(object)_sum;
+
+        public void Init(int? _) { }
+
+        public bool ProcessNext(double input)
+        {
+            _sum += input;
+            return true;
+        }
+    }
+
 }

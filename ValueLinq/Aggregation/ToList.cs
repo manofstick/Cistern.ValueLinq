@@ -2,6 +2,7 @@
 
 namespace Cistern.ValueLinq.Aggregation
 {
+#if OLD_WAY
     struct ToList
         : INode
     {
@@ -46,6 +47,24 @@ namespace Cistern.ValueLinq.Aggregation
 
                 return list;
             }
+        }
+    }
+
+#endif
+
+    struct ToListForward<T>
+        : IForwardEnumerator<T>
+    {
+        private List<T> _list;
+
+        TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_list;
+
+        void IForwardEnumerator<T>.Init(int? size) => _list = size.HasValue ? new List<T>(size.Value) : new List<T>();
+
+        bool IForwardEnumerator<T>.ProcessNext(T input)
+        {
+            _list.Add(input);
+            return true;
         }
     }
 }

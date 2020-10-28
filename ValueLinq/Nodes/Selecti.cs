@@ -53,8 +53,24 @@ namespace Cistern.ValueLinq.Nodes
         bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false;}
 
         public TResult CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
-        {
-            throw new NotImplementedException();
-        }
+            => _nodeT.CreateObjectViaFastEnumerator<T, TResult, SelectiFoward<T, TIn, FEnumerator>>(new SelectiFoward<T, TIn, FEnumerator>(fenum, (Func<T, int, TIn>)(object) _map));
     }
+
+    struct SelectiFoward<T, U, Next>
+        : IForwardEnumerator<T>
+        where Next : IForwardEnumerator<U>
+    {
+        Next _next;
+        Func<T, int, U> _selector;
+        int _idx;
+
+        public SelectiFoward(in Next prior, Func<T, int, U> predicate) => (_next, _selector, _idx) = (prior, predicate, 0);
+
+        public TResult GetResult<TResult>() => _next.GetResult<TResult>();
+
+        public void Init(int? size) => _next.Init(size);
+
+        public bool ProcessNext(T input) => _next.ProcessNext(_selector(input, _idx++));
+    }
+
 }

@@ -131,13 +131,21 @@ namespace Cistern.ValueLinq.Containers
         internal static TResult FastEnumerate<TIn, TResult, FEnumerator>(TIn[] array, FEnumerator fenum)
             where FEnumerator : IForwardEnumerator<TIn>
         {
-            fenum.Init(null);
-            foreach (var item in array)
+            fenum.Init(array.Length);
+
+            Loop(array, ref fenum);
+
+            return fenum.GetResult<TResult>();
+        }
+
+        private static void Loop<TIn, FEnumerator>(TIn[] array, ref FEnumerator fenum)
+            where FEnumerator : IForwardEnumerator<TIn>
+        {
+            for (var i = 0; i < array.Length; ++i)
             {
-                if (!fenum.ProcessNext(item))
+                if (!fenum.ProcessNext(array[i]))
                     break;
             }
-            return fenum.GetResult<TResult>();
         }
     }
 }

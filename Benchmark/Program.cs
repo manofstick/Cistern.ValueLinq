@@ -22,7 +22,7 @@ namespace Cistern.Benchmarks
             Double.Any.Benchmark.SanityCheck();
             Double.SelectSum.Benchmark.SanityCheck();
 
-            var summary = BenchmarkRunner.Run<DoubleDoubleDouble.SelectWhereAggregate.Benchmark>();
+            var summary = BenchmarkRunner.Run<Double.SelectSum.Benchmark>();
         }
     }
 }

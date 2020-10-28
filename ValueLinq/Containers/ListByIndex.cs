@@ -130,15 +130,22 @@ namespace Cistern.ValueLinq.Containers
             return newList;
         }
 
-        internal static TResult FastEnumerate<TIn, TResult, FEnumerator>(List<TIn> list, FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
+        internal static TResult FastEnumerate<TIn, TResult, FEnumerator>(List<TIn> list, FEnumerator fenum)
+            where FEnumerator : IForwardEnumerator<TIn>
         {
-            fenum.Init(null);
-            for(var i=0; i < list.Count; ++i)
+            fenum.Init(list.Count);
+            DoLoop(list, ref fenum);
+            return fenum.GetResult<TResult>();
+        }
+
+        private static void DoLoop<TIn, FEnumerator>(List<TIn> list, ref FEnumerator fenum)
+            where FEnumerator : IForwardEnumerator<TIn>
+        {
+            for (var i = 0; i < list.Count; ++i)
             {
                 if (!fenum.ProcessNext(list[i]))
                     break;
             }
-            return fenum.GetResult<TResult>();
         }
     }
 

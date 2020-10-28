@@ -10,12 +10,18 @@ namespace Cistern.Benchmarks.Double.SelectSum
     {
         IEnumerable<double> _double;
 
+#if trueX
         [Params(0, 1, 10, 100, 1000, 1000000)]
-        //[Params(1000000)]
+#else
+        [Params(100)]
+#endif
         public int Length { get; set; } = 0;
 
+#if trueX
         [Params(ContainerTypes.Array, ContainerTypes.Enumerable, ContainerTypes.List)]
-        //[Params(ContainerTypes.Enumerable)]
+#else
+        [Params(ContainerTypes.Array)]
+#endif
         public ContainerTypes ContainerType { get; set; } = ContainerTypes.Enumerable;
 
         [GlobalSetup]

@@ -100,12 +100,16 @@ namespace Cistern.ValueLinq
             return new ValueEnumerable<T, WhereNode<T, TPrior>>(new WhereNode<T, TPrior>(in prior.Node, predicate));
         }
         public static ValueEnumerable<T, Where_InNode<T, TPrior>> Where<T, TPrior>(in this ValueEnumerable<T, TPrior> prior, InFunc<T, bool> f) where TPrior : INode => new ValueEnumerable<T, Where_InNode<T, TPrior>>(new Where_InNode<T, TPrior>(in prior.Node, f));
-        public static List<T> ToList<T, Inner>(in this ValueEnumerable<T, Inner> inner) where Inner : INode =>
-            inner.Node.CheckForOptimization<T, Optimizations.ToList_XXX, List<T>>(new Optimizations.ToList_XXX(), out var list) switch
+        public static List<T> ToList<T, Inner>(in this ValueEnumerable<T, Inner> inner) where Inner : INode
+#if OLD_WAY
+            => inner.Node.CheckForOptimization<T, Optimizations.ToList_XXX, List<T>>(new Optimizations.ToList_XXX(), out var list) switch
             {
                 false => Nodes<List<T>>.Aggregation<Inner, ToList>(in inner.Node),
                 true => list,
             };
+#else
+            => inner.Node.CreateObjectViaFastEnumerator<T, List<T>, ToListForward<T>>(new ToListForward<T>());
+#endif
 
         public static T Last<T, Inner>(in this ValueEnumerable<T, Inner> inner) where Inner : INode =>
             (inner.Node.CheckForOptimization<T, Optimizations.TryLast, (bool, T)>(new Optimizations.TryLast(), out var maybeLast), maybeLast) switch
@@ -123,8 +127,18 @@ namespace Cistern.ValueLinq
             };
 
 
-        public static int Sum<Inner>(in this ValueEnumerable<int, Inner> inner) where Inner : INode => Nodes<int>.Aggregation<Inner, SumInt>(in inner.Node);
-        public static double Sum<Inner>(in this ValueEnumerable<double, Inner> inner) where Inner : INode => Nodes<double>.Aggregation<Inner, SumDouble>(in inner.Node);
+        public static int Sum<Inner>(in this ValueEnumerable<int, Inner> inner) where Inner : INode
+#if OLD_WAY
+            => Nodes<int>.Aggregation<Inner, SumInt>(in inner.Node);
+#else
+            => inner.Node.CreateObjectViaFastEnumerator<int, int, SumIntForward>(new SumIntForward());
+#endif
+        public static double Sum<Inner>(in this ValueEnumerable<double, Inner> inner) where Inner : INode
+#if OLD_WAY
+            => Nodes<double>.Aggregation<Inner, SumDouble>(in inner.Node);
+#else
+            => inner.Node.CreateObjectViaFastEnumerator<double, double, SumDoubleForward>(new SumDoubleForward());
+#endif
 
         public static int Count<T, Inner>(in this ValueEnumerable<T, Inner> inner) where Inner : INode => Enumerable.Count<T, Inner>(in inner.Node);
 

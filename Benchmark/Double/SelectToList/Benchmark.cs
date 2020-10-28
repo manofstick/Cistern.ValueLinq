@@ -10,7 +10,7 @@ namespace Cistern.Benchmarks.Double.SelectToList
     {
         IEnumerable<double> _double;
 
-#if LONG
+#if true
         [Params(0, 1, 10, 100, 1000, 1000000)]
 #else
         [Params(0, 1, 10, 100)]
