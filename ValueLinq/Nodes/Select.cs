@@ -51,26 +51,6 @@ namespace Cistern.ValueLinq.Nodes
 
         bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result)
         {
-            if (typeof(TRequest) == typeof(Optimizations.ToList_XXX))
-            {
-                return _nodeT.CheckForOptimization<TOuter, Optimizations.ToList_Select_XXX<T, U>, TResult>(new Optimizations.ToList_Select_XXX<T, U>(_map), out result);
-            }
-
-            if (typeof(TRequest) == typeof(Optimizations.ToList_Select_XXX<U, TOuter>))
-            {
-                var fromRequest = (Optimizations.ToList_Select_XXX<U, TOuter>)(object)request;
-                var u2Outer = fromRequest.Map;
-                var t2u = _map;
-                TOuter t2Outer(T t) => u2Outer(t2u(t));
-                return _nodeT.CheckForOptimization<TOuter, Optimizations.ToList_Select_XXX<T, TOuter>, TResult>(new Optimizations.ToList_Select_XXX<T, TOuter>(t2Outer), out result);
-            }
-
-            if (typeof(TRequest) == typeof(Optimizations.ToList_Where_XXX<TOuter>))
-            {
-                var fromRequest = (Optimizations.ToList_Where_XXX<U>)(object)request;
-                return _nodeT.CheckForOptimization<U, Optimizations.ToList_Where_Select_XXX<T, U>, TResult>(new Optimizations.ToList_Where_Select_XXX<T, U>(_map, fromRequest.Filter), out result);
-            }
-
             result = default;
             return false;
         }

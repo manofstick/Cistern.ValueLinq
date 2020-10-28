@@ -101,15 +101,7 @@ namespace Cistern.ValueLinq
         }
         public static ValueEnumerable<T, Where_InNode<T, TPrior>> Where<T, TPrior>(in this ValueEnumerable<T, TPrior> prior, InFunc<T, bool> f) where TPrior : INode => new ValueEnumerable<T, Where_InNode<T, TPrior>>(new Where_InNode<T, TPrior>(in prior.Node, f));
         public static List<T> ToList<T, Inner>(in this ValueEnumerable<T, Inner> inner) where Inner : INode
-#if OLD_WAY
-            => inner.Node.CheckForOptimization<T, Optimizations.ToList_XXX, List<T>>(new Optimizations.ToList_XXX(), out var list) switch
-            {
-                false => Nodes<List<T>>.Aggregation<Inner, ToList>(in inner.Node),
-                true => list,
-            };
-#else
             => inner.Node.CreateObjectViaFastEnumerator<T, List<T>, ToListForward<T>>(new ToListForward<T>());
-#endif
 
         public static T Last<T, Inner>(in this ValueEnumerable<T, Inner> inner) where Inner : INode =>
             (inner.Node.CheckForOptimization<T, Optimizations.TryLast, (bool, T)>(new Optimizations.TryLast(), out var maybeLast), maybeLast) switch

@@ -52,8 +52,24 @@ namespace Cistern.ValueLinq.Containers
         bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
 
         public TResult CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
+            => RepeatNode.FastEnumerate<TIn, TResult, FEnumerator>((TIn)(object)_element, _count, fenum);
+    }
+
+    static class RepeatNode
+    {
+        internal static TResult FastEnumerate<TIn, TResult, FEnumerator>(TIn element, int count, FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
         {
-            throw new NotImplementedException();
+            fenum.Init(count);
+            Loop<TIn, FEnumerator>(element, count, ref fenum);
+            return fenum.GetResult<TResult>();
+        }
+
+        private static void Loop<TIn, FEnumerator>(TIn element, int count, ref FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
+        {
+            for(var i=0; i < count; ++i)
+            {
+                fenum.ProcessNext(element);
+            }
         }
     }
 }

@@ -44,37 +44,6 @@ namespace Cistern.ValueLinq.Containers
 
         bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result)
         {
-            // To me these are somewhat dubious, because we're using the List<T>.Enumerator to track changes to the collection
-            // yet we're using the indexer here. Anyway, it's the same in System.Linq's version, so there you go
-
-            if (typeof(TRequest) == typeof(Optimizations.ToList_Select_XXX<T, TOuter>))
-            {
-                var toListSelect = (Optimizations.ToList_Select_XXX<T, TOuter>)(object)request;
-                result = (TResult)(object)ListByIndexNode.ToList(_list, toListSelect.Map);
-                return true;
-            }
-
-            if (typeof(TRequest) == typeof(Optimizations.ToList_Where_XXX<T>))
-            {
-                var toListWhere = (Optimizations.ToList_Where_XXX<T>)(object)request;
-                result = (TResult)(object)ListByIndexNode.ToList(_list, toListWhere.Filter);
-                return true;
-            }
-
-            if (typeof(TRequest) == typeof(Optimizations.ToList_Where_Select_XXX<T, TOuter>))
-            {
-                var toListSelectWhere = (Optimizations.ToList_Where_Select_XXX<T, TOuter>)(object)request;
-                result = (TResult)(object)ListByIndexNode.ToList(_list, toListSelectWhere.Map, toListSelectWhere.Filter);
-                return true;
-            }
-
-            if (typeof(TRequest) == typeof(Optimizations.ToList_Select_Where_XXX<T, TOuter>))
-            {
-                var toListSelectWhere = (Optimizations.ToList_Select_Where_XXX<T, TOuter>)(object)request;
-                result = (TResult)(object)ListByIndexNode.ToList(_list, toListSelectWhere.Filter, toListSelectWhere.Map);
-                return true;
-            }
-
             result = default;
             return false;
         }

@@ -22,15 +22,6 @@ namespace Cistern.ValueLinq.Containers
 
         bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result)
         {
-            if ((typeof(TRequest) == typeof(Optimizations.ToList_Select_XXX<T, TOuter>))
-             || (typeof(TRequest) == typeof(Optimizations.ToList_Where_XXX<T>))
-             || (typeof(TRequest) == typeof(Optimizations.ToList_Where_Select_XXX<T, TOuter>))
-             || (typeof(TRequest) == typeof(Optimizations.ToList_Select_Where_XXX<T, TOuter>)))
-            {
-                result = (TResult)(object)new List<TOuter>();
-                return true;
-            }
-
             if (typeof(TRequest) == typeof(Optimizations.Count))
             {
                 result = (TResult)(object)0;
@@ -42,9 +33,7 @@ namespace Cistern.ValueLinq.Containers
         }
 
         public TResult CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
-        {
-            throw new NotImplementedException();
-        }
+            => EmptyNode.FastEnumerate<TIn, TResult, FEnumerator>(fenum);
     }
 
     static class EmptyNode
@@ -55,6 +44,12 @@ namespace Cistern.ValueLinq.Containers
         {
             var enumerator = new EmptyFastEnumerator<T>();
             return nodes.CreateObject<CreationType, T, EmptyFastEnumerator<T>>(ref enumerator);
+        }
+
+        internal static TResult FastEnumerate<TIn, TResult, FEnumerator>(FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
+        {
+            fenum.Init(0);
+            return fenum.GetResult<TResult>();
         }
     }
 }
