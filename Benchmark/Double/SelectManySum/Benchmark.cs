@@ -50,6 +50,7 @@ namespace Cistern.Benchmarks.Double.SelectManySum
             var check = new Benchmark();
 
             check.Length = 100;
+            check.ContainerType = ContainerTypes.Array;
             check.SetupData();
 
             var baseline = check.Linq();

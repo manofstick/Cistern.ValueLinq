@@ -1,6 +1,5 @@
 ﻿using Cistern.ValueLinq.ValueEnumerable;
 using System;
-using System.Linq;
 
 namespace Cistern.ValueLinq.Nodes
 {
@@ -86,20 +85,57 @@ namespace Cistern.ValueLinq.Nodes
 
         private readonly int Count()
         {
+            using var e = Nodes<T>.CreateValueEnumerator(_nodeT);
+            return SelectManyImpl.Count(e.FastEnumerator, _map);
+        }
+
+        public TResult CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
+            => _nodeT.CreateObjectViaFastEnumerator<T, TResult, SelectManyFoward<T, TIn, NodeU, FEnumerator>>(new SelectManyFoward<T, TIn, NodeU, FEnumerator>(new SelectManyCommonNext<TIn, FEnumerator>(in fenum), (Func<T, ValueEnumerable<TIn, NodeU>>)(object) _map));
+    }
+
+    static class SelectManyImpl
+    {
+        public static int Count<T, U, NodeU>(FastEnumerator<T> enumerator, Func<T, ValueEnumerable<U, NodeU>> _map)
+            where NodeU : INode
+        {
             checked
             {
-                var e = Nodes<T>.CreateValueEnumerator(_nodeT).FastEnumerator;
                 var count = 0;
-                while (e.TryGetNext(out var item))
+                while (enumerator.TryGetNext(out var item))
                 {
-                    count += Enumerable.Count(_map(item));
+                    count += _map(item).Count();
                 }
                 return count;
             }
         }
+    }
 
-        public TResult CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
-            => _nodeT.CreateObjectViaFastEnumerator<T, TResult, SelectManyFoward<T, TIn, NodeU, FEnumerator>>(new SelectManyFoward<T, TIn, NodeU, FEnumerator>(fenum, (Func<T, ValueEnumerable<TIn, NodeU>>)(object) _map));
+    sealed class SelectManyCommonNext<T, Next>
+        where Next : IForwardEnumerator<T>
+    {
+        private Next _next;
+
+        public SelectManyCommonNext(in Next next) => _next = next;
+
+        public void Init(int? _) => _next.Init(null);
+        public bool ProcessNext(T input) => _next.ProcessNext(input);
+        public TResult GetResult<TResult>() => _next.GetResult<TResult>();
+    }
+
+    struct SelectManyProcessNextForward<T, Next>
+        : IForwardEnumerator<T>
+        where Next : IForwardEnumerator<T>
+    {
+        SelectManyCommonNext<T, Next> _next;
+        private bool _processNext;
+
+        public SelectManyProcessNextForward(SelectManyCommonNext<T, Next> next) => (_next, _processNext) = (next, false);
+
+        TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_processNext;
+
+        void IForwardEnumerator<T>.Init(int? size) {}
+
+        bool IForwardEnumerator<T>.ProcessNext(T input) => _processNext = _next.ProcessNext(input);
     }
 
     struct SelectManyFoward<T, U, NodeU, Next>
@@ -107,31 +143,16 @@ namespace Cistern.ValueLinq.Nodes
         where Next : IForwardEnumerator<U>
         where NodeU : INode
     {
-        Next _next;
+        private SelectManyCommonNext<U, Next> _next;
         private Func<T, ValueEnumerable<U, NodeU>> _getEnumerable;
 
-        public SelectManyFoward(in Next prior, Func<T, ValueEnumerable<U, NodeU>> predicate) => (_next, _getEnumerable) = (prior, predicate);
+        public SelectManyFoward(in SelectManyCommonNext<U, Next> next, Func<T, ValueEnumerable<U, NodeU>> predicate) => (_next, _getEnumerable) = (next, predicate);
 
         public TResult GetResult<TResult>() => _next.GetResult<TResult>();
 
-        public void Init(int? size) => _next.Init(size);
+        public void Init(int? size) => _next.Init(null);
 
-        public bool ProcessNext(T input)
-        {
-            // TODO: think of cheaper pass through mechanism
-            var enumerator =
-                _getEnumerable(input)
-                .GetEnumerator()
-                .FastEnumerator;
-
-            while (enumerator.TryGetNext(out var current))
-            {
-                if (!_next.ProcessNext(current))
-                    return false;
-            }
-
-            return true;
-        }
+        public bool ProcessNext(T input) =>
+            _getEnumerable(input).Node.CreateObjectViaFastEnumerator<U, bool, SelectManyProcessNextForward<U, Next>>(new SelectManyProcessNextForward<U, Next>(_next));
     }
-
 }

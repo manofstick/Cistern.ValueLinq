@@ -8,7 +8,7 @@ namespace Cistern.ValueLinq.Containers
     {
         private readonly IEnumerator<T> _enumerator;
 
-        public EnumerableFastEnumerator(IEnumerator<T> enumerator) => _enumerator = enumerator;
+        public EnumerableFastEnumerator(IEnumerable<T> enumerable) => _enumerator = enumerable.GetEnumerator();
 
         public (bool, int)? InitialSize => null;
 
@@ -54,7 +54,7 @@ namespace Cistern.ValueLinq.Containers
             {
                 return node.CreateObjectDescent<CreationType, Head, Tail>(ref nodes);
             }
-            return EnumerableNode.Create<T, Head, Tail, CreationType>(_enumerable.GetEnumerator(), ref nodes);
+            return EnumerableNode.Create<T, Head, Tail, CreationType>(_enumerable, ref nodes);
         }
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
@@ -108,11 +108,11 @@ namespace Cistern.ValueLinq.Containers
 
     static class EnumerableNode
     {
-        public static CreationType Create<T, Head, Tail, CreationType>(IEnumerator<T> enumerator, ref Nodes<Head, Tail> nodes)
+        public static CreationType Create<T, Head, Tail, CreationType>(IEnumerable<T> enumerable, ref Nodes<Head, Tail> nodes)
             where Head : INode
             where Tail : INodes
         {
-            var e = new EnumerableFastEnumerator<T>(enumerator);
+            var e = new EnumerableFastEnumerator<T>(enumerable);
             return nodes.CreateObject<CreationType, T, EnumerableFastEnumerator<T>>(ref e);
         }
 

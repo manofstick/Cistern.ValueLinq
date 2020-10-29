@@ -350,13 +350,13 @@ namespace Linqs.Tests
             Assert.Equal(expected, source.SelectMany((e, i) => i == 4 ? e.total : (IEnumerable<int?>)Enumerable.Empty<int?>(), (e, f) => f.ToString()));
         }
 
-        [Fact]
+        [Fact(Skip = "CISTERN.VALUELINQ: Irrelevant")]
         public void ForcedToEnumeratorDoesntEnumerate()
         {
-            var iterator = NumberRangeGuaranteedNotCollectionType(0, 3).SelectMany(i => new int[0]);
-            // Don't insist on this behaviour, but check it's correct if it happens
-            var en = iterator as IEnumerator<int>;
-            Assert.False(en != null && en.MoveNext());
+            //var iterator = NumberRangeGuaranteedNotCollectionType(0, 3).SelectMany(i => new int[0]);
+            //// Don't insist on this behaviour, but check it's correct if it happens
+            //var en = iterator as IEnumerator<int>;
+            //Assert.False(en != null && en.MoveNext());
         }
 
         [Fact]
@@ -429,7 +429,7 @@ namespace Linqs.Tests
             var iterator = source.SelectMany(_ => subCollection);
 
             int index = 0; // How much have we gone into the iterator?
-            IEnumerator<int> e = iterator.GetEnumerator();
+            IEnumerator<int> e = ((IEnumerable<int>)iterator).GetEnumerator();
 
             using (e)
             {
