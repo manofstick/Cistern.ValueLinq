@@ -67,8 +67,30 @@ namespace Cistern.ValueLinq
                 : new List<T>(source);
         }
 
-        public static int Sum(this IEnumerable<int> inner) => inner.OfEnumerable().Sum();
-        public static double Sum(this IEnumerable<double> inner) => inner.OfEnumerable().Sum();
+        public static decimal Sum(this IEnumerable<decimal> inner) => inner.OfEnumerable().Sum();
+        public static double  Sum(this IEnumerable<double>  inner) => inner.OfEnumerable().Sum();
+        public static int     Sum(this IEnumerable<int>     inner) => inner.OfEnumerable().Sum();
+        public static float   Sum(this IEnumerable<float>   inner) => inner.OfEnumerable().Sum();
+        public static long    Sum(this IEnumerable<long>    inner) => inner.OfEnumerable().Sum();
+
+        public static decimal? Sum(this IEnumerable<decimal?> inner) => inner.OfEnumerable().Sum();
+        public static double?  Sum(this IEnumerable<double?>  inner) => inner.OfEnumerable().Sum();
+        public static int?     Sum(this IEnumerable<int?>     inner) => inner.OfEnumerable().Sum();
+        public static float?   Sum(this IEnumerable<float?>   inner) => inner.OfEnumerable().Sum();
+        public static long?    Sum(this IEnumerable<long?>    inner) => inner.OfEnumerable().Sum();
+
+        public static decimal Sum<TSource>(this IEnumerable<TSource> inner, Func<TSource, decimal> selector) => inner.OfEnumerable().Select(selector).Sum();
+        public static double  Sum<TSource>(this IEnumerable<TSource> inner, Func<TSource, double > selector) => inner.OfEnumerable().Select(selector).Sum();
+        public static int     Sum<TSource>(this IEnumerable<TSource> inner, Func<TSource, int    > selector) => inner.OfEnumerable().Select(selector).Sum();
+        public static float   Sum<TSource>(this IEnumerable<TSource> inner, Func<TSource, float  > selector) => inner.OfEnumerable().Select(selector).Sum();
+        public static long    Sum<TSource>(this IEnumerable<TSource> inner, Func<TSource, long   > selector) => inner.OfEnumerable().Select(selector).Sum();
+
+        public static decimal? Sum<TSource>(this IEnumerable<TSource> inner, Func<TSource, decimal?> selector) => inner.OfEnumerable().Select(selector).Sum();
+        public static double?  Sum<TSource>(this IEnumerable<TSource> inner, Func<TSource, double? > selector) => inner.OfEnumerable().Select(selector).Sum();
+        public static int?     Sum<TSource>(this IEnumerable<TSource> inner, Func<TSource, int?    > selector) => inner.OfEnumerable().Select(selector).Sum();
+        public static float?   Sum<TSource>(this IEnumerable<TSource> inner, Func<TSource, float?  > selector) => inner.OfEnumerable().Select(selector).Sum();
+        public static long?    Sum<TSource>(this IEnumerable<TSource> inner, Func<TSource, long?   > selector) => inner.OfEnumerable().Select(selector).Sum();
+
 
         public static int Count<T>(this IEnumerable<T> inner) => inner.OfEnumerable().Count();
 

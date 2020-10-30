@@ -1,99 +1,47 @@
-﻿using System;
+﻿using Cistern.ValueLinq.Maths;
 
 namespace Cistern.ValueLinq.Aggregation
 {
-#if OLD_WAY
-    struct SumInt
-        : INode
+    struct Sum<T, Accumulator, Quotient, Math>
+        : IForwardEnumerator<T>
+        where T : struct
+        where Accumulator : struct
+        where Quotient : struct
+        where Math : struct, IMathsOperations<T, Accumulator, Quotient>
     {
-        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
-            => Impl.CreateObjectDescent<CreationType>();
+        static Math math = default;
 
-        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator enumerator)
+        private Accumulator sum;
+
+        public TResult GetResult<TResult>() => (TResult)(object)math.Cast(sum);
+
+        public void Init(int? size) => sum = math.Zero;
+
+        public bool ProcessNext(T input)
         {
-            checked
-            {
-                try
-                {
-                    var total = 0;
-                    while (enumerator.TryGetNext(out var current))
-                        total += (int)(object)current;
-                    return (CreationType)(object)total;
-                }
-                finally
-                {
-                    enumerator.Dispose();
-                }
-            }
-        }
-
-        bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result)
-            => Impl.CheckForOptimization(out result);
-
-        TResult INode.CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum)
-            => Impl.CreateObjectViaFastEnumerator<TResult>();
-    }
-
-    struct SumDouble
-        : INode
-    {
-        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => throw new NotImplementedException();
-
-        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator enumerator)
-        {
-            checked
-            {
-                try
-                {
-                    var total = 0.0;
-                    while (enumerator.TryGetNext(out var current))
-                        total += (double)(object)current;
-                    return (CreationType)(object)total;
-                }
-                finally
-                {
-                    enumerator.Dispose();
-                }
-            }
-        }
-
-        bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
-
-        TResult INode.CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum)
-            => Impl.CreateObjectViaFastEnumerator<TResult>();
-    }
-#endif
-    struct SumIntForward
-        : IForwardEnumerator<int>
-    {
-        private int _sum;
-
-        public void Init(int? size) { }
-
-        public TResult GetResult<TResult>() => (TResult)(object)_sum;
-
-        public bool ProcessNext(int input)
-        {
-            checked
-            {
-                _sum += input;
-                return true;
-            }
+            sum = math.Add(sum, input);
+            return true;
         }
     }
 
-    struct SumDoubleForward
-        : IForwardEnumerator<double>
+    struct SumNullable<T, Accumulator, Quotient, Math>
+        : IForwardEnumerator<T?>
+        where T : struct
+        where Accumulator : struct
+        where Quotient : struct
+        where Math : struct, IMathsOperations<T, Accumulator, Quotient>
     {
-        private double _sum;
+        static Math math = default;
 
-        public TResult GetResult<TResult>() => (TResult)(object)_sum;
+        private Accumulator sum;
 
-        public void Init(int? _) { }
+        public TResult GetResult<TResult>() => (TResult)(object)math.Cast(sum);
 
-        public bool ProcessNext(double input)
+        public void Init(int? size) => sum = math.Zero;
+
+        public bool ProcessNext(T? input)
         {
-            _sum += input;
+            sum = math.Add(sum, input);
             return true;
         }
     }

@@ -4,7 +4,19 @@ using Cistern.ValueLinq.Nodes;
 using Cistern.ValueLinq.ValueEnumerable;
 using System;
 using System.Collections.Generic;
-using System.Threading;
+
+using SumDecimal = Cistern.ValueLinq.Aggregation.Sum<decimal, decimal, decimal, Cistern.ValueLinq.Maths.OpsDecimal>;
+using SumDouble  = Cistern.ValueLinq.Aggregation.Sum<double,  double,  double,  Cistern.ValueLinq.Maths.OpsDouble>;
+using SumFloat   = Cistern.ValueLinq.Aggregation.Sum<float,   double,  float,   Cistern.ValueLinq.Maths.OpsFloat>;
+using SumInt     = Cistern.ValueLinq.Aggregation.Sum<int,     int,     double,  Cistern.ValueLinq.Maths.OpsInt>;
+using SumLong    = Cistern.ValueLinq.Aggregation.Sum<long,    long,    double,  Cistern.ValueLinq.Maths.OpsLong>;
+
+using SumDecimalNullable = Cistern.ValueLinq.Aggregation.SumNullable<decimal, decimal, decimal, Cistern.ValueLinq.Maths.OpsDecimal>;
+using SumDoubleNullable  = Cistern.ValueLinq.Aggregation.SumNullable<double,  double,  double,  Cistern.ValueLinq.Maths.OpsDouble>;
+using SumFloatNullable   = Cistern.ValueLinq.Aggregation.SumNullable<float,   double,  float,   Cistern.ValueLinq.Maths.OpsFloat>;
+using SumIntNullable     = Cistern.ValueLinq.Aggregation.SumNullable<int,     int,     double,  Cistern.ValueLinq.Maths.OpsInt>;
+using SumLongNullable    = Cistern.ValueLinq.Aggregation.SumNullable<long,    long,    double,  Cistern.ValueLinq.Maths.OpsLong>;
+
 
 namespace Cistern.ValueLinq
 {
@@ -119,18 +131,17 @@ namespace Cistern.ValueLinq
             };
 
 
-        public static int Sum<Inner>(in this ValueEnumerable<int, Inner> inner) where Inner : INode
-#if OLD_WAY
-            => Nodes<int>.Aggregation<Inner, SumInt>(in inner.Node);
-#else
-            => inner.Node.CreateObjectViaFastEnumerator<int, int, SumIntForward>(new SumIntForward());
-#endif
-        public static double Sum<Inner>(in this ValueEnumerable<double, Inner> inner) where Inner : INode
-#if OLD_WAY
-            => Nodes<double>.Aggregation<Inner, SumDouble>(in inner.Node);
-#else
-            => inner.Node.CreateObjectViaFastEnumerator<double, double, SumDoubleForward>(new SumDoubleForward());
-#endif
+        public static decimal Sum<Inner>(in this ValueEnumerable<decimal, Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<decimal, decimal, SumDecimal>(new SumDecimal());
+        public static double  Sum<Inner>(in this ValueEnumerable<double,  Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<double,  double,  SumDouble >(new SumDouble());
+        public static float   Sum<Inner>(in this ValueEnumerable<float,   Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<float,   float,   SumFloat  >(new SumFloat());
+        public static int     Sum<Inner>(in this ValueEnumerable<int,     Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<int,     int,     SumInt    >(new SumInt());
+        public static long    Sum<Inner>(in this ValueEnumerable<long,    Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<long,    long,    SumLong   >(new SumLong());
+
+        public static decimal? Sum<Inner>(in this ValueEnumerable<decimal?, Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<decimal?, decimal, SumDecimalNullable>(new SumDecimalNullable());
+        public static double?  Sum<Inner>(in this ValueEnumerable<double?,  Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<double?,  double,  SumDoubleNullable >(new SumDoubleNullable());
+        public static float?   Sum<Inner>(in this ValueEnumerable<float?,   Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<float?,   float,   SumFloatNullable  >(new SumFloatNullable());
+        public static int?     Sum<Inner>(in this ValueEnumerable<int?,     Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<int?,     int,     SumIntNullable    >(new SumIntNullable());
+        public static long?    Sum<Inner>(in this ValueEnumerable<long?,    Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<long?,    long,    SumLongNullable   >(new SumLongNullable());
 
         public static int Count<T, Inner>(in this ValueEnumerable<T, Inner> inner) where Inner : INode => Enumerable.Count<T, Inner>(in inner.Node);
 
