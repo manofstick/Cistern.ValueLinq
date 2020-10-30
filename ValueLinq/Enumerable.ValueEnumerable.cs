@@ -233,5 +233,26 @@ namespace Cistern.ValueLinq
             where First : INode
             where Second : INode
             => new ValueEnumerable<T, ConcatNode<T, First, Second>>(new ConcatNode<T, First, Second>(first.Node, second.Node));
+
+        // -- Value based operators
+
+        public static ValueEnumerable<U, ValueSelectNode<T, U, TPrior, IFunc>> Select<T, U, TPrior, IFunc>(in this ValueEnumerable<T, TPrior> prior, IFunc selector, U u = default)
+            where TPrior : INode
+            where IFunc : IFunc<T, U>
+        {
+            if (selector == null)
+                throw new ArgumentNullException(nameof(selector));
+
+            return new ValueEnumerable<U, ValueSelectNode<T, U, TPrior, IFunc>>(new ValueSelectNode<T, U, TPrior, IFunc>(in prior.Node, selector));
+        }
+        public static ValueEnumerable<T, ValueWhereNode<T, TPrior, Predicate>> Where<T, TPrior, Predicate>(in this ValueEnumerable<T, TPrior> prior, Predicate predicate)
+            where TPrior : INode
+            where Predicate : IFunc<T, bool>
+        {
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
+
+            return new ValueEnumerable<T, ValueWhereNode<T, TPrior, Predicate>>(new ValueWhereNode<T, TPrior, Predicate>(in prior.Node, predicate));
+        }
     }
 }

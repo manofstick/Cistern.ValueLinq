@@ -189,5 +189,15 @@ namespace Cistern.ValueLinq
 
             return first.OfEnumerable().Concat(second.OfEnumerable());
         }
+
+
+        // -- Value based select
+
+        public static ValueEnumerable<U, ValueSelectNode<T, U, EnumerableNode<T>, IFunc>> Select<T, U, IFunc>(this IEnumerable<T> prior, IFunc selector, U u = default)
+            where IFunc : IFunc<T, U> => prior.OfEnumerable().Select(selector, u);
+
+        public static ValueEnumerable<T, ValueWhereNode<T, EnumerableNode<T>, Predicate>> Where<T, Predicate>(this IEnumerable<T> inner, Predicate predicate)
+            where Predicate : IFunc<T, bool>
+            => inner.OfEnumerable().Where(predicate);
     }
 }
