@@ -67,6 +67,30 @@ namespace Cistern.ValueLinq
                 : new List<T>(source);
         }
 
+        public static decimal Average(this IEnumerable<decimal> inner) => inner.OfEnumerable().Average();
+        public static double  Average(this IEnumerable<double>  inner) => inner.OfEnumerable().Average();
+        public static double  Average(this IEnumerable<int>     inner) => inner.OfEnumerable().Average();
+        public static float   Average(this IEnumerable<float>   inner) => inner.OfEnumerable().Average();
+        public static double  Average(this IEnumerable<long>    inner) => inner.OfEnumerable().Average();
+
+        public static decimal? Average(this IEnumerable<decimal?> inner) => inner.OfEnumerable().Average();
+        public static double?  Average(this IEnumerable<double?>  inner) => inner.OfEnumerable().Average();
+        public static double?  Average(this IEnumerable<int?>     inner) => inner.OfEnumerable().Average();
+        public static float?   Average(this IEnumerable<float?>   inner) => inner.OfEnumerable().Average();
+        public static double?  Average(this IEnumerable<long?>    inner) => inner.OfEnumerable().Average();
+
+        public static decimal Average<TSource>(this IEnumerable<TSource> inner, Func<TSource, decimal> selector) => inner.OfEnumerable().Select(selector).Average();
+        public static double  Average<TSource>(this IEnumerable<TSource> inner, Func<TSource, double > selector) => inner.OfEnumerable().Select(selector).Average();
+        public static double  Average<TSource>(this IEnumerable<TSource> inner, Func<TSource, int    > selector) => inner.OfEnumerable().Select(selector).Average();
+        public static double  Average<TSource>(this IEnumerable<TSource> inner, Func<TSource, float  > selector) => inner.OfEnumerable().Select(selector).Average();
+        public static double  Average<TSource>(this IEnumerable<TSource> inner, Func<TSource, long   > selector) => inner.OfEnumerable().Select(selector).Average();
+
+        public static decimal? Average<TSource>(this IEnumerable<TSource> inner, Func<TSource, decimal?> selector) => inner.OfEnumerable().Select(selector).Average();
+        public static double?  Average<TSource>(this IEnumerable<TSource> inner, Func<TSource, double? > selector) => inner.OfEnumerable().Select(selector).Average();
+        public static double?  Average<TSource>(this IEnumerable<TSource> inner, Func<TSource, int?    > selector) => inner.OfEnumerable().Select(selector).Average();
+        public static float?   Average<TSource>(this IEnumerable<TSource> inner, Func<TSource, float?  > selector) => inner.OfEnumerable().Select(selector).Average();
+        public static double?  Average<TSource>(this IEnumerable<TSource> inner, Func<TSource, long?   > selector) => inner.OfEnumerable().Select(selector).Average();
+
         public static decimal Sum(this IEnumerable<decimal> inner) => inner.OfEnumerable().Sum();
         public static double  Sum(this IEnumerable<double>  inner) => inner.OfEnumerable().Sum();
         public static int     Sum(this IEnumerable<int>     inner) => inner.OfEnumerable().Sum();
