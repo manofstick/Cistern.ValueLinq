@@ -184,6 +184,7 @@ namespace Cistern.ValueLinq
         public static float   Min<Inner>(in this ValueEnumerable<float,   Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<float,   float,   MinFloat  >(new MinFloat());
         public static int     Min<Inner>(in this ValueEnumerable<int,     Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<int,     int,     MinInt    >(new MinInt());
         public static long    Min<Inner>(in this ValueEnumerable<long,    Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<long,    long,    MinLong   >(new MinLong());
+        public static T       Min<T, Inner>(in this ValueEnumerable<T,    Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<T,       T,       Min<T>    >(new Min<T>());
 
         public static decimal? Min<Inner>(in this ValueEnumerable<decimal?, Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<decimal?, decimal?, MinDecimalNullable>(new MinDecimalNullable());
         public static double?  Min<Inner>(in this ValueEnumerable<double?,  Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<double?,  double?,  MinDoubleNullable >(new MinDoubleNullable());
@@ -196,6 +197,7 @@ namespace Cistern.ValueLinq
         public static float   Max<Inner>(in this ValueEnumerable<float,   Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<float,   float,   MaxFloat  >(new MaxFloat());
         public static int     Max<Inner>(in this ValueEnumerable<int,     Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<int,     int,     MaxInt    >(new MaxInt());
         public static long    Max<Inner>(in this ValueEnumerable<long,    Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<long,    long,    MaxLong   >(new MaxLong());
+        public static T       Max<T, Inner>(in this ValueEnumerable<T,    Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<T,       T,       Max<T>    >(new Max<T>());
 
         public static decimal? Max<Inner>(in this ValueEnumerable<decimal?, Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<decimal?, decimal?, MaxDecimalNullable>(new MaxDecimalNullable());
         public static double?  Max<Inner>(in this ValueEnumerable<double?,  Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<double?,  double?,  MaxDoubleNullable >(new MaxDoubleNullable());

@@ -96,6 +96,7 @@ namespace Cistern.ValueLinq
         public static int     Min(this IEnumerable<int>     inner) => inner.OfEnumerable().Min();
         public static float   Min(this IEnumerable<float>   inner) => inner.OfEnumerable().Min();
         public static long    Min(this IEnumerable<long>    inner) => inner.OfEnumerable().Min();
+        public static T       Min<T>(this IEnumerable<T>    inner) => inner.OfEnumerable().Min();
 
         public static decimal? Min(this IEnumerable<decimal?> inner) => inner.OfEnumerable().Min();
         public static double?  Min(this IEnumerable<double?>  inner) => inner.OfEnumerable().Min();
@@ -108,6 +109,7 @@ namespace Cistern.ValueLinq
         public static int     Min<TSource>(this IEnumerable<TSource> inner, Func<TSource, int    > selector) => inner.OfEnumerable().Select(selector).Min();
         public static float   Min<TSource>(this IEnumerable<TSource> inner, Func<TSource, float  > selector) => inner.OfEnumerable().Select(selector).Min();
         public static long    Min<TSource>(this IEnumerable<TSource> inner, Func<TSource, long   > selector) => inner.OfEnumerable().Select(selector).Min();
+        public static T       Min<TSource, T>(this IEnumerable<TSource> inner, Func<TSource, T> selector) => inner.OfEnumerable().Select(selector).Min();
 
         public static decimal? Min<TSource>(this IEnumerable<TSource> inner, Func<TSource, decimal?> selector) => inner.OfEnumerable().Select(selector).Min();
         public static double?  Min<TSource>(this IEnumerable<TSource> inner, Func<TSource, double? > selector) => inner.OfEnumerable().Select(selector).Min();
@@ -121,6 +123,7 @@ namespace Cistern.ValueLinq
         public static int     Max(this IEnumerable<int>     inner) => inner.OfEnumerable().Max();
         public static float   Max(this IEnumerable<float>   inner) => inner.OfEnumerable().Max();
         public static long    Max(this IEnumerable<long>    inner) => inner.OfEnumerable().Max();
+        public static T       Max<T>(this IEnumerable<T>    inner) => inner.OfEnumerable().Max();
 
         public static decimal? Max(this IEnumerable<decimal?> inner) => inner.OfEnumerable().Max();
         public static double?  Max(this IEnumerable<double?>  inner) => inner.OfEnumerable().Max();
@@ -133,6 +136,7 @@ namespace Cistern.ValueLinq
         public static int     Max<TSource>(this IEnumerable<TSource> inner, Func<TSource, int    > selector) => inner.OfEnumerable().Select(selector).Max();
         public static float   Max<TSource>(this IEnumerable<TSource> inner, Func<TSource, float  > selector) => inner.OfEnumerable().Select(selector).Max();
         public static long    Max<TSource>(this IEnumerable<TSource> inner, Func<TSource, long   > selector) => inner.OfEnumerable().Select(selector).Max();
+        public static T       Max<TSource, T>(this IEnumerable<TSource> inner, Func<TSource, T> selector) => inner.OfEnumerable().Select(selector).Max();
 
         public static decimal? Max<TSource>(this IEnumerable<TSource> inner, Func<TSource, decimal?> selector) => inner.OfEnumerable().Select(selector).Max();
         public static double?  Max<TSource>(this IEnumerable<TSource> inner, Func<TSource, double? > selector) => inner.OfEnumerable().Select(selector).Max();

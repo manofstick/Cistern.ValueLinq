@@ -1,7 +1,45 @@
 ﻿using Cistern.ValueLinq.Maths;
+using System;
+using System.Collections.Generic;
 
 namespace Cistern.ValueLinq.Aggregation
 {
+    struct Min<T>
+        : IForwardEnumerator<T>
+    {
+        private static IComparer<T> comparer =
+            typeof(T) == typeof(string)
+                ? (IComparer<T>)StringComparer.CurrentCulture
+                : Comparer<T>.Default;
+
+        private T result;
+        private bool noData;
+
+        public TResult GetResult<TResult>()
+        {
+            if (noData && default(TResult) != null)
+                ThrowHelper.ThrowNoElementsException();
+            return (TResult)(object)result;
+        }
+
+        public void Init(int? size) => noData = true;
+
+        public bool ProcessNext(T input)
+        {
+            if (noData)
+            {
+                noData = false;
+                result = input;
+            }
+            else
+            {
+                if (result == null || (input != null && comparer.Compare(input, result) < 0))
+                    result = input;
+            }
+            return true;
+        }
+    }
+
     struct Min<T, Accumulator, Quotient, Math>
         : IForwardEnumerator<T>
         where T : struct
