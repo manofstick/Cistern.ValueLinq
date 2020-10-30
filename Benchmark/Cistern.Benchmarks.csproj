@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>TRACE;LINQAF,CISTERNLINQ</DefineConstants>
+    <DefineConstants>TRACE;LINQAF,CISTERNLINQ,STRUCTLINQ</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -19,6 +19,7 @@
     <PackageReference Include="Cistern.Linq" Version="0.1.1" />
     <PackageReference Include="LinqAF" Version="3.0.0" />
     <PackageReference Include="NetFabric.Hyperlinq" Version="3.0.0-beta26" />
+    <PackageReference Include="StructLinq.BCL" Version="0.20.2" />
   </ItemGroup>
 
   <ItemGroup>

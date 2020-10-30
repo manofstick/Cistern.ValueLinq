@@ -1,63 +1,62 @@
 ﻿using BenchmarkDotNet.Attributes;
-//using StructLinq;
+using StructLinq;
+using System.Collections.Generic;
 
 namespace Cistern.Benchmarks.ValueLambdas.WhereSelectSum
 {
     partial class Benchmark
     {
-        //struct WherePredicate : IFunction<int, bool>
-        //{
-        //    public readonly bool Eval(int element)
-        //    {
-        //        return (element & 1) == 0;
-        //    }
-        //}
+        struct WherePredicate : IFunction<int, bool> { public bool Eval(int element) => (element & 1) == 0; }
+        struct SelectFunction : IFunction<int, int> { public int Eval(int element) => element * 2; }
 
-        //struct SelectFunction : IFunction<int, int>
-        //{
-        //    public readonly int Eval(int element)
-        //    {
-        //        return element * 2;
-        //    }
-        //}
+        [Benchmark]
+        public int StructLinq()
+        {
+            return _ints switch
+            {
+                int[] asArray => AsArray(asArray),
+                List<int> asList => AsList(asList),
+                var x => AsEnumerable(x)
+            };
 
-        //[Benchmark]
-        //public int StructLinq() =>
-        //    _ints
-        //    .ToStructEnumerable()
-        //    .Where(x => (x & 1) == 0)
-        //    .Select(x => x * 2)
-        //    .Sum();
+            static int AsList(List<int> list)
+            {
+                var where = new WherePredicate();
+                var select = new SelectFunction();
 
+                return
+                    list
+                    .ToStructEnumerable()
+                    .Where(ref @where, x => x)
+                    .Select(ref @select, x => x, x => x)
+                    .Sum();
+            }
 
-        //[Benchmark]
-        //public int StructLinq_Structs()
-        //{
-        //    var where = new WherePredicate();
-        //    var select = new SelectFunction();
+            static int AsArray(int[] array)
+            {
+                var where = new WherePredicate();
+                var select = new SelectFunction();
 
-        //    return 
-        //        _ints
-        //        .ToStructEnumerable()
-        //        .Where(ref @where, x => x)
-        //        .Select(ref @select, x => x, x => x)
-        //        .Sum();
-        //}
+                return
+                    array
+                    .ToStructEnumerable()
+                    .Where(ref @where, x => x)
+                    .Select(ref @select, x => x, x => x)
+                    .Sum();
+            }
 
-        ////[Benchmark]
-        ////public double StructLinqLinq_Foreach()
-        ////{
-        ////    var total = 0.0;
-        ////    foreach (var item in 
-        ////        _ints
-        ////        .ToStructEnumerable()
-        ////        .Where(x => (x & 1) == 0)
-        ////        .Select(x => x * 2)
-        ////    )
-        ////    {
-        ////        total += item;
-        ////    }
-        ////    return total;
-        ////}
+            static int AsEnumerable(IEnumerable<int> enumerable)
+            {
+                var where = new WherePredicate();
+                var select = new SelectFunction();
+
+                return
+                    enumerable
+                    .ToStructEnumerable()
+                    .Where(ref @where, x => x)
+                    .Select(ref @select, x => x, x => x)
+                    .Sum();
+            }
+        }
     }
 }
