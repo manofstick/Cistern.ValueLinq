@@ -17,6 +17,30 @@ using AverageFloatNullable   = Cistern.ValueLinq.Aggregation.AverageNullable<flo
 using AverageIntNullable     = Cistern.ValueLinq.Aggregation.AverageNullable<int,     int,     double,  Cistern.ValueLinq.Maths.OpsInt>;
 using AverageLongNullable    = Cistern.ValueLinq.Aggregation.AverageNullable<long,    long,    double,  Cistern.ValueLinq.Maths.OpsLong>;
 
+using MinDecimal = Cistern.ValueLinq.Aggregation.Min<decimal, decimal, decimal, Cistern.ValueLinq.Maths.OpsDecimal>;
+using MinDouble  = Cistern.ValueLinq.Aggregation.Min<double,  double,  double,  Cistern.ValueLinq.Maths.OpsDouble>;
+using MinFloat   = Cistern.ValueLinq.Aggregation.Min<float,   double,  float,   Cistern.ValueLinq.Maths.OpsFloat>;
+using MinInt     = Cistern.ValueLinq.Aggregation.Min<int,     int,     double,  Cistern.ValueLinq.Maths.OpsInt>;
+using MinLong    = Cistern.ValueLinq.Aggregation.Min<long,    long,    double,  Cistern.ValueLinq.Maths.OpsLong>;
+
+using MinDecimalNullable = Cistern.ValueLinq.Aggregation.MinNullable<decimal, decimal, decimal, Cistern.ValueLinq.Maths.OpsDecimal>;
+using MinDoubleNullable  = Cistern.ValueLinq.Aggregation.MinNullable<double,  double,  double,  Cistern.ValueLinq.Maths.OpsDouble>;
+using MinFloatNullable   = Cistern.ValueLinq.Aggregation.MinNullable<float,   double,  float,   Cistern.ValueLinq.Maths.OpsFloat>;
+using MinIntNullable     = Cistern.ValueLinq.Aggregation.MinNullable<int,     int,     double,  Cistern.ValueLinq.Maths.OpsInt>;
+using MinLongNullable    = Cistern.ValueLinq.Aggregation.MinNullable<long,    long,    double,  Cistern.ValueLinq.Maths.OpsLong>;
+
+using MaxDecimal = Cistern.ValueLinq.Aggregation.Max<decimal, decimal, decimal, Cistern.ValueLinq.Maths.OpsDecimal>;
+using MaxDouble  = Cistern.ValueLinq.Aggregation.Max<double,  double,  double,  Cistern.ValueLinq.Maths.OpsDouble>;
+using MaxFloat   = Cistern.ValueLinq.Aggregation.Max<float,   double,  float,   Cistern.ValueLinq.Maths.OpsFloat>;
+using MaxInt     = Cistern.ValueLinq.Aggregation.Max<int,     int,     double,  Cistern.ValueLinq.Maths.OpsInt>;
+using MaxLong    = Cistern.ValueLinq.Aggregation.Max<long,    long,    double,  Cistern.ValueLinq.Maths.OpsLong>;
+
+using MaxDecimalNullable = Cistern.ValueLinq.Aggregation.MaxNullable<decimal, decimal, decimal, Cistern.ValueLinq.Maths.OpsDecimal>;
+using MaxDoubleNullable  = Cistern.ValueLinq.Aggregation.MaxNullable<double,  double,  double,  Cistern.ValueLinq.Maths.OpsDouble>;
+using MaxFloatNullable   = Cistern.ValueLinq.Aggregation.MaxNullable<float,   double,  float,   Cistern.ValueLinq.Maths.OpsFloat>;
+using MaxIntNullable     = Cistern.ValueLinq.Aggregation.MaxNullable<int,     int,     double,  Cistern.ValueLinq.Maths.OpsInt>;
+using MaxLongNullable    = Cistern.ValueLinq.Aggregation.MaxNullable<long,    long,    double,  Cistern.ValueLinq.Maths.OpsLong>;
+
 using SumDecimal = Cistern.ValueLinq.Aggregation.Sum<decimal, decimal, decimal, Cistern.ValueLinq.Maths.OpsDecimal>;
 using SumDouble  = Cistern.ValueLinq.Aggregation.Sum<double,  double,  double,  Cistern.ValueLinq.Maths.OpsDouble>;
 using SumFloat   = Cistern.ValueLinq.Aggregation.Sum<float,   double,  float,   Cistern.ValueLinq.Maths.OpsFloat>;
@@ -154,6 +178,30 @@ namespace Cistern.ValueLinq
         public static float?   Average<Inner>(in this ValueEnumerable<float?,   Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<float?,   float?,   AverageFloatNullable  >(new AverageFloatNullable());
         public static double?  Average<Inner>(in this ValueEnumerable<int?,     Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<int?,     double?,     AverageIntNullable    >(new AverageIntNullable());
         public static double?  Average<Inner>(in this ValueEnumerable<long?,    Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<long?,    double?,    AverageLongNullable   >(new AverageLongNullable());
+
+        public static decimal Min<Inner>(in this ValueEnumerable<decimal, Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<decimal, decimal, MinDecimal>(new MinDecimal());
+        public static double  Min<Inner>(in this ValueEnumerable<double,  Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<double,  double,  MinDouble >(new MinDouble());
+        public static float   Min<Inner>(in this ValueEnumerable<float,   Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<float,   float,   MinFloat  >(new MinFloat());
+        public static int     Min<Inner>(in this ValueEnumerable<int,     Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<int,     int,     MinInt    >(new MinInt());
+        public static long    Min<Inner>(in this ValueEnumerable<long,    Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<long,    long,    MinLong   >(new MinLong());
+
+        public static decimal? Min<Inner>(in this ValueEnumerable<decimal?, Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<decimal?, decimal?, MinDecimalNullable>(new MinDecimalNullable());
+        public static double?  Min<Inner>(in this ValueEnumerable<double?,  Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<double?,  double?,  MinDoubleNullable >(new MinDoubleNullable());
+        public static float?   Min<Inner>(in this ValueEnumerable<float?,   Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<float?,   float?,   MinFloatNullable  >(new MinFloatNullable());
+        public static int?     Min<Inner>(in this ValueEnumerable<int?,     Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<int?,     int?,     MinIntNullable    >(new MinIntNullable());
+        public static long?    Min<Inner>(in this ValueEnumerable<long?,    Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<long?,    long?,    MinLongNullable   >(new MinLongNullable());
+
+        public static decimal Max<Inner>(in this ValueEnumerable<decimal, Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<decimal, decimal, MaxDecimal>(new MaxDecimal());
+        public static double  Max<Inner>(in this ValueEnumerable<double,  Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<double,  double,  MaxDouble >(new MaxDouble());
+        public static float   Max<Inner>(in this ValueEnumerable<float,   Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<float,   float,   MaxFloat  >(new MaxFloat());
+        public static int     Max<Inner>(in this ValueEnumerable<int,     Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<int,     int,     MaxInt    >(new MaxInt());
+        public static long    Max<Inner>(in this ValueEnumerable<long,    Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<long,    long,    MaxLong   >(new MaxLong());
+
+        public static decimal? Max<Inner>(in this ValueEnumerable<decimal?, Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<decimal?, decimal?, MaxDecimalNullable>(new MaxDecimalNullable());
+        public static double?  Max<Inner>(in this ValueEnumerable<double?,  Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<double?,  double?,  MaxDoubleNullable >(new MaxDoubleNullable());
+        public static float?   Max<Inner>(in this ValueEnumerable<float?,   Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<float?,   float?,   MaxFloatNullable  >(new MaxFloatNullable());
+        public static int?     Max<Inner>(in this ValueEnumerable<int?,     Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<int?,     int?,     MaxIntNullable    >(new MaxIntNullable());
+        public static long?    Max<Inner>(in this ValueEnumerable<long?,    Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<long?,    long?,    MaxLongNullable   >(new MaxLongNullable());
 
         public static decimal Sum<Inner>(in this ValueEnumerable<decimal, Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<decimal, decimal, SumDecimal>(new SumDecimal());
         public static double  Sum<Inner>(in this ValueEnumerable<double,  Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<double,  double,  SumDouble >(new SumDouble());
