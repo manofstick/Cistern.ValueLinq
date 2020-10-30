@@ -23,8 +23,9 @@ namespace Cistern.Benchmarks
             Double.SelectSum.Benchmark.SanityCheck();
             Double.SelectManySum.Benchmark.SanityCheck();
             ValueLambdas.WhereSelectSum.Benchmark.SanityCheck();
+            ValueLambdas.SelectWhereMax.Benchmark.SanityCheck();
 
-            var summary = BenchmarkRunner.Run<ValueLambdas.WhereSelectSum.Benchmark> ();
+            var summary = BenchmarkRunner.Run<ValueLambdas.SelectWhereMax.Benchmark> ();
         }
     }
 }
