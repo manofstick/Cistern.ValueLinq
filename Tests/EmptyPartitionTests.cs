@@ -38,7 +38,7 @@ namespace Linqs.Tests
             Assert.True(ReferenceEquals(GetEmptyPartition<int>(), GetEmptyPartition<int>()));
         }
 
-        [Fact]
+        [Fact(Skip = "CISTERN.VALUELINQ: Not possible")]
         //[SkipOnTargetFramework(~TargetFrameworkMonikers.Netcoreapp, ".NET Core returns the instance as an optimization")]
         public void SkipSame()
         {

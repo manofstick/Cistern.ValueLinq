@@ -134,6 +134,11 @@ namespace Cistern.ValueLinq
             return new ValueEnumerable<T, WhereNode<T, TPrior>>(new WhereNode<T, TPrior>(in prior.Node, predicate));
         }
         public static ValueEnumerable<T, Where_InNode<T, TPrior>> Where<T, TPrior>(in this ValueEnumerable<T, TPrior> prior, InFunc<T, bool> f) where TPrior : INode => new ValueEnumerable<T, Where_InNode<T, TPrior>>(new Where_InNode<T, TPrior>(in prior.Node, f));
+
+        public static ValueEnumerable<T, SkipNode<T, TPrior>> Skip<T, TPrior>(in this ValueEnumerable<T, TPrior> prior, int count)
+            where TPrior : INode
+            => new ValueEnumerable<T, SkipNode<T, TPrior>>(new SkipNode<T, TPrior>(in prior.Node, count));
+
         public static List<T> ToList<T, Inner>(in this ValueEnumerable<T, Inner> inner) where Inner : INode
             => inner.Node.CreateObjectViaFastEnumerator<T, List<T>, ToListForward<T>>(new ToListForward<T>());
 

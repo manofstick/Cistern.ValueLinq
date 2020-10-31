@@ -193,6 +193,8 @@ namespace Cistern.ValueLinq
         public static TSource ElementAt<TSource>(this IEnumerable<TSource> source, int index) => source.OfEnumerable().ElementAt(index);
         public static TSource ElementAtOrDefault<TSource>(this IEnumerable<TSource> source, int index) => source.OfEnumerable().ElementAtOrDefault(index);
 
+        public static ValueEnumerable<T, SkipNode<T, EnumerableNode<T>>> Skip<T>(this IEnumerable<T> source, int count) => source.OfEnumerable().Skip(count);
+
         // -- Value based select
 
         public static ValueEnumerable<U, ValueSelectNode<T, U, EnumerableNode<T>, IFunc>> Select<T, U, IFunc>(this IEnumerable<T> prior, IFunc selector, U u = default)
