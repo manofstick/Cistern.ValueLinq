@@ -152,6 +152,12 @@ namespace Cistern.ValueLinq
                 _ => inner.Node.CreateObjectViaFastEnumerator<T, T, LastOrDefault<T>>(new LastOrDefault<T>())
             };
 
+        public static T ElementAt<T, Inner>(in this ValueEnumerable<T, Inner> inner, int index) where Inner : INode =>
+            inner.Node.CreateObjectViaFastEnumerator<T, T, ElementAt<T>>(new ElementAt<T>(index));
+
+        public static T ElementAtOrDefault<T, Inner>(in this ValueEnumerable<T, Inner> inner, int index) where Inner : INode =>
+            inner.Node.CreateObjectViaFastEnumerator<T, T, ElementAtOrDefault<T>>(new ElementAtOrDefault<T>(index));
+
 
         public static decimal Average<Inner>(in this ValueEnumerable<decimal, Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<decimal, decimal, AverageDecimal>(new AverageDecimal());
         public static double  Average<Inner>(in this ValueEnumerable<double,  Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<double,  double,  AverageDouble >(new AverageDouble());

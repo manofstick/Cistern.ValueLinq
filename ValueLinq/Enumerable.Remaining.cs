@@ -43,8 +43,8 @@ namespace Cistern.ValueLinq
         public static IEnumerable<TSource> DefaultIfEmpty<TSource>(this IEnumerable<TSource> source) => System.Linq.Enumerable.DefaultIfEmpty<TSource>(source);
         public static IEnumerable<TSource> Distinct<TSource>(this IEnumerable<TSource> source) => System.Linq.Enumerable.Distinct<TSource>(source);
         public static IEnumerable<TSource> Distinct<TSource>(this IEnumerable<TSource> source, IEqualityComparer<TSource> comparer) => System.Linq.Enumerable.Distinct<TSource>(source, comparer);
-        public static TSource ElementAt<TSource>(this IEnumerable<TSource> source, int index) => System.Linq.Enumerable.ElementAt<TSource>(source, index);
-        public static TSource ElementAtOrDefault<TSource>(this IEnumerable<TSource> source, int index) => System.Linq.Enumerable.ElementAtOrDefault<TSource>(source, index);
+//        public static TSource ElementAt<TSource>(this IEnumerable<TSource> source, int index) => System.Linq.Enumerable.ElementAt<TSource>(source, index);
+//        public static TSource ElementAtOrDefault<TSource>(this IEnumerable<TSource> source, int index) => System.Linq.Enumerable.ElementAtOrDefault<TSource>(source, index);
 //        public static IEnumerable<TResult> Empty<TResult>() => System.Linq.Enumerable.Empty<TResult>();
         public static IEnumerable<TSource> Except<TSource>(this IEnumerable<TSource> first, IEnumerable<TSource> second) => System.Linq.Enumerable.Except<TSource>(first, second);
         public static IEnumerable<TSource> Except<TSource>(this IEnumerable<TSource> first, IEnumerable<TSource> second, IEqualityComparer<TSource> comparer) => System.Linq.Enumerable.Except<TSource>(first, second, comparer);

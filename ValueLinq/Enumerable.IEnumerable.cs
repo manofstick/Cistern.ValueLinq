@@ -190,6 +190,8 @@ namespace Cistern.ValueLinq
             return first.OfEnumerable().Concat(second.OfEnumerable());
         }
 
+        public static TSource ElementAt<TSource>(this IEnumerable<TSource> source, int index) => source.OfEnumerable().ElementAt(index);
+        public static TSource ElementAtOrDefault<TSource>(this IEnumerable<TSource> source, int index) => source.OfEnumerable().ElementAtOrDefault(index);
 
         // -- Value based select
 
