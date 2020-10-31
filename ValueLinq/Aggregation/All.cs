@@ -3,48 +3,25 @@
 namespace Cistern.ValueLinq.Aggregation
 {
     struct All<T>
-        : INode
+        : IForwardEnumerator<T>
     {
         private Func<T, bool> _predicate;
+        private bool _all;
 
-        public All(Func<T, bool> predicate) => _predicate = predicate;
+        public All(Func<T, bool> predicate) => (_predicate, _all) = (predicate, true);
 
-        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
-            => Impl.CreateObjectDescent<CreationType>();
+        TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_all;
 
-        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator enumerator)
-            => (CreationType)(object)Impl.All(ref enumerator, (Func<EnumeratorElement, bool>)(object)_predicate);
+        void IForwardEnumerator<T>.Init(int? size) { }
 
-        bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result)
-            => Impl.CheckForOptimization(out result);
-
-        TResult INode.CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum)
-            => Impl.CreateObjectViaFastEnumerator<TResult>();
-    }
-
-    static partial class Impl
-    {
-        internal static bool All<EnumeratorElement, Enumerator>(ref Enumerator enumerator, Func<EnumeratorElement, bool> predicate)
-            where Enumerator : IFastEnumerator<EnumeratorElement>
+        bool IForwardEnumerator<T>.ProcessNext(T input)
         {
-            try
+            if (!_predicate(input))
             {
-                return DoAll(ref enumerator, predicate);
+                _all = false;
+                return false;
             }
-            finally
-            {
-                enumerator.Dispose();
-            }
-
-            static bool DoAll(ref Enumerator enumerator, Func<EnumeratorElement, bool> predicate)
-            {
-                while (enumerator.TryGetNext(out var current))
-                {
-                    if (!predicate(current))
-                        return false;
-                }
-                return true;
-            }
+            return true;
         }
     }
 }

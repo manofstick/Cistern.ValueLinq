@@ -93,16 +93,12 @@ namespace Cistern.ValueLinq
             if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
 
-            var aggregate = new All<T>(predicate);
-            return Nodes<bool>.Aggregation(in source.Node, in aggregate);
+            return source.Node.CreateObjectViaFastEnumerator<T, bool, All<T>>(new All<T>(predicate));
         }
 
         public static bool Any<T, Inner>(in this ValueEnumerable<T, Inner> source)
             where Inner : INode
-        {
-            var aggregate = new Any<T>(null);
-            return Nodes<bool>.Aggregation(in source.Node, in aggregate);
-        }
+            => source.Node.CreateObjectViaFastEnumerator<T, bool, Anything<T>>(new Anything<T>());
 
         public static bool Any<T, Inner>(in this ValueEnumerable<T, Inner> source, Func<T, bool> predicate)
             where Inner : INode
@@ -110,8 +106,7 @@ namespace Cistern.ValueLinq
             if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
 
-            var aggregate = new Any<T>(predicate);
-            return Nodes<bool>.Aggregation(in source.Node, in aggregate);
+            return source.Node.CreateObjectViaFastEnumerator<T, bool, Any<T>>(new Any<T>(predicate));
         }
 
         // -- 

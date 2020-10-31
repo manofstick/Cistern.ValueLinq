@@ -5,68 +5,41 @@
 namespace Cistern.ValueLinq.Aggregation
 {
     struct Any<T>
-        : INode
+        : IForwardEnumerator<T>
     {
-        private readonly Func<T, bool>? _maybePredicate;
+        private Func<T, bool> _predicate;
+        private bool _any;
 
-        public Any(Func<T, bool>? predicate) => _maybePredicate = predicate;
+        public Any(Func<T, bool> predicate) => (_predicate, _any) = (predicate, false);
 
-        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
-            => Impl.CreateObjectDescent<CreationType>();
+        TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_any;
 
-        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator enumerator) =>
-            (CreationType)(object)(
-                (enumerator.InitialSize, _maybePredicate) switch
-                {
-                    ((_, 0), _) => false,
-                    ((_, var _), null) => true,
-                    (_, null) => Impl.Any<EnumeratorElement, Enumerator>(ref enumerator),
-                    (_, var predicate) => Impl.Any(ref enumerator, (Func<EnumeratorElement, bool>)(object)predicate)
-                });
+        void IForwardEnumerator<T>.Init(int? size) { }
 
-        bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result)
-            => Impl.CheckForOptimization(out result);
-
-        TResult INode.CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum)
-            => Impl.CreateObjectViaFastEnumerator<TResult>();
-    }
-
-    static partial class Impl
-    {
-        internal static bool Any<EnumeratorElement, Enumerator>(ref Enumerator enumerator, Func<EnumeratorElement, bool> predicate)
-            where Enumerator : IFastEnumerator<EnumeratorElement>
+        bool IForwardEnumerator<T>.ProcessNext(T input)
         {
-            try
+            if (_predicate(input))
             {
-                return DoAny(ref enumerator, predicate);
-            }
-            finally
-            {
-                enumerator.Dispose();
-            }
-
-            static bool DoAny(ref Enumerator enumerator, Func<EnumeratorElement, bool> predicate)
-            {
-                while (enumerator.TryGetNext(out var current))
-                {
-                    if (predicate(current))
-                        return true;
-                }
+                _any = true;
                 return false;
             }
+            return true;
         }
+    }
 
-        internal static bool Any<EnumeratorElement, Enumerator>(ref Enumerator enumerator)
-            where Enumerator : IFastEnumerator<EnumeratorElement>
+    struct Anything<T>
+        : IForwardEnumerator<T>
+    {
+        private bool _any;
+
+        TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_any;
+
+        void IForwardEnumerator<T>.Init(int? size) { }
+
+        bool IForwardEnumerator<T>.ProcessNext(T input)
         {
-            try
-            {
-                return enumerator.TryGetNext(out var _);
-            }
-            finally
-            {
-                enumerator.Dispose();
-            }
+            _any = true;
+            return false;
         }
     }
 }
