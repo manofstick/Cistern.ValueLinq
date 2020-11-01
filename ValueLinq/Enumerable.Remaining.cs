@@ -161,7 +161,7 @@ namespace Cistern.ValueLinq
 //        public static int? Sum(this IEnumerable<int?> source) => System.Linq.Enumerable.Sum(source);
 //        public static long? Sum(this IEnumerable<long?> source) => System.Linq.Enumerable.Sum(source);
 //        public static long Sum(this IEnumerable<long> source) => System.Linq.Enumerable.Sum(source);
-        public static IEnumerable<TSource> Take<TSource>(this IEnumerable<TSource> source, int count) => System.Linq.Enumerable.Take<TSource>(source, count);
+//        public static IEnumerable<TSource> Take<TSource>(this IEnumerable<TSource> source, int count) => System.Linq.Enumerable.Take<TSource>(source, count);
         public static IEnumerable<TSource> TakeLast<TSource>(this IEnumerable<TSource> source, int count) => System.Linq.Enumerable.TakeLast<TSource>(source, count);
         public static IEnumerable<TSource> TakeWhile<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) => System.Linq.Enumerable.TakeWhile<TSource>(source, predicate);
         public static IEnumerable<TSource> TakeWhile<TSource>(this IEnumerable<TSource> source, Func<TSource, int, bool> predicate) => System.Linq.Enumerable.TakeWhile<TSource>(source, predicate);
