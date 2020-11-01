@@ -2,6 +2,8 @@
 
 In the tradition of [Kevin Montrose's LinqAF](https://github.com/kevin-montrose/LinqAF), a version of Linq that has minimal allocations. (Another rendition on this there is [@reegeek's StructLinq](https://github.com/reegeek/StructLinq)).
 
+NOTE THAT THIS A WIP; NOT ALL OPERATORS ARE SUPPORTED (ALTHOUGH THEY ALL "WORK" BECAUSE THEY ARE PATCHED TO SYSTEM.LINQ)
+
 So given that there area already a couple of version of a value based linq, what does this one bring to the table?
 
 - Easy conversion from `System.Linq` (just change the using declaration)
@@ -11,7 +13,9 @@ So given that there area already a couple of version of a value based linq, what
 - Fast across all source lengths (i.e. no heavy creation phase)
 - If you want to get ugly, performance can be close to hand written loops (and actually beat it sometimes. Huh? Say what? Run the example! Depends on input data, so I'm assuming just "luck" of branch prediction going in my favour, but would really love someone with skills to analyse assembly to debunk or confirm this)
 
-Anyway, here is simple example:
+Anyway, here is simple example which shows:
+- faster than linq (and actually System.Linq is only as fast here because it "knows" about `Select().Where()` as a pattern, if we were to do a `Select` with an index, or even a `Where().Select()` then the performance of Linq is *much* worse. ValueLinq has no such special case, although it does support some optimizations for things like `Last` or `Count`)
+- the ugly
 
 
 ```csharp
