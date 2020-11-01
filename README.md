@@ -15,7 +15,8 @@ So given that there area already a couple of version of a value based linq, what
 
 Anyway, here is simple example which shows:
 - faster than linq (and actually System.Linq is only as fast here because it "knows" about `Select().Where()` as a pattern, if we were to do a `Select` with an index, or even a `Where().Select()` then the performance of Linq is *much* worse. ValueLinq has no such special case, although it does support some optimizations for things like `Last` or `Count`)
-- the ugly
+- "the ugly" version is faster than the handcoded version! 
+- the handcoded requires knowledge of the underlying data-source, otherwise wouldn't be anywhere near as fast
 
 
 ```csharp
