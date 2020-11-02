@@ -139,7 +139,7 @@ namespace Cistern.ValueLinq
         public static TSource SingleOrDefault<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) => System.Linq.Enumerable.SingleOrDefault<TSource>(source, predicate);
 //        public static IEnumerable<TSource> Skip<TSource>(this IEnumerable<TSource> source, int count) => System.Linq.Enumerable.Skip<TSource>(source, count);
         public static IEnumerable<TSource> SkipLast<TSource>(this IEnumerable<TSource> source, int count) => System.Linq.Enumerable.SkipLast<TSource>(source, count);
-        public static IEnumerable<TSource> SkipWhile<TSource>(this IEnumerable<TSource> source, Func<TSource, int, bool> predicate) => System.Linq.Enumerable.SkipWhile<TSource>(source, predicate);
+//        public static IEnumerable<TSource> SkipWhile<TSource>(this IEnumerable<TSource> source, Func<TSource, int, bool> predicate) => System.Linq.Enumerable.SkipWhile<TSource>(source, predicate);
 //        public static IEnumerable<TSource> SkipWhile<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) => System.Linq.Enumerable.SkipWhile<TSource>(source, predicate);
 //        public static float Sum<TSource>(this IEnumerable<TSource> source, Func<TSource, float> selector) => System.Linq.Enumerable.Sum<TSource>(source, selector);
 //        public static int Sum<TSource>(this IEnumerable<TSource> source, Func<TSource, int> selector) => System.Linq.Enumerable.Sum<TSource>(source, selector);
