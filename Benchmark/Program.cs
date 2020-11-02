@@ -10,6 +10,7 @@ namespace Cistern.Benchmarks
             // For some sanity checking
             DoubleDoubleDouble.SelectWhereAggregate.Benchmark.SanityCheck();
             DoubleDoubleDouble.WhereSelectAggregate.Benchmark.SanityCheck();
+
             Double.ToList.Benchmark.SanityCheck();
             Double.SelectToList.Benchmark.SanityCheck();
             Double.SelectSelectToList.Benchmark.SanityCheck();
@@ -22,8 +23,10 @@ namespace Cistern.Benchmarks
             Double.Any.Benchmark.SanityCheck();
             Double.SelectSum.Benchmark.SanityCheck();
             Double.SelectManySum.Benchmark.SanityCheck();
+
             ValueLambdas.WhereSelectSum.Benchmark.SanityCheck();
             ValueLambdas.SelectWhereMax.Benchmark.SanityCheck();
+            ValueLambdas.WhereSelect.Benchmark.SanityCheck();
 
             var summary = BenchmarkRunner.Run<ValueLambdas.WhereSelect.Benchmark> ();
         }

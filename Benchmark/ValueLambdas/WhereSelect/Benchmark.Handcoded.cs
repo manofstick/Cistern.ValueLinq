@@ -6,7 +6,7 @@ namespace Cistern.Benchmarks.ValueLambdas.WhereSelect
     partial class Benchmark
     {
         [Benchmark(Baseline = true)]
-        public double Handcoded()
+        public int Handcoded()
         {
             return _ints switch
             {
@@ -21,7 +21,7 @@ namespace Cistern.Benchmarks.ValueLambdas.WhereSelect
                 foreach (var x in asList)
                 {
                     if ((x & 1) == 0)
-                        total += x * 2;
+                        total += x / 2;
                 }
 
                 return total;
@@ -33,7 +33,7 @@ namespace Cistern.Benchmarks.ValueLambdas.WhereSelect
                 foreach (var x in asArray)
                 {
                     if ((x & 1) == 0)
-                        total += x * 2;
+                        total += x / 2;
                 }
 
                 return total;
@@ -45,7 +45,7 @@ namespace Cistern.Benchmarks.ValueLambdas.WhereSelect
                 foreach (var x in asArray)
                 {
                     if ((x & 1) == 0)
-                        total += x * 2;
+                        total += x / 2;
                 }
 
                 return total;

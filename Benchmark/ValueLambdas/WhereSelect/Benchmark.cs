@@ -58,6 +58,15 @@ namespace Cistern.Benchmarks.ValueLambdas.WhereSelect
             var cisternvaluelinq = check.CisternValueLinq();
             if (baseline != cisternvaluelinq) throw new Exception();
 
+            var cisternValueLinq_ViaAggregate = check.CisternValueLinq_ViaAggregate();
+            if (baseline != cisternValueLinq_ViaAggregate) throw new Exception();
+
+            var cisternValueLinq_ViaIEnumerable = check.CisternValueLinq_ViaIEnumerable();
+            if (baseline != cisternValueLinq_ViaIEnumerable) throw new Exception();
+
+            var cisternValueLinq_ViaSum = check.CisternValueLinq_ViaSum();
+            if (baseline != cisternValueLinq_ViaSum) throw new Exception();
+
 #if STRUCTLINQ
             var structlinq = check.StructLinq();
             if (structlinq != baseline) throw new Exception();
