@@ -119,12 +119,12 @@ namespace Cistern.ValueLinq
             return new ValueEnumerable<U, SelectNode<T, U, TPrior>>(new SelectNode<T, U, TPrior>(in prior.Node, selector));
         }
         public static ValueEnumerable<U, Select_InNode<T, U, TPrior>> Select<T, U, TPrior>(in this ValueEnumerable<T, TPrior> prior, InFunc<T, U> f) where TPrior : INode => new ValueEnumerable<U, Select_InNode<T, U, TPrior>>(new Select_InNode<T, U, TPrior>(in prior.Node, f));
-        public static ValueEnumerable<U, SelectiNode<T, U, TPrior>> Select<T, U, TPrior>(in this ValueEnumerable<T, TPrior> prior, Func<T, int, U> selector) where TPrior : INode
+        public static ValueEnumerable<U, SelectIdxNode<T, U, TPrior>> Select<T, U, TPrior>(in this ValueEnumerable<T, TPrior> prior, Func<T, int, U> selector) where TPrior : INode
         {
             if (selector == null)
                 throw new ArgumentNullException(nameof(selector));
 
-            return new ValueEnumerable<U, SelectiNode<T, U, TPrior>>(new SelectiNode<T, U, TPrior>(in prior.Node, selector));
+            return new ValueEnumerable<U, SelectIdxNode<T, U, TPrior>>(new SelectIdxNode<T, U, TPrior>(in prior.Node, selector));
         }
         public static ValueEnumerable<T, WhereNode<T, TPrior>> Where<T, TPrior>(in this ValueEnumerable<T, TPrior> prior, Func<T, bool> predicate) where TPrior : INode
         {
