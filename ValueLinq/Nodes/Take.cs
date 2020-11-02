@@ -47,16 +47,18 @@ namespace Cistern.ValueLinq.Nodes
         public TakeNode(in NodeT nodeT, int count) => (_nodeT, _count) = (nodeT, count);
 
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
-            => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
-
-        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
         {
             if (_count <= 0)
             {
                 var empty = new Containers.EmptyFastEnumerator<T>();
-                return tail.CreateObject<CreationType, T, Containers.EmptyFastEnumerator<T>>(ref empty);
+                return nodes.CreateObject<CreationType, T, Containers.EmptyFastEnumerator<T>>(ref empty);
             }
 
+            return Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
+        }
+
+        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
+        {
             var nextEnumerator = new TakeNodeEnumerator<EnumeratorElement, Enumerator>(in enumerator, _count);
             return tail.CreateObject<CreationType, EnumeratorElement, TakeNodeEnumerator<EnumeratorElement, Enumerator>>(ref nextEnumerator);
         }
