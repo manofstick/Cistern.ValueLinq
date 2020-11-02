@@ -19,7 +19,7 @@
     <PackageReference Include="Cistern.Linq" Version="0.1.1" />
     <PackageReference Include="LinqAF" Version="3.0.0" />
     <PackageReference Include="NetFabric.Hyperlinq" Version="3.0.0-beta26" />
-    <PackageReference Include="StructLinq.BCL" Version="0.20.2" />
+    <PackageReference Include="StructLinq.BCL" Version="0.20.3" />
   </ItemGroup>
 
   <ItemGroup>
