@@ -29,7 +29,7 @@ namespace Cistern.Benchmarks.ValueLambdas.SelectWhereMax
                     .ToStructEnumerable()
                     .Select(ref @select, x => x, x => x)
                     .Where(ref @where, x => x)
-                    .Max();
+                    .Max(x=>x);
             }
 
             static int AsArray(int[] array)
@@ -42,7 +42,7 @@ namespace Cistern.Benchmarks.ValueLambdas.SelectWhereMax
                     .ToStructEnumerable()
                     .Select(ref @select, x => x, x => x)
                     .Where(ref @where, x => x)
-                    .Max();
+                    .Max(x=>x);
             }
 
             static int AsEnumerable(IEnumerable<int> enumerable)
@@ -55,7 +55,7 @@ namespace Cistern.Benchmarks.ValueLambdas.SelectWhereMax
                     .ToStructEnumerable()
                     .Select(ref @select, x => x, x => x)
                     .Where(ref @where, x => x)
-                    .Max();
+                    .Max(x=>x);
             }
         }
     }

@@ -25,7 +25,7 @@ namespace Cistern.Benchmarks
             ValueLambdas.WhereSelectSum.Benchmark.SanityCheck();
             ValueLambdas.SelectWhereMax.Benchmark.SanityCheck();
 
-            var summary = BenchmarkRunner.Run<ValueLambdas.SelectWhereMax.Benchmark> ();
+            var summary = BenchmarkRunner.Run<ValueLambdas.WhereSelect.Benchmark> ();
         }
     }
 }
