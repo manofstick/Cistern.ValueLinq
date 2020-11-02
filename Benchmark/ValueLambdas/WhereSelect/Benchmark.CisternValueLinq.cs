@@ -61,5 +61,20 @@ namespace Cistern.Benchmarks.ValueLambdas.WhereSelect
                 .Select(new HalveAnInt(), default(int)) // ug, sugar please + better type inference...
                 .Sum();
         }
+
+        [Benchmark]
+        public int CisternValueLinq_ViaForeachFunc()
+        {
+            var sum = 0;
+
+            var pipeline = 
+                _ints
+                .Where(new FilterEvenInts()) // ug, sugar please
+                .Select(new HalveAnInt(), default(int)); // ug, sugar please + better type inference...
+                
+            pipeline.Foreach(x => sum += x);
+
+            return sum;
+        }
     }
 }
