@@ -52,7 +52,7 @@ using SumDoubleNullable  = Cistern.ValueLinq.Aggregation.SumNullable<double,  do
 using SumFloatNullable   = Cistern.ValueLinq.Aggregation.SumNullable<float,   double,  float,   Cistern.ValueLinq.Maths.OpsFloat>;
 using SumIntNullable     = Cistern.ValueLinq.Aggregation.SumNullable<int,     int,     double,  Cistern.ValueLinq.Maths.OpsInt>;
 using SumLongNullable    = Cistern.ValueLinq.Aggregation.SumNullable<long,    long,    double,  Cistern.ValueLinq.Maths.OpsLong>;
-
+using System.Buffers;
 
 namespace Cistern.ValueLinq
 {
@@ -167,9 +167,13 @@ namespace Cistern.ValueLinq
             where TPrior : INode
                 => new ValueEnumerable<T, TakeNode<T, TPrior>>(new TakeNode<T, TPrior>(in prior.Node, count));
 
+        public static List<T> ToList<T, Inner>(in this ValueEnumerable<T, Inner> inner, ArrayPool<T> arrayPool = null) where Inner : INode
+            => arrayPool == null
+                ? inner.Node.CreateObjectViaFastEnumerator<T, List<T>, ToListForward<T>>(new ToListForward<T>())
+                : inner.Node.CreateObjectViaFastEnumerator<T, List<T>, ToListViaArrayPoolForward<T>>(new ToListViaArrayPoolForward<T>(arrayPool));
 
-        public static List<T> ToList<T, Inner>(in this ValueEnumerable<T, Inner> inner) where Inner : INode
-            => inner.Node.CreateObjectViaFastEnumerator<T, List<T>, ToListForward<T>>(new ToListForward<T>());
+        public static List<T> ToListUseSharedPool<T, Inner>(in this ValueEnumerable<T, Inner> inner, ArrayPool<T> arrayPool = null) where Inner : INode
+            => inner.ToList(ArrayPool<T>.Shared);
 
         public static T Last<T, Inner>(in this ValueEnumerable<T, Inner> inner) where Inner : INode =>
             (inner.Node.CheckForOptimization<T, Optimizations.TryLast, (bool, T)>(new Optimizations.TryLast(), out var maybeLast), maybeLast) switch
