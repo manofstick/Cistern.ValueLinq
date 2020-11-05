@@ -167,13 +167,18 @@ namespace Cistern.ValueLinq
             where TPrior : INode
                 => new ValueEnumerable<T, TakeNode<T, TPrior>>(new TakeNode<T, TPrior>(in prior.Node, count));
 
-        public static List<T> ToList<T, Inner>(in this ValueEnumerable<T, Inner> inner, ArrayPool<T> arrayPool = null) where Inner : INode
-            => arrayPool == null
-                ? inner.Node.CreateObjectViaFastEnumerator<T, List<T>, ToListForward<T>>(new ToListForward<T>())
-                : inner.Node.CreateObjectViaFastEnumerator<T, List<T>, ToListViaArrayPoolForward<T>>(new ToListViaArrayPoolForward<T>(arrayPool));
+        public static List<T> ToList<T, Inner>(in this ValueEnumerable<T, Inner> inner, (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo = null) where Inner : INode
+            => arrayPoolInfo switch
+            {
+                null => inner.Node.CreateObjectViaFastEnumerator<T, List<T>, ToListForward<T>>(new ToListForward<T>()),
+                (var arrayPool, var cleanBuffers) => inner.Node.CreateObjectViaFastEnumerator<T, List<T>, ToListViaArrayPoolForward<T>>(new ToListViaArrayPoolForward<T>(arrayPool, cleanBuffers))
+            };
 
-        public static List<T> ToListUseSharedPool<T, Inner>(in this ValueEnumerable<T, Inner> inner, ArrayPool<T> arrayPool = null) where Inner : INode
-            => inner.ToList(ArrayPool<T>.Shared);
+        public static List<T> ToListUseSharedPool<T, Inner>(in this ValueEnumerable<T, Inner> inner, bool? cleanBuffers = null) where Inner : INode
+            => inner.ToList((ArrayPool<T>.Shared, cleanBuffers ?? !CachedTypeInfo<T>.IsPrimitive));
+
+        public static List<T> ToListUseStack<T, Inner>(in this ValueEnumerable<T, Inner> inner) where Inner : INode
+            => Nodes<List<T>>.Aggregation<Inner, ToListViaStack>(in inner.Node);
 
         public static T Last<T, Inner>(in this ValueEnumerable<T, Inner> inner) where Inner : INode =>
             (inner.Node.CheckForOptimization<T, Optimizations.TryLast, (bool, T)>(new Optimizations.TryLast(), out var maybeLast), maybeLast) switch

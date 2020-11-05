@@ -2,15 +2,115 @@
 using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace Cistern.ValueLinq.Aggregation
 {
-#if OLD_WAY
-    struct ToList
+    namespace ToListImpl
+    {
+        /// <summary>
+        /// Base class for List[T] populator. Relies on **undocumented** functionality in the constructor for List[T] where it
+        /// queries for ICollection[T] and only uses the Count and CopyTo functions. I believe this is a reasonable assumption
+        /// but would be nice if it was documented, so it could more conclusively be relied upon.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        abstract class ListPopulator<T>
+            : ICollection<T>
+        {
+            public bool IsReadOnly => true;
+
+            public abstract int Count { get; }
+            public abstract void CopyTo(T[] array, int arrayIndex);
+
+            IEnumerator<T> IEnumerable<T>.GetEnumerator() => throw new InvalidOperationException();
+            IEnumerator IEnumerable.GetEnumerator() => throw new InvalidOperationException();
+            void ICollection<T>.Add(T item) => throw new InvalidOperationException();
+            void ICollection<T>.Clear() => throw new InvalidOperationException();
+            bool ICollection<T>.Contains(T item) => throw new InvalidOperationException();
+            bool ICollection<T>.Remove(T item) => throw new InvalidOperationException();
+        }
+
+        class CreatedEmptyIndexableList<T>
+            : ListPopulator<T>
+        {
+            private static CreatedEmptyIndexableList<T> _maybeInstance; // cache and reuse or discard
+
+            public static List<T> Create(int size)
+            {
+                var listCreator = Interlocked.Exchange(ref _maybeInstance, null);
+                if (listCreator == null)
+                    listCreator = new CreatedEmptyIndexableList<T>();
+
+                listCreator._count = size;
+
+                var list = new List<T>(listCreator);
+
+                listCreator._count = int.MinValue;
+
+                _maybeInstance = listCreator; // might splat another, might not get flushed in time, but we don't care
+
+                return list;
+            }
+
+            int _count;
+            private CreatedEmptyIndexableList() { }
+
+            public override int Count => _count;
+            public override void CopyTo(T[] array, int arrayIndex) { /* we don't copy anything, so list will be empty */ }
+        }
+
+        class CreateListFromSectionOfArray<T>
+            : ListPopulator<T>
+        {
+            private static CreateListFromSectionOfArray<T> _maybeInstance; // cache and reuse or discard
+
+            private static List<T> CreateSmall(T[] data, int count)
+            {
+                var list = new List<T>(count);
+                for (var i = 0; i < count; ++i)
+                    list.Add(data[i]);
+                return list;
+            }
+
+            public static List<T> Create(T[] data, int count)
+            {
+                if (count <= 10)
+                    return CreateSmall(data, count);
+
+                var listCreator = Interlocked.Exchange(ref _maybeInstance, null);
+                if (listCreator == null)
+                    listCreator = new CreateListFromSectionOfArray<T>();
+
+                listCreator._data = data;
+                listCreator._count = count;
+
+                var list = new List<T>(listCreator);
+
+                listCreator._count = int.MinValue;
+                listCreator._data = null;
+
+                _maybeInstance = listCreator; // might splat another, might not get flushed in time, but we don't care
+
+                return list;
+            }
+
+            T[] _data;
+            int _count;
+
+            public override int Count => _count;
+
+            public override void CopyTo(T[] array, int arrayIndex)
+            {
+                var srcSpan = new Span<T>(_data, 0, _count);
+                var dstSpan = new Span<T>(array, arrayIndex, array.Length - arrayIndex);
+
+                srcSpan.CopyTo(dstSpan);
+            }
+        }
+    }
+
+    struct ToListViaStack
         : INode
     {
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
@@ -40,24 +140,47 @@ namespace Cistern.ValueLinq.Aggregation
                 enumerator.Dispose();
             }
 
-            static List<EnumeratorElement> DoToList(ref Enumerator enumerator)
+            static List<EnumeratorElement> Create(int size) =>
+                ToListImpl.CreatedEmptyIndexableList<EnumeratorElement>.Create(size);
+
+            static List<EnumeratorElement> StackBasedPopulate(ref Enumerator enumerator, int idx)
             {
-                var list =
-                    enumerator.InitialSize switch
-                    {
-                        (_, var size) => new List<EnumeratorElement>(size),
-                        _ => new List<EnumeratorElement>()
-                    };
+                List<EnumeratorElement> result;
 
-                while (enumerator.TryGetNext(out var current))
-                    list.Add(current);
+                if (!enumerator.TryGetNext(out var t1))
+                {
+                    result = Create(idx);
+                    goto _0;
+                }
+                if (!enumerator.TryGetNext(out var t2))
+                {
+                    result = Create(idx+1);
+                    goto _1;
+                }
+                if (!enumerator.TryGetNext(out var t3))
+                {
+                    result = Create(idx+2);
+                    goto _2;
+                }
+                if (!enumerator.TryGetNext(out var t4))
+                {
+                    result = Create(idx+3);
+                    goto _3;
+                }
 
-                return list;
+                result = StackBasedPopulate(ref enumerator, idx+4);
+
+                result[idx+3] = t4;
+            _3: result[idx+2] = t3;
+            _2: result[idx+1] = t2;
+            _1: result[idx+0] = t1;
+
+            _0: return result;
             }
+
+            static List<EnumeratorElement> DoToList(ref Enumerator enumerator) => StackBasedPopulate(ref enumerator, 0);
         }
     }
-
-#endif
 
     struct ToListForward<T>
         : IForwardEnumerator<T>
@@ -75,17 +198,15 @@ namespace Cistern.ValueLinq.Aggregation
         }
     }
 
-
     struct ToListViaArrayPoolForward<T>
         : IForwardEnumerator<T>
     {
-        static readonly bool ClearArrayItems = !typeof(T).IsPrimitive;
-
         // logic requires that these constants be negative
         const int KNOWN_SIZE = int.MinValue;
         const int INIT = -1;
 
         ArrayPool<T> _pool;
+        bool _cleanBuffers;
 
         T[] _0000_0010, _0000_0020, _0000_0040, _0000_0080;
         T[] _0000_0100, _0000_0200, _0000_0400, _0000_0800;
@@ -99,7 +220,7 @@ namespace Cistern.ValueLinq.Aggregation
         int _currentIdx;
         int _arrayIdx;
 
-        public ToListViaArrayPoolForward(ArrayPool<T> pool)
+        public ToListViaArrayPoolForward(ArrayPool<T> pool, bool cleanBuffers)
         {
             _0000_0010 = _0000_0020 = _0000_0040 = _0000_0080 = null;
             _0000_0100 = _0000_0200 = _0000_0400 = _0000_0800 = null;
@@ -110,6 +231,7 @@ namespace Cistern.ValueLinq.Aggregation
             _1000_0000 = _2000_0000 = _4000_0000              = null;
 
             _pool = pool;
+            _cleanBuffers = cleanBuffers;
 
             _current = Array.Empty<T>();
             _currentIdx = 0;
@@ -172,7 +294,7 @@ namespace Cistern.ValueLinq.Aggregation
             if (_array == null)
                 return false;
 
-            _pool.Return(_array, ClearArrayItems);
+            _pool.Return(_array, _cleanBuffers);
             _array = null;
 
             return true;
@@ -192,64 +314,14 @@ namespace Cistern.ValueLinq.Aggregation
 
         TResult IForwardEnumerator<T>.GetResult<TResult>()
         {
-            var list =
-                _arrayIdx switch
-                {
-                    0 => CreateListFromSmallSingleArray(),
-                    KNOWN_SIZE when _currentIdx < 10 => CreateListFromSmallSingleArray(),
-                    KNOWN_SIZE => CreateListFromSingleArray(),
-                    _ => CreateLargeList(),
-                };
+            var list = 
+                (_arrayIdx == 0 || _arrayIdx == KNOWN_SIZE)
+                    ? ToListImpl.CreateListFromSectionOfArray<T>.Create(_current, _currentIdx)
+                    : CreateListFromArrayCollection.Create(ref this);
 
             ReturnArrays(); // should really be in a dispose
 
             return (TResult)(object)list;
-        }
-
-        private readonly List<T> CreateListFromSingleArray()
-        {
-            var listCreator = Interlocked.Exchange(ref _smallListCreator, null);
-            if (listCreator == null)
-                listCreator = new ToListSmallEnumerable();
-
-            try
-            {
-                listCreator.Init(_current, _currentIdx);
-                return new List<T>(listCreator); // relies on List<T> utilizing ICollection<T>.CopyTo
-            }
-            finally
-            {
-                listCreator.Init(Array.Empty<T>(), 0);
-                _smallListCreator = listCreator;
-            }
-        }
-
-        private readonly List<T> CreateListFromSmallSingleArray()
-        {
-            var list = new List<T>(_currentIdx);
-            for (var i = 0; i < _currentIdx; ++i)
-                list.Add(_current[i]);
-            return list;
-        }
-
-        private List<T> CreateLargeList()
-        {
-            // try and use a shared listCreator, but just create one if there isn't a spare
-            var listCreator = Interlocked.Exchange(ref _largeListCreator, null);
-            if (listCreator == null)
-                listCreator = new ToListViaArrayPoolForwardEnumerable();
-
-            try
-            {
-                listCreator.Init(ref this);
-                return new List<T>(listCreator); // relies on List<T> utilizing ICollection<T>.CopyTo
-            }
-            finally
-            {
-                var clear = default(ToListViaArrayPoolForward<T>);
-                listCreator.Init(ref clear);
-                _largeListCreator = listCreator; // don't really care when gets flushed out to memory, as we can always create a new one
-            }
         }
 
         void IForwardEnumerator<T>.Init(int? size)
@@ -277,56 +349,40 @@ namespace Cistern.ValueLinq.Aggregation
             }
         }
 
-        static ToListViaArrayPoolForwardEnumerable _largeListCreator;
-        static ToListSmallEnumerable _smallListCreator;
-
-        class ToListSmallEnumerable
-            : ICollection<T>
+        class CreateListFromArrayCollection
+            : ToListImpl.ListPopulator<T>
         {
-            T[] _data;
-            int _count;
+            static CreateListFromArrayCollection _maybeInstance;
 
-            public void Init(T[] data, int count) => (_data, _count) = (data, count);
-
-            public int Count => _count;
-
-            public bool IsReadOnly => true;
-
-            public void CopyTo(T[] array, int arrayIndex)
+            public static List<T> Create(ref ToListViaArrayPoolForward<T> p)
             {
-                var srcSpan = new Span<T>(_data, 0, _count);
-                var dstSpan = new Span<T>(array, arrayIndex, array.Length-arrayIndex);
-                srcSpan.CopyTo(dstSpan);
+                var listCreator = Interlocked.Exchange(ref _maybeInstance, null);
+                if (listCreator == null)
+                    listCreator = new CreateListFromArrayCollection();
+
+                listCreator._p = p;
+
+                var list = new List<T>(listCreator);
+
+                listCreator._p = default; // release references
+
+                _maybeInstance = listCreator; // might splat another, might not get flushed in time, but we don't care
+
+                return list;
             }
 
-            public void Dispose() { }
+            private CreateListFromArrayCollection() {}
 
-            public IEnumerator<T> GetEnumerator() => throw new NotImplementedException();
-            IEnumerator IEnumerable.GetEnumerator() => throw new NotImplementedException();
-
-            public void Add(T item) => throw new NotImplementedException();
-            public void Clear() => throw new NotImplementedException();
-            public bool Contains(T item) => throw new NotImplementedException();
-            public bool Remove(T item) => throw new NotImplementedException();
-        }
-
-        class ToListViaArrayPoolForwardEnumerable
-            : ICollection<T>
-        {
             // The polite thing here would be to ensure that the IEnumerator<T> interface works, rather than
             // relying on the List<> constructor using ICollection<T>.CopyTo
             ToListViaArrayPoolForward<T> _p;
 
-            public void Init(ref ToListViaArrayPoolForward<T> p) => _p = p;
-
-            public int Count =>
+            public override int Count =>
                 _p._arrayIdx < 0 /* KNOWN_SIZE, INIT */
                     ? _p._currentIdx
                     : (0x_0000_0010 << _p._arrayIdx) - 0x_0000_0010 + _p._currentIdx;
 
-            public bool IsReadOnly => true;
-
-            public void CopyTo(T[] array, int arrayIndex)
+            public override void CopyTo(T[] array, int arrayIndex)
             {
                 var remaining = Count;
 
@@ -380,16 +436,6 @@ namespace Cistern.ValueLinq.Aggregation
                     return remaining > 0;
                 }
             }
-
-            public void Dispose() {}
-
-            public IEnumerator<T> GetEnumerator() => throw new NotImplementedException();
-            IEnumerator IEnumerable.GetEnumerator() => throw new NotImplementedException();
-
-            public void Add(T item) => throw new NotImplementedException();
-            public void Clear() => throw new NotImplementedException();
-            public bool Contains(T item) => throw new NotImplementedException();
-            public bool Remove(T item) => throw new NotImplementedException();
         }
     }
 }
