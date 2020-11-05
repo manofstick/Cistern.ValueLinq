@@ -47,6 +47,8 @@ namespace Cistern.ValueLinq.Nodes
         private NodeT _nodeT;
         private Func<T, int, bool> _predicate;
 
+        public int? MaximumLength => _nodeT.MaximumLength;
+
         public SkipWhileIdxNode(in NodeT nodeT, Func<T, int, bool> predicate) => (_nodeT, _predicate) = (nodeT, predicate);
 
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)

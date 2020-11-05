@@ -167,15 +167,24 @@ namespace Cistern.ValueLinq
             where TPrior : INode
                 => new ValueEnumerable<T, TakeNode<T, TPrior>>(new TakeNode<T, TPrior>(in prior.Node, count));
 
-        public static List<T> ToList<T, Inner>(in this ValueEnumerable<T, Inner> inner, (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo = null) where Inner : INode
-            => arrayPoolInfo switch
-            {
-                null => inner.Node.CreateObjectViaFastEnumerator<T, List<T>, ToListForward<T>>(new ToListForward<T>()),
-                (var arrayPool, var cleanBuffers) => inner.Node.CreateObjectViaFastEnumerator<T, List<T>, ToListViaArrayPoolForward<T>>(new ToListViaArrayPoolForward<T>(arrayPool, cleanBuffers))
-            };
+        public static List<T> ToList<T, Inner>(in this ValueEnumerable<T, Inner> inner, int? maybeMaxCountForStackBasedPath = 64, (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo = null) where Inner : INode
+        {
+            var maximumLength = inner.MaximumLength;
+
+            if (maximumLength <= 4)
+                return inner.Node.CreateObjectViaFastEnumerator<T, List<T>, ToListForward<T>>(new ToListForward<T>());
+
+            if (maximumLength <= maybeMaxCountForStackBasedPath.GetValueOrDefault())
+                return Nodes<List<T>>.Aggregation<Inner, ToListViaStack>(in inner.Node);
+
+            if (!arrayPoolInfo.HasValue)
+                return inner.Node.CreateObjectViaFastEnumerator<T, List<T>, ToListForward<T>>(new ToListForward<T>());
+
+            return inner.Node.CreateObjectViaFastEnumerator<T, List<T>, ToListViaArrayPoolForward<T>>(new ToListViaArrayPoolForward<T>(arrayPoolInfo.Value.arrayPool, arrayPoolInfo.Value.cleanBuffers));
+        }
 
         public static List<T> ToListUseSharedPool<T, Inner>(in this ValueEnumerable<T, Inner> inner, bool? cleanBuffers = null) where Inner : INode
-            => inner.ToList((ArrayPool<T>.Shared, cleanBuffers ?? !CachedTypeInfo<T>.IsPrimitive));
+            => inner.ToList(arrayPoolInfo:(ArrayPool<T>.Shared, cleanBuffers ?? !CachedTypeInfo<T>.IsPrimitive));
 
         public static List<T> ToListUseStack<T, Inner>(in this ValueEnumerable<T, Inner> inner) where Inner : INode
             => Nodes<List<T>>.Aggregation<Inner, ToListViaStack>(in inner.Node);

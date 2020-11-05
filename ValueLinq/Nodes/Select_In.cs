@@ -37,6 +37,8 @@
         private NodeT _nodeT;
         private InFunc<T, U> _map;
 
+        public int? MaximumLength => _nodeT.MaximumLength;
+
         public Select_InNode(in NodeT nodeT, InFunc<T, U> map) => (_nodeT, _map) = (nodeT, map);
 
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);

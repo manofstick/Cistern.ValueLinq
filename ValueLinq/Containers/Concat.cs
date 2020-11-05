@@ -58,6 +58,20 @@ namespace Cistern.ValueLinq.Containers
         where Start : INode
         where Finish : INode
     {
+        public int? MaximumLength => null;
+        //{
+        //    get 
+        //    {
+        //        if (!_start.MaximumLength.HasValue || !_finish.MaximumLength.HasValue)
+        //            return null;
+
+        //        var max = (long)_start.MaximumLength + _finish.MaximumLength;
+        //        if (max > int.MaxValue)
+        //            return null;
+        //        return (int)max;
+        //    }
+        //}
+
         private Start _start;
         private Finish _finish;
 

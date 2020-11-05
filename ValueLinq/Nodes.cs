@@ -17,6 +17,8 @@ namespace Cistern.ValueLinq
         TResult CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>;
 
         bool CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result);
+
+        int? MaximumLength { get; }
     }
 
     public interface INodes

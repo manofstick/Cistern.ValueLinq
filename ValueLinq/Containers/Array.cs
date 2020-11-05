@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace Cistern.ValueLinq.Containers
 {
@@ -33,6 +33,8 @@ namespace Cistern.ValueLinq.Containers
         : INode
     {
         private readonly T[] _array;
+
+        public int? MaximumLength => _array.Length;
 
         public ArrayNode(T[] array) => _array = array;
 

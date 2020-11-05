@@ -8,6 +8,9 @@ namespace Cistern.ValueLinq.ValueEnumerable
         where TNode : INode
     {
         public readonly TNode Node;
+
+        public int? MaximumLength => Node.MaximumLength;
+
         public ValueEnumerable(in TNode node) => Node = node;
 
         public ValueEnumerator<T> GetEnumerator() => Nodes<T>.CreateValueEnumerator(in Node);

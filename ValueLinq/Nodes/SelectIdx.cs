@@ -40,6 +40,8 @@ namespace Cistern.ValueLinq.Nodes
         private NodeT _nodeT;
         private Func<T, int, U> _map;
 
+        public int? MaximumLength => _nodeT.MaximumLength;
+
         public SelectIdxNode(in NodeT nodeT, Func<T, int, U> selector) => (_nodeT, _map) = (nodeT, selector);
 
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);

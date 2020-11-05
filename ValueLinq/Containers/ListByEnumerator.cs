@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace Cistern.ValueLinq.Containers
 {
@@ -31,6 +32,8 @@ namespace Cistern.ValueLinq.Containers
         : INode
     {
         private readonly List<T> _list;
+
+        public int? MaximumLength => _list.Count;
 
         public ListByEnumeratorNode(List<T> list) => _list = list;
 

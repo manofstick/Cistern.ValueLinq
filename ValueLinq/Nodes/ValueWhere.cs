@@ -40,6 +40,8 @@ namespace Cistern.ValueLinq.Nodes
         private NodeT _nodeT;
         private Predicate _filter;
 
+        public int? MaximumLength => _nodeT.MaximumLength;
+
         public ValueWhereNode(in NodeT nodeT, Predicate predicate) => (_nodeT, _filter) = (nodeT, predicate);
 
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)

@@ -45,6 +45,8 @@ namespace Cistern.ValueLinq.Nodes
         private NodeT _nodeT;
         private int _count;
 
+        public int? MaximumLength => !_nodeT.MaximumLength.HasValue ? (int?)null : Math.Max(0, _nodeT.MaximumLength.Value - _count);
+
         public SkipNode(in NodeT nodeT, int count) => (_nodeT, _count) = (nodeT, count);
 
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)

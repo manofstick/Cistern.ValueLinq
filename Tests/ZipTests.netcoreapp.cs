@@ -56,7 +56,8 @@ namespace Linqs.Tests
             AssertExtensions.Throws<ArgumentNullException>("second", () => first.Zip<int, int>(second));
         }
 
-        [Fact]
+
+        [Fact(Skip ="Waiting for .net 5.0")]
         public void Zip2_ExceptionThrownFromFirstsEnumerator()
         {
             ThrowsOnMatchEnumerable<int> first = new ThrowsOnMatchEnumerable<int>(new int[] { 1, 3, 3 }, 2);
@@ -72,7 +73,7 @@ namespace Linqs.Tests
             Assert.Throws<Exception>(() => zip.ToList());
         }
 
-        [Fact]
+        [Fact(Skip = "Waiting for .net 5.0")]
         public void Zip2_ExceptionThrownFromSecondsEnumerator()
         {
             ThrowsOnMatchEnumerable<int> second = new ThrowsOnMatchEnumerable<int>(new int[] { 1, 3, 3 }, 2);
@@ -88,7 +89,7 @@ namespace Linqs.Tests
             Assert.Throws<Exception>(() => zip.ToList());
         }
 
-        [Fact]
+        [Fact(Skip = "Waiting for .net 5.0")]
         public void Zip2_FirstAndSecondEmpty()
         {
             IEnumerable<int> first = new int[] { };
@@ -98,7 +99,7 @@ namespace Linqs.Tests
             Assert.Equal(expected, first.Zip(second));
         }
 
-        [Fact]
+        [Fact(Skip = "Waiting for .net 5.0")]
         public void Zip2_FirstEmptySecondSingle()
         {
             IEnumerable<int> first = new int[] { };
@@ -108,7 +109,7 @@ namespace Linqs.Tests
             Assert.Equal(expected, first.Zip(second));
         }
 
-        [Fact]
+        [Fact(Skip = "Waiting for .net 5.0")]
         public void Zip2_FirstEmptySecondMany()
         {
             IEnumerable<int> first = new int[] { };
@@ -118,7 +119,7 @@ namespace Linqs.Tests
             Assert.Equal(expected, first.Zip(second));
         }
 
-        [Fact]
+        [Fact(Skip = "Waiting for .net 5.0")]
         public void Zip2_SecondEmptyFirstSingle()
         {
             IEnumerable<int> first = new int[] { 1 };
@@ -128,7 +129,7 @@ namespace Linqs.Tests
             Assert.Equal(expected, first.Zip(second));
         }
 
-        [Fact]
+        [Fact(Skip = "Waiting for .net 5.0")]
         public void Zip2_SecondEmptyFirstMany()
         {
             IEnumerable<int> first = new int[] { 1, 2, 3 };
@@ -138,7 +139,7 @@ namespace Linqs.Tests
             Assert.Equal(expected, first.Zip(second));
         }
 
-        [Fact]
+        [Fact(Skip = "Waiting for .net 5.0")]
         public void Zip2_FirstAndSecondSingle()
         {
             IEnumerable<int> first = new int[] { 1 };
@@ -148,7 +149,7 @@ namespace Linqs.Tests
             Assert.Equal(expected, first.Zip(second));
         }
 
-        [Fact]
+        [Fact(Skip = "Waiting for .net 5.0")]
         public void Zip2_FirstAndSecondEqualSize()
         {
             IEnumerable<int> first = new int[] { 1, 2, 3 };
@@ -158,7 +159,7 @@ namespace Linqs.Tests
             Assert.Equal(expected, first.Zip(second));
         }
 
-        [Fact]
+        [Fact(Skip = "Waiting for .net 5.0")]
         public void Zip2_SecondOneMoreThanFirst()
         {
             IEnumerable<int> first = new int[] { 1, 2 };
@@ -169,7 +170,7 @@ namespace Linqs.Tests
         }
 
 
-        [Fact]
+        [Fact(Skip = "Waiting for .net 5.0")]
         public void Zip2_SecondManyMoreThanFirst()
         {
             IEnumerable<int> first = new int[] { 1, 2 };
@@ -179,7 +180,7 @@ namespace Linqs.Tests
             Assert.Equal(expected, first.Zip(second));
         }
 
-        [Fact]
+        [Fact(Skip = "Waiting for .net 5.0")]
         public void Zip2_FirstOneMoreThanSecond()
         {
             IEnumerable<int> first = new int[] { 1, 2, 3 };
@@ -189,7 +190,7 @@ namespace Linqs.Tests
             Assert.Equal(expected, first.Zip(second));
         }
 
-        [Fact]
+        [Fact(Skip = "Waiting for .net 5.0")]
         public void Zip2_FirstManyMoreThanSecond()
         {
             IEnumerable<int> first = new int[] { 1, 2, 3, 4 };
@@ -199,7 +200,7 @@ namespace Linqs.Tests
             Assert.Equal(expected, first.Zip(second));
         }
 
-        [Fact]
+        [Fact(Skip = "Waiting for .net 5.0")]
         public void Zip2_RunOnce()
         {
             IEnumerable<int?> first = new[] { 1, (int?)null, 3 };
@@ -209,7 +210,7 @@ namespace Linqs.Tests
             Assert.Equal(expected, first.RunOnce().Zip(second.RunOnce()));
         }
 
-        [Fact]
+        [Fact(Skip = "Waiting for .net 5.0")]
         public void Zip2_NestedTuple()
         {
             IEnumerable<int> first = new[] { 1, 3, 5 };
@@ -224,7 +225,7 @@ namespace Linqs.Tests
             Assert.Equal(final, third.Zip(fourth));
         }
 
-        [Fact]
+        [Fact(Skip = "Waiting for .net 5.0")]
         public void Zip2_TupleNames()
         {
             var t = new[] { 1, 2, 3 }.Zip(new[] { 2, 4, 6 }).First();

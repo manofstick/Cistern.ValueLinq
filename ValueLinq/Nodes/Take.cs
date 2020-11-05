@@ -44,6 +44,8 @@ namespace Cistern.ValueLinq.Nodes
         private NodeT _nodeT;
         private int _count;
 
+        public int? MaximumLength => !_nodeT.MaximumLength.HasValue ? _count : Math.Min(_nodeT.MaximumLength.Value, _count);
+
         public TakeNode(in NodeT nodeT, int count) => (_nodeT, _count) = (nodeT, count);
 
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)

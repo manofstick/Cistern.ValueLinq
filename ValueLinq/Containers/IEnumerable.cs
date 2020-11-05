@@ -31,6 +31,14 @@ namespace Cistern.ValueLinq.Containers
     {
         private readonly IEnumerable<T> _enumerable;
 
+        public int? MaximumLength => 
+            _enumerable switch
+            {
+                System.Collections.ICollection c => c.Count,
+                INode n => n.MaximumLength,
+                _ => null
+            };
+
         public EnumerableNode(IEnumerable<T> source) => _enumerable = source;
 
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)

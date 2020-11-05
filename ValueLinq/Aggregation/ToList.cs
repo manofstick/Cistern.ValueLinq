@@ -113,6 +113,8 @@ namespace Cistern.ValueLinq.Aggregation
     struct ToListViaStack
         : INode
     {
+        public int? MaximumLength => Impl.CountInfo;
+
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
             => Impl.CreateObjectDescent<CreationType>();
 
@@ -154,26 +156,26 @@ namespace Cistern.ValueLinq.Aggregation
                 }
                 if (!enumerator.TryGetNext(out var t2))
                 {
-                    result = Create(idx+1);
+                    result = Create(idx + 1);
                     goto _1;
                 }
                 if (!enumerator.TryGetNext(out var t3))
                 {
-                    result = Create(idx+2);
+                    result = Create(idx + 2);
                     goto _2;
                 }
                 if (!enumerator.TryGetNext(out var t4))
                 {
-                    result = Create(idx+3);
+                    result = Create(idx + 3);
                     goto _3;
                 }
 
                 result = StackBasedPopulate(ref enumerator, idx+4);
 
-                result[idx+3] = t4;
-            _3: result[idx+2] = t3;
-            _2: result[idx+1] = t2;
-            _1: result[idx+0] = t1;
+                result[idx + 3] = t4;
+            _3: result[idx + 2] = t3;
+            _2: result[idx + 1] = t2;
+            _1: result[idx + 0] = t1;
 
             _0: return result;
             }

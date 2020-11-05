@@ -36,6 +36,7 @@
         private NodeT _nodeT;
         private InFunc<T, bool> _filter;
 
+        public int? MaximumLength => _nodeT.MaximumLength;
         public Where_InNode(in NodeT nodeT, InFunc<T, bool> filter) => (_nodeT, _filter) = (nodeT, filter);
 
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);

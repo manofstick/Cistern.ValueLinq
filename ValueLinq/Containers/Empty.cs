@@ -16,6 +16,8 @@ namespace Cistern.ValueLinq.Containers
     public struct EmptyNode<T>
         : INode
     {
+        public int? MaximumLength => 0;
+
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => EmptyNode.Create<T, Head, Tail, CreationType>(ref nodes);
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
