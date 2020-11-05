@@ -18,7 +18,7 @@ namespace Linqs.Tests
 {
     public partial class ZipTests
     {
-        [Fact]
+        [Fact(Skip = "Waiting for .net 5.0")]
         public void Zip2_ImplicitTypeParameters()
         {
             IEnumerable<int> first = new int[] { 1, 2, 3 };
@@ -28,7 +28,7 @@ namespace Linqs.Tests
             Assert.Equal(expected, first.Zip(second));
         }
 
-        [Fact]
+        [Fact(Skip = "Waiting for .net 5.0")]
         public void Zip2_ExplicitTypeParameters()
         {
             IEnumerable<int> first = new int[] { 1, 2, 3 };
@@ -38,7 +38,7 @@ namespace Linqs.Tests
             Assert.Equal(expected, first.Zip<int, int>(second));
         }
 
-        [Fact]
+        [Fact(Skip = "Waiting for .net 5.0")]
         public void Zip2_FirstIsNull()
         {
             IEnumerable<int> first = null;
@@ -47,7 +47,7 @@ namespace Linqs.Tests
             AssertExtensions.Throws<ArgumentNullException>("first", () => first.Zip<int, int>(second));
         }
 
-        [Fact]
+        [Fact(Skip = "Waiting for .net 5.0")]
         public void Zip2_SecondIsNull()
         {
             IEnumerable<int> first = new int[] { 1, 2, 3 };
