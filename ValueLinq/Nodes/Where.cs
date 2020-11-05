@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace Cistern.ValueLinq.Nodes
 {
@@ -20,6 +21,7 @@ namespace Cistern.ValueLinq.Nodes
 
         public void Dispose() => _enumerator.Dispose();
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetNext(out TIn current)
         {
             while(_enumerator.TryGetNext(out current))
