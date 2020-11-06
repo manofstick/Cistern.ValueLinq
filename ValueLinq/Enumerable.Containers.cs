@@ -45,5 +45,6 @@ namespace Cistern.ValueLinq
 
         public static ValueEnumerable<T, RepeatNode<T>> Repeat<T>(T element, int count) => new ValueEnumerable<T, RepeatNode<T>>(new RepeatNode<T>(element, count));
 
+        public static ValueEnumerable<T, ReturnNode<T>> Return<T>(T element) => new ValueEnumerable<T, ReturnNode<T>>(new ReturnNode<T>(element));
     }
 }
