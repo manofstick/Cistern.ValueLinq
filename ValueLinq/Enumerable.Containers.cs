@@ -26,6 +26,9 @@ namespace Cistern.ValueLinq
         public static ValueEnumerable<T, MemoryNode<T>> OfMemory<T>(this ReadOnlyMemory<T> source) =>
             new ValueEnumerable<T, MemoryNode<T>>(new MemoryNode<T>(source));
 
+        public static ValueEnumerable<T, SpanNode<TObject, T>> FromSpan<TObject, T>(TObject obj, GetSpan<TObject,T> getSpan) =>
+            new ValueEnumerable<T, SpanNode<TObject, T>>(new SpanNode<TObject, T>(obj, getSpan));
+
         public static ValueEnumerable<T, ListByIndexNode<T>> OfListByIndex<T>(this List<T> source)
         {
             if (source == null)

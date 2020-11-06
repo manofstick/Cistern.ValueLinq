@@ -1,4 +1,5 @@
 ﻿using BenchmarkDotNet.Running;
+using System;
 
 namespace Cistern.Benchmarks
 {
@@ -27,7 +28,9 @@ namespace Cistern.Benchmarks
             ValueLambdas.SelectWhereMax.SanityCheck();
             ValueLambdas.WhereSelect.SanityCheck();
 
-            var summary = BenchmarkRunner.Run<DoubleDoubleDouble.SelectWhereAggregate> ();
+            Span.StringToList.SanityCheck();
+
+            var summary = BenchmarkRunner.Run<Span.StringToList> ();
         }
     }
 }
