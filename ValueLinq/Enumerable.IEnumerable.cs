@@ -179,6 +179,14 @@ namespace Cistern.ValueLinq
             return source.OfEnumerable().SelectMany(src => selector(src).OfEnumerable());
         }
 
+        public static ValueEnumerable<TResult, SelectManyNode<TSource, TResult, EnumerableNode<TSource>, NodeU>> SelectMany<TSource, TResult, NodeU>(this IEnumerable<TSource> source, Func<TSource, ValueEnumerable<TResult, NodeU>> selector)
+            where NodeU : INode
+        {
+            if (selector == null)
+                throw new ArgumentNullException(nameof(selector));
+
+            return source.OfEnumerable().SelectMany(selector);
+        }
 
         public static IEnumerable<T> Concat<T>(this IEnumerable<T> first, IEnumerable<T> second)
         {
