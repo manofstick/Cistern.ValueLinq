@@ -30,7 +30,9 @@ namespace Cistern.Benchmarks
 
             Span.StringToList.SanityCheck();
 
-            var summary = BenchmarkRunner.Run<Span.StringToList> ();
+            ImmutableArray.WhereSelectToList.SanityCheck();
+
+            var summary = BenchmarkRunner.Run<ImmutableArray.WhereSelectToList>();
         }
     }
 }
