@@ -105,6 +105,16 @@ namespace Cistern.ValueLinq
             return source.Node.CreateObjectViaFastEnumerator<T, bool, All<T>>(new All<T>(predicate));
         }
 
+        public static bool All<T, Inner, Predicate>(in this ValueEnumerable<T, Inner> source, Predicate predicate)
+            where Inner : INode
+            where Predicate : IFunc<T, bool>
+        {
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
+
+            return source.Node.CreateObjectViaFastEnumerator<T, bool, All<T, Predicate>>(new All<T, Predicate>(predicate));
+        }
+
         public static bool Any<T, Inner>(in this ValueEnumerable<T, Inner> source)
             where Inner : INode
             => source.Node.CreateObjectViaFastEnumerator<T, bool, Anything<T>>(new Anything<T>());
