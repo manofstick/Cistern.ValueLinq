@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Cistern.Benchmarks.Double.SelectToList
+namespace Cistern.Benchmarks.Double
 {
-    partial class Benchmark
+    partial class SelectToList
     {
         [Benchmark(Baseline = true)]
         public List<double> Linq() => _double.Select(x => x * 2).ToList();

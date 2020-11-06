@@ -3,10 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Cistern.Benchmarks.Double.SelectSelectToList
+namespace Cistern.Benchmarks.Double
 {
     [MemoryDiagnoser]
-    public partial class Benchmark
+    public partial class SelectSelectToList
     {
         IEnumerable<double> _double;
 
@@ -47,7 +47,7 @@ namespace Cistern.Benchmarks.Double.SelectSelectToList
 
         internal static void SanityCheck()
         {
-            var check = new Benchmark();
+            var check = new SelectSelectToList();
 
             check.Length = 100;
             check.ContainerType = ContainerTypes.Array;

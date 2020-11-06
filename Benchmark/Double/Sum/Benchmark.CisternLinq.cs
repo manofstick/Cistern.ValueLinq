@@ -1,10 +1,10 @@
 ﻿using BenchmarkDotNet.Attributes;
 using Cistern.Linq;
 
-namespace Cistern.Benchmarks.Double.Sum
+namespace Cistern.Benchmarks.Double
 {
 #if CISTERNLINQ
-    partial class Benchmark
+    partial class Sum
     {
         [Benchmark]
         public double CisternLinq() => _double.Sum();

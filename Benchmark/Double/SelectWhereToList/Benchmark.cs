@@ -3,10 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Cistern.Benchmarks.Double.SelectWhereToList
+namespace Cistern.Benchmarks.Double
 {
     [MemoryDiagnoser]
-    public partial class Benchmark
+    public partial class SelectWhereToList
     {
         IEnumerable<double> _double;
 
@@ -39,7 +39,7 @@ namespace Cistern.Benchmarks.Double.SelectWhereToList
 
         internal static void SanityCheck()
         {
-            var check = new Benchmark();
+            var check = new SelectWhereToList();
 
             check.Length = 100;
             check.SetupData();

@@ -1,9 +1,9 @@
 ﻿using BenchmarkDotNet.Attributes;
 using System.Linq;
 
-namespace Cistern.Benchmarks.Double.Any
+namespace Cistern.Benchmarks.Double
 {
-    partial class Benchmark
+    partial class Any
     {
         [Benchmark(Baseline = true)]
         public bool Linq() =>

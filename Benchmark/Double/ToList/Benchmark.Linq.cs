@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Cistern.Benchmarks.Double.ToList
+namespace Cistern.Benchmarks.Double
 {
-    partial class Benchmark
+    partial class ToList
     {
         [Benchmark(Baseline = true)]
         public List<double> Linq() => _double.ToList();

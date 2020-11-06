@@ -5,10 +5,10 @@ using System.Linq;
 
 #nullable enable
 
-namespace Cistern.Benchmarks.Double.Any
+namespace Cistern.Benchmarks.Double
 {
     [MemoryDiagnoser]
-    public partial class Benchmark
+    public partial class Any
     {
         IEnumerable<double>? _double;
         Func<double, bool>? _filter;
@@ -59,7 +59,7 @@ namespace Cistern.Benchmarks.Double.Any
 
         internal static void SanityCheck()
         {
-            var check = new Benchmark();
+            var check = new Any();
 
             check.ContainerType = ContainerTypes.List;
             check.Length = 100;

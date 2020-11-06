@@ -1,10 +1,10 @@
 ﻿using BenchmarkDotNet.Attributes;
 using Cistern.Linq;
 
-namespace Cistern.Benchmarks.DoubleDoubleDouble.WhereSelectAggregate
+namespace Cistern.Benchmarks.DoubleDoubleDouble
 {
 #if CISTERNLINQ
-    partial class Benchmark
+    partial class WhereSelectAggregate
     {
         [Benchmark]
         public (double x, double y, double z) CisternLinq()

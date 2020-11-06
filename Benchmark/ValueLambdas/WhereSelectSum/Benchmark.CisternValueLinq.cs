@@ -1,9 +1,9 @@
 ﻿using BenchmarkDotNet.Attributes;
 using Cistern.ValueLinq;
 
-namespace Cistern.Benchmarks.ValueLambdas.WhereSelectSum
+namespace Cistern.Benchmarks.ValueLambdas
 {
-    partial class Benchmark
+    partial class WhereSelectSum
     {
         struct DoubleAnInt : IFunc<int, int> { public int Invoke(int t) => t * 2; } 
         struct FilterEvenInts : IFunc<int, bool> { public bool Invoke(int t) => (t & 1) == 0; }

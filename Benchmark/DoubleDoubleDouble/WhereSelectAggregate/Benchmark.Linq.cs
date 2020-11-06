@@ -1,9 +1,9 @@
 ﻿using BenchmarkDotNet.Attributes;
 using System.Linq;
 
-namespace Cistern.Benchmarks.DoubleDoubleDouble.WhereSelectAggregate
+namespace Cistern.Benchmarks.DoubleDoubleDouble
 {
-    partial class Benchmark
+    partial class WhereSelectAggregate
     {
         [Benchmark(Baseline = true)]
         public (double, double, double) Linq()

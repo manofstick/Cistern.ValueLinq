@@ -1,9 +1,9 @@
 ﻿using BenchmarkDotNet.Attributes;
 using Cistern.ValueLinq;
 
-namespace Cistern.Benchmarks.Double.SelectSum
+namespace Cistern.Benchmarks.Double
 {
-    partial class Benchmark
+    partial class SelectSum
     {
         [Benchmark]
         public double CisternValueLinq() => _double.Select(x => x * 2).Sum();

@@ -1,9 +1,9 @@
 ﻿using BenchmarkDotNet.Attributes;
 using System.Collections.Generic;
 
-namespace Cistern.Benchmarks.ValueLambdas.WhereSelectSum
+namespace Cistern.Benchmarks.ValueLambdas
 {
-    partial class Benchmark
+    partial class WhereSelectSum
     {
         [Benchmark(Baseline = true)]
         public double Handcoded()

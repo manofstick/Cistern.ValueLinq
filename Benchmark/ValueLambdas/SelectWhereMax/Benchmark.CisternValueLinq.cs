@@ -1,9 +1,9 @@
 ﻿using BenchmarkDotNet.Attributes;
 using Cistern.ValueLinq;
 
-namespace Cistern.Benchmarks.ValueLambdas.SelectWhereMax
+namespace Cistern.Benchmarks.ValueLambdas
 {
-    partial class Benchmark
+    partial class SelectWhereMax
     {
         struct HalveAnInt : IFunc<int, int> { public int Invoke(int t) => t / 2; } 
         struct FilterEvenInts : IFunc<int, bool> { public bool Invoke(int t) => (t & 1) == 0; }

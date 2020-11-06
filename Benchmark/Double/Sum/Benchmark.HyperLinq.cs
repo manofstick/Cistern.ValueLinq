@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using NetFabric.Hyperlinq;
 
-namespace Cistern.Benchmarks.Double.Sum
+namespace Cistern.Benchmarks.Double
 {
 #if HYPERLINQ
     partial class Benchmark

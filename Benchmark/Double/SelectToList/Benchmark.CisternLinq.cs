@@ -2,10 +2,10 @@
 using Cistern.Linq;
 using System.Collections.Generic;
 
-namespace Cistern.Benchmarks.Double.SelectToList
+namespace Cistern.Benchmarks.Double
 {
 #if CISTERNLINQ
-    partial class Benchmark
+    partial class SelectToList
     {
         [Benchmark]
         public List<double> CisternLinq() => _double.Select(x => x*2).ToList();

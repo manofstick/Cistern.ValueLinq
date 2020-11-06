@@ -2,9 +2,9 @@
 using StructLinq;
 using System.Collections.Generic;
 
-namespace Cistern.Benchmarks.ValueLambdas.SelectWhereMax
+namespace Cistern.Benchmarks.ValueLambdas
 {
-    partial class Benchmark
+    partial class SelectWhereMax
     {
         struct WherePredicate : IFunction<int, bool> { public bool Eval(int element) => (element & 1) == 0; }
         struct SelectFunction : IFunction<int, int> { public int Eval(int element) => element / 2; }

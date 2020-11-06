@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using BenchmarkDotNet.Attributes;
 
-namespace Cistern.Benchmarks.ValueLambdas.WhereSelect
+namespace Cistern.Benchmarks.ValueLambdas
 {
     [MemoryDiagnoser]
-    public partial class Benchmark
+    public partial class WhereSelect
     {
         IEnumerable<int> _ints;
 
@@ -47,7 +47,7 @@ namespace Cistern.Benchmarks.ValueLambdas.WhereSelect
 
         internal static void SanityCheck()
         {
-            var check = new Benchmark();
+            var check = new WhereSelect();
 
             check.Length = 100;
             check.ContainerType = ContainerTypes.Array;

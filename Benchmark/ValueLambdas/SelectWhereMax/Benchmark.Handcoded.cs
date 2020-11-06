@@ -1,9 +1,9 @@
 ﻿using BenchmarkDotNet.Attributes;
 using System.Collections.Generic;
 
-namespace Cistern.Benchmarks.ValueLambdas.SelectWhereMax
+namespace Cistern.Benchmarks.ValueLambdas
 {
-    partial class Benchmark
+    partial class SelectWhereMax
     {
         [Benchmark(Baseline = true)]
         public double Handcoded()

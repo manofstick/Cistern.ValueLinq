@@ -1,10 +1,10 @@
 ﻿using BenchmarkDotNet.Attributes;
 using Cistern.Linq;
 
-namespace Cistern.Benchmarks.Double.Any
+namespace Cistern.Benchmarks.Double
 {
 #if CISTERNLINQ
-    partial class Benchmark
+    partial class Any
     {
         [Benchmark]
         public bool CisternLinq() =>

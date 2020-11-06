@@ -2,10 +2,10 @@
 using LinqAF;
 using System.Collections.Generic;
 
-namespace Cistern.Benchmarks.Double.SelectToList
+namespace Cistern.Benchmarks.Double
 {
 #if LINQAF
-    partial class Benchmark
+    partial class SelectToList
     {
         [Benchmark]
         public List<double> LinqAF() => _double.Select(x => x * 2).ToList();

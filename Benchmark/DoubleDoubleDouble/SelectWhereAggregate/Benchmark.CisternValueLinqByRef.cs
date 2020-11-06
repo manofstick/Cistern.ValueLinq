@@ -1,9 +1,9 @@
 ﻿using BenchmarkDotNet.Attributes;
 using Cistern.ValueLinq;
 
-namespace Cistern.Benchmarks.DoubleDoubleDouble.SelectWhereAggregate
+namespace Cistern.Benchmarks.DoubleDoubleDouble
 {
-    partial class Benchmark
+    partial class SelectWhereAggregate
     {
         [Benchmark]
         public (double, double, double) CisternValueLinqByRef()

@@ -3,10 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Cistern.Benchmarks.ValueLambdas.SelectWhereMax
+namespace Cistern.Benchmarks.ValueLambdas
 {
     [MemoryDiagnoser]
-    public partial class Benchmark
+    public partial class SelectWhereMax
     {
         IEnumerable<int> _ints;
 
@@ -47,7 +47,7 @@ namespace Cistern.Benchmarks.ValueLambdas.SelectWhereMax
 
         internal static void SanityCheck()
         {
-            var check = new Benchmark();
+            var check = new SelectWhereMax();
 
             check.Length = 100;
             check.ContainerType = ContainerTypes.Array;

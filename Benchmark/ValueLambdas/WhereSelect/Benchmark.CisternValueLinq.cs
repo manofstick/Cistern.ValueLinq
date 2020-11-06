@@ -2,9 +2,9 @@
 using Cistern.ValueLinq;
 using System.Collections.Generic;
 
-namespace Cistern.Benchmarks.ValueLambdas.WhereSelect
+namespace Cistern.Benchmarks.ValueLambdas
 {
-    partial class Benchmark
+    partial class WhereSelect
     {
         struct HalveAnInt : IFunc<int, int> { public int Invoke(int t) => t / 2; } 
         struct FilterEvenInts : IFunc<int, bool> { public bool Invoke(int t) => (t & 1) == 0; }

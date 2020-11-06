@@ -1,5 +1,4 @@
 ﻿using BenchmarkDotNet.Running;
-using System;
 
 namespace Cistern.Benchmarks
 {
@@ -8,27 +7,27 @@ namespace Cistern.Benchmarks
         public static void Main(string[] args)
         {
             // For some sanity checking
-            DoubleDoubleDouble.SelectWhereAggregate.Benchmark.SanityCheck();
-            DoubleDoubleDouble.WhereSelectAggregate.Benchmark.SanityCheck();
+            DoubleDoubleDouble.SelectWhereAggregate.SanityCheck();
+            DoubleDoubleDouble.WhereSelectAggregate.SanityCheck();
 
-            Double.ToList.Benchmark.SanityCheck();
-            Double.SelectToList.Benchmark.SanityCheck();
-            Double.SelectSelectToList.Benchmark.SanityCheck();
-            Double.WhereToList.Benchmark.SanityCheck();
-            Double.SelectWhereToList.Benchmark.SanityCheck();
-            Double.WhereSelectToList.Benchmark.SanityCheck();
-            Double.WhereSelectIToList.Benchmark.SanityCheck();
-            Double.WhereWhereToList.Benchmark.SanityCheck();
-            Double.Sum.Benchmark.SanityCheck();
-            Double.Any.Benchmark.SanityCheck();
-            Double.SelectSum.Benchmark.SanityCheck();
-            Double.SelectManySum.Benchmark.SanityCheck();
+            Double.ToList.SanityCheck();
+            Double.SelectToList.SanityCheck();
+            Double.SelectSelectToList.SanityCheck();
+            Double.WhereToList.SanityCheck();
+            Double.SelectWhereToList.SanityCheck();
+            Double.WhereSelectToList.SanityCheck();
+            Double.WhereSelectIToList.SanityCheck();
+            Double.WhereWhereToList.SanityCheck();
+            Double.Sum.SanityCheck();
+            Double.Any.SanityCheck();
+            Double.SelectSum.SanityCheck();
+            Double.SelectManySum.SanityCheck();
 
-            ValueLambdas.WhereSelectSum.Benchmark.SanityCheck();
-            ValueLambdas.SelectWhereMax.Benchmark.SanityCheck();
-            ValueLambdas.WhereSelect.Benchmark.SanityCheck();
+            ValueLambdas.WhereSelectSum.SanityCheck();
+            ValueLambdas.SelectWhereMax.SanityCheck();
+            ValueLambdas.WhereSelect.SanityCheck();
 
-            var summary = BenchmarkRunner.Run<ValueLambdas.WhereSelect.Benchmark> ();
+            var summary = BenchmarkRunner.Run<DoubleDoubleDouble.SelectWhereAggregate> ();
         }
     }
 }

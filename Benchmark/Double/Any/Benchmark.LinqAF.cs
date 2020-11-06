@@ -1,10 +1,10 @@
 ﻿using BenchmarkDotNet.Attributes;
 using LinqAF;
 
-namespace Cistern.Benchmarks.Double.Any
+namespace Cistern.Benchmarks.Double
 {
 #if LINQAF
-    partial class Benchmark
+    partial class Any
     {
         [Benchmark]
         public bool LinqAF() =>

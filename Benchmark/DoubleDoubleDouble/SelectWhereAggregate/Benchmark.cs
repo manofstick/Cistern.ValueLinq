@@ -3,10 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Cistern.Benchmarks.DoubleDoubleDouble.SelectWhereAggregate
+namespace Cistern.Benchmarks.DoubleDoubleDouble
 {
     [MemoryDiagnoser]
-    public partial class Benchmark
+    public partial class SelectWhereAggregate
     {
         IEnumerable<(double, double, double)> _doubledoubledoubles;
 
@@ -45,7 +45,7 @@ namespace Cistern.Benchmarks.DoubleDoubleDouble.SelectWhereAggregate
 
         internal static void SanityCheck()
         {
-            var check = new Benchmark();
+            var check = new SelectWhereAggregate();
 
             check.Length = 100;
             check.SetupData();

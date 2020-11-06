@@ -2,9 +2,9 @@
 using BenchmarkDotNet.Attributes;
 using StructLinq;
 
-namespace Cistern.Benchmarks.ValueLambdas.WhereSelect
+namespace Cistern.Benchmarks.ValueLambdas
 {
-    partial class Benchmark
+    partial class WhereSelect
     {
         struct WherePredicate : IFunction<int, bool> { public bool Eval(int element) => (element & 1) == 0; }
         struct SelectFunction : IFunction<int, int> { public int Eval(int element) => element / 2; }

@@ -3,10 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Cistern.Benchmarks.ValueLambdas.WhereSelectSum
+namespace Cistern.Benchmarks.ValueLambdas
 {
     [MemoryDiagnoser]
-    public partial class Benchmark
+    public partial class WhereSelectSum
     {
         IEnumerable<int> _ints;
 
@@ -47,7 +47,7 @@ namespace Cistern.Benchmarks.ValueLambdas.WhereSelectSum
 
         internal static void SanityCheck()
         {
-            var check = new Benchmark();
+            var check = new WhereSelectSum();
 
             check.Length = 100;
             check.ContainerType = ContainerTypes.Array;
