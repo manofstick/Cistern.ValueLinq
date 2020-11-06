@@ -1,6 +1,7 @@
 ﻿using Cistern.ValueLinq.Containers;
 using Cistern.ValueLinq.ValueEnumerable;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace Cistern.ValueLinq
@@ -31,12 +32,12 @@ namespace Cistern.ValueLinq
             return new ValueEnumerable<T, ListByIndexNode<T>>(new ListByIndexNode<T>(source));
         }
 
-        public static ValueEnumerable<T, ListByIndexNode<T>> OfListByEnumerator<T>(this List<T> source)
+        public static ValueEnumerable<T, ListByEnumeratorNode<T>> OfListByEnumerator<T>(this List<T> source)
         {
             if (source == null)
                 throw new ArgumentNullException(nameof(source));
 
-            return new ValueEnumerable<T, ListByIndexNode<T>>(new ListByIndexNode<T>(source));
+            return new ValueEnumerable<T, ListByEnumeratorNode<T>>(new ListByEnumeratorNode<T>(source));
         }
 
         public static ValueEnumerable<T, EmptyNode<T>> Empty<T>() => new ValueEnumerable<T, EmptyNode<T>>(new EmptyNode<T>());
@@ -46,5 +47,16 @@ namespace Cistern.ValueLinq
         public static ValueEnumerable<T, RepeatNode<T>> Repeat<T>(T element, int count) => new ValueEnumerable<T, RepeatNode<T>>(new RepeatNode<T>(element, count));
 
         public static ValueEnumerable<T, ReturnNode<T>> Return<T>(T element) => new ValueEnumerable<T, ReturnNode<T>>(new ReturnNode<T>(element));
+
+        public static ValueEnumerable<T, GenericEnumeratorNode<T, Enumerable, Enumerator>> OfEnumerableGeneric<T, Enumerable, Enumerator>(this Enumerable source, Func<Enumerable, Enumerator> getEnumerator, int? count = null)
+            where Enumerable : IEnumerable<T>
+            where Enumerator : IEnumerator<T>
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+
+            return new ValueEnumerable<T, GenericEnumeratorNode<T, Enumerable, Enumerator>>(new GenericEnumeratorNode<T, Enumerable, Enumerator>(source, getEnumerator, count));
+        }
+
     }
 }
