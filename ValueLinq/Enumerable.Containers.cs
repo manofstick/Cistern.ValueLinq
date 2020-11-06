@@ -50,7 +50,7 @@ namespace Cistern.ValueLinq
 
         public static ValueEnumerable<T, ReturnNode<T>> Return<T>(T element) => new ValueEnumerable<T, ReturnNode<T>>(new ReturnNode<T>(element));
 
-        public static ValueEnumerable<T, GenericEnumeratorNode<T, Enumerable, Enumerator>> OfEnumerableGeneric<T, Enumerable, Enumerator>(this Enumerable source, Func<Enumerable, Enumerator> getEnumerator, int? count = null)
+        public static ValueEnumerable<T, GenericEnumeratorNode<T, Enumerable, Enumerator>> OfEnumeratorConstraint<T, Enumerable, Enumerator>(this Enumerable source, Func<Enumerable, Enumerator> getEnumerator, int? count = null)
             where Enumerable : IEnumerable<T>
             where Enumerator : IEnumerator<T>
         {
@@ -58,6 +58,15 @@ namespace Cistern.ValueLinq
                 throw new ArgumentNullException(nameof(source));
 
             return new ValueEnumerable<T, GenericEnumeratorNode<T, Enumerable, Enumerator>>(new GenericEnumeratorNode<T, Enumerable, Enumerator>(source, getEnumerator, count));
+        }
+
+        public static ValueEnumerable<T, IReadOnlyListNode<T, List>> OfReadOnlyListConstraint<T, List>(this List source)
+            where List : IReadOnlyList<T>
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+
+            return new ValueEnumerable<T, IReadOnlyListNode<T, List>>(new IReadOnlyListNode<T, List>(source));
         }
 
     }
