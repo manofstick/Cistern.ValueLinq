@@ -186,11 +186,6 @@ namespace Cistern.ValueLinq
         //        public static IEnumerable<TSource> Where<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) => System.Linq.Enumerable.Where<TSource>(source, predicate);
         [Obsolete("Not converted to ValueLinq yet")] public static IEnumerable<TSource> Where<TSource>(this IEnumerable<TSource> source, Func<TSource, int, bool> predicate) => System.Linq.Enumerable.Where<TSource>(source, predicate);
         [Obsolete("Not converted to ValueLinq yet")] public static IEnumerable<TResult> Zip<TFirst, TSecond, TResult>(this IEnumerable<TFirst> first, IEnumerable<TSecond> second, Func<TFirst, TSecond, TResult> resultSelector) => System.Linq.Enumerable.Zip<TFirst, TSecond, TResult>(first, second, resultSelector);
-
-
-
-
-
-        [Obsolete("Not converted to ValueLinq yet")] public static IEnumerable<(TFirst First, TSecond Second)> Zip<TFirst, TSecond>(this IEnumerable<TFirst> first, IEnumerable<TSecond> second) => throw new Exception("Need .net 5.0");//System.Linq.Enumerable.Zip<TFirst, TSecond>(first, second);
+        [Obsolete("Not converted to ValueLinq yet")] public static IEnumerable<(TFirst First, TSecond Second)> Zip<TFirst, TSecond>(this IEnumerable<TFirst> first, IEnumerable<TSecond> second) => System.Linq.Enumerable.Zip<TFirst, TSecond, (TFirst, TSecond)>(first, second, (f, s) => (f, s));
     }
 }
