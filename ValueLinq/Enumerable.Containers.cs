@@ -1,7 +1,6 @@
 ﻿using Cistern.ValueLinq.Containers;
 using Cistern.ValueLinq.ValueEnumerable;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace Cistern.ValueLinq
@@ -23,6 +22,9 @@ namespace Cistern.ValueLinq
 
             return new ValueEnumerable<T, ArrayNode<T>>(new ArrayNode<T>(source));
         }
+
+        public static ValueEnumerable<T, MemoryNode<T>> OfMemory<T>(this ReadOnlyMemory<T> source) =>
+            new ValueEnumerable<T, MemoryNode<T>>(new MemoryNode<T>(source));
 
         public static ValueEnumerable<T, ListByIndexNode<T>> OfListByIndex<T>(this List<T> source)
         {
