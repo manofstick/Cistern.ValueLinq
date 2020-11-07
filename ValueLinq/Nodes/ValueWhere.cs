@@ -43,7 +43,7 @@ namespace Cistern.ValueLinq.Nodes
         public void GetCountInformation(out CountInformation info)
         {
             _nodeT.GetCountInformation(out info);
-            info.ActualLengthIsMaximumLength = false;
+            info.ActualLengthIsMaximumLength &= info.MaximumLength == 0;
         }
 
         public ValueWhereNode(in NodeT nodeT, Predicate predicate) => (_nodeT, _filter) = (nodeT, predicate);

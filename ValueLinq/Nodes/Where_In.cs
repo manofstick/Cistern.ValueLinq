@@ -39,7 +39,7 @@
         public void GetCountInformation(out CountInformation info)
         {
             _nodeT.GetCountInformation(out info);
-            info.ActualLengthIsMaximumLength = false;
+            info.ActualLengthIsMaximumLength &= info.MaximumLength == 0;
         }
 
         public Where_InNode(in NodeT nodeT, InFunc<T, bool> filter) => (_nodeT, _filter) = (nodeT, filter);

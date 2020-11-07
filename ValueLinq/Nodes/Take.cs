@@ -47,7 +47,11 @@ namespace Cistern.ValueLinq.Nodes
         public void GetCountInformation(out CountInformation info)
         {
             _nodeT.GetCountInformation(out info);
-            if (info.MaximumLength.HasValue)
+            if (_count <= 0)
+            {
+                info = new CountInformation(0, true);
+            }
+            else if (info.MaximumLength.HasValue)
             {
                 info.MaximumLength = Math.Min(info.MaximumLength.Value, _count);
             }

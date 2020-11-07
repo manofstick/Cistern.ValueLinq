@@ -10,10 +10,9 @@
 
             return inner.CheckForOptimization<T, Optimizations.Count, int>(new Optimizations.Count(), out var count) switch
             {
-                false => Nodes<int>.Aggregation<Inner, Aggregation.Count>(in inner),
+                false => inner.CreateObjectViaFastEnumerator<T, int, Aggregation.Count<T>>(new Aggregation.Count<T>()),
                 true => count
             };
         }
-
     }
 }
