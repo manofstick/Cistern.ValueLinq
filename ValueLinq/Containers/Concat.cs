@@ -69,7 +69,17 @@ namespace Cistern.ValueLinq.Containers
         {
             start.GetCountInformation(out _countInfo);
             finish.GetCountInformation(out var rhs);
-            _countInfo.Merge(in rhs);
+
+            _countInfo.MaximumLength += rhs.MaximumLength;
+            _countInfo.ActualLengthIsMaximumLength &= rhs.ActualLengthIsMaximumLength;
+            _countInfo.IsImmutable &= rhs.IsImmutable;
+            _countInfo.IsStale = !_countInfo.IsImmutable || !rhs.IsImmutable;
+
+#if PROPERLY_RIPPLE_POTENTIAL_SIDE_EFFECTS
+            _countInfo.PotentialSideEffects |= rhs.PotentialSideEffects;
+#else
+            _countInfo.PotentialSideEffects = false;
+#endif
 
             (_start, _finish) = (start, finish);
         }

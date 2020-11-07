@@ -34,7 +34,10 @@ namespace Cistern.ValueLinq.Containers
         public void GetCountInformation(out CountInformation info)
         {
             if (_enumerable is System.Collections.ICollection c)
-                info = new CountInformation(c.Count, false);
+            {
+                var isImmutable = _enumerable is T[];
+                info = new CountInformation(c.Count, isImmutable);
+            }
             else if (_enumerable is INode n)
                 n.GetCountInformation(out info);
             else

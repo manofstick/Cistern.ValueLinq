@@ -19,16 +19,6 @@ namespace Cistern.ValueLinq
         public bool IsImmutable;
         public bool IsStale;
         public bool PotentialSideEffects;
-
-        public void Merge(in CountInformation rhs)
-        {
-            MaximumLength               += rhs.MaximumLength;
-            ActualLengthIsMaximumLength &= rhs.ActualLengthIsMaximumLength;
-            IsImmutable                 &= rhs.IsImmutable;
-            PotentialSideEffects        |= rhs.PotentialSideEffects;
-
-            IsStale = !IsImmutable || !rhs.IsImmutable;
-        }
     }
 
     public interface INode
