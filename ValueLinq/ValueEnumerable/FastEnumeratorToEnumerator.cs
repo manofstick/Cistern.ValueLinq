@@ -27,7 +27,7 @@ namespace Cistern.ValueLinq.ValueEnumerable
     struct FastEnumeratorToEnumeratorNode
         : INode
     {
-        public int? MaximumLength => Impl.CountInfo;
+        public void GetCountInformation(out int? maximumLength) => Impl.CountInfo(out maximumLength);
 
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> _) 
             => Impl.CreateObjectDescent<CreationType>();

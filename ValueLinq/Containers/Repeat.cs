@@ -33,7 +33,10 @@ namespace Cistern.ValueLinq.Containers
         private T _element;
         private int _count;
 
-        public int? MaximumLength => _count;
+        public void GetCountInformation(out int? maximumLength)
+        {
+            maximumLength = _count;
+        }
 
         public RepeatNode(T element, int count)
         {

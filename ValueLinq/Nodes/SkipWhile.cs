@@ -46,7 +46,10 @@ namespace Cistern.ValueLinq.Nodes
         private NodeT _nodeT;
         private Func<T, bool> _predicate;
 
-        public int? MaximumLength => _nodeT.MaximumLength;
+        public void GetCountInformation(out int? maximumLength)
+        {
+            _nodeT.GetCountInformation(out maximumLength);
+        }
 
         public SkipWhileNode(in NodeT nodeT, Func<T, bool> predicate) => (_nodeT, _predicate) = (nodeT, predicate);
 

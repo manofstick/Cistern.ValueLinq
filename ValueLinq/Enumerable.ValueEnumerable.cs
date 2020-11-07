@@ -179,10 +179,15 @@ namespace Cistern.ValueLinq
 
         public static List<T> ToList<T, Inner>(in this ValueEnumerable<T, Inner> inner, int? maybeMaxCountForStackBasedPath = 64, (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo = null) where Inner : INode
         {
-            var maximumLength = inner.MaximumLength;
+            inner.GetCountInformation(out var maximumLength);
 
             if (maximumLength <= 4)
+            {
+                if (maximumLength == 0)
+                    return new List<T>();
+
                 return inner.Node.CreateObjectViaFastEnumerator<T, List<T>, ToListForward<T>>(new ToListForward<T>());
+            }
 
             if (maximumLength <= maybeMaxCountForStackBasedPath.GetValueOrDefault())
                 return Nodes<List<T>>.Aggregation<Inner, ToListViaStack>(in inner.Node);

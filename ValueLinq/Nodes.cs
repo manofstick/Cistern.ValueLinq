@@ -18,7 +18,7 @@ namespace Cistern.ValueLinq
 
         bool CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result);
 
-        int? MaximumLength { get; }
+        void GetCountInformation(out int? maximumLength);
     }
 
     public interface INodes

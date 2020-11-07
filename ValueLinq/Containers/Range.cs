@@ -33,7 +33,10 @@ namespace Cistern.ValueLinq.Containers
         private int _start;
         private int _max;
 
-        public int? MaximumLength => _max-_start+1;
+        public void GetCountInformation(out int? maximumLength)
+        {
+            maximumLength = _max - _start + 1;
+        }
 
         public RangeNode(int start, int count)
         {

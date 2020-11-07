@@ -35,7 +35,10 @@ namespace Cistern.ValueLinq.Containers
     {
         private readonly List<T> _list;
 
-        public int? MaximumLength => _list.Count;
+        public void GetCountInformation(out int? maximumLength)
+        {
+            maximumLength = _list.Count;
+        }
 
         public ListByIndexNode(List<T> list) => _list = list;
 

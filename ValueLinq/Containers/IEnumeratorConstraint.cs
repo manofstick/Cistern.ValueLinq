@@ -37,7 +37,10 @@ namespace Cistern.ValueLinq.Containers
         private readonly Func<Enumerable, Enumerator> _f;
         private readonly int? _count;
 
-        public int? MaximumLength => _count;
+        public void GetCountInformation(out int? maximumLength)
+        {
+            maximumLength = _count;
+        }
 
         public GenericEnumeratorNode(Enumerable e, Func<Enumerable, Enumerator> f, int? count) => (_e, _f, _count) = (e, f, count);
 

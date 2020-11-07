@@ -41,7 +41,10 @@ namespace Cistern.ValueLinq.Nodes
         private NodeT _nodeT;
         private Func _map;
 
-        public int? MaximumLength => _nodeT.MaximumLength;
+        public void GetCountInformation(out int? maximumLength)
+        {
+            _nodeT.GetCountInformation(out maximumLength);
+        }
 
         public ValueSelectNode(in NodeT nodeT, Func selector) => (_nodeT, _map) = (nodeT, selector);
 

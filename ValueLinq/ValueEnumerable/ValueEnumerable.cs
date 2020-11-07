@@ -9,7 +9,10 @@ namespace Cistern.ValueLinq.ValueEnumerable
     {
         public readonly TNode Node;
 
-        public int? MaximumLength => Node.MaximumLength;
+        public void GetCountInformation(out int? maximumLength)
+        {
+            Node.GetCountInformation(out maximumLength);
+        }
 
         public ValueEnumerable(in TNode node) => Node = node;
 

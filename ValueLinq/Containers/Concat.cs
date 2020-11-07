@@ -58,7 +58,11 @@ namespace Cistern.ValueLinq.Containers
         where Start : INode
         where Finish : INode
     {
-        public int? MaximumLength => null;
+        public void GetCountInformation(out int? maximumLength)
+        {
+            maximumLength = null;
+        }
+
         //{
         //    get 
         //    {
