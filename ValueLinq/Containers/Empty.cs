@@ -16,10 +16,8 @@ namespace Cistern.ValueLinq.Containers
     public struct EmptyNode<T>
         : INode
     {
-        public void GetCountInformation(out int? maximumLength)
-        {
-            maximumLength = 0;
-        }
+        public void GetCountInformation(out CountInformation info) => 
+            info = new CountInformation(0, true);
 
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => EmptyNode.Create<T, Head, Tail, CreationType>(ref nodes);
 

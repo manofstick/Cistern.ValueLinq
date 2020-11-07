@@ -34,10 +34,8 @@ namespace Cistern.ValueLinq.Containers
     {
         private readonly T[] _array;
 
-        public void GetCountInformation(out int? maximumLength)
-        {
-            maximumLength = _array.Length;
-        }
+        public void GetCountInformation(out CountInformation info) =>
+            info = new CountInformation(_array.Length, true);
 
         public ArrayNode(T[] array) => _array = array;
 

@@ -45,10 +45,13 @@ namespace Cistern.ValueLinq.Nodes
         private NodeT _nodeT;
         private int _count;
 
-        public void GetCountInformation(out int? maximumLength)
+        public void GetCountInformation(out CountInformation info)
         {
-            _nodeT.GetCountInformation(out maximumLength);
-            maximumLength = !maximumLength.HasValue ? (int?)null : Math.Max(0, maximumLength.Value - _count);
+            _nodeT.GetCountInformation(out info);
+            if (info.MaximumLength.HasValue)
+            {
+                info.MaximumLength = Math.Max(0, info.MaximumLength.Value - _count);
+            }
         }
 
         public SkipNode(in NodeT nodeT, int count) => (_nodeT, _count) = (nodeT, count);

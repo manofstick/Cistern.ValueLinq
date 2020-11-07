@@ -47,9 +47,10 @@ namespace Cistern.ValueLinq.Nodes
         private NodeT _nodeT;
         private Func<T, int, bool> _predicate;
 
-        public void GetCountInformation(out int? maximumLength)
+        public void GetCountInformation(out CountInformation info)
         {
-            _nodeT.GetCountInformation(out maximumLength);
+            _nodeT.GetCountInformation(out info);
+            info.ActualLengthIsMaximumLength = false;
         }
 
         public SkipWhileIdxNode(in NodeT nodeT, Func<T, int, bool> predicate) => (_nodeT, _predicate) = (nodeT, predicate);

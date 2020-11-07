@@ -38,10 +38,8 @@ namespace Cistern.ValueLinq.Containers
         private TObject _obj;
         private readonly GetSpan<TObject, TElement> _getSpan;
 
-        public void GetCountInformation(out int? maximumLength)
-        {
-            maximumLength = _getSpan(_obj).Length;
-        }
+        public void GetCountInformation(out CountInformation info) =>
+            info = new CountInformation(_getSpan(_obj).Length, true);
 
         public SpanNode(TObject obj, GetSpan<TObject, TElement> getSpan) => (_obj, _getSpan) = (obj, getSpan);
 

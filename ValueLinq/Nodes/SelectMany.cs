@@ -61,10 +61,8 @@ namespace Cistern.ValueLinq.Nodes
         private NodeT _nodeT;
         private Func<T, ValueEnumerable<U, NodeU>> _map;
 
-        public void GetCountInformation(out int? maximumLength)
-        {
-            maximumLength = null;
-        }
+        public void GetCountInformation(out CountInformation info) =>
+            info = new CountInformation();
 
         public SelectManyNode(in NodeT nodeT, Func<T, ValueEnumerable<U, NodeU>> selector) => (_nodeT, _map) = (nodeT, selector);
 

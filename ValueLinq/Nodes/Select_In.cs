@@ -37,9 +37,10 @@
         private NodeT _nodeT;
         private InFunc<T, U> _map;
 
-        public void GetCountInformation(out int? maximumLength)
+        public void GetCountInformation(out CountInformation info)
         {
-            _nodeT.GetCountInformation(out maximumLength);
+            _nodeT.GetCountInformation(out info);
+            info.PotentialSideEffects = true;
         }
 
         public Select_InNode(in NodeT nodeT, InFunc<T, U> map) => (_nodeT, _map) = (nodeT, map);

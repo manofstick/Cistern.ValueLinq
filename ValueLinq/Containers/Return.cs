@@ -32,10 +32,8 @@ namespace Cistern.ValueLinq.Containers
     {
         private T _element;
 
-        public void GetCountInformation(out int? maximumLength)
-        {
-            maximumLength = 1;
-        }
+        public void GetCountInformation(out CountInformation info) =>
+            info = new CountInformation(1, true);
 
         public ReturnNode(T element) => _element = element;
 

@@ -3,7 +3,7 @@
     struct Count
         : INode
     {
-        public void GetCountInformation(out int? maximumLength) => Impl.CountInfo(out maximumLength);
+        public void GetCountInformation(out CountInformation info) => Impl.CountInfo(out info);
 
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
             => Impl.CreateObjectDescent<CreationType>();

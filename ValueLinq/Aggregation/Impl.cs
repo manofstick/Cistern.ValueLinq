@@ -4,7 +4,7 @@ namespace Cistern.ValueLinq.Aggregation
 {
     static partial class Impl
     {
-        internal static void CountInfo(out int? maximumLength)
+        internal static void CountInfo(out CountInformation info)
             => throw new InvalidOperationException("Aggregation objects provide no count");
 
         internal static CreationType CreateObjectDescent<CreationType>()

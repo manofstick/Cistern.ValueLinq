@@ -33,10 +33,8 @@ namespace Cistern.ValueLinq.Containers
     {
         private readonly ReadOnlyMemory<T> _memory;
 
-        public void GetCountInformation(out int? maximumLength)
-        {
-            maximumLength = _memory.Length;
-        }
+        public void GetCountInformation(out CountInformation info) =>
+            info = new CountInformation(_memory.Length, true);
 
         public MemoryNode(ReadOnlyMemory<T> Memory) => _memory = Memory;
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 
 namespace Cistern.ValueLinq.Containers
 {
@@ -58,28 +59,20 @@ namespace Cistern.ValueLinq.Containers
         where Start : INode
         where Finish : INode
     {
-        public void GetCountInformation(out int? maximumLength)
-        {
-            maximumLength = null;
-        }
-
-        //{
-        //    get 
-        //    {
-        //        if (!_start.MaximumLength.HasValue || !_finish.MaximumLength.HasValue)
-        //            return null;
-
-        //        var max = (long)_start.MaximumLength + _finish.MaximumLength;
-        //        if (max > int.MaxValue)
-        //            return null;
-        //        return (int)max;
-        //    }
-        //}
+        public void GetCountInformation(out CountInformation info) => info = _countInfo;
 
         private Start _start;
         private Finish _finish;
+        CountInformation _countInfo;
 
-        public ConcatNode(in Start start, in Finish finish) => (_start, _finish) = (start, finish);
+        public ConcatNode(in Start start, in Finish finish)
+        {
+            start.GetCountInformation(out _countInfo);
+            finish.GetCountInformation(out var rhs);
+            _countInfo.Merge(in rhs);
+
+            (_start, _finish) = (start, finish);
+        }
 
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) =>
                 ConcatNode.Create<T, Start, Finish, Head, Tail, CreationType>(in _start, in _finish, ref nodes);

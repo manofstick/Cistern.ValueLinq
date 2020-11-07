@@ -4,6 +4,33 @@ using System.Collections.Generic;
 
 namespace Cistern.ValueLinq
 {
+    public struct CountInformation
+    {
+        public CountInformation(long? size, bool isImmutable)
+        {
+            MaximumLength = size;
+            ActualLengthIsMaximumLength = true;
+            IsImmutable = isImmutable;
+            IsStale = PotentialSideEffects = false;
+        }
+
+        public long? MaximumLength;
+        public bool ActualLengthIsMaximumLength;
+        public bool IsImmutable;
+        public bool IsStale;
+        public bool PotentialSideEffects;
+
+        public void Merge(in CountInformation rhs)
+        {
+            MaximumLength               += rhs.MaximumLength;
+            ActualLengthIsMaximumLength &= rhs.ActualLengthIsMaximumLength;
+            IsImmutable                 &= rhs.IsImmutable;
+            PotentialSideEffects        |= rhs.PotentialSideEffects;
+
+            IsStale = !IsImmutable || !rhs.IsImmutable;
+        }
+    }
+
     public interface INode
     {
         CreationType CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
@@ -18,7 +45,7 @@ namespace Cistern.ValueLinq
 
         bool CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result);
 
-        void GetCountInformation(out int? maximumLength);
+        void GetCountInformation(out CountInformation info);
     }
 
     public interface INodes

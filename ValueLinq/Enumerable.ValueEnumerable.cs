@@ -58,6 +58,8 @@ namespace Cistern.ValueLinq
 {
     public static partial class Enumerable
     {
+        private static void GetCountInformation<Node>(this Node node, out CountInformation ci) where Node : INode => node.GetCountInformation(out ci);
+
         public static T Aggregate<T, Inner>(in this ValueEnumerable<T, Inner> source, Func<T, T, T> func)
             where Inner : INode
         {
@@ -179,17 +181,17 @@ namespace Cistern.ValueLinq
 
         public static List<T> ToList<T, Inner>(in this ValueEnumerable<T, Inner> inner, int? maybeMaxCountForStackBasedPath = 64, (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo = null) where Inner : INode
         {
-            inner.GetCountInformation(out var maximumLength);
+            inner.GetCountInformation(out var info);
 
-            if (maximumLength <= 4)
+            if (info.MaximumLength <= 4)
             {
-                if (maximumLength == 0)
+                if (info.MaximumLength == 0)
                     return new List<T>();
 
                 return inner.Node.CreateObjectViaFastEnumerator<T, List<T>, ToListForward<T>>(new ToListForward<T>());
             }
 
-            if (maximumLength <= maybeMaxCountForStackBasedPath.GetValueOrDefault())
+            if (info.MaximumLength <= maybeMaxCountForStackBasedPath.GetValueOrDefault())
                 return Nodes<List<T>>.Aggregation<Inner, ToListViaStack>(in inner.Node);
 
             if (!arrayPoolInfo.HasValue)

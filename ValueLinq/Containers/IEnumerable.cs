@@ -31,14 +31,14 @@ namespace Cistern.ValueLinq.Containers
     {
         private readonly IEnumerable<T> _enumerable;
 
-        public void GetCountInformation(out int? maximumLength)
+        public void GetCountInformation(out CountInformation info)
         {
             if (_enumerable is System.Collections.ICollection c)
-                maximumLength = c.Count;
+                info = new CountInformation(c.Count, false);
             else if (_enumerable is INode n)
-                n.GetCountInformation(out maximumLength);
+                n.GetCountInformation(out info);
             else
-                maximumLength = null;
+                info = new CountInformation(null, false);
         }
 
         public EnumerableNode(IEnumerable<T> source) => _enumerable = source;

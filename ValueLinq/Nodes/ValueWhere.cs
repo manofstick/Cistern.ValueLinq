@@ -40,9 +40,10 @@ namespace Cistern.ValueLinq.Nodes
         private NodeT _nodeT;
         private Predicate _filter;
 
-        public void GetCountInformation(out int? maximumLength)
+        public void GetCountInformation(out CountInformation info)
         {
-            _nodeT.GetCountInformation(out maximumLength);
+            _nodeT.GetCountInformation(out info);
+            info.ActualLengthIsMaximumLength = false;
         }
 
         public ValueWhereNode(in NodeT nodeT, Predicate predicate) => (_nodeT, _filter) = (nodeT, predicate);
