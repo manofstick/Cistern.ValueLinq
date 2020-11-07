@@ -25,12 +25,6 @@ namespace Cistern.ValueLinq.Containers
 
         bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result)
         {
-            if (typeof(TRequest) == typeof(Optimizations.Count))
-            {
-                result = (TResult)(object)0;
-                return true;
-            }
-
             result = default;
             return false;
         }

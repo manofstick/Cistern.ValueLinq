@@ -76,35 +76,12 @@ namespace Cistern.ValueLinq.Containers
 
             if (typeof(TRequest) == typeof(Optimizations.Count))
             {
-                result = (TResult)(object)Count();
+                result = (TResult)(object)EnumerableNode.Count(_enumerable);
                 return true;
             }
 
             result = default;
             return false;
-        }
-
-        private int Count() =>
-            _enumerable switch
-            {
-                System.Collections.ICollection c => c.Count,
-                ICollection<T> c => c.Count,
-                IReadOnlyCollection<T> c => c.Count,
-                var other => IterateCount(other)
-            };
-
-        private static int IterateCount(IEnumerable<T> ts)
-        {
-            checked
-            {
-                int count = 0;
-                using (var e = ts.GetEnumerator())
-                {
-                    while (e.MoveNext())
-                        ++count;
-                    return count;
-                }
-            }
         }
 
         TResult INode.CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) =>
@@ -118,6 +95,29 @@ namespace Cistern.ValueLinq.Containers
 
     static class EnumerableNode
     {
+        public static int Count<T>(IEnumerable<T> _enumerable) =>
+            _enumerable switch
+            {
+                ICollection<T> c => c.Count,
+                IReadOnlyCollection<T> c => c.Count,
+                var other => IterateCount(other)
+            };
+
+        private static int IterateCount<T>(IEnumerable<T> ts)
+        {
+            checked
+            {
+                int count = 0;
+                using (var e = ts.GetEnumerator())
+                {
+                    while (e.MoveNext())
+                        ++count;
+                    return count;
+                }
+            }
+        }
+
+
         public static CreationType Create<T, Head, Tail, CreationType>(IEnumerable<T> enumerable, ref Nodes<Head, Tail> nodes)
             where Head : INode
             where Tail : INodes
@@ -132,7 +132,6 @@ namespace Cistern.ValueLinq.Containers
             Loop(e, ref fenum);
             return fenum.GetResult<TResult>();
         }
-
         private static void Loop<TIn, FEnumerator>(IEnumerable<TIn> e, ref FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
         {
             foreach (var item in e)

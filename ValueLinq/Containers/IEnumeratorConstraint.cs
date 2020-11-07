@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace Cistern.ValueLinq.Containers
@@ -40,7 +41,13 @@ namespace Cistern.ValueLinq.Containers
         public void GetCountInformation(out CountInformation info) =>
             info = new CountInformation(_count, false);
 
-        public GenericEnumeratorNode(Enumerable e, Func<Enumerable, Enumerator> f, int? count) => (_e, _f, _count) = (e, f, count);
+        public GenericEnumeratorNode(Enumerable e, Func<Enumerable, Enumerator> f, int? count)
+        {
+            if (count == null && e is ICollection c)
+                count = c.Count;
+
+            (_e, _f, _count) = (e, f, count);
+        }
 
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
             => GenericEnumeratorNode.Create<T, Head, Tail, CreationType, Enumerator>(_f(_e), _count, ref nodes);
@@ -50,6 +57,12 @@ namespace Cistern.ValueLinq.Containers
 
         bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result)
         {
+            if (typeof(TRequest) == typeof(Optimizations.Count))
+            {
+                result = (TResult)(object)EnumerableNode.Count(_e);
+                return true;
+            }
+
             result = default;
             return false;
         }

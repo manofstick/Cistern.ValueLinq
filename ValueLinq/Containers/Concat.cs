@@ -83,7 +83,7 @@ namespace Cistern.ValueLinq.Containers
         {
             if (typeof(TRequest) == typeof(Optimizations.Count))
             {
-                result = (TResult)(object)(Count());
+                result = (TResult)(object)Count();
                 return true;
             }
 
