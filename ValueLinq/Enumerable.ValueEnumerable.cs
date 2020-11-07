@@ -102,7 +102,7 @@ namespace Cistern.ValueLinq
             if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
 
-            return source.Node.CreateObjectViaFastEnumerator<T, bool, All<T>>(new All<T>(predicate));
+            return source.Node.CreateObjectViaFastEnumerator<T, bool, All<T, FuncToIFunc<T, bool>>>(new All<T, FuncToIFunc<T, bool>>(new FuncToIFunc<T, bool>(predicate)));
         }
 
         public static bool All<T, Inner, Predicate>(in this ValueEnumerable<T, Inner> source, Predicate predicate)
