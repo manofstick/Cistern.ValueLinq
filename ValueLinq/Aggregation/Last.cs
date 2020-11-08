@@ -15,8 +15,6 @@ namespace Cistern.ValueLinq.Aggregation
             return (TResult)(object)_last;
         }
 
-        void IForwardEnumerator<T>.Init(int? size) { }
-
         bool IForwardEnumerator<T>.ProcessNext(T input)
         {
             _found = true;
@@ -30,9 +28,9 @@ namespace Cistern.ValueLinq.Aggregation
     {
         private T _last;
 
-        TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_last;
+        public LastOrDefault(bool _) => _last = default;
 
-        void IForwardEnumerator<T>.Init(int? size) => _last = default;
+        TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_last;
 
         bool IForwardEnumerator<T>.ProcessNext(T input)
         {

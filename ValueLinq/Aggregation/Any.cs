@@ -14,8 +14,6 @@ namespace Cistern.ValueLinq.Aggregation
 
         TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_any;
 
-        void IForwardEnumerator<T>.Init(int? size) { }
-
         bool IForwardEnumerator<T>.ProcessNext(T input)
         {
             if (_predicate(input))
@@ -33,8 +31,6 @@ namespace Cistern.ValueLinq.Aggregation
         private bool _any;
 
         TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_any;
-
-        void IForwardEnumerator<T>.Init(int? size) { }
 
         bool IForwardEnumerator<T>.ProcessNext(T input)
         {

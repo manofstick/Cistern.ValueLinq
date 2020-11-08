@@ -14,6 +14,8 @@ namespace Cistern.ValueLinq.Aggregation
         private Accumulator sum;
         private long counter;
 
+        public Average(bool _) => (sum, counter) = (math.Zero, 0);
+
         public TResult GetResult<TResult>()
         {
             if (counter == 0)
@@ -23,8 +25,6 @@ namespace Cistern.ValueLinq.Aggregation
 
             return (TResult)(object)math.DivLong(sum, counter);
         }
-
-        public void Init(int? size) => sum = math.Zero;
 
         public bool ProcessNext(T input)
         {
@@ -46,12 +46,12 @@ namespace Cistern.ValueLinq.Aggregation
         private Accumulator sum;
         private long counter;
 
+        public AverageNullable(bool _) => (sum, counter) = (math.Zero, 0);
+
         public TResult GetResult<TResult>() =>
             counter == 0 
                 ? default
                 : (TResult)(object)math.DivLong(sum, counter);
-
-        public void Init(int? size) => sum = math.Zero;
 
         public bool ProcessNext(T? input)
         {

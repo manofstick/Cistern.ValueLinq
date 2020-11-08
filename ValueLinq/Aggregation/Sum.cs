@@ -13,9 +13,9 @@ namespace Cistern.ValueLinq.Aggregation
 
         private Accumulator sum;
 
-        public TResult GetResult<TResult>() => (TResult)(object)math.Cast(sum);
+        public Sum(bool _) => (sum) = (math.Zero);
 
-        public void Init(int? size) => sum = math.Zero;
+        public TResult GetResult<TResult>() => (TResult)(object)math.Cast(sum);
 
         public bool ProcessNext(T input)
         {
@@ -35,9 +35,9 @@ namespace Cistern.ValueLinq.Aggregation
 
         private Accumulator sum;
 
-        public TResult GetResult<TResult>() => (TResult)(object)math.Cast(sum);
+        public SumNullable(bool _) => sum = math.Zero;
 
-        public void Init(int? size) => sum = math.Zero;
+        public TResult GetResult<TResult>() => (TResult)(object)math.Cast(sum);
 
         public bool ProcessNext(T? input)
         {

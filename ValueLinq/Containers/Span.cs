@@ -72,8 +72,6 @@ namespace Cistern.ValueLinq.Containers
         {
             var span = getSpan(obj);
 
-            fenum.Init(span.Length);
-
             Loop(span, ref fenum);
 
             return fenum.GetResult<TResult>();

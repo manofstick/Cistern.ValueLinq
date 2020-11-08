@@ -79,8 +79,6 @@ namespace Cistern.ValueLinq.Nodes
 
         public TResult GetResult<TResult>() => _next.GetResult<TResult>();
 
-        public void Init(int? size) => _next.Init(size);
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ProcessNext(T input) => _next.ProcessNext((U)(object)_selector.Invoke(input));
     }

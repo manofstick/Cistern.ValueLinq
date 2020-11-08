@@ -76,7 +76,6 @@ namespace Cistern.ValueLinq.Containers
             where FEnumerator : IForwardEnumerator<TIn>
             where List : IReadOnlyList<TAlso>
         {
-            fenum.Init(list.Count);
             DoLoop<TIn, FEnumerator, List, TAlso>(list, ref fenum);
             return fenum.GetResult<TResult>();
         }

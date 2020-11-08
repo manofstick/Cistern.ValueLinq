@@ -11,8 +11,6 @@ namespace Cistern.ValueLinq.Aggregation
 
         TResult IForwardEnumerator<T>.GetResult<TResult>() => default;
 
-        void IForwardEnumerator<T>.Init(int? size) { }
-
         bool IForwardEnumerator<T>.ProcessNext(T input)
         {
             _func(input);

@@ -188,16 +188,16 @@ namespace Cistern.ValueLinq
                 if (info.MaximumLength == 0)
                     return new List<T>();
 
-                return inner.Node.CreateObjectViaFastEnumerator<T, List<T>, ToListForward<T>>(new ToListForward<T>());
+                return inner.Node.CreateObjectViaFastEnumerator<T, List<T>, ToListForward<T>>(new ToListForward<T>(info.ActualSize));
             }
 
             if (info.MaximumLength <= maybeMaxCountForStackBasedPath.GetValueOrDefault())
                 return Nodes<List<T>>.Aggregation<Inner, ToListViaStack>(in inner.Node);
 
             if (!arrayPoolInfo.HasValue)
-                return inner.Node.CreateObjectViaFastEnumerator<T, List<T>, ToListForward<T>>(new ToListForward<T>());
+                return inner.Node.CreateObjectViaFastEnumerator<T, List<T>, ToListForward<T>>(new ToListForward<T>(info.ActualSize));
 
-            return inner.Node.CreateObjectViaFastEnumerator<T, List<T>, ToListViaArrayPoolForward<T>>(new ToListViaArrayPoolForward<T>(arrayPoolInfo.Value.arrayPool, arrayPoolInfo.Value.cleanBuffers));
+            return inner.Node.CreateObjectViaFastEnumerator<T, List<T>, ToListViaArrayPoolForward<T>>(new ToListViaArrayPoolForward<T>(arrayPoolInfo.Value.arrayPool, arrayPoolInfo.Value.cleanBuffers, info.ActualSize));
         }
 
         public static List<T> ToListUseSharedPool<T, Inner>(in this ValueEnumerable<T, Inner> inner, bool? cleanBuffers = null) where Inner : INode
@@ -221,64 +221,71 @@ namespace Cistern.ValueLinq
                 _ => inner.Node.CreateObjectViaFastEnumerator<T, T, LastOrDefault<T>>(new LastOrDefault<T>())
             };
 
-        public static T ElementAt<T, Inner>(in this ValueEnumerable<T, Inner> inner, int index) where Inner : INode =>
-            inner.Node.CreateObjectViaFastEnumerator<T, T, ElementAt<T>>(new ElementAt<T>(index));
+        public static T ElementAt<T, Inner>(in this ValueEnumerable<T, Inner> inner, int index) where Inner : INode
+        {
+            inner.Node.GetCountInformation(out var countInfo);
+            return inner.Node.CreateObjectViaFastEnumerator<T, T, ElementAt<T>>(new ElementAt<T>(index, countInfo.ActualSize));
+        }
 
-        public static T ElementAtOrDefault<T, Inner>(in this ValueEnumerable<T, Inner> inner, int index) where Inner : INode =>
-            inner.Node.CreateObjectViaFastEnumerator<T, T, ElementAtOrDefault<T>>(new ElementAtOrDefault<T>(index));
+        public static T ElementAtOrDefault<T, Inner>(in this ValueEnumerable<T, Inner> inner, int index) where Inner : INode
+        {
+            inner.Node.GetCountInformation(out var countInfo);
+            return inner.Node.CreateObjectViaFastEnumerator<T, T, ElementAtOrDefault<T>>(new ElementAtOrDefault<T>(index, countInfo.ActualSize));
+        }
 
 
-        public static decimal Average<Inner>(in this ValueEnumerable<decimal, Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<decimal, decimal, AverageDecimal>(new AverageDecimal());
-        public static double  Average<Inner>(in this ValueEnumerable<double,  Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<double,  double,  AverageDouble >(new AverageDouble());
-        public static float   Average<Inner>(in this ValueEnumerable<float,   Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<float,   float,   AverageFloat  >(new AverageFloat());
-        public static double  Average<Inner>(in this ValueEnumerable<int,     Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<int,     double,  AverageInt    >(new AverageInt());
-        public static double  Average<Inner>(in this ValueEnumerable<long,    Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<long,    double,  AverageLong   >(new AverageLong());
+        public static decimal Average<Inner>(in this ValueEnumerable<decimal, Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<decimal, decimal, AverageDecimal>(new AverageDecimal(true));
+        public static double  Average<Inner>(in this ValueEnumerable<double,  Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<double,  double,  AverageDouble >(new AverageDouble(true));
+        public static float   Average<Inner>(in this ValueEnumerable<float,   Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<float,   float,   AverageFloat  >(new AverageFloat(true));
+        public static double  Average<Inner>(in this ValueEnumerable<int,     Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<int,     double,  AverageInt    >(new AverageInt(true));
+        public static double  Average<Inner>(in this ValueEnumerable<long,    Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<long,    double,  AverageLong   >(new AverageLong(true));
 
-        public static decimal? Average<Inner>(in this ValueEnumerable<decimal?, Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<decimal?, decimal?, AverageDecimalNullable>(new AverageDecimalNullable());
-        public static double?  Average<Inner>(in this ValueEnumerable<double?,  Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<double?,  double?,  AverageDoubleNullable >(new AverageDoubleNullable());
-        public static float?   Average<Inner>(in this ValueEnumerable<float?,   Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<float?,   float?,   AverageFloatNullable  >(new AverageFloatNullable());
-        public static double?  Average<Inner>(in this ValueEnumerable<int?,     Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<int?,     double?,     AverageIntNullable    >(new AverageIntNullable());
-        public static double?  Average<Inner>(in this ValueEnumerable<long?,    Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<long?,    double?,    AverageLongNullable   >(new AverageLongNullable());
+        public static decimal? Average<Inner>(in this ValueEnumerable<decimal?, Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<decimal?, decimal?, AverageDecimalNullable>(new AverageDecimalNullable(true));
+        public static double?  Average<Inner>(in this ValueEnumerable<double?,  Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<double?,  double?,  AverageDoubleNullable >(new AverageDoubleNullable(true));
+        public static float?   Average<Inner>(in this ValueEnumerable<float?,   Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<float?,   float?,   AverageFloatNullable  >(new AverageFloatNullable(true));
+        public static double?  Average<Inner>(in this ValueEnumerable<int?,     Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<int?,     double?,     AverageIntNullable    >(new AverageIntNullable(true));
+        public static double?  Average<Inner>(in this ValueEnumerable<long?,    Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<long?,    double?,    AverageLongNullable   >(new AverageLongNullable(true));
 
-        public static decimal Min<Inner>(in this ValueEnumerable<decimal, Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<decimal, decimal, MinDecimal>(new MinDecimal());
-        public static double  Min<Inner>(in this ValueEnumerable<double,  Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<double,  double,  MinDouble >(new MinDouble());
-        public static float   Min<Inner>(in this ValueEnumerable<float,   Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<float,   float,   MinFloat  >(new MinFloat());
-        public static int     Min<Inner>(in this ValueEnumerable<int,     Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<int,     int,     MinInt    >(new MinInt());
-        public static long    Min<Inner>(in this ValueEnumerable<long,    Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<long,    long,    MinLong   >(new MinLong());
-        public static T       Min<T, Inner>(in this ValueEnumerable<T,    Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<T,       T,       Min<T>    >(new Min<T>());
+        public static decimal Min<Inner>(in this ValueEnumerable<decimal, Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<decimal, decimal, MinDecimal>(new MinDecimal(true));
+        public static double  Min<Inner>(in this ValueEnumerable<double,  Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<double,  double,  MinDouble >(new MinDouble(true));
+        public static float   Min<Inner>(in this ValueEnumerable<float,   Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<float,   float,   MinFloat  >(new MinFloat(true));
+        public static int     Min<Inner>(in this ValueEnumerable<int,     Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<int,     int,     MinInt    >(new MinInt(true));
+        public static long    Min<Inner>(in this ValueEnumerable<long,    Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<long,    long,    MinLong   >(new MinLong(true));
+        public static T       Min<T, Inner>(in this ValueEnumerable<T,    Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<T,       T,       Min<T>    >(new Min<T>(true));
 
-        public static decimal? Min<Inner>(in this ValueEnumerable<decimal?, Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<decimal?, decimal?, MinDecimalNullable>(new MinDecimalNullable());
-        public static double?  Min<Inner>(in this ValueEnumerable<double?,  Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<double?,  double?,  MinDoubleNullable >(new MinDoubleNullable());
-        public static float?   Min<Inner>(in this ValueEnumerable<float?,   Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<float?,   float?,   MinFloatNullable  >(new MinFloatNullable());
-        public static int?     Min<Inner>(in this ValueEnumerable<int?,     Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<int?,     int?,     MinIntNullable    >(new MinIntNullable());
-        public static long?    Min<Inner>(in this ValueEnumerable<long?,    Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<long?,    long?,    MinLongNullable   >(new MinLongNullable());
+        public static decimal? Min<Inner>(in this ValueEnumerable<decimal?, Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<decimal?, decimal?, MinDecimalNullable>(new MinDecimalNullable(true));
+        public static double?  Min<Inner>(in this ValueEnumerable<double?,  Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<double?,  double?,  MinDoubleNullable >(new MinDoubleNullable(true));
+        public static float?   Min<Inner>(in this ValueEnumerable<float?,   Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<float?,   float?,   MinFloatNullable  >(new MinFloatNullable(true));
+        public static int?     Min<Inner>(in this ValueEnumerable<int?,     Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<int?,     int?,     MinIntNullable    >(new MinIntNullable(true));
+        public static long?    Min<Inner>(in this ValueEnumerable<long?,    Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<long?,    long?,    MinLongNullable   >(new MinLongNullable(true));
 
-        public static decimal Max<Inner>(in this ValueEnumerable<decimal, Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<decimal, decimal, MaxDecimal>(new MaxDecimal());
-        public static double  Max<Inner>(in this ValueEnumerable<double,  Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<double,  double,  MaxDouble >(new MaxDouble());
-        public static float   Max<Inner>(in this ValueEnumerable<float,   Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<float,   float,   MaxFloat  >(new MaxFloat());
-        public static int     Max<Inner>(in this ValueEnumerable<int,     Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<int,     int,     MaxInt    >(new MaxInt());
-        public static long    Max<Inner>(in this ValueEnumerable<long,    Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<long,    long,    MaxLong   >(new MaxLong());
-        public static T       Max<T, Inner>(in this ValueEnumerable<T,    Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<T,       T,       Max<T>    >(new Max<T>());
+        public static decimal Max<Inner>(in this ValueEnumerable<decimal, Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<decimal, decimal, MaxDecimal>(new MaxDecimal(true));
+        public static double  Max<Inner>(in this ValueEnumerable<double,  Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<double,  double,  MaxDouble >(new MaxDouble(true));
+        public static float   Max<Inner>(in this ValueEnumerable<float,   Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<float,   float,   MaxFloat  >(new MaxFloat(true));
+        public static int     Max<Inner>(in this ValueEnumerable<int,     Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<int,     int,     MaxInt    >(new MaxInt(true));
+        public static long    Max<Inner>(in this ValueEnumerable<long,    Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<long,    long,    MaxLong   >(new MaxLong(true));
+        public static T       Max<T, Inner>(in this ValueEnumerable<T,    Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<T,       T,       Max<T>    >(new Max<T>(true));
 
-        public static decimal? Max<Inner>(in this ValueEnumerable<decimal?, Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<decimal?, decimal?, MaxDecimalNullable>(new MaxDecimalNullable());
-        public static double?  Max<Inner>(in this ValueEnumerable<double?,  Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<double?,  double?,  MaxDoubleNullable >(new MaxDoubleNullable());
-        public static float?   Max<Inner>(in this ValueEnumerable<float?,   Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<float?,   float?,   MaxFloatNullable  >(new MaxFloatNullable());
-        public static int?     Max<Inner>(in this ValueEnumerable<int?,     Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<int?,     int?,     MaxIntNullable    >(new MaxIntNullable());
-        public static long?    Max<Inner>(in this ValueEnumerable<long?,    Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<long?,    long?,    MaxLongNullable   >(new MaxLongNullable());
+        public static decimal? Max<Inner>(in this ValueEnumerable<decimal?, Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<decimal?, decimal?, MaxDecimalNullable>(new MaxDecimalNullable(true));
+        public static double?  Max<Inner>(in this ValueEnumerable<double?,  Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<double?,  double?,  MaxDoubleNullable >(new MaxDoubleNullable(true));
+        public static float?   Max<Inner>(in this ValueEnumerable<float?,   Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<float?,   float?,   MaxFloatNullable  >(new MaxFloatNullable(true));
+        public static int?     Max<Inner>(in this ValueEnumerable<int?,     Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<int?,     int?,     MaxIntNullable    >(new MaxIntNullable(true));
+        public static long?    Max<Inner>(in this ValueEnumerable<long?,    Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<long?,    long?,    MaxLongNullable   >(new MaxLongNullable(true));
 
-        public static decimal Sum<Inner>(in this ValueEnumerable<decimal, Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<decimal, decimal, SumDecimal>(new SumDecimal());
-        public static double  Sum<Inner>(in this ValueEnumerable<double,  Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<double,  double,  SumDouble >(new SumDouble());
-        public static float   Sum<Inner>(in this ValueEnumerable<float,   Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<float,   float,   SumFloat  >(new SumFloat());
-        public static int     Sum<Inner>(in this ValueEnumerable<int,     Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<int,     int,     SumInt    >(new SumInt());
-        public static long    Sum<Inner>(in this ValueEnumerable<long,    Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<long,    long,    SumLong   >(new SumLong());
+        public static decimal Sum<Inner>(in this ValueEnumerable<decimal, Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<decimal, decimal, SumDecimal>(new SumDecimal(true));
+        public static double  Sum<Inner>(in this ValueEnumerable<double,  Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<double,  double,  SumDouble >(new SumDouble(true));
+        public static float   Sum<Inner>(in this ValueEnumerable<float,   Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<float,   float,   SumFloat  >(new SumFloat(true));
+        public static int     Sum<Inner>(in this ValueEnumerable<int,     Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<int,     int,     SumInt    >(new SumInt(true));
+        public static long    Sum<Inner>(in this ValueEnumerable<long,    Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<long,    long,    SumLong   >(new SumLong(true));
 
-        public static decimal? Sum<Inner>(in this ValueEnumerable<decimal?, Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<decimal?, decimal, SumDecimalNullable>(new SumDecimalNullable());
-        public static double?  Sum<Inner>(in this ValueEnumerable<double?,  Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<double?,  double,  SumDoubleNullable >(new SumDoubleNullable());
-        public static float?   Sum<Inner>(in this ValueEnumerable<float?,   Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<float?,   float,   SumFloatNullable  >(new SumFloatNullable());
-        public static int?     Sum<Inner>(in this ValueEnumerable<int?,     Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<int?,     int,     SumIntNullable    >(new SumIntNullable());
-        public static long?    Sum<Inner>(in this ValueEnumerable<long?,    Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<long?,    long,    SumLongNullable   >(new SumLongNullable());
+        public static decimal? Sum<Inner>(in this ValueEnumerable<decimal?, Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<decimal?, decimal, SumDecimalNullable>(new SumDecimalNullable(true));
+        public static double?  Sum<Inner>(in this ValueEnumerable<double?,  Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<double?,  double,  SumDoubleNullable >(new SumDoubleNullable(true));
+        public static float?   Sum<Inner>(in this ValueEnumerable<float?,   Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<float?,   float,   SumFloatNullable  >(new SumFloatNullable(true));
+        public static int?     Sum<Inner>(in this ValueEnumerable<int?,     Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<int?,     int,     SumIntNullable    >(new SumIntNullable(true));
+        public static long?    Sum<Inner>(in this ValueEnumerable<long?,    Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<long?,    long,    SumLongNullable   >(new SumLongNullable(true));
 
-        public static int Count<T, Inner>(in this ValueEnumerable<T, Inner> inner, bool ignorePotentialSideEffects = false) where Inner : INode => Enumerable.Count<T, Inner>(in inner.Node, ignorePotentialSideEffects);
+        public static int Count<T, Inner>(in this ValueEnumerable<T, Inner> inner, bool ignorePotentialSideEffects = false) where Inner : INode =>
+            Enumerable.Count<T, Inner>(in inner.Node, ignorePotentialSideEffects);
 
         public static ValueEnumerable<TResult, SelectManyNode<TSource, TResult, NodeT, NodeU>> SelectMany<TSource, TResult, NodeT, NodeU>(in this ValueEnumerable<TSource, NodeT> prior, Func<TSource, ValueEnumerable<TResult, NodeU>> selector)
             where NodeT : INode

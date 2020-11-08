@@ -45,7 +45,6 @@ namespace Cistern.ValueLinq.Containers
 
         internal static TResult FastEnumerate<TIn, TResult, FEnumerator>(FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
         {
-            fenum.Init(0);
             return fenum.GetResult<TResult>();
         }
     }

@@ -189,9 +189,9 @@ namespace Cistern.ValueLinq.Aggregation
     {
         private List<T> _list;
 
-        TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_list;
+        public ToListForward(int? size) => _list = size.HasValue ? new List<T>(size.Value) : new List<T>();
 
-        void IForwardEnumerator<T>.Init(int? size) => _list = size.HasValue ? new List<T>(size.Value) : new List<T>();
+        TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_list;
 
         bool IForwardEnumerator<T>.ProcessNext(T input)
         {
@@ -222,7 +222,7 @@ namespace Cistern.ValueLinq.Aggregation
         int _currentIdx;
         int _arrayIdx;
 
-        public ToListViaArrayPoolForward(ArrayPool<T> pool, bool cleanBuffers)
+        public ToListViaArrayPoolForward(ArrayPool<T> pool, bool cleanBuffers, int? size)
         {
             _0000_0010 = _0000_0020 = _0000_0040 = _0000_0080 = null;
             _0000_0100 = _0000_0200 = _0000_0400 = _0000_0800 = null;
@@ -238,6 +238,12 @@ namespace Cistern.ValueLinq.Aggregation
             _current = Array.Empty<T>();
             _currentIdx = 0;
             _arrayIdx = INIT;
+
+            if (size.HasValue)
+            {
+                Rent(ref _0000_0010, size.Value);
+                _arrayIdx = KNOWN_SIZE;
+            }
         }
 
         private void Rent(ref T[] array, int size)
@@ -324,15 +330,6 @@ namespace Cistern.ValueLinq.Aggregation
             ReturnArrays(); // should really be in a dispose
 
             return (TResult)(object)list;
-        }
-
-        void IForwardEnumerator<T>.Init(int? size)
-        {
-            if (size.HasValue)
-            {
-                Rent(ref _0000_0010, size.Value);
-                _arrayIdx = KNOWN_SIZE;
-            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

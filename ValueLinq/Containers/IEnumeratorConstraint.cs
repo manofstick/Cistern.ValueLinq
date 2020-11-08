@@ -85,8 +85,6 @@ namespace Cistern.ValueLinq.Containers
         internal static TResult FastEnumerate<TIn, TResult, FEnumerator, Enumerator, TAlso>(Enumerator enumerator, int? count, FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
             where Enumerator : IEnumerator<TAlso>
         {
-            fenum.Init(count);
-
             try
             {
                 InnerLoop<TIn, FEnumerator, Enumerator, TAlso>(enumerator, fenum);

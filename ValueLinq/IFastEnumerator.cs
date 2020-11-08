@@ -15,7 +15,6 @@ namespace Cistern.ValueLinq
 
     public interface IForwardEnumerator<T>
     {
-        public void Init(int? size);
         public abstract bool ProcessNext(T input);
         TResult GetResult<TResult>();
     }

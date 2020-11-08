@@ -1,6 +1,7 @@
 ﻿using Cistern.ValueLinq.Maths;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 
 namespace Cistern.ValueLinq.Aggregation
 {
@@ -15,14 +16,14 @@ namespace Cistern.ValueLinq.Aggregation
         private T result;
         private bool noData;
 
+        public Min(bool _) => (noData, result) = (true, default);
+
         public TResult GetResult<TResult>()
         {
             if (noData && default(TResult) != null)
                 ThrowHelper.ThrowNoElementsException();
             return (TResult)(object)result;
         }
-
-        public void Init(int? size) => noData = true;
 
         public bool ProcessNext(T input)
         {
@@ -52,17 +53,13 @@ namespace Cistern.ValueLinq.Aggregation
         private T result;
         private bool noData;
 
+        public Min(bool _) => (noData, result) = (true, math.MinInit);
+
         public TResult GetResult<TResult>()
         {
             if (noData)
                 ThrowHelper.ThrowNoElementsException();
             return (TResult)(object)result;
-        }
-
-        public void Init(int? size)
-        {
-            noData = true;
-            result = math.MinInit;
         }
 
         public bool ProcessNext(T input)
@@ -91,14 +88,10 @@ namespace Cistern.ValueLinq.Aggregation
         private T result;
         private bool noData;
 
+        public MinNullable(bool _) => (noData, result) = (true, math.MinInit);
+
         public TResult GetResult<TResult>() =>
             noData ? default : (TResult)(object)result;
-
-        public void Init(int? size)
-        {
-            noData = true;
-            result = math.MinInit;
-        }
 
         public bool ProcessNext(T? input)
         {

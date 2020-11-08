@@ -19,8 +19,6 @@ namespace Cistern.ValueLinq.Aggregation
             return (TResult)(object)_accumulate;
         }
 
-        void IForwardEnumerator<T>.Init(int? size) { }
-
         bool IForwardEnumerator<T>.ProcessNext(T input)
         {
             if (_hasData)

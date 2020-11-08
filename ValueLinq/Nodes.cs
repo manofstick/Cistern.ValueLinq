@@ -14,6 +14,8 @@ namespace Cistern.ValueLinq
             IsStale = PotentialSideEffects = false;
         }
 
+        public int? ActualSize => ActualLengthIsMaximumLength ? (int?)MaximumLength : null;
+
         /// <summary>
         /// The maximum length of the sequence. It is null if the maximum length is unknown.
         /// </summary>

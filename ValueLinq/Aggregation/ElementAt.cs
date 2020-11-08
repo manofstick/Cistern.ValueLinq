@@ -11,12 +11,12 @@ namespace Cistern.ValueLinq.Aggregation
         private bool _found;
         private T _elementAt;
 
-        public ElementAt(int index)
+        public ElementAt(int index, int? size)
         {
             if (index < 0)
                 throw new ArgumentOutOfRangeException("index");
 
-            (_elementAtIndex, _index, _found, _elementAt) = (index, -1, false, default);
+            (_elementAtIndex, _index, _found, _elementAt) = (index, index >= size ? index : - 1, false, default);
         }
 
         TResult IForwardEnumerator<T>.GetResult<TResult>()
@@ -25,12 +25,6 @@ namespace Cistern.ValueLinq.Aggregation
                 throw new ArgumentOutOfRangeException("index");
 
             return (TResult)(object)_elementAt;
-        }
-
-        void IForwardEnumerator<T>.Init(int? size)
-        {
-            if (_elementAtIndex >= size)
-                _index = _elementAtIndex;
         }
 
         bool IForwardEnumerator<T>.ProcessNext(T input)
@@ -57,15 +51,9 @@ namespace Cistern.ValueLinq.Aggregation
         private int _index;
         private T _elementAt;
 
-        public ElementAtOrDefault(int index) => (_elementAtIndex, _index, _elementAt) = (index, -1, default);
+        public ElementAtOrDefault(int index, int? size) => (_elementAtIndex, _index, _elementAt) = (index, (index < 0 || index >= size) ? index : - 1, default);
 
         TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_elementAt;
-
-        void IForwardEnumerator<T>.Init(int? size)
-        {
-            if (_elementAtIndex < 0 || _elementAtIndex >= size)
-                _index = _elementAtIndex;
-        }
 
         bool IForwardEnumerator<T>.ProcessNext(T input)
         {
