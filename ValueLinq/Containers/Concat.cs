@@ -13,8 +13,6 @@ namespace Cistern.ValueLinq.Containers
 
         public ConcatFastEnumerator(FastEnumerator<T> start, in Finish finish) => (_current, _finish, _state) = (start, finish, 0);
 
-        public (bool, int)? InitialSize => null;
-
         public void Dispose()
         {
             if (_state < 2)

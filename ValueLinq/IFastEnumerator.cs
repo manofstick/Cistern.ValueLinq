@@ -7,7 +7,6 @@ namespace Cistern.ValueLinq
         /// <summary>
         /// Valid prior to iterating, undefined afterwards
         /// </summary>
-        (bool NoSelect, int Count)? InitialSize { get; }
         bool TryGetNext(out T current);
 
         void Dispose();
@@ -23,8 +22,6 @@ namespace Cistern.ValueLinq
     {
         public abstract void Dispose();
         public abstract bool TryGetNext(out EnumeratorElement current);
-        public abstract (bool NoSelect, int Count)? InitialSize { get; }
-
         public static readonly FastEnumerator<EnumeratorElement> Empty = new FastEnumerator<EmptyFastEnumerator<EnumeratorElement>, EnumeratorElement>(default);
     }
 
@@ -35,8 +32,6 @@ namespace Cistern.ValueLinq
         private Enumerator enumerator;
 
         public FastEnumerator(Enumerator enumerator) => this.enumerator = enumerator;
-
-        public override (bool NoSelect, int Count)? InitialSize => enumerator.InitialSize;
 
         public override void Dispose() => enumerator.Dispose();
 

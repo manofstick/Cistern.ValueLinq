@@ -12,8 +12,6 @@ namespace Cistern.ValueLinq.Nodes
 
         public SkipWhileNodeEnumerator(in TInEnumerator enumerator, Func<TIn, bool> predicate) => (_enumerator, _predicate, _skipping) = (enumerator, predicate, true);
 
-        public (bool, int)? InitialSize => null;
-
         public void Dispose() => _enumerator.Dispose();
 
         public bool TryGetNext(out TIn current)

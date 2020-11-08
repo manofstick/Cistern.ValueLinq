@@ -10,8 +10,6 @@ namespace Cistern.ValueLinq.Containers
 
         public EnumerableFastEnumerator(IEnumerable<T> enumerable) => _enumerator = enumerable.GetEnumerator();
 
-        public (bool, int)? InitialSize => null;
-
         public void Dispose() { _enumerator.Dispose(); }
 
         public bool TryGetNext(out T current)

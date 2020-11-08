@@ -12,13 +12,6 @@ namespace Cistern.ValueLinq.Nodes
 
         public SkipNodeEnumerator(in TInEnumerator enumerator, int count) => (_enumerator, _count) = (enumerator, count);
 
-        public (bool, int)? InitialSize =>
-            _enumerator.InitialSize switch
-            {
-                (var flag, var length) => (flag, Max(0, length-_count)),
-                _ => null
-            };
-
         public void Dispose() => _enumerator.Dispose();
 
         public bool TryGetNext(out TIn current)

@@ -13,8 +13,6 @@ namespace Cistern.ValueLinq.Containers
 
         public GenericEnumeratorFastEnumerator(Enumerator e, int? count) => (_enumerator, _count) = (e, count);
 
-        public (bool, int)? InitialSize => _count.HasValue ? (true, _count.Value) : ((bool, int)?)null;
-
         public void Dispose() =>_enumerator.Dispose();
 
         public bool TryGetNext(out T current)

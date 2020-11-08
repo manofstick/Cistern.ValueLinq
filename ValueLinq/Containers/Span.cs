@@ -13,8 +13,6 @@ namespace Cistern.ValueLinq.Containers
 
         public SpanFastEnumerator(TObject obj, GetSpan<TObject, TElement> getSpan) => (_obj, _getSpan, _idx) = (obj, getSpan, -1);
 
-        public (bool, int)? InitialSize => (true, _getSpan(_obj).Length);
-
         public void Dispose() { }
 
         public bool TryGetNext(out TElement current)

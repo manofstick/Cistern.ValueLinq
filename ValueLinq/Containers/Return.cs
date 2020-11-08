@@ -10,8 +10,6 @@ namespace Cistern.ValueLinq.Containers
 
         public ReturnFastEnumerator(T element) => (_element, _iterated) = (element, false);
 
-        public (bool, int)? InitialSize => (true, 1);
-
         public void Dispose() { }
 
         public bool TryGetNext(out T current)

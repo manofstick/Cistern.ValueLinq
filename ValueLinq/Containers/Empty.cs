@@ -6,8 +6,6 @@ namespace Cistern.ValueLinq.Containers
     struct EmptyFastEnumerator<T>
         : IFastEnumerator<T>
     {
-        public (bool, int)? InitialSize => (true, 0);
-
         public void Dispose() { }
 
         public bool TryGetNext(out T current) { current = default; return false; }

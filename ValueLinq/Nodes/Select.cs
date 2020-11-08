@@ -12,13 +12,6 @@ namespace Cistern.ValueLinq.Nodes
 
         public SelectNodeEnumerator(in TInEnumerator enumerator, Func<TIn, TOut> map) => (_enumerator, _map) = (enumerator, map);
 
-        public (bool, int)? InitialSize => 
-            _enumerator.InitialSize switch
-            {
-                null => null,
-                (_, var size) => (false, size)
-            };
-
         public void Dispose() => _enumerator.Dispose();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

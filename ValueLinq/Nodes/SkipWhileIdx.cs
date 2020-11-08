@@ -13,8 +13,6 @@ namespace Cistern.ValueLinq.Nodes
 
         public SkipWhileIdxNodeEnumerator(in TInEnumerator enumerator, Func<TIn, int, bool> predicate) => (_enumerator, _predicate, _skipping, _idx) = (enumerator, predicate, true, 0);
 
-        public (bool, int)? InitialSize => null;
-
         public void Dispose() => _enumerator.Dispose();
 
         public bool TryGetNext(out TIn current)

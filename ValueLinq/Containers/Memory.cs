@@ -10,8 +10,6 @@ namespace Cistern.ValueLinq.Containers
 
         public MemoryFastEnumerator(ReadOnlyMemory<T> memory) => (_memory, _idx) = (memory, -1);
 
-        public (bool, int)? InitialSize => (true, _memory.Length);
-
         public void Dispose() { }
 
         public bool TryGetNext(out T current)

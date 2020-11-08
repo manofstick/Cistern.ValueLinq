@@ -14,8 +14,6 @@ namespace Cistern.ValueLinq.Nodes
 
         public SelectManyNodeEnumerator(in TInEnumerator enumerator, Func<TIn, ValueEnumerable<TOut, NodeU>> getInner) => (_outer, _getInner, _inner) = (enumerator, getInner, FastEnumerator<TOut>.Empty);
 
-        public (bool, int)? InitialSize => null;
-
         public void Dispose()
         {
             _inner.Dispose();

@@ -12,13 +12,6 @@ namespace Cistern.ValueLinq.Nodes
 
         public ValueWhereNodeEnumerator(in TInEnumerator enumerator, Predicate filter) => (_enumerator, _filter) = (enumerator, filter);
 
-        public (bool, int)? InitialSize =>
-            _enumerator.InitialSize switch
-            {
-                (var flag, 0) => (flag, 0),
-                _ => null
-            };
-
         public void Dispose() => _enumerator.Dispose();
 
         public bool TryGetNext(out TIn current)

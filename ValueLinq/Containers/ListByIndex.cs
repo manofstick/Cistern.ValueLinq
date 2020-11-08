@@ -12,8 +12,6 @@ namespace Cistern.ValueLinq.Containers
 
         public ListByIndexFastEnumerator(List<T> list) => (_list, _idx) = (list, -1);
 
-        public (bool, int)? InitialSize => (true, _list.Count);
-
         public void Dispose() { }
 
         public bool TryGetNext(out T current)

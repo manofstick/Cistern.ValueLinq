@@ -11,8 +11,6 @@ namespace Cistern.ValueLinq.Containers
 
         public RangeFastEnumerator(int current, int max) => (_current, _max) = (current, max);
 
-        public (bool, int)? InitialSize => (true, _max-_current+1);
-
         public void Dispose() { }
 
         public bool TryGetNext(out int current)
