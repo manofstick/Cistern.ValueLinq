@@ -37,12 +37,12 @@ namespace Cistern.ValueLinq
             return new ValueEnumerable<T, ListByIndexNode<T>>(new ListByIndexNode<T>(source));
         }
 
-        public static ValueEnumerable<T, ListByEnumeratorNode<T>> OfListByEnumerator<T>(this List<T> source)
+        public static ValueEnumerable<T, GenericEnumeratorNode<T, List<T>, List<T>.Enumerator>> OfListByEnumerator<T>(this List<T> source)
         {
             if (source == null)
                 throw new ArgumentNullException(nameof(source));
 
-            return new ValueEnumerable<T, ListByEnumeratorNode<T>>(new ListByEnumeratorNode<T>(source));
+            return new ValueEnumerable<T, GenericEnumeratorNode<T, List<T>, List<T>.Enumerator>>(new GenericEnumeratorNode<T, List<T>, List<T>.Enumerator>(source, source => source.GetEnumerator(), source.Count));
         }
 
         public static ValueEnumerable<T, EmptyNode<T>> Empty<T>() => new ValueEnumerable<T, EmptyNode<T>>(new EmptyNode<T>());

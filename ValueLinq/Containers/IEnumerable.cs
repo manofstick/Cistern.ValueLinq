@@ -57,7 +57,7 @@ namespace Cistern.ValueLinq.Containers
 #if USE_LIST_BY_INDEX
                     return ListByIndexNode.Create<T, Head, Tail, CreationType>(list, ref nodes),
 #else
-                    return ListByEnumeratorNode.Create<T, Head, Tail, CreationType>(list, ref nodes);
+                    return GenericEnumeratorNode.Create<T, Head, Tail, CreationType, List<T>.Enumerator>(list.GetEnumerator(), list.Count, ref nodes);
 #endif
                 }
             }
