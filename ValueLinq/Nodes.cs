@@ -14,10 +14,30 @@ namespace Cistern.ValueLinq
             IsStale = PotentialSideEffects = false;
         }
 
+        /// <summary>
+        /// The maximum length of the sequence. It is null if the maximum length is unknown.
+        /// </summary>
         public long? MaximumLength;
+        /// <summary>
+        /// MaximumLength contains the true length of the sequence when this is true. It is false if the
+        /// stream passed through a filtering function such as Where.
+        /// </summary>
         public bool ActualLengthIsMaximumLength;
+        /// <summary>
+        /// If the length of the underlying container is immutable, such as an array or a constructed enumerable
+        /// such as a List
+        /// </summary>
         public bool IsImmutable;
+        /// <summary>
+        /// When the data has been cached on a node, such as Concat. Because potentially the underlying structure
+        /// might have changed, such as with a List
+        /// </summary>
         public bool IsStale;
+        /// <summary>
+        /// Lamdbda's passed to Select are considered as having side effects so in a usual Count() instruction they
+        /// are enumerated, athough System.Linq's implemetation doesn't handle this consistently (i.e. if a Select
+        /// is then contained within a Concat as an example)
+        /// </summary>
         public bool PotentialSideEffects;
     }
 

@@ -278,7 +278,7 @@ namespace Cistern.ValueLinq
         public static int?     Sum<Inner>(in this ValueEnumerable<int?,     Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<int?,     int,     SumIntNullable    >(new SumIntNullable());
         public static long?    Sum<Inner>(in this ValueEnumerable<long?,    Inner> inner) where Inner : INode => inner.Node.CreateObjectViaFastEnumerator<long?,    long,    SumLongNullable   >(new SumLongNullable());
 
-        public static int Count<T, Inner>(in this ValueEnumerable<T, Inner> inner) where Inner : INode => Enumerable.Count<T, Inner>(in inner.Node);
+        public static int Count<T, Inner>(in this ValueEnumerable<T, Inner> inner, bool ignorePotentialSideEffects = false) where Inner : INode => Enumerable.Count<T, Inner>(in inner.Node, ignorePotentialSideEffects);
 
         public static ValueEnumerable<TResult, SelectManyNode<TSource, TResult, NodeT, NodeU>> SelectMany<TSource, TResult, NodeT, NodeU>(in this ValueEnumerable<TSource, NodeT> prior, Func<TSource, ValueEnumerable<TResult, NodeU>> selector)
             where NodeT : INode

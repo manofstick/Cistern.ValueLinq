@@ -93,7 +93,8 @@ namespace Cistern.ValueLinq.Containers
         {
             if (typeof(TRequest) == typeof(Optimizations.Count))
             {
-                result = (TResult)(object)Count();
+                var countInfo = (Optimizations.Count)(object)request;
+                result = (TResult)(object)Count(countInfo.IgnorePotentialSideEffects);
                 return true;
             }
 
@@ -101,9 +102,9 @@ namespace Cistern.ValueLinq.Containers
             return false;
         }
 
-        private readonly int Count()
+        private readonly int Count(bool ignorePotentialSideEffects)
         {
-            checked { return Enumerable.Count<T, Start>(_start) + Enumerable.Count<T, Finish>(_finish); }
+            checked { return Enumerable.Count<T, Start>(_start, ignorePotentialSideEffects) + Enumerable.Count<T, Finish>(_finish, ignorePotentialSideEffects); }
         }
 
         public TResult CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>

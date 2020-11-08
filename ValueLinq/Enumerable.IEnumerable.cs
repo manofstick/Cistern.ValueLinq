@@ -169,7 +169,7 @@ namespace Cistern.ValueLinq
         public static long?    Sum<TSource>(this IEnumerable<TSource> inner, Func<TSource, long?   > selector) => inner.OfEnumerable().Select(selector).Sum();
 
 
-        public static int Count<T>(this IEnumerable<T> inner) => inner.OfEnumerable().Count();
+        public static int Count<T>(this IEnumerable<T> inner, bool ignorePotentialSideEffects = false) => inner.OfEnumerable().Count(ignorePotentialSideEffects);
 
         public static ValueEnumerable<TResult, SelectManyNode<TSource, TResult, EnumerableNode<TSource>, EnumerableNode<TResult>>> SelectMany<TSource, TResult>(this IEnumerable<TSource> source, Func<TSource, IEnumerable<TResult>> selector)
         {

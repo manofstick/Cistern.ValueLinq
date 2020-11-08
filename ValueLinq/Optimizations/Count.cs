@@ -1,4 +1,7 @@
 ﻿namespace Cistern.ValueLinq.Optimizations
 {
-    struct Count {}
+    struct Count
+    {
+        public bool IgnorePotentialSideEffects;
+    }
 }
