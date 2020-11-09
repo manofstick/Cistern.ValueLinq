@@ -26,8 +26,8 @@ namespace Cistern.ValueLinq
         /// </summary>
         public bool ActualLengthIsMaximumLength;
         /// <summary>
-        /// If the length of the underlying container is immutable, such as an array or a constructed enumerable
-        /// such as a List
+        /// If the length of the underlying containers length is immutable, such as an array, or rather than an 
+        /// enumerable that could change size such as a List
         /// </summary>
         public bool IsImmutable;
         /// <summary>

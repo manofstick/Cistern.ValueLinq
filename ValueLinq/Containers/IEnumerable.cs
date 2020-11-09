@@ -44,31 +44,22 @@ namespace Cistern.ValueLinq.Containers
 
         public EnumerableNode(IEnumerable<T> source) => _enumerable = source;
 
-        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
-        {
-            if (_enumerable is System.Collections.ICollection)
+        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) =>
+            _enumerable switch
             {
-                if (_enumerable is T[] array)
-                {
-                    return ArrayNode.Create<T, Head, Tail, CreationType>(array, ref nodes);
-                }
-                if (_enumerable is List<T> list)
-                {
+                T[] array => ArrayNode.Create<T, Head, Tail, CreationType>(array, ref nodes),
+                List<T> list =>
 #if USE_LIST_BY_INDEX
-                    return ListByIndexNode.Create<T, Head, Tail, CreationType>(list, ref nodes),
+                    ListByIndexNode.Create<T, Head, Tail, CreationType>(list, ref nodes),
 #else
-                    return GenericEnumeratorNode.Create<T, Head, Tail, CreationType, List<T>.Enumerator>(list.GetEnumerator(), list.Count, ref nodes);
+                    GenericEnumeratorNode.Create<T, Head, Tail, CreationType, List<T>.Enumerator>(list.GetEnumerator(), list.Count, ref nodes),
 #endif
-                }
-            }
-            else if (_enumerable is INode node)
-            {
-                return node.CreateObjectDescent<CreationType, Head, Tail>(ref nodes);
-            }
-            return EnumerableNode.Create<T, Head, Tail, CreationType>(_enumerable, ref nodes);
-        }
+                INode node => node.CreateObjectDescent<CreationType, Head, Tail>(ref nodes),
+                _ => EnumerableNode.Create<T, Head, Tail, CreationType>(_enumerable, ref nodes),
+            };
 
-        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
+        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) =>
+            throw new InvalidOperationException();
 
         bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result)
         {
