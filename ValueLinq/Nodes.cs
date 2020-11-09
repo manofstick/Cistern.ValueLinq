@@ -6,41 +6,84 @@ namespace Cistern.ValueLinq
 {
     public struct CountInformation
     {
+        enum Flags : byte
+        {
+            HasMaximumLength                = 0b_00001,
+            ActualLengthIsMaximumLength     = 0b_00010,
+            IsImmutable                     = 0b_00100,
+            IsStale                         = 0b_01000,
+            PotentialSideEffects            = 0b_10000,
+        }
+
         public CountInformation(long? size, bool isImmutable)
         {
-            MaximumLength = size;
-            ActualLengthIsMaximumLength = true;
-            IsImmutable = isImmutable;
-            IsStale = PotentialSideEffects = false;
+            _flags = Flags.ActualLengthIsMaximumLength;
+            
+            _maybeMaximumLength = size.GetValueOrDefault();
+            if (size.HasValue)
+                _flags |= Flags.HasMaximumLength;
+            
+            if (isImmutable)
+                _flags |= Flags.IsImmutable;
         }
+
+        long _maybeMaximumLength;
+        Flags _flags;
 
         public int? ActualSize => ActualLengthIsMaximumLength ? (int?)MaximumLength : null;
 
         /// <summary>
         /// The maximum length of the sequence. It is null if the maximum length is unknown.
         /// </summary>
-        public long? MaximumLength;
+        public long? MaximumLength
+        {
+            get => _flags.HasFlag(Flags.HasMaximumLength) ? (long?)_maybeMaximumLength : null;
+            set {
+                _maybeMaximumLength = value.GetValueOrDefault();
+                if (value.HasValue) _flags |= Flags.HasMaximumLength; else _flags &= ~Flags.HasMaximumLength;
+            }
+        }
+
         /// <summary>
         /// MaximumLength contains the true length of the sequence when this is true. It is false if the
         /// stream passed through a filtering function such as Where.
         /// </summary>
-        public bool ActualLengthIsMaximumLength;
+        public bool ActualLengthIsMaximumLength
+        {
+            get => _flags.HasFlag(Flags.ActualLengthIsMaximumLength);
+            set { if (value) _flags |= Flags.ActualLengthIsMaximumLength; else _flags &= ~Flags.ActualLengthIsMaximumLength; }
+        }
+
         /// <summary>
         /// If the length of the underlying containers length is immutable, such as an array, or rather than an 
         /// enumerable that could change size such as a List
         /// </summary>
-        public bool IsImmutable;
+        public bool IsImmutable
+        {
+            get => _flags.HasFlag(Flags.IsImmutable);
+            set { if (value) _flags |= Flags.IsImmutable; else _flags &= ~Flags.IsImmutable; }
+        }
+
         /// <summary>
         /// When the data has been cached on a node, such as Concat. Because potentially the underlying structure
         /// might have changed, such as with a List
         /// </summary>
-        public bool IsStale;
+        public bool IsStale
+        {
+            get => _flags.HasFlag(Flags.IsStale);
+            set { if (value) _flags |= Flags.IsStale; else _flags &= ~Flags.IsStale; }
+        }
+
         /// <summary>
         /// Lamdbda's passed to Select are considered as having side effects so in a usual Count() instruction they
         /// are enumerated, athough System.Linq's implemetation doesn't handle this consistently (i.e. if a Select
         /// is then contained within a Concat as an example)
         /// </summary>
-        public bool PotentialSideEffects;
+        public bool PotentialSideEffects
+        {
+            get => _flags.HasFlag(Flags.PotentialSideEffects);
+            set { if (value) _flags |= Flags.PotentialSideEffects; else _flags &= ~Flags.PotentialSideEffects; }
+        }
     }
 
     public interface INode
