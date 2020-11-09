@@ -26,7 +26,7 @@ namespace Cistern.ValueLinq.Containers
     }
 
     public struct ReturnNode<T>
-        : INode
+        : INode<T>
     {
         private T _element;
 
@@ -45,8 +45,8 @@ namespace Cistern.ValueLinq.Containers
 
         bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
 
-        public TResult CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
-            => ReturnNode.FastEnumerate<TIn, TResult, FEnumerator>((TIn)(object)_element, fenum);
+        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
+            => ReturnNode.FastEnumerate<T, TResult, FEnumerator>(_element, fenum);
     }
 
     static class ReturnNode

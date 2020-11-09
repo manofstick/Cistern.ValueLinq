@@ -24,8 +24,8 @@
     }
 
     public struct Select_InNode<T, U, NodeT>
-        : INode
-        where NodeT : INode
+        : INode<U>
+        where NodeT : INode<T>
     {
         private NodeT _nodeT;
         private InFunc<T, U> _map;
@@ -47,8 +47,8 @@
 
         bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
 
-        TResult INode.CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) =>
-            _nodeT.CreateObjectViaFastEnumerator<T, TResult, Select_InFoward<T, TIn, FEnumerator>>(new Select_InFoward<T, TIn, FEnumerator>(fenum, (InFunc<T, TIn>)(object)_map));
+        TResult INode<U>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) =>
+            _nodeT.CreateObjectViaFastEnumerator<TResult, Select_InFoward<T, U, FEnumerator>>(new Select_InFoward<T, U, FEnumerator>(fenum, _map));
     }
 
     struct Select_InFoward<T, U, Next>

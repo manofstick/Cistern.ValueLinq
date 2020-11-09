@@ -31,8 +31,8 @@ namespace Cistern.ValueLinq.Nodes
     }
 
     public struct TakeNode<T, NodeT>
-        : INode
-        where NodeT : INode
+        : INode<T>
+        where NodeT : INode<T>
     {
         private NodeT _nodeT;
         private int _count;
@@ -75,8 +75,8 @@ namespace Cistern.ValueLinq.Nodes
             return false;
         }
 
-        TResult INode.CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) =>
-            _nodeT.CreateObjectViaFastEnumerator<TIn, TResult, TakeFoward<TIn, FEnumerator>>(new TakeFoward<TIn, FEnumerator>(fenum, _count));
+        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) =>
+            _nodeT.CreateObjectViaFastEnumerator<TResult, TakeFoward<T, FEnumerator>>(new TakeFoward<T, FEnumerator>(fenum, _count));
     }
 
     struct TakeFoward<T, Next>

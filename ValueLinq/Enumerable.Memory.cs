@@ -172,7 +172,7 @@ namespace Cistern.ValueLinq
         }
 
         public static ValueEnumerable<TResult, SelectManyNode<TSource, TResult, MemoryNode<TSource>, NodeU>> SelectMany<TSource, TResult, NodeU>(this ReadOnlyMemory<TSource> source, Func<TSource, ValueEnumerable<TResult, NodeU>> selector)
-            where NodeU : INode
+            where NodeU : INode<TResult>
         {
             if (selector == null)
                 throw new ArgumentNullException(nameof(selector));

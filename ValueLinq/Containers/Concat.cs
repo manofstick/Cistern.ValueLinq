@@ -53,9 +53,9 @@ namespace Cistern.ValueLinq.Containers
     }
 
     public struct ConcatNode<T, Start, Finish>
-        : INode
-        where Start : INode
-        where Finish : INode
+        : INode<T>
+        where Start : INode<T>
+        where Finish : INode<T>
     {
         public void GetCountInformation(out CountInformation info) => info = _countInfo;
 
@@ -105,8 +105,9 @@ namespace Cistern.ValueLinq.Containers
             checked { return Enumerable.Count<T, Start>(_start, ignorePotentialSideEffects) + Enumerable.Count<T, Finish>(_finish, ignorePotentialSideEffects); }
         }
 
-        public TResult CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
+        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
         {
+            //TODO: implement
             throw new NotImplementedException();
         }
     }

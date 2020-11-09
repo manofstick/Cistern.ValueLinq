@@ -23,8 +23,8 @@
     }
 
     public struct Where_InNode<T, NodeT>
-        : INode
-        where NodeT : INode
+        : INode<T>
+        where NodeT : INode<T>
     {
         private NodeT _nodeT;
         private InFunc<T, bool> _filter;
@@ -47,8 +47,8 @@
 
         bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
 
-        TResult INode.CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) =>
-            _nodeT.CreateObjectViaFastEnumerator<TIn, TResult, Where_InFoward<TIn, FEnumerator>>(new Where_InFoward<TIn, FEnumerator>(fenum, (InFunc<TIn, bool>)(object)_filter));
+        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) =>
+            _nodeT.CreateObjectViaFastEnumerator<TResult, Where_InFoward<T, FEnumerator>>(new Where_InFoward<T, FEnumerator>(fenum, _filter));
     }
 
     struct Where_InFoward<T, Next>

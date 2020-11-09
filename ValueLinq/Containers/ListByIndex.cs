@@ -29,7 +29,7 @@ namespace Cistern.ValueLinq.Containers
     }
 
     public struct ListByIndexNode<T>
-        : INode
+        : INode<T>
     {
         private readonly List<T> _list;
 
@@ -56,8 +56,8 @@ namespace Cistern.ValueLinq.Containers
             return false;
         }
 
-        TResult INode.CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) 
-            => ListByIndexNode.FastEnumerate<TIn, TResult, FEnumerator>((List<TIn>)(object)_list, fenum);
+        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) 
+            => ListByIndexNode.FastEnumerate<T, TResult, FEnumerator>(_list, fenum);
     }
 
     static class ListByIndexNode

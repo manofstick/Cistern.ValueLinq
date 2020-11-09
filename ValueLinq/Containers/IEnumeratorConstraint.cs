@@ -28,7 +28,7 @@ namespace Cistern.ValueLinq.Containers
     }
 
     public struct GenericEnumeratorNode<T, Enumerable, Enumerator>
-        : INode
+        : INode<T>
         where Enumerable : IEnumerable<T>
         where Enumerator : IEnumerator<T>
     {
@@ -65,8 +65,8 @@ namespace Cistern.ValueLinq.Containers
             return false;
         }
 
-        public TResult CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
-            => GenericEnumeratorNode.FastEnumerate<TIn, TResult, FEnumerator, Enumerator, T>(_f(_e), _count, fenum);
+        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
+            => GenericEnumeratorNode.FastEnumerate<T, TResult, FEnumerator, Enumerator, T>(_f(_e), _count, fenum);
     }
 
     static class GenericEnumeratorNode

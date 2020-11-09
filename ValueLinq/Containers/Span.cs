@@ -31,7 +31,7 @@ namespace Cistern.ValueLinq.Containers
     }
 
     public struct SpanNode<TObject, TElement>
-        : INode
+        : INode<TElement>
     {
         private TObject _obj;
         private readonly GetSpan<TObject, TElement> _getSpan;
@@ -51,8 +51,8 @@ namespace Cistern.ValueLinq.Containers
             return false;
         }
 
-        TResult INode.CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum)
-            => SpanNode.FastEnumerate<TIn, TResult, FEnumerator, TObject>(_obj, (GetSpan<TObject, TIn>)(object)_getSpan, fenum);
+        TResult INode<TElement>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
+            => SpanNode.FastEnumerate<TElement, TResult, FEnumerator, TObject>(_obj, _getSpan, fenum);
     }
 
     static class SpanNode

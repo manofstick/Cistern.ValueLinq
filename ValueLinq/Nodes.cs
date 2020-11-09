@@ -45,6 +45,8 @@ namespace Cistern.ValueLinq
 
     public interface INode
     {
+        void GetCountInformation(out CountInformation info);
+
         CreationType CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
             where Head : INode
             where Tail : INodes;
@@ -53,11 +55,12 @@ namespace Cistern.ValueLinq
             where Enumerator : IFastEnumerator<EnumeratorElement>
             where Tail : INodes;
 
-        TResult CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>;
-
         bool CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result);
+    }
 
-        void GetCountInformation(out CountInformation info);
+    public interface INode<T> : INode
+    {
+        TResult CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<T>;
     }
 
     public interface INodes

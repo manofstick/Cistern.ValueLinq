@@ -180,7 +180,7 @@ namespace Cistern.ValueLinq
         }
 
         public static ValueEnumerable<TResult, SelectManyNode<TSource, TResult, EnumerableNode<TSource>, NodeU>> SelectMany<TSource, TResult, NodeU>(this IEnumerable<TSource> source, Func<TSource, ValueEnumerable<TResult, NodeU>> selector)
-            where NodeU : INode
+            where NodeU : INode<TResult>
         {
             if (selector == null)
                 throw new ArgumentNullException(nameof(selector));

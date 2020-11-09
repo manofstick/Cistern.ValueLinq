@@ -26,7 +26,7 @@ namespace Cistern.ValueLinq.Containers
     }
 
     public struct RangeNode
-        : INode
+        : INode<int>
     {
         private int _start;
         private int _max;
@@ -62,23 +62,22 @@ namespace Cistern.ValueLinq.Containers
             return false;
         }
 
-        public TResult CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<TIn>
-                => RangeNode.FastEnumerate<TIn, TResult, FEnumerator>(_start, _max, fenum);
+        TResult INode<int>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
+                => RangeNode.FastEnumerate<TResult, FEnumerator>(_start, _max, fenum);
 
-        private static TResult FastEnumerate<TIn, TResult, FEnumerator>(int start, int max, FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<TIn>
+        private static TResult FastEnumerate<TResult, FEnumerator>(int start, int max, FEnumerator fenum)
+            where FEnumerator : IForwardEnumerator<int>
         {
-            Loop<TIn, FEnumerator>(start, max, ref fenum);
+            Loop<FEnumerator>(start, max, ref fenum);
             return fenum.GetResult<TResult>();
         }
 
-        private static void Loop<TIn, FEnumerator>(int start, int max, ref FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
+        private static void Loop<FEnumerator>(int start, int max, ref FEnumerator fenum) where FEnumerator : IForwardEnumerator<int>
         {
             var i = start - 1;
             while (i < max)
             {
-                fenum.ProcessNext((TIn)(object)++i);
+                fenum.ProcessNext(++i);
             }
         }
     }

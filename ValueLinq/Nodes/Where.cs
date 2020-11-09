@@ -27,8 +27,8 @@ namespace Cistern.ValueLinq.Nodes
     }
 
     public struct WhereNode<T, NodeT>
-        : INode
-        where NodeT : INode
+        : INode<T>
+        where NodeT : INode<T>
     {
         private NodeT _nodeT;
         private Func<T, bool> _filter;
@@ -56,8 +56,8 @@ namespace Cistern.ValueLinq.Nodes
             return false;
         }
 
-        TResult INode.CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) =>
-            _nodeT.CreateObjectViaFastEnumerator<TIn, TResult, WhereFoward<TIn, FEnumerator>>(new WhereFoward<TIn, FEnumerator>(fenum, (Func<TIn, bool>)(object)_filter));
+        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) =>
+            _nodeT.CreateObjectViaFastEnumerator<TResult, WhereFoward<T, FEnumerator>>(new WhereFoward<T, FEnumerator>(fenum, _filter));
     }
 
     struct WhereFoward<T, Next>

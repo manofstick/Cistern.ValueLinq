@@ -28,7 +28,7 @@ namespace Cistern.ValueLinq.Containers
     }
 
     public struct ArrayNode<T>
-        : INode
+        : INode<T>
     {
         private readonly T[] _array;
 
@@ -47,8 +47,8 @@ namespace Cistern.ValueLinq.Containers
             return false;
         }
 
-        TResult INode.CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum)
-            => ArrayNode.FastEnumerate<TIn, TResult, FEnumerator>((TIn[])(object)_array, fenum);
+        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
+            => ArrayNode.FastEnumerate<T, TResult, FEnumerator>(_array, fenum);
     }
 
     static class ArrayNode

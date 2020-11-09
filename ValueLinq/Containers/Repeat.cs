@@ -26,7 +26,7 @@ namespace Cistern.ValueLinq.Containers
     }
 
     public struct RepeatNode<T>
-        : INode
+        : INode<T>
     {
         private T _element;
         private int _count;
@@ -52,8 +52,8 @@ namespace Cistern.ValueLinq.Containers
 
         bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
 
-        public TResult CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
-            => RepeatNode.FastEnumerate<TIn, TResult, FEnumerator>((TIn)(object)_element, _count, fenum);
+        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
+            => RepeatNode.FastEnumerate<T, TResult, FEnumerator>(_element, _count, fenum);
     }
 
     static class RepeatNode

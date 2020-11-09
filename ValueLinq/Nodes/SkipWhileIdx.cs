@@ -39,8 +39,8 @@ namespace Cistern.ValueLinq.Nodes
     }
 
     public struct SkipWhileIdxNode<T, NodeT>
-        : INode
-        where NodeT : INode
+        : INode<T>
+        where NodeT : INode<T>
     {
         private NodeT _nodeT;
         private Func<T, int, bool> _predicate;
@@ -68,8 +68,8 @@ namespace Cistern.ValueLinq.Nodes
             return false;
         }
 
-        TResult INode.CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) =>
-            _nodeT.CreateObjectViaFastEnumerator<TIn, TResult, SkipWhileIdxFoward<TIn, FEnumerator>>(new SkipWhileIdxFoward<TIn, FEnumerator>(fenum, (Func<TIn, int, bool>)(object)_predicate));
+        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) =>
+            _nodeT.CreateObjectViaFastEnumerator<TResult, SkipWhileIdxFoward<T, FEnumerator>>(new SkipWhileIdxFoward<T, FEnumerator>(fenum, _predicate));
     }
 
     struct SkipWhileIdxFoward<T, Next>

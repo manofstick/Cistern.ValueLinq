@@ -6,7 +6,7 @@ namespace Cistern.ValueLinq.Nodes
     struct SelectManyNodeEnumerator<TIn, TOut, TInEnumerator, NodeU>
         : IFastEnumerator<TOut>
         where TInEnumerator : IFastEnumerator<TIn>
-        where NodeU : INode
+        where NodeU : INode<TOut>
     {
         private TInEnumerator _outer;
         private Func<TIn, ValueEnumerable<TOut, NodeU>> _getInner;
@@ -52,9 +52,9 @@ namespace Cistern.ValueLinq.Nodes
     }
 
     public struct SelectManyNode<T, U, NodeT, NodeU>
-        : INode
-        where NodeT : INode
-        where NodeU : INode
+        : INode<U>
+        where NodeT : INode<T>
+        where NodeU : INode<U>
     {
         private NodeT _nodeT;
         private Func<T, ValueEnumerable<U, NodeU>> _map;
@@ -91,14 +91,14 @@ namespace Cistern.ValueLinq.Nodes
             return SelectManyImpl.Count(e.FastEnumerator, _map);
         }
 
-        public TResult CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
-            => _nodeT.CreateObjectViaFastEnumerator<T, TResult, SelectManyFoward<T, TIn, NodeU, FEnumerator>>(new SelectManyFoward<T, TIn, NodeU, FEnumerator>(new SelectManyCommonNext<TIn, FEnumerator>(in fenum), (Func<T, ValueEnumerable<TIn, NodeU>>)(object) _map));
+        TResult INode<U>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
+            => _nodeT.CreateObjectViaFastEnumerator<TResult, SelectManyFoward<T, U, NodeU, FEnumerator>>(new SelectManyFoward<T, U, NodeU, FEnumerator>(new SelectManyCommonNext<U, FEnumerator>(in fenum), _map));
     }
 
     static class SelectManyImpl
     {
         public static int Count<T, U, NodeU>(FastEnumerator<T> enumerator, Func<T, ValueEnumerable<U, NodeU>> _map)
-            where NodeU : INode
+            where NodeU : INode<U>
         {
             checked
             {
@@ -140,7 +140,7 @@ namespace Cistern.ValueLinq.Nodes
     struct SelectManyFoward<T, U, NodeU, Next>
         : IForwardEnumerator<T>
         where Next : IForwardEnumerator<U>
-        where NodeU : INode
+        where NodeU : INode<U>
     {
         private SelectManyCommonNext<U, Next> _next;
         private Func<T, ValueEnumerable<U, NodeU>> _getEnumerable;
@@ -150,6 +150,6 @@ namespace Cistern.ValueLinq.Nodes
         public TResult GetResult<TResult>() => _next.GetResult<TResult>();
 
         public bool ProcessNext(T input) =>
-            _getEnumerable(input).Node.CreateObjectViaFastEnumerator<U, bool, SelectManyProcessNextForward<U, Next>>(new SelectManyProcessNextForward<U, Next>(_next));
+            _getEnumerable(input).Node.CreateObjectViaFastEnumerator<bool, SelectManyProcessNextForward<U, Next>>(new SelectManyProcessNextForward<U, Next>(_next));
     }
 }

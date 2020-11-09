@@ -27,8 +27,8 @@ namespace Cistern.ValueLinq.Nodes
     }
 
     public struct ValueSelectNode<T, U, NodeT, Func>
-        : INode
-        where NodeT : INode
+        : INode<U>
+        where NodeT : INode<T>
         where Func : IFunc<T, U>
     {
         private NodeT _nodeT;
@@ -56,8 +56,8 @@ namespace Cistern.ValueLinq.Nodes
             return false;
         }
 
-        TResult INode.CreateObjectViaFastEnumerator<TNext, TResult, Next>(in Next fenum) =>
-            _nodeT.CreateObjectViaFastEnumerator<T, TResult, ValueSelectFoward<T, TNext, Next, U, Func>>(new ValueSelectFoward<T, TNext, Next, U, Func>(fenum, _map));
+        TResult INode<U>.CreateObjectViaFastEnumerator<TResult, Next>(in Next fenum) =>
+            _nodeT.CreateObjectViaFastEnumerator<TResult, ValueSelectFoward<T, U, Next, U, Func>>(new ValueSelectFoward<T, U, Next, U, Func>(fenum, _map));
     }
 
     struct ValueSelectFoward<T, U, Next, AlsoU, Func>

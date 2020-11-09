@@ -27,7 +27,7 @@ namespace Cistern.ValueLinq.Containers
     }
 
     public struct MemoryNode<T>
-        : INode
+        : INode<T>
     {
         private readonly ReadOnlyMemory<T> _memory;
 
@@ -46,8 +46,8 @@ namespace Cistern.ValueLinq.Containers
             return false;
         }
 
-        TResult INode.CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum)
-            => MemoryNode.FastEnumerate<TIn, TResult, FEnumerator>((ReadOnlyMemory<TIn>)(object)_memory, fenum);
+        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
+            => MemoryNode.FastEnumerate<T, TResult, FEnumerator>(_memory, fenum);
     }
 
     static class MemoryNode

@@ -12,7 +12,7 @@ namespace Cistern.ValueLinq.Containers
     }
 
     public struct EmptyNode<T>
-        : INode
+        : INode<T>
     {
         public void GetCountInformation(out CountInformation info) => 
             info = new CountInformation(0, true);
@@ -27,8 +27,8 @@ namespace Cistern.ValueLinq.Containers
             return false;
         }
 
-        public TResult CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
-            => EmptyNode.FastEnumerate<TIn, TResult, FEnumerator>(fenum);
+        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
+            => EmptyNode.FastEnumerate<T, TResult, FEnumerator>(fenum);
     }
 
     static class EmptyNode

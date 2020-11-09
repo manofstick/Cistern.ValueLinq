@@ -27,8 +27,8 @@ namespace Cistern.ValueLinq.Nodes
     }
 
     public struct SelectIdxNode<T, U, NodeT>
-        : INode
-        where NodeT : INode
+        : INode<U>
+        where NodeT : INode<T>
     {
         private NodeT _nodeT;
         private Func<T, int, U> _map;
@@ -51,8 +51,8 @@ namespace Cistern.ValueLinq.Nodes
 
         bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false;}
 
-        public TResult CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
-            => _nodeT.CreateObjectViaFastEnumerator<T, TResult, SelectIdxFoward<T, TIn, FEnumerator>>(new SelectIdxFoward<T, TIn, FEnumerator>(fenum, (Func<T, int, TIn>)(object) _map));
+        TResult INode<U>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
+            => _nodeT.CreateObjectViaFastEnumerator<TResult, SelectIdxFoward<T, U, FEnumerator>>(new SelectIdxFoward<T, U, FEnumerator>(fenum, _map));
     }
 
     struct SelectIdxFoward<T, U, Next>

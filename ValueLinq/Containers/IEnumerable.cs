@@ -25,7 +25,7 @@ namespace Cistern.ValueLinq.Containers
     }
 
     public struct EnumerableNode<T>
-        : INode
+        : INode<T>
     {
         private readonly IEnumerable<T> _enumerable;
 
@@ -76,12 +76,12 @@ namespace Cistern.ValueLinq.Containers
             return false;
         }
 
-        TResult INode.CreateObjectViaFastEnumerator<TIn, TResult, FEnumerator>(in FEnumerator fenum) =>
-            (IEnumerable<TIn>)(object)_enumerable switch
+        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) =>
+            _enumerable switch
             {
-                TIn[] array => ArrayNode.FastEnumerate<TIn, TResult, FEnumerator>(array, fenum),
-                List<TIn> list => ListByIndexNode.FastEnumerate<TIn, TResult, FEnumerator>(list, fenum),
-                var e => EnumerableNode.FastEnumerate<TIn, TResult, FEnumerator>(e, fenum),
+                T[] array => ArrayNode.FastEnumerate<T, TResult, FEnumerator>(array, fenum),
+                List<T> list => ListByIndexNode.FastEnumerate<T, TResult, FEnumerator>(list, fenum),
+                var e => EnumerableNode.FastEnumerate<T, TResult, FEnumerator>(e, fenum),
             };
     }
 
