@@ -183,7 +183,7 @@ namespace Cistern.ValueLinq
         {
             inner.GetCountInformation(out var info);
 
-            if (info.MaximumLength <= 4)
+            if (info.ActualLengthIsMaximumLength || info.MaximumLength <= 4)
             {
                 if (info.MaximumLength == 0)
                     return new List<T>();
@@ -195,13 +195,17 @@ namespace Cistern.ValueLinq
                 return Nodes<List<T>>.Aggregation<Inner, ToListViaStack>(in inner.Node);
 
             if (!arrayPoolInfo.HasValue)
-                return inner.Node.CreateObjectViaFastEnumerator<T, List<T>, ToListForward<T>>(new ToListForward<T>(info.ActualSize));
+                return inner.Node.CreateObjectViaFastEnumerator<T, List<T>, ToListForward<T>>(new ToListForward<T>(null));
 
-            return inner.Node.CreateObjectViaFastEnumerator<T, List<T>, ToListViaArrayPoolForward<T>>(new ToListViaArrayPoolForward<T>(arrayPoolInfo.Value.arrayPool, arrayPoolInfo.Value.cleanBuffers, info.ActualSize));
+            return inner.Node.CreateObjectViaFastEnumerator<T, List<T>, ToListViaArrayPoolForward<T>>(new ToListViaArrayPoolForward<T>(arrayPoolInfo.Value.arrayPool, arrayPoolInfo.Value.cleanBuffers, null));
         }
 
         public static List<T> ToListUseSharedPool<T, Inner>(in this ValueEnumerable<T, Inner> inner, bool? cleanBuffers = null) where Inner : INode
-            => inner.ToList(arrayPoolInfo:(ArrayPool<T>.Shared, cleanBuffers ?? !CachedTypeInfo<T>.IsPrimitive));
+        {
+            inner.GetCountInformation(out var info);
+
+            return inner.Node.CreateObjectViaFastEnumerator<T, List<T>, ToListViaArrayPoolForward<T>>(new ToListViaArrayPoolForward<T>(ArrayPool<T>.Shared, cleanBuffers ?? !CachedTypeInfo<T>.IsPrimitive, info.ActualSize));
+        }
 
         public static List<T> ToListUseStack<T, Inner>(in this ValueEnumerable<T, Inner> inner) where Inner : INode
             => Nodes<List<T>>.Aggregation<Inner, ToListViaStack>(in inner.Node);
