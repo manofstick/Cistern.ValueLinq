@@ -57,13 +57,13 @@ namespace Cistern.ValueLinq.Nodes
         }
 
         TResult INode<U>.CreateObjectViaFastEnumerator<TResult, Next>(in Next fenum) =>
-            _nodeT.CreateObjectViaFastEnumerator<TResult, ValueSelectFoward<T, U, Next, U, Func>>(new ValueSelectFoward<T, U, Next, U, Func>(fenum, _map));
+            _nodeT.CreateObjectViaFastEnumerator<TResult, ValueSelectFoward<T, U, Next, Func>>(new ValueSelectFoward<T, U, Next, Func>(fenum, _map));
     }
 
-    struct ValueSelectFoward<T, U, Next, AlsoU, Func>
+    struct ValueSelectFoward<T, U, Next, Func>
         : IForwardEnumerator<T>
         where Next : IForwardEnumerator<U>
-        where Func : IFunc<T, AlsoU>
+        where Func : IFunc<T, U>
     {
         Next _next;
         Func _selector;
@@ -73,6 +73,6 @@ namespace Cistern.ValueLinq.Nodes
         public TResult GetResult<TResult>() => _next.GetResult<TResult>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool ProcessNext(T input) => _next.ProcessNext((U)(object)_selector.Invoke(input));
+        public bool ProcessNext(T input) => _next.ProcessNext(_selector.Invoke(input));
     }
 }

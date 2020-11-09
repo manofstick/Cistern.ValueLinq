@@ -66,7 +66,7 @@ namespace Cistern.ValueLinq.Containers
         }
 
         TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
-            => GenericEnumeratorNode.FastEnumerate<T, TResult, FEnumerator, Enumerator, T>(_f(_e), _count, fenum);
+            => GenericEnumeratorNode.FastEnumerate<T, TResult, FEnumerator, Enumerator>(_f(_e), _count, fenum);
     }
 
     static class GenericEnumeratorNode
@@ -80,12 +80,13 @@ namespace Cistern.ValueLinq.Containers
             return nodes.CreateObject<CreationType, T, GenericEnumeratorFastEnumerator<T, Enumerator>>(ref enumerator);
         }
 
-        internal static TResult FastEnumerate<TIn, TResult, FEnumerator, Enumerator, TAlso>(Enumerator enumerator, int? count, FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
-            where Enumerator : IEnumerator<TAlso>
+        internal static TResult FastEnumerate<T, TResult, FEnumerator, Enumerator>(Enumerator enumerator, int? count, FEnumerator fenum)
+            where FEnumerator : IForwardEnumerator<T>
+            where Enumerator : IEnumerator<T>
         {
             try
             {
-                InnerLoop<TIn, FEnumerator, Enumerator, TAlso>(enumerator, fenum);
+                InnerLoop<T, FEnumerator, Enumerator>(enumerator, fenum);
             }
             finally
             {
@@ -95,12 +96,12 @@ namespace Cistern.ValueLinq.Containers
             return fenum.GetResult<TResult>();
         }
 
-        private static void InnerLoop<TIn, FEnumerator, Enumerator, TAlso>(Enumerator enumerator, FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<TIn>
-            where Enumerator : IEnumerator<TAlso>
+        private static void InnerLoop<T, FEnumerator, Enumerator>(Enumerator enumerator, FEnumerator fenum)
+            where FEnumerator : IForwardEnumerator<T>
+            where Enumerator : IEnumerator<T>
         {
             while (enumerator.MoveNext())
-                fenum.ProcessNext((TIn)(object)enumerator.Current);
+                fenum.ProcessNext(enumerator.Current);
         }
     }
 }

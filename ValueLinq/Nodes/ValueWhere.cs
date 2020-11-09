@@ -57,13 +57,13 @@ namespace Cistern.ValueLinq.Nodes
         }
 
         TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) =>
-            _nodeT.CreateObjectViaFastEnumerator<TResult, ValueWhereFoward<T, FEnumerator, T, Predicate>>(new ValueWhereFoward<T, FEnumerator, T, Predicate>(fenum, _filter));
+            _nodeT.CreateObjectViaFastEnumerator<TResult, ValueWhereFoward<T, FEnumerator, Predicate>>(new ValueWhereFoward<T, FEnumerator, Predicate>(fenum, _filter));
     }
 
-    struct ValueWhereFoward<T, Next, AlsoT, Predicate>
+    struct ValueWhereFoward<T, Next, Predicate>
         : IForwardEnumerator<T>
         where Next : IForwardEnumerator<T>
-        where Predicate : IFunc<AlsoT, bool>
+        where Predicate : IFunc<T, bool>
     {
         Next _next;
         Predicate _predicate;
@@ -75,7 +75,7 @@ namespace Cistern.ValueLinq.Nodes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ProcessNext(T input)
         {
-            if (_predicate.Invoke((AlsoT)(object)input))
+            if (_predicate.Invoke(input))
                 return _next.ProcessNext(input);
             return true;
         }

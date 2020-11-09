@@ -56,7 +56,7 @@ namespace Cistern.ValueLinq.Containers
         }
 
         TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) 
-            => IReadOnlyListNode.FastEnumerate<T, TResult, FEnumerator, List, T>(_list, fenum);
+            => IReadOnlyListNode.FastEnumerate<T, TResult, FEnumerator, List>(_list, fenum);
     }
 
     static class IReadOnlyListNode
@@ -70,22 +70,22 @@ namespace Cistern.ValueLinq.Containers
             return nodes.CreateObject<CreationType, T, IReadOnlyListFastEnumerator<T, List>>(ref enumerator);
         }
 
-        internal static TResult FastEnumerate<TIn, TResult, FEnumerator, List, TAlso>(List list, FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<TIn>
-            where List : IReadOnlyList<TAlso>
+        internal static TResult FastEnumerate<T, TResult, FEnumerator, List>(List list, FEnumerator fenum)
+            where FEnumerator : IForwardEnumerator<T>
+            where List : IReadOnlyList<T>
         {
-            DoLoop<TIn, FEnumerator, List, TAlso>(list, ref fenum);
+            DoLoop<T, FEnumerator, List>(list, ref fenum);
             return fenum.GetResult<TResult>();
         }
 
-        internal static void DoLoop<TIn, FEnumerator, List, TAlso>(List list, ref FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<TIn>
-            where List : IReadOnlyList<TAlso>
+        internal static void DoLoop<T, FEnumerator, List>(List list, ref FEnumerator fenum)
+            where FEnumerator : IForwardEnumerator<T>
+            where List : IReadOnlyList<T>
         {
             var count = list.Count;
             for (var i = 0; i < count; ++i)
             {
-                if (!fenum.ProcessNext((TIn)(object)list[i]))
+                if (!fenum.ProcessNext(list[i]))
                     break;
             }
         }
