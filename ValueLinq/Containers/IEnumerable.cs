@@ -81,6 +81,7 @@ namespace Cistern.ValueLinq.Containers
             {
                 T[] array => ArrayNode.FastEnumerate<T, TResult, FEnumerator>(array, fenum),
                 List<T> list => ListByIndexNode.FastEnumerate<T, TResult, FEnumerator>(list, fenum),
+                INode<T> n => n.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum),
                 var e => EnumerableNode.FastEnumerate<T, TResult, FEnumerator>(e, fenum),
             };
     }
