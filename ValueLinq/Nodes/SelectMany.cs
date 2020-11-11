@@ -120,6 +120,7 @@ namespace Cistern.ValueLinq.Nodes
         public SelectManyCommonNext(in Next next) => _next = next;
 
         public bool ProcessNext(T input) => _next.ProcessNext(input);
+        public void Dispose() { }
         public TResult GetResult<TResult>() => _next.GetResult<TResult>();
     }
 
@@ -132,6 +133,7 @@ namespace Cistern.ValueLinq.Nodes
 
         public SelectManyProcessNextForward(SelectManyCommonNext<T, Next> next) => (_next, _processNext) = (next, false);
 
+        public void Dispose() { }
         TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_processNext;
 
         bool IForwardEnumerator<T>.ProcessNext(T input) => _processNext = _next.ProcessNext(input);
@@ -146,6 +148,8 @@ namespace Cistern.ValueLinq.Nodes
         private Func<T, ValueEnumerable<U, NodeU>> _getEnumerable;
 
         public SelectManyFoward(in SelectManyCommonNext<U, Next> next, Func<T, ValueEnumerable<U, NodeU>> predicate) => (_next, _getEnumerable) = (next, predicate);
+
+        public void Dispose() => _next.Dispose();
 
         public TResult GetResult<TResult>() => _next.GetResult<TResult>();
 

@@ -19,6 +19,7 @@ namespace Cistern.ValueLinq.Aggregation
             (_elementAtIndex, _index, _found, _elementAt) = (index, index >= size ? index : - 1, false, default);
         }
 
+        public void Dispose() { }
         TResult IForwardEnumerator<T>.GetResult<TResult>()
         {
             if (!_found)
@@ -53,6 +54,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public ElementAtOrDefault(int index, int? size) => (_elementAtIndex, _index, _elementAt) = (index, (index < 0 || index >= size) ? index : - 1, default);
 
+        public void Dispose() { }
         TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_elementAt;
 
         bool IForwardEnumerator<T>.ProcessNext(T input)

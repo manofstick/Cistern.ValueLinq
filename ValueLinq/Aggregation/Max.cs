@@ -18,6 +18,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public Max(bool _) => (noData, result) = (true, default);
 
+        public void Dispose() { }
         public TResult GetResult<TResult>()
         {
             if (noData && default(TResult) != null)
@@ -55,6 +56,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public Max(bool _) => (noData, result) = (true, math.MaxInit);
 
+        public void Dispose() { }
         public TResult GetResult<TResult>()
         {
             if (noData)
@@ -83,6 +85,7 @@ namespace Cistern.ValueLinq.Aggregation
         private T result;
         private bool noData;
 
+        public void Dispose() { }
         public MaxNullable(bool _) => (noData, result) = (true, math.MaxInit);
 
         public TResult GetResult<TResult>() =>

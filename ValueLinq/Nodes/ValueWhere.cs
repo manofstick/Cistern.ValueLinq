@@ -78,6 +78,7 @@ namespace Cistern.ValueLinq.Nodes
 
         public ValueWhereFoward(in Next prior, Predicate predicate) => (_next, _predicate) = (prior, predicate);
 
+        public void Dispose() => _next.Dispose();
         public TResult GetResult<TResult>() => _next.GetResult<TResult>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

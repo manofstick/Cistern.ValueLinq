@@ -10,6 +10,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public FoldForward(Func<TAccumulate, T, TAccumulate> func, TAccumulate seed) => (_func, _accumulate) = (func, seed);
 
+        public void Dispose() { }
         TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_accumulate;
 
         bool IForwardEnumerator<T>.ProcessNext(T input)

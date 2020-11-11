@@ -12,6 +12,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public Any(Func<T, bool> predicate) => (_predicate, _any) = (predicate, false);
 
+        public void Dispose() { }
         TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_any;
 
         bool IForwardEnumerator<T>.ProcessNext(T input)
@@ -30,6 +31,7 @@ namespace Cistern.ValueLinq.Aggregation
     {
         private bool _any;
 
+        public void Dispose() { }
         TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_any;
 
         bool IForwardEnumerator<T>.ProcessNext(T input)

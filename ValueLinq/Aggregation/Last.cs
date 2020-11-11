@@ -8,6 +8,7 @@ namespace Cistern.ValueLinq.Aggregation
         private T _last;
         private bool _found;
 
+        public void Dispose() { }
         TResult IForwardEnumerator<T>.GetResult<TResult>()
         {
             if (!_found)
@@ -30,6 +31,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public LastOrDefault(bool _) => _last = default;
 
+        public void Dispose() { }
         TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_last;
 
         bool IForwardEnumerator<T>.ProcessNext(T input)

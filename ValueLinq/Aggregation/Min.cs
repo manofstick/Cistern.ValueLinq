@@ -18,6 +18,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public Min(bool _) => (noData, result) = (true, default);
 
+        public void Dispose() { }
         public TResult GetResult<TResult>()
         {
             if (noData && default(TResult) != null)
@@ -55,6 +56,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public Min(bool _) => (noData, result) = (true, math.MinInit);
 
+        public void Dispose() { }
         public TResult GetResult<TResult>()
         {
             if (noData)
@@ -88,6 +90,7 @@ namespace Cistern.ValueLinq.Aggregation
         private T result;
         private bool noData;
 
+        public void Dispose() { }
         public MinNullable(bool _) => (noData, result) = (true, math.MinInit);
 
         public TResult GetResult<TResult>() =>

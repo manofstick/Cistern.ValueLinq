@@ -63,6 +63,7 @@ namespace Cistern.ValueLinq.Nodes
 
         public Where_InFoward(in Next prior, InFunc<T, bool> predicate) => (_next, _predicate) = (prior, predicate);
 
+        public void Dispose() => _next.Dispose();
         public TResult GetResult<TResult>() => _next.GetResult<TResult>();
 
         public bool ProcessNext(T input)

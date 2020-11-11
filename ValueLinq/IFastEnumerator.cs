@@ -16,6 +16,7 @@ namespace Cistern.ValueLinq
     {
         public abstract bool ProcessNext(T input);
         TResult GetResult<TResult>();
+        void Dispose();
     }
 
     abstract class FastEnumerator<EnumeratorElement>

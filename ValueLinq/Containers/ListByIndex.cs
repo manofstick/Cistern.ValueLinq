@@ -73,8 +73,15 @@ namespace Cistern.ValueLinq.Containers
         internal static TResult FastEnumerate<TIn, TResult, FEnumerator>(List<TIn> list, FEnumerator fenum)
             where FEnumerator : IForwardEnumerator<TIn>
         {
-            DoLoop(list, ref fenum);
-            return fenum.GetResult<TResult>();
+            try
+            {
+                DoLoop(list, ref fenum);
+                return fenum.GetResult<TResult>();
+            }
+            finally
+            {
+                fenum.Dispose();
+            }
         }
 
         private static void DoLoop<TIn, FEnumerator>(List<TIn> list, ref FEnumerator fenum)

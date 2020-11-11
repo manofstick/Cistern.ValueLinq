@@ -65,6 +65,7 @@ namespace Cistern.ValueLinq.Nodes
 
         public SelectIdxFoward(in Next prior, Func<T, int, U> predicate) => (_next, _selector, _idx) = (prior, predicate, 0);
 
+        public void Dispose() => _next.Dispose();
         public TResult GetResult<TResult>() => _next.GetResult<TResult>();
 
         public bool ProcessNext(T input) => _next.ProcessNext(_selector(input, _idx++));

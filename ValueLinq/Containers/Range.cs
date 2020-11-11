@@ -68,8 +68,15 @@ namespace Cistern.ValueLinq.Containers
         private static TResult FastEnumerate<TResult, FEnumerator>(int start, int max, FEnumerator fenum)
             where FEnumerator : IForwardEnumerator<int>
         {
-            Loop<FEnumerator>(start, max, ref fenum);
-            return fenum.GetResult<TResult>();
+            try
+            { 
+                Loop<FEnumerator>(start, max, ref fenum);
+                return fenum.GetResult<TResult>();
+            }
+            finally
+            {
+                fenum.Dispose();
+            }
         }
 
         private static void Loop<FEnumerator>(int start, int max, ref FEnumerator fenum) where FEnumerator : IForwardEnumerator<int>

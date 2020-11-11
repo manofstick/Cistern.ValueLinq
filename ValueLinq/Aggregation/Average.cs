@@ -16,6 +16,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public Average(bool _) => (sum, counter) = (math.Zero, 0);
 
+        public void Dispose() { }
         public TResult GetResult<TResult>()
         {
             if (counter == 0)
@@ -48,6 +49,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public AverageNullable(bool _) => (sum, counter) = (math.Zero, 0);
 
+        public void Dispose() { }
         public TResult GetResult<TResult>() =>
             counter == 0 
                 ? default

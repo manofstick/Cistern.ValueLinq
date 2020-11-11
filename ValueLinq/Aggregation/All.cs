@@ -11,6 +11,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public All(Func predicate) => (_predicate, _all) = (predicate, true);
 
+        public void Dispose() { }
         TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_all;
 
         bool IForwardEnumerator<T>.ProcessNext(T input)

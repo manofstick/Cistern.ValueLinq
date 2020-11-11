@@ -5,6 +5,7 @@
     {
         private int _count;
 
+        public void Dispose() { }
         TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_count;
 
         bool IForwardEnumerator<T>.ProcessNext(T input)

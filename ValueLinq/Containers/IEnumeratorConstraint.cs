@@ -87,13 +87,13 @@ namespace Cistern.ValueLinq.Containers
             try
             {
                 InnerLoop<T, FEnumerator, Enumerator>(enumerator, fenum);
+                return fenum.GetResult<TResult>();
             }
             finally
             {
                 enumerator.Dispose();
+                fenum.Dispose();
             }
-
-            return fenum.GetResult<TResult>();
         }
 
         private static void InnerLoop<T, FEnumerator, Enumerator>(Enumerator enumerator, FEnumerator fenum)

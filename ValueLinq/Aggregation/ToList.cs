@@ -184,14 +184,15 @@ namespace Cistern.ValueLinq.Aggregation
         internal static List<EnumeratorElement> ToListViaArrayPool<EnumeratorElement, Enumerator>(ArrayPool<EnumeratorElement> arrayPool, bool cleanBuffers, int? size, ref Enumerator enumerator)
                 where Enumerator : IFastEnumerator<EnumeratorElement>
         {
+            var creator = new ToListViaArrayPoolForward<EnumeratorElement>(arrayPool, cleanBuffers, size);
             try
             {
-                var creator = new ToListViaArrayPoolForward<EnumeratorElement>(arrayPool, cleanBuffers, size);
                 creator.Populate(ref enumerator);
                 return creator.GetResult();
             }
             finally
             {
+                creator.Dispose();
                 enumerator.Dispose();
             }
         }
@@ -205,6 +206,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public ToListForward(int? size) => _list = size.HasValue ? new List<T>(size.Value) : new List<T>();
 
+        public void Dispose() { }
         TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_list;
 
         bool IForwardEnumerator<T>.ProcessNext(T input)
@@ -355,6 +357,7 @@ namespace Cistern.ValueLinq.Aggregation
                 && Return(ref _1000_0000) && Return(ref _2000_0000) && Return(ref _4000_0000);
         }
 
+        public void Dispose() => ReturnArrays(); 
         TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
 
         public List<T> GetResult()
@@ -363,8 +366,6 @@ namespace Cistern.ValueLinq.Aggregation
                 (_arrayIdx == 0 || _arrayIdx == KNOWN_SIZE)
                     ? ToListImpl.CreateListFromSectionOfArray<T>.Create(_current, _currentIdx)
                     : CreateListFromArrayCollection.Create(ref this);
-
-            ReturnArrays(); // should really be in a dispose
 
             return list;
         }

@@ -74,8 +74,15 @@ namespace Cistern.ValueLinq.Containers
             where FEnumerator : IForwardEnumerator<T>
             where List : IReadOnlyList<T>
         {
-            DoLoop<T, FEnumerator, List>(list, ref fenum);
-            return fenum.GetResult<TResult>();
+            try
+            { 
+                DoLoop<T, FEnumerator, List>(list, ref fenum);
+                return fenum.GetResult<TResult>();
+            }
+            finally
+            {
+                fenum.Dispose();
+            }
         }
 
         internal static void DoLoop<T, FEnumerator, List>(List list, ref FEnumerator fenum)

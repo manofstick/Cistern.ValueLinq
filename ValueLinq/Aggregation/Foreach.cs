@@ -9,6 +9,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public ForeachForward(Action<T> func) => (_func) = (func);
 
+        public void Dispose() { }
         TResult IForwardEnumerator<T>.GetResult<TResult>() => default;
 
         bool IForwardEnumerator<T>.ProcessNext(T input)

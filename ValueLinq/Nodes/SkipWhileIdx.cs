@@ -83,6 +83,7 @@ namespace Cistern.ValueLinq.Nodes
 
         public SkipWhileIdxFoward(in Next prior, Func<T, int, bool> predicate) => (_next, _predicate, _skipping, _idx) = (prior, predicate, true, 0);
 
+        public void Dispose() => _next.Dispose();
         public TResult GetResult<TResult>() => _next.GetResult<TResult>();
 
         public bool ProcessNext(T input)
