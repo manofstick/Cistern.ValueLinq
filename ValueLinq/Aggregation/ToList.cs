@@ -2,6 +2,7 @@
 using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
@@ -119,7 +120,7 @@ namespace Cistern.ValueLinq.Aggregation
             => Impl.CreateObjectDescent<CreationType>();
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator enumerator)
-            => (CreationType)(object)Impl.ToList<EnumeratorElement, Enumerator>(ref enumerator);
+            => (CreationType)(object)Impl.ToListViaStack<EnumeratorElement, Enumerator>(ref enumerator);
 
         bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result)
             => Impl.CheckForOptimization(out result);
@@ -127,7 +128,7 @@ namespace Cistern.ValueLinq.Aggregation
 
     static partial class Impl
     {
-        internal static List<EnumeratorElement> ToList<EnumeratorElement, Enumerator>(ref Enumerator enumerator)
+        internal static List<EnumeratorElement> ToListViaStack<EnumeratorElement, Enumerator>(ref Enumerator enumerator)
                 where Enumerator : IFastEnumerator<EnumeratorElement>
         {
             try
@@ -179,6 +180,22 @@ namespace Cistern.ValueLinq.Aggregation
 
             static List<EnumeratorElement> DoToList(ref Enumerator enumerator) => StackBasedPopulate(ref enumerator, 0);
         }
+
+        internal static List<EnumeratorElement> ToListViaArrayPool<EnumeratorElement, Enumerator>(ArrayPool<EnumeratorElement> arrayPool, bool cleanBuffers, int? size, ref Enumerator enumerator)
+                where Enumerator : IFastEnumerator<EnumeratorElement>
+        {
+            try
+            {
+                var creator = new ToListViaArrayPoolForward<EnumeratorElement>(arrayPool, cleanBuffers, size);
+                creator.Populate(ref enumerator);
+                return creator.GetResult();
+            }
+            finally
+            {
+                enumerator.Dispose();
+            }
+        }
+
     }
 
     struct ToListForward<T>
@@ -195,6 +212,27 @@ namespace Cistern.ValueLinq.Aggregation
             _list.Add(input);
             return true;
         }
+    }
+
+    struct ToListViaArrayPool<T>
+        : INode
+    {
+        ArrayPool<T> _arrayPool;
+        bool _cleanBuffers;
+        int? _size;
+
+        public ToListViaArrayPool(ArrayPool<T> arrayPool, bool cleanBuffers, int? size) => (_arrayPool, _cleanBuffers, _size) = (arrayPool, cleanBuffers, size);
+
+        public void GetCountInformation(out CountInformation info) => Impl.CountInfo(out info);
+
+        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+            => Impl.CreateObjectDescent<CreationType>();
+
+        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator enumerator)
+            => (CreationType)(object)Impl.ToListViaArrayPool<EnumeratorElement, Enumerator>((ArrayPool<EnumeratorElement>)(object)_arrayPool, _cleanBuffers, _size, ref enumerator);
+
+        bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result)
+            => Impl.CheckForOptimization(out result);
     }
 
     struct ToListViaArrayPoolForward<T>
@@ -317,7 +355,9 @@ namespace Cistern.ValueLinq.Aggregation
                 && Return(ref _1000_0000) && Return(ref _2000_0000) && Return(ref _4000_0000);
         }
 
-        TResult IForwardEnumerator<T>.GetResult<TResult>()
+        TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
+
+        public List<T> GetResult()
         {
             var list = 
                 (_arrayIdx == 0 || _arrayIdx == KNOWN_SIZE)
@@ -326,11 +366,11 @@ namespace Cistern.ValueLinq.Aggregation
 
             ReturnArrays(); // should really be in a dispose
 
-            return (TResult)(object)list;
+            return list;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        bool IForwardEnumerator<T>.ProcessNext(T input)
+        public bool ProcessNext(T input)
         {
             for (;;)
             {
@@ -341,6 +381,24 @@ namespace Cistern.ValueLinq.Aggregation
                     return true;
                 }
 
+                RentNextArray();
+            }
+        }
+
+        internal void Populate<Enumerator>(ref Enumerator enumerator)
+            where Enumerator : IFastEnumerator<T>
+        {
+            for (;;)
+            {
+                var current = _current;
+                for (var i=0; i < current.Length; ++i)
+                {
+                    if (!enumerator.TryGetNext(out current[i]))
+                    {
+                        _currentIdx = i;
+                        return;
+                    }
+                }
                 RentNextArray();
             }
         }

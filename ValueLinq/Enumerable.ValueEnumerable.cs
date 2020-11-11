@@ -210,12 +210,17 @@ namespace Cistern.ValueLinq
             return inner.Node.CreateObjectViaFastEnumerator<List<T>, ToListViaArrayPoolForward<T>>(new ToListViaArrayPoolForward<T>(arrayPoolInfo.Value.arrayPool, arrayPoolInfo.Value.cleanBuffers, null));
         }
 
-        public static List<T> ToListUseSharedPool<T, Inner>(in this ValueEnumerable<T, Inner> inner, bool? cleanBuffers = null)
+        public static List<T> ToListUsePool<T, Inner>(in this ValueEnumerable<T, Inner> inner, ArrayPool<T> maybeArrayPool = null, bool? maybeCleanBuffers = null, bool viaPull = false)
             where Inner : INode<T>
         {
             inner.GetCountInformation(out var info);
 
-            return inner.Node.CreateObjectViaFastEnumerator<List<T>, ToListViaArrayPoolForward<T>>(new ToListViaArrayPoolForward<T>(ArrayPool<T>.Shared, cleanBuffers ?? !CachedTypeInfo<T>.IsPrimitive, info.ActualSize));
+            var cleanBuffers = maybeCleanBuffers ?? !CachedTypeInfo<T>.IsPrimitive;
+            var arrayPool = maybeArrayPool ?? ArrayPool<T>.Shared;
+
+            return viaPull
+                ? Nodes<List<T>>.Aggregation<Inner, ToListViaArrayPool<T>>(in inner.Node, new ToListViaArrayPool<T>(arrayPool, cleanBuffers, info.ActualSize))
+                : inner.Node.CreateObjectViaFastEnumerator<List<T>, ToListViaArrayPoolForward<T>>(new ToListViaArrayPoolForward<T>(arrayPool, cleanBuffers, info.ActualSize));
         }
 
         public static List<T> ToListUseStack<T, Inner>(in this ValueEnumerable<T, Inner> inner)
