@@ -84,7 +84,8 @@ namespace Cistern.ValueLinq.Containers
             var i = start - 1;
             while (i < max)
             {
-                fenum.ProcessNext(++i);
+                if (!fenum.ProcessNext(++i))
+                    break;
             }
         }
     }

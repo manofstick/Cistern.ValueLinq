@@ -75,7 +75,8 @@ namespace Cistern.ValueLinq.Containers
         {
             for(var i=0; i < count; ++i)
             {
-                fenum.ProcessNext(element);
+                if (!fenum.ProcessNext(element))
+                    break;
             }
         }
     }
