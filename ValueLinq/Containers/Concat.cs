@@ -106,10 +106,7 @@ namespace Cistern.ValueLinq.Containers
         }
 
         TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
-        {
-            //TODO: implement
-            throw new NotImplementedException();
-        }
+            => _start.CreateObjectViaFastEnumerator<TResult, ConcatStartFoward<T, Finish, FEnumerator>>(new ConcatStartFoward<T, Finish, FEnumerator>(fenum, _finish));
     }
 
     static class ConcatNode
@@ -125,5 +122,49 @@ namespace Cistern.ValueLinq.Containers
             var e = new ConcatFastEnumerator<T, Finish>(startEnumerator.FastEnumerator, finish);
             return nodes.CreateObject<CreationType, T, ConcatFastEnumerator<T, Finish>>(ref e);
         }
+    }
+
+    struct ConcatFinishFoward<T, Next>
+        : IForwardEnumerator<T>
+        where Next : IForwardEnumerator<T>
+    {
+        Next _next;
+
+        public ConcatFinishFoward(in Next prior) => (_next) = (prior);
+
+        public void Dispose() => _next.Dispose();
+
+        public TResult GetResult<TResult>() => _next.GetResult<TResult>();
+
+        public bool ProcessNext(T input) => _next.ProcessNext(input);
+    }
+
+    struct ConcatStartFoward<T, Finish, Next>
+        : IForwardEnumerator<T>
+        where Next : IForwardEnumerator<T>
+        where Finish : INode<T>
+    {
+        Next _next;
+        Finish _finish;
+        bool _disposedOrOntoFinish;
+
+        public ConcatStartFoward(in Next prior, in Finish finish) => (_next, _finish, _disposedOrOntoFinish) = (prior, finish, false);
+
+        public void Dispose()
+        {
+            if (!_disposedOrOntoFinish)
+            {
+                _disposedOrOntoFinish = true;
+                _next.Dispose();
+            }
+        }
+
+        public TResult GetResult<TResult>()
+        {
+            _disposedOrOntoFinish = true;
+            return _finish.CreateObjectViaFastEnumerator<TResult, ConcatFinishFoward<T, Next>>(new ConcatFinishFoward<T, Next>(in _next));
+        }
+
+        public bool ProcessNext(T input) => _next.ProcessNext(input);
     }
 }
