@@ -1,4 +1,6 @@
-﻿namespace Cistern.ValueLinq.Nodes
+﻿using System.Runtime.CompilerServices;
+
+namespace Cistern.ValueLinq.Nodes
 {
     struct Select_InNodeEnumerator<TIn, TOut, TInEnumerator>
         : IFastEnumerator<TOut>
@@ -11,6 +13,7 @@
 
         public void Dispose() => _enumerator.Dispose();
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetNext(out TOut current)
         {
             if (_enumerator.TryGetNext(out var currentIn))

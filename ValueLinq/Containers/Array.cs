@@ -13,13 +13,12 @@ namespace Cistern.ValueLinq.Containers
 
         public void Dispose() { }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetNext(out T current)
         {
-            var idx = _idx + 1;
-            if (idx < _array.Length)
+            if (++_idx < _array.Length)
             {
-                current = _array[idx];
-                _idx = idx;
+                current = _array[_idx];
                 return true;
             }
             current = default;

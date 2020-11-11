@@ -1,11 +1,12 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace Cistern.ValueLinq.Nodes
 {
-    struct ValueWhereNodeEnumerator<TIn, TInEnumerator, AlsoT, Predicate>
-        : IFastEnumerator<TIn>
-        where TInEnumerator : IFastEnumerator<TIn>
-        where Predicate : IFunc<AlsoT, bool>
+    struct ValueWhereNodeEnumerator<T, TInEnumerator, AlsoT, Predicate>
+        : IFastEnumerator<T>
+        where TInEnumerator : IFastEnumerator<T>
+        where Predicate : IFuncBase<AlsoT, bool>
     {
         private TInEnumerator _enumerator;
         private Predicate _filter;
@@ -14,11 +15,18 @@ namespace Cistern.ValueLinq.Nodes
 
         public void Dispose() => _enumerator.Dispose();
 
-        public bool TryGetNext(out TIn current)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetNext(out T current)
         {
             while (_enumerator.TryGetNext(out current))
             {
-                if (_filter.Invoke((AlsoT)(object)current))
+                bool filtered;
+
+                     if (_filter is IFunc<T, bool>)   filtered = ((IFunc<T, bool>)  _filter).Invoke(current);
+                else if (_filter is IInFunc<T, bool>) filtered = ((IInFunc<T, bool>)_filter).Invoke(in current);
+                else throw new NotImplementedException();
+
+                if (filtered)
                     return true;
             }
             return false;
@@ -28,7 +36,7 @@ namespace Cistern.ValueLinq.Nodes
     public struct ValueWhereNode<T, NodeT, Predicate>
         : INode<T>
         where NodeT : INode<T>
-        where Predicate : IFunc<T, bool>
+        where Predicate : IFuncBase<T, bool>
     {
         private NodeT _nodeT;
         private Predicate _filter;
@@ -63,7 +71,7 @@ namespace Cistern.ValueLinq.Nodes
     struct ValueWhereFoward<T, Next, Predicate>
         : IForwardEnumerator<T>
         where Next : IForwardEnumerator<T>
-        where Predicate : IFunc<T, bool>
+        where Predicate : IFuncBase<T, bool>
     {
         Next _next;
         Predicate _predicate;
@@ -75,7 +83,13 @@ namespace Cistern.ValueLinq.Nodes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ProcessNext(T input)
         {
-            if (_predicate.Invoke(input))
+            bool filtered;
+
+                 if (_predicate is IFunc<T, bool>)   filtered = ((IFunc<T, bool>)  _predicate).Invoke(input);
+            else if (_predicate is IInFunc<T, bool>) filtered = ((IInFunc<T, bool>)_predicate).Invoke(in input);
+            else throw new NotImplementedException();
+
+            if (filtered)
                 return _next.ProcessNext(input);
             return true;
         }

@@ -327,7 +327,7 @@ namespace Cistern.ValueLinq
 
         public static ValueEnumerable<U, ValueSelectNode<T, U, TPrior, IFunc>> Select<T, U, TPrior, IFunc>(in this ValueEnumerable<T, TPrior> prior, IFunc selector, U u = default)
             where TPrior : INode<T>
-            where IFunc : IFunc<T, U>
+            where IFunc : IFuncBase<T, U>
         {
             if (selector == null)
                 throw new ArgumentNullException(nameof(selector));
@@ -336,7 +336,7 @@ namespace Cistern.ValueLinq
         }
         public static ValueEnumerable<T, ValueWhereNode<T, TPrior, Predicate>> Where<T, TPrior, Predicate>(in this ValueEnumerable<T, TPrior> prior, Predicate predicate)
             where TPrior : INode<T>
-            where Predicate : IFunc<T, bool>
+            where Predicate : IFuncBase<T, bool>
         {
             if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));

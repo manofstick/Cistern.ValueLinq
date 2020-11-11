@@ -4,9 +4,15 @@ namespace Cistern.ValueLinq
 {
     public delegate U InFunc<T, U>(in T t);
 
-    public interface IFunc<T, U>
+    public interface IFuncBase<T, U> { }
+
+    public interface IFunc<T, U> : IFuncBase<T, U>
     {
         U Invoke(T t);
+    }
+    public interface IInFunc<T, U> : IFuncBase<T, U>
+    {
+        U Invoke(in T t);
     }
 
     public struct FuncToIFunc<T, U>

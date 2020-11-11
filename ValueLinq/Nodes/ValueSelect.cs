@@ -1,11 +1,12 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace Cistern.ValueLinq.Nodes
 {
     struct ValueSelectNodeEnumerator<T, U, TInEnumerator, AlsoT, Func>
         : IFastEnumerator<U>
         where TInEnumerator : IFastEnumerator<T>
-        where Func : IFunc<AlsoT, U>
+        where Func : IFuncBase<AlsoT, U>
     {
         private TInEnumerator _enumerator;
         private Func _map;
@@ -14,13 +15,18 @@ namespace Cistern.ValueLinq.Nodes
 
         public void Dispose() => _enumerator.Dispose();
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetNext(out U current)
         {
             if (_enumerator.TryGetNext(out var currentIn))
             {
-                current = _map.Invoke((AlsoT)(object)currentIn);
+                     if (_map is IFunc<T, U>)   current = ((IFunc<T, U>)  _map).Invoke(currentIn);
+                else if (_map is IInFunc<T, U>) current = ((IInFunc<T, U>)_map).Invoke(in currentIn);
+                else throw new NotImplementedException();
+
                 return true;
             }
+
             current = default;
             return false;
         }
@@ -29,7 +35,7 @@ namespace Cistern.ValueLinq.Nodes
     public struct ValueSelectNode<T, U, NodeT, Func>
         : INode<U>
         where NodeT : INode<T>
-        where Func : IFunc<T, U>
+        where Func : IFuncBase<T, U>
     {
         private NodeT _nodeT;
         private Func _map;
@@ -63,7 +69,7 @@ namespace Cistern.ValueLinq.Nodes
     struct ValueSelectFoward<T, U, Next, Func>
         : IForwardEnumerator<T>
         where Next : IForwardEnumerator<U>
-        where Func : IFunc<T, U>
+        where Func : IFuncBase<T, U>
     {
         Next _next;
         Func _selector;
@@ -73,6 +79,15 @@ namespace Cistern.ValueLinq.Nodes
         public TResult GetResult<TResult>() => _next.GetResult<TResult>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool ProcessNext(T input) => _next.ProcessNext(_selector.Invoke(input));
+        public bool ProcessNext(T input)
+        {
+            U u;
+
+                 if (_selector is IFunc<T, U>)   u = ((IFunc<T, U>)  _selector).Invoke(input);
+            else if (_selector is IInFunc<T, U>) u = ((IInFunc<T, U>)_selector).Invoke(in input);
+            else throw new NotImplementedException();
+
+            return _next.ProcessNext(u);
+        }
     }
 }
