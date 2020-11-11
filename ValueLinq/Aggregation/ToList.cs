@@ -391,6 +391,8 @@ namespace Cistern.ValueLinq.Aggregation
         {
             for (;;)
             {
+                RentNextArray();
+
                 var current = _current;
                 for (var i=0; i < current.Length; ++i)
                 {
@@ -400,7 +402,12 @@ namespace Cistern.ValueLinq.Aggregation
                         return;
                     }
                 }
-                RentNextArray();
+
+                if (_arrayIdx == KNOWN_SIZE)
+                {
+                    _currentIdx = current.Length;
+                    return;
+                }
             }
         }
 
