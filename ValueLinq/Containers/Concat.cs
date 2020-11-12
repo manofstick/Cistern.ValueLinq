@@ -128,25 +128,10 @@ namespace Cistern.ValueLinq.Containers
             (_start, _finish) = (start, finish);
         }
 
-        static bool CheckForOptimization<Node, TRequest, TResult>(ref Node node, in TRequest request, out TResult result)
-            where Node : INode
-            => node.CheckForOptimization(in request, out result);
-
-        static CreationType CreateObjectDescent<Node, CreationType, Head, Tail>(in Node node, ref Nodes<Head, Tail> nodes)
-            where Head : INode
-            where Tail : INodes
-            where Node : INode
-            => node.CreateObjectDescent<CreationType, Head, Tail>(ref nodes);
-
-        TResult CreateObjectViaFastEnumerator<Node, TResult, FEnumerator>(in Node node, in FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<T>
-            where Node : INode<T>
-            => node.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum);
-
         List<EnumerableNode<T>> TryCollectNodes()
         {
             (EnumerableNode<T>, EnumerableNode<T>) items;
-            if (!(_start is EnumerableNode<T> && _finish is EnumerableNode<T> && CheckForOptimization(ref _start, new Optimizations.SplitConcat<T>(), out items)))
+            if (!(_start is EnumerableNode<T> && _finish is EnumerableNode<T> && _start.CheckForOptimization(new Optimizations.SplitConcat<T>(), out items)))
                 return null;
 
             var heads = new List<EnumerableNode<T>>();
@@ -157,7 +142,7 @@ namespace Cistern.ValueLinq.Containers
             tails.Add(items.Item2);
             while (headHasValue)
             {
-                while (CheckForOptimization(ref head, new Optimizations.SplitConcat<T>(), out items))
+                while (Helper.CheckForOptimization(in head, new Optimizations.SplitConcat<T>(), out items))
                 {
                     head = items.Item1;
                     tails.Add(items.Item2);
@@ -198,7 +183,7 @@ namespace Cistern.ValueLinq.Containers
                 return components.Count switch
                 {
                     0 => EmptyNode.Create<T, Head, Tail, CreationType>(ref nodes),
-                    1 => CreateObjectDescent<EnumerableNode<T>, CreationType, Head, Tail>(components[0], ref nodes),
+                    1 => Helper.CreateObjectDescent<EnumerableNode<T>, CreationType, Head, Tail>(components[0], ref nodes),
                     2 => ConcatNode.Create<T, EnumerableNode<T>, EnumerableNode<T>, Head, Tail, CreationType>(components[0], components[1], ref nodes),
                     _ => ConcatNode.Create<T, Head, Tail, CreationType>(components, ref nodes)
                 };
@@ -242,10 +227,10 @@ namespace Cistern.ValueLinq.Containers
             {
                 return components.Count switch
                 {
-                    0 => CreateObjectViaFastEnumerator<EmptyNode<T>, TResult, FEnumerator>(new EmptyNode<T>(), in fenum),
-                    1 => CreateObjectViaFastEnumerator<EnumerableNode<T>, TResult, FEnumerator>(components[0], in fenum),
-                    2 => CreateObjectViaFastEnumerator<EnumerableNode<T>, TResult, ConcatStartFoward<T, EnumerableNode<T>, FEnumerator>>(components[0], new ConcatStartFoward<T, EnumerableNode<T>, FEnumerator>(fenum, components[1])),
-                    _ => CreateObjectViaFastEnumerator<EnumerableNode<T>, TResult, ConcatListFoward<T, FEnumerator>>(components[0], new ConcatListFoward<T, FEnumerator>(fenum, components, 1))
+                    0 => Helper.CreateObjectViaFastEnumerator<EmptyNode<T>, T, TResult, FEnumerator>(new EmptyNode<T>(), in fenum),
+                    1 => Helper.CreateObjectViaFastEnumerator<EnumerableNode<T>, T, TResult, FEnumerator>(components[0], in fenum),
+                    2 => Helper.CreateObjectViaFastEnumerator<EnumerableNode<T>, T, TResult, ConcatStartFoward<T, EnumerableNode<T>, FEnumerator>>(components[0], new ConcatStartFoward<T, EnumerableNode<T>, FEnumerator>(fenum, components[1])),
+                    _ => Helper.CreateObjectViaFastEnumerator<EnumerableNode<T>, T, TResult, ConcatListFoward<T, FEnumerator>>(components[0], new ConcatListFoward<T, FEnumerator>(fenum, components, 1))
                 };
             }
 
@@ -341,7 +326,7 @@ namespace Cistern.ValueLinq.Containers
             if (_nodes.Count == _idx)
                 return _next.GetResult<TResult>();
 
-            return ((INode<T>) _nodes[_idx]).CreateObjectViaFastEnumerator<TResult, ConcatListFoward<T, Next>>(new ConcatListFoward<T, Next>(in _next, _nodes, _idx+1));
+            return Helper.CreateObjectViaFastEnumerator<EnumerableNode<T>, T, TResult, ConcatListFoward<T, Next>>(_nodes[_idx], new ConcatListFoward<T, Next>(in _next, _nodes, _idx+1));
         }
 
         public bool ProcessNext(T input) => _next.ProcessNext(input);

@@ -133,6 +133,25 @@ namespace Cistern.ValueLinq
                 => _head.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref _tail, ref enumerator);
     }
 
+    internal static class Helper
+    {
+        public static bool CheckForOptimization<Node, TRequest, TResult>(in Node node, in TRequest request, out TResult result)
+            where Node : INode
+            => node.CheckForOptimization(in request, out result);
+
+        public static CreationType CreateObjectDescent<Node, CreationType, Head, Tail>(in Node node, ref Nodes<Head, Tail> nodes)
+            where Head : INode
+            where Tail : INodes
+            where Node : INode
+            => node.CreateObjectDescent<CreationType, Head, Tail>(ref nodes);
+
+        public static TResult CreateObjectViaFastEnumerator<Node, T, TResult, FEnumerator>(in Node node, in FEnumerator fenum)
+            where FEnumerator : IForwardEnumerator<T>
+            where Node : INode<T>
+            => node.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum);
+
+    }
+
     static class Nodes<T>
     {
         public static IEnumerator<T> CreateEnumerator<Node>(in Node node)
@@ -170,5 +189,8 @@ namespace Cistern.ValueLinq
             var nodes = new Nodes<Aggregator, NodesEnd>(aggregator, new NodesEnd());
             return inner.CreateObjectDescent<T, Aggregator, NodesEnd>(ref nodes);
         }
+
+
+
     }
 }
