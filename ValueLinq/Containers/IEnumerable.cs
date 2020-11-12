@@ -47,8 +47,10 @@ namespace Cistern.ValueLinq.Containers
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) =>
             _enumerable switch
             {
+                T[] array when array.Length == 0 => EmptyNode.Create<T, Head, Tail, CreationType>(ref nodes),
                 T[] array => ArrayNode.Create<T, Head, Tail, CreationType>(array, ref nodes),
-                List<T> list =>
+                List<T> list when list.Count == 0 => EmptyNode.Create<T, Head, Tail, CreationType>(ref nodes),
+                List <T> list =>
 #if USE_LIST_BY_INDEX
                     ListByIndexNode.Create<T, Head, Tail, CreationType>(list, ref nodes),
 #else

@@ -36,7 +36,13 @@ namespace Cistern.ValueLinq.Containers
 
         public ArrayNode(T[] array) => _array = array;
 
-        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => ArrayNode.Create<T, Head, Tail, CreationType>(_array, ref nodes);
+        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+        {
+            if (_array.Length == 0)
+                return EmptyNode.Create<T, Head, Tail, CreationType>(ref nodes);
+
+            return ArrayNode.Create<T, Head, Tail, CreationType>(_array, ref nodes);
+        }
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
 
