@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace Cistern.ValueLinq.Containers
 {
@@ -9,7 +8,11 @@ namespace Cistern.ValueLinq.Containers
         public void Dispose() { }
 
         public bool TryGetNext(out T current) { current = default; return false; }
+
+        public static readonly FastEnumerator<T> Instance = new FastEnumerator<EmptyFastEnumerator<T>, T>(new EmptyFastEnumerator<T>());
     }
+
+    
 
     public struct EmptyNode<T>
         : INode<T>

@@ -344,7 +344,7 @@ namespace Linqs.Tests
             // stack overflow through getting the Count() of the iterator.
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: Current stackoverflow")]
+        [Fact]
         [OuterLoop("This test tries to catch stack overflows and can take a long time.")]
         public void GettingFirstEnumerableShouldBeResilientToStackOverflow()
         {
@@ -362,7 +362,7 @@ namespace Linqs.Tests
 
             for (int i = 0; i < NumberOfConcats; i++)
             {
-                concatChain = concatChain.Concat(Array.Empty<int>());
+                concatChain = concatChain.Concat(Enumerable.Range(0, 1));
             }
 
             using (IEnumerator<int> en = concatChain.GetEnumerator())
@@ -372,7 +372,7 @@ namespace Linqs.Tests
             }
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: Current stackoverflow")]
+        [Fact]
         [OuterLoop("This test tries to catch stack overflows and can take a long time.")]
         public void GetEnumerableOfConcatCollectionChainFollowedByEnumerableNodeShouldBeResilientToStackOverflow()
         {
@@ -398,11 +398,11 @@ namespace Linqs.Tests
 
             for (int i = 0; i < NumberOfConcats - 1; i++)
             {
-                concatChain = concatChain.Concat(Array.Empty<int>());
+                concatChain = concatChain.Concat(Enumerable.Range(0, 1));
             }
 
             // Finally, link an enumerable iterator at the head of the list.
-            concatChain = concatChain.Concat(ForceNotCollection(Array.Empty<int>()));
+            concatChain = concatChain.Concat(ForceNotCollection(Enumerable.Range(0, 1)));
 
             using (IEnumerator<int> en = concatChain.GetEnumerator())
             {
