@@ -2,8 +2,14 @@
 
 namespace Cistern.ValueLinq.ValueEnumerable
 {
-    public readonly struct ValueEnumerable<T, TNode>
+    public interface IValueEnumerable<T>
         : IEnumerable<T>
+    {
+        new ValueEnumerator<T> GetEnumerator();
+    }
+
+    public readonly struct ValueEnumerable<T, TNode>
+        : IValueEnumerable<T>
         , INode<T>
         where TNode : INode<T>
     {
