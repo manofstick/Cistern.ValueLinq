@@ -215,9 +215,20 @@ namespace Cistern.ValueLinq.Containers
             return false;
         }
 
-        private readonly int Count(bool ignorePotentialSideEffects)
+        private int Count(bool ignorePotentialSideEffects)
         {
-            checked { return Enumerable.Count<T, Start>(_start, ignorePotentialSideEffects) + Enumerable.Count<T, Finish>(_finish, ignorePotentialSideEffects); }
+            checked
+            {
+                var components = TryCollectNodes();
+                if (components == null)
+                    return Enumerable.Count<T, Start>(_start, ignorePotentialSideEffects) + Enumerable.Count<T, Finish>(_finish, ignorePotentialSideEffects);
+
+                var count = 0;
+                foreach (var item in components)
+                    count += Enumerable.Count<T, EnumerableNode<T>>(item, ignorePotentialSideEffects);
+
+                return count;
+            }
         }
 
         TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
@@ -230,7 +241,7 @@ namespace Cistern.ValueLinq.Containers
                     0 => Helper.CreateObjectViaFastEnumerator<EmptyNode<T>, T, TResult, FEnumerator>(new EmptyNode<T>(), in fenum),
                     1 => Helper.CreateObjectViaFastEnumerator<EnumerableNode<T>, T, TResult, FEnumerator>(components[0], in fenum),
                     2 => Helper.CreateObjectViaFastEnumerator<EnumerableNode<T>, T, TResult, ConcatStartFoward<T, EnumerableNode<T>, FEnumerator>>(components[0], new ConcatStartFoward<T, EnumerableNode<T>, FEnumerator>(fenum, components[1])),
-                    _ => Helper.CreateObjectViaFastEnumerator<EnumerableNode<T>, T, TResult, ConcatListFoward<T, FEnumerator>>(components[0], new ConcatListFoward<T, FEnumerator>(fenum, components, 1))
+                    _ => Helper.CreateObjectViaFastEnumerator<EnumerableNode<T>, T, TResult, ConcatListFoward<T, FEnumerator>>(components[0], new ConcatListFoward<T, FEnumerator>(fenum, components))
                 };
             }
 
@@ -305,31 +316,55 @@ namespace Cistern.ValueLinq.Containers
         public bool ProcessNext(T input) => _next.ProcessNext(input);
     }
 
+    sealed class ConcatCommonNext<T, Next>
+        where Next : IForwardEnumerator<T>
+    {
+        private Next _next;
+
+        public ConcatCommonNext(in Next next) => _next = next;
+
+        public bool ProcessNext(T input) => _next.ProcessNext(input);
+        public void Dispose() { }
+        public TResult GetResult<TResult>() => _next.GetResult<TResult>();
+    }
+
+    struct ConcatNextForward<T, Next>
+        : IForwardEnumerator<T>
+        where Next : IForwardEnumerator<T>
+    {
+        ConcatCommonNext<T, Next> _next;
+        private bool _processNext;
+
+        public ConcatNextForward(ConcatCommonNext<T, Next> next) => (_next, _processNext) = (next, true);
+
+        public void Dispose() { }
+        TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_processNext;
+
+        bool IForwardEnumerator<T>.ProcessNext(T input) => _processNext = _next.ProcessNext(input);
+    }
+
     struct ConcatListFoward<T, Next>
         : IForwardEnumerator<T>
         where Next : IForwardEnumerator<T>
     {
-        Next _next;
         List<EnumerableNode<T>> _nodes;
-        int _idx;
+        ConcatCommonNext<T, Next> _common;
 
-        public ConcatListFoward(in Next prior, List<EnumerableNode<T>> nodes, int idx) => (_next, _nodes, _idx) = (prior, nodes, idx);
+        public ConcatListFoward(in Next prior, List<EnumerableNode<T>> nodes) => (_nodes, _common) = (nodes, _common = new ConcatCommonNext<T, Next>(prior));
 
-        public void Dispose()
-        {
-            if (_nodes.Count == _idx)
-                _next.Dispose();
-        }
+        public void Dispose() => _common.Dispose();
 
         public TResult GetResult<TResult>()
         {
-            if (_nodes.Count == _idx)
-                return _next.GetResult<TResult>();
-
-            return Helper.CreateObjectViaFastEnumerator<EnumerableNode<T>, T, TResult, ConcatListFoward<T, Next>>(_nodes[_idx], new ConcatListFoward<T, Next>(in _next, _nodes, _idx+1));
+            for (var i = 1; i < _nodes.Count; ++i)
+            {
+                if (!Helper.CreateObjectViaFastEnumerator<EnumerableNode<T>, T, bool, ConcatNextForward<T, Next>>(_nodes[i], new ConcatNextForward<T, Next>(_common)))
+                    break;
+            }
+            return _common.GetResult<TResult>();
         }
 
-        public bool ProcessNext(T input) => _next.ProcessNext(input);
+        public bool ProcessNext(T input) => _common.ProcessNext(input);
     }
 
 }

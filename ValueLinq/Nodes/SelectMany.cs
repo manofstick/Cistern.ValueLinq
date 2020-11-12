@@ -131,7 +131,7 @@ namespace Cistern.ValueLinq.Nodes
         SelectManyCommonNext<T, Next> _next;
         private bool _processNext;
 
-        public SelectManyProcessNextForward(SelectManyCommonNext<T, Next> next) => (_next, _processNext) = (next, false);
+        public SelectManyProcessNextForward(SelectManyCommonNext<T, Next> next) => (_next, _processNext) = (next, true);
 
         public void Dispose() { }
         TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_processNext;

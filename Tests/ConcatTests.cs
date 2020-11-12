@@ -309,7 +309,7 @@ namespace Linqs.Tests
             Assert.Equal(new List<int> { }, concatChain.ToList()); // ToList also gets the count beforehand
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: Current stackoverflow")]
+        [Fact]
         [OuterLoop("This test tries to catch stack overflows and can take a long time.")]
         public void CountOfConcatEnumerableChainShouldBeResilientToStackOverflow()
         {
