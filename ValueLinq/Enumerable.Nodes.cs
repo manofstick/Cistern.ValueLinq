@@ -8,7 +8,7 @@
             if (!countInfo.IsStale && (ignorePotentialSideEffects || !countInfo.PotentialSideEffects) && countInfo.ActualLengthIsMaximumLength && countInfo.MaximumLength.HasValue && countInfo.MaximumLength.Value <= int.MaxValue)
                 return (int)countInfo.MaximumLength.Value;
 
-            return inner.CheckForOptimization<T, Optimizations.Count, int>(new Optimizations.Count { IgnorePotentialSideEffects = ignorePotentialSideEffects }, out var count) switch
+            return inner.CheckForOptimization<Optimizations.Count, int>(new Optimizations.Count { IgnorePotentialSideEffects = ignorePotentialSideEffects }, out var count) switch
             {
                 false => inner.CreateObjectViaFastEnumerator<int, Aggregation.Count<T>>(new Aggregation.Count<T>()),
                 true => count

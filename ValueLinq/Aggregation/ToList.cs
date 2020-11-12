@@ -122,7 +122,7 @@ namespace Cistern.ValueLinq.Aggregation
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator enumerator)
             => (CreationType)(object)Impl.ToListViaStack<EnumeratorElement, Enumerator>(ref enumerator);
 
-        bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result)
+        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
             => Impl.CheckForOptimization(out result);
     }
 
@@ -233,7 +233,7 @@ namespace Cistern.ValueLinq.Aggregation
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator enumerator)
             => (CreationType)(object)Impl.ToListViaArrayPool<EnumeratorElement, Enumerator>((ArrayPool<EnumeratorElement>)(object)_arrayPool, _cleanBuffers, _size, ref enumerator);
 
-        bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result)
+        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
             => Impl.CheckForOptimization(out result);
     }
 

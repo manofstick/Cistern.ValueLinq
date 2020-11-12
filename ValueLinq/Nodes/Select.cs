@@ -50,7 +50,7 @@ namespace Cistern.ValueLinq.Nodes
             return tail.CreateObject<CreationType, U, SelectNodeEnumerator<EnumeratorElement, U, Enumerator>>(ref nextEnumerator);
         }
 
-        bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result)
+        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
             result = default;
             return false;

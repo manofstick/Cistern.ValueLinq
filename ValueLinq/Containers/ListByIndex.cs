@@ -44,7 +44,7 @@ namespace Cistern.ValueLinq.Containers
 
         public List<T>.Enumerator GetEnumerator() => _list.GetEnumerator();
 
-        bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result)
+        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
             if (typeof(TRequest) == typeof(Optimizations.Count))
             {

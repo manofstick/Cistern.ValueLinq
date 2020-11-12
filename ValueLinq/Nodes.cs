@@ -98,7 +98,7 @@ namespace Cistern.ValueLinq
             where Enumerator : IFastEnumerator<EnumeratorElement>
             where Tail : INodes;
 
-        bool CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result);
+        bool CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result);
     }
 
     public interface INode<T> : INode

@@ -229,7 +229,7 @@ namespace Cistern.ValueLinq
 
         public static T Last<T, Inner>(in this ValueEnumerable<T, Inner> inner)
             where Inner : INode<T> =>
-            (inner.Node.CheckForOptimization<T, Optimizations.TryLast, (bool, T)>(new Optimizations.TryLast(), out var maybeLast), maybeLast) switch
+            (inner.Node.CheckForOptimization<Optimizations.TryLast, (bool, T)>(new Optimizations.TryLast(), out var maybeLast), maybeLast) switch
             {
                 (true, (true, var last)) => last,
                 _ => inner.Node.CreateObjectViaFastEnumerator<T, Last<T>>(new Last<T>())
@@ -237,7 +237,7 @@ namespace Cistern.ValueLinq
 
         public static T LastOrDefault<T, Inner>(in this ValueEnumerable<T, Inner> inner)
             where Inner : INode<T> =>
-            (inner.Node.CheckForOptimization<T, Optimizations.TryLast, (bool, T)>(new Optimizations.TryLast(), out var maybeLast), maybeLast) switch
+            (inner.Node.CheckForOptimization<Optimizations.TryLast, (bool, T)>(new Optimizations.TryLast(), out var maybeLast), maybeLast) switch
             {
                 (true, (true, var last)) => last,
                 (true, (false, _)) => default,

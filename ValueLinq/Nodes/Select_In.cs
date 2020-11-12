@@ -48,7 +48,7 @@ namespace Cistern.ValueLinq.Nodes
             return tail.CreateObject<CreationType, U, Select_InNodeEnumerator<EnumeratorElement, U, Enumerator>>(ref nextEnumerator);
         }
 
-        bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
+        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
 
         TResult INode<U>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) =>
             _nodeT.CreateObjectViaFastEnumerator<TResult, Select_InFoward<T, U, FEnumerator>>(new Select_InFoward<T, U, FEnumerator>(fenum, _map));

@@ -63,10 +63,10 @@ namespace Cistern.ValueLinq.Containers
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) =>
             throw new InvalidOperationException();
 
-        bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result)
+        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
             if (_enumerable is INode node)
-                return node.CheckForOptimization<TOuter, TRequest, TResult>(in request, out result);
+                return node.CheckForOptimization<TRequest, TResult>(in request, out result);
 
             if (typeof(TRequest) == typeof(Optimizations.Count))
             {

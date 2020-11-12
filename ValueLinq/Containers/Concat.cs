@@ -128,20 +128,36 @@ namespace Cistern.ValueLinq.Containers
             (_start, _finish) = (start, finish);
         }
 
+        static bool CheckForOptimization<Node, TRequest, TResult>(ref Node node, in TRequest request, out TResult result)
+            where Node : INode
+            => node.CheckForOptimization(in request, out result);
+
+        static CreationType CreateObjectDescent<Node, CreationType, Head, Tail>(in Node node, ref Nodes<Head, Tail> nodes)
+            where Head : INode
+            where Tail : INodes
+            where Node : INode
+            => node.CreateObjectDescent<CreationType, Head, Tail>(ref nodes);
+
+        TResult CreateObjectViaFastEnumerator<Node, TResult, FEnumerator>(in Node node, in FEnumerator fenum)
+            where FEnumerator : IForwardEnumerator<T>
+            where Node : INode<T>
+            => node.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum);
 
         List<EnumerableNode<T>> TryCollectNodes()
         {
-            if (!(_start is EnumerableNode<T> && _finish is EnumerableNode<T> && _start.CheckForOptimization<Start, Optimizations.SplitConcat<T>, (EnumerableNode<T>, EnumerableNode<T>)>(new Optimizations.SplitConcat<T>(), out var items)))
+            (EnumerableNode<T>, EnumerableNode<T>) items;
+            if (!(_start is EnumerableNode<T> && _finish is EnumerableNode<T> && CheckForOptimization(ref _start, new Optimizations.SplitConcat<T>(), out items)))
                 return null;
 
             var heads = new List<EnumerableNode<T>>();
             var tails = new List<EnumerableNode<T>>();
 
-            EnumerableNode<T>? head = items.Item1;
+            EnumerableNode<T> head = items.Item1;
+            bool headHasValue = true;
             tails.Add(items.Item2);
-            while (head != null)
+            while (headHasValue)
             {
-                while (((INode)head.Value).CheckForOptimization<Start, Optimizations.SplitConcat<T>, (EnumerableNode<T>, EnumerableNode<T>)>(new Optimizations.SplitConcat<T>(), out items))
+                while (CheckForOptimization(ref head, new Optimizations.SplitConcat<T>(), out items))
                 {
                     head = items.Item1;
                     tails.Add(items.Item2);
@@ -150,7 +166,9 @@ namespace Cistern.ValueLinq.Containers
                 ConditionallyAdd(heads, head);
 
                 if (tails.Count == 0)
-                    head = null;
+                {
+                    headHasValue = false;
+                }
                 else
                 {
                     var lastIdx = tails.Count - 1;
@@ -180,7 +198,7 @@ namespace Cistern.ValueLinq.Containers
                 return components.Count switch
                 {
                     0 => EmptyNode.Create<T, Head, Tail, CreationType>(ref nodes),
-                    1 => ((INode)components[0]).CreateObjectDescent<CreationType, Head, Tail>(ref nodes),
+                    1 => CreateObjectDescent<EnumerableNode<T>, CreationType, Head, Tail>(components[0], ref nodes),
                     2 => ConcatNode.Create<T, EnumerableNode<T>, EnumerableNode<T>, Head, Tail, CreationType>(components[0], components[1], ref nodes),
                     _ => ConcatNode.Create<T, Head, Tail, CreationType>(components, ref nodes)
                 };
@@ -191,7 +209,7 @@ namespace Cistern.ValueLinq.Containers
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __)
             => throw new InvalidOperationException();
 
-        bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result)
+        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
             if (typeof(TRequest) == typeof(Optimizations.Count))
             {
@@ -224,10 +242,10 @@ namespace Cistern.ValueLinq.Containers
             {
                 return components.Count switch
                 {
-                    0 => ((INode<T>)new EmptyNode<T>()).CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum),
-                    1 => ((INode<T>)components[0]).CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum),
-                    2 => ((INode<T>)components[0]).CreateObjectViaFastEnumerator<TResult, ConcatStartFoward<T, EnumerableNode<T>, FEnumerator>>(new ConcatStartFoward<T, EnumerableNode<T>, FEnumerator>(fenum, components[1])),
-                    _ => ((INode<T>)components[0]).CreateObjectViaFastEnumerator<TResult, ConcatListFoward<T, FEnumerator>>(new ConcatListFoward<T, FEnumerator>(fenum, components, 1))
+                    0 => CreateObjectViaFastEnumerator<EmptyNode<T>, TResult, FEnumerator>(new EmptyNode<T>(), in fenum),
+                    1 => CreateObjectViaFastEnumerator<EnumerableNode<T>, TResult, FEnumerator>(components[0], in fenum),
+                    2 => CreateObjectViaFastEnumerator<EnumerableNode<T>, TResult, ConcatStartFoward<T, EnumerableNode<T>, FEnumerator>>(components[0], new ConcatStartFoward<T, EnumerableNode<T>, FEnumerator>(fenum, components[1])),
+                    _ => CreateObjectViaFastEnumerator<EnumerableNode<T>, TResult, ConcatListFoward<T, FEnumerator>>(components[0], new ConcatListFoward<T, FEnumerator>(fenum, components, 1))
                 };
             }
 
