@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Cistern.ValueLinq.Aggregation;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -118,6 +119,7 @@ namespace Cistern.ValueLinq.Containers
             _countInfo.ActualLengthIsMaximumLength &= rhs.ActualLengthIsMaximumLength;
             _countInfo.IsImmutable &= rhs.IsImmutable;
             _countInfo.IsStale = !_countInfo.IsImmutable || !rhs.IsImmutable;
+            _countInfo.Depth = max(_countInfo.Depth, rhs.Depth) + 1;
 
 #if PROPERLY_RIPPLE_POTENTIAL_SIDE_EFFECTS
             _countInfo.PotentialSideEffects |= rhs.PotentialSideEffects;
@@ -126,16 +128,22 @@ namespace Cistern.ValueLinq.Containers
 #endif
 
             (_start, _finish) = (start, finish);
+
+            static int? max(int? depth1, int? depth2) =>
+                depth1.HasValue && depth2.HasValue
+                    ? Math.Max(depth1.Value, depth2.Value)
+                    : default;
         }
 
-        List<EnumerableNode<T>> TryCollectNodes()
+
+        readonly List<EnumerableNode<T>> TryCollectNodes()
         {
             (EnumerableNode<T>, EnumerableNode<T>) items;
             if (!(_start is EnumerableNode<T> && _finish is EnumerableNode<T> && _start.CheckForOptimization(new Optimizations.SplitConcat<T>(), out items)))
                 return null;
 
-            var heads = new List<EnumerableNode<T>>();
-            var tails = new List<EnumerableNode<T>>();
+            var heads = new List<EnumerableNode<T>>(_countInfo.Depth ?? byte.MaxValue);
+            var tails = new List<EnumerableNode<T>>(_countInfo.Depth ?? byte.MaxValue);
 
             EnumerableNode<T> head = items.Item1;
             bool headHasValue = true;
@@ -205,7 +213,9 @@ namespace Cistern.ValueLinq.Containers
 
             // recursive concats, which this is designed to find, should of been defined through IEnumerable<T>, which will mean that
             // they are of type EnumerableNode<T>
-            if (typeof(TRequest) == typeof(Optimizations.SplitConcat<T>) && _start is EnumerableNode<T> && _finish is EnumerableNode<T>)
+            if (typeof(TRequest) == typeof(Optimizations.SplitConcat<T>)
+                && _start is EnumerableNode<T>
+                && _finish is EnumerableNode<T>)
             {
                 result = (TResult)(object)(_start, _finish);
                 return true;
@@ -215,7 +225,7 @@ namespace Cistern.ValueLinq.Containers
             return false;
         }
 
-        private int Count(bool ignorePotentialSideEffects)
+        private readonly int Count(bool ignorePotentialSideEffects)
         {
             checked
             {

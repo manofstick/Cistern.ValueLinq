@@ -1,6 +1,7 @@
 ﻿using Cistern.ValueLinq.ValueEnumerable;
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 
 namespace Cistern.ValueLinq
 {
@@ -8,16 +9,17 @@ namespace Cistern.ValueLinq
     {
         enum Flags : byte
         {
-            HasMaximumLength                = 0b_00001,
-            ActualLengthIsMaximumLength     = 0b_00010,
-            IsImmutable                     = 0b_00100,
-            IsStale                         = 0b_01000,
-            PotentialSideEffects            = 0b_10000,
+            HasMaximumLength                = 0b_000001,
+            ActualLengthIsMaximumLength     = 0b_000010,
+            IsImmutable                     = 0b_000100,
+            IsStale                         = 0b_001000,
+            PotentialSideEffects            = 0b_010000,
+            CountingDepth                   = 0b_100000,
         }
 
         public CountInformation(long? size, bool isImmutable)
         {
-            _flags = Flags.ActualLengthIsMaximumLength;
+            _flags = Flags.ActualLengthIsMaximumLength | Flags.CountingDepth;
             
             _maybeMaximumLength = size.GetValueOrDefault();
             if (size.HasValue)
@@ -25,22 +27,43 @@ namespace Cistern.ValueLinq
             
             if (isImmutable)
                 _flags |= Flags.IsImmutable;
+
+            _depth = 0;
         }
 
         long _maybeMaximumLength;
         Flags _flags;
+        byte _depth;
 
-        public int? ActualSize => ActualLengthIsMaximumLength ? (int?)MaximumLength : null;
+        public readonly int? ActualSize => ActualLengthIsMaximumLength ? (int?)MaximumLength : null;
 
         /// <summary>
         /// The maximum length of the sequence. It is null if the maximum length is unknown.
         /// </summary>
         public long? MaximumLength
         {
-            get => _flags.HasFlag(Flags.HasMaximumLength) ? (long?)_maybeMaximumLength : null;
+            readonly get => _flags.HasFlag(Flags.HasMaximumLength) ? (long?)_maybeMaximumLength : null;
             set {
                 _maybeMaximumLength = value.GetValueOrDefault();
                 if (value.HasValue) _flags |= Flags.HasMaximumLength; else _flags &= ~Flags.HasMaximumLength;
+            }
+        }
+
+        public int? Depth
+        {
+            readonly get => _flags.HasFlag(Flags.CountingDepth) ? (int?)_depth : null;
+            set
+            {
+                if (value >= 0 || value <= byte.MaxValue)
+                {
+                    _flags |= Flags.CountingDepth;
+                    _depth = (byte)value;
+                }
+                else
+                {
+                    _flags &= ~Flags.CountingDepth;
+                    _depth = byte.MaxValue;
+                }
             }
         }
 
@@ -50,7 +73,7 @@ namespace Cistern.ValueLinq
         /// </summary>
         public bool ActualLengthIsMaximumLength
         {
-            get => _flags.HasFlag(Flags.ActualLengthIsMaximumLength);
+            readonly get => _flags.HasFlag(Flags.ActualLengthIsMaximumLength);
             set { if (value) _flags |= Flags.ActualLengthIsMaximumLength; else _flags &= ~Flags.ActualLengthIsMaximumLength; }
         }
 
@@ -60,7 +83,7 @@ namespace Cistern.ValueLinq
         /// </summary>
         public bool IsImmutable
         {
-            get => _flags.HasFlag(Flags.IsImmutable);
+            readonly get => _flags.HasFlag(Flags.IsImmutable);
             set { if (value) _flags |= Flags.IsImmutable; else _flags &= ~Flags.IsImmutable; }
         }
 
@@ -70,7 +93,7 @@ namespace Cistern.ValueLinq
         /// </summary>
         public bool IsStale
         {
-            get => _flags.HasFlag(Flags.IsStale);
+            readonly get => _flags.HasFlag(Flags.IsStale);
             set { if (value) _flags |= Flags.IsStale; else _flags &= ~Flags.IsStale; }
         }
 
@@ -81,7 +104,7 @@ namespace Cistern.ValueLinq
         /// </summary>
         public bool PotentialSideEffects
         {
-            get => _flags.HasFlag(Flags.PotentialSideEffects);
+            readonly get => _flags.HasFlag(Flags.PotentialSideEffects);
             set { if (value) _flags |= Flags.PotentialSideEffects; else _flags &= ~Flags.PotentialSideEffects; }
         }
     }
