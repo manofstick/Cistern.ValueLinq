@@ -1,5 +1,4 @@
 ﻿using System;
-using static System.Math;
 
 namespace Cistern.ValueLinq.Nodes
 {
@@ -49,8 +48,10 @@ namespace Cistern.ValueLinq.Nodes
 
         public SkipNode(in NodeT nodeT, int count) => (_nodeT, _count) = (nodeT, count);
 
-        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
-            => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
+        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) =>
+            _count <= 0
+                ? _nodeT.CreateObjectDescent<CreationType, Head, Tail>(ref nodes)
+                : Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
         {
@@ -58,14 +59,12 @@ namespace Cistern.ValueLinq.Nodes
             return tail.CreateObject<CreationType, EnumeratorElement, SkipNodeEnumerator<EnumeratorElement, Enumerator>>(ref nextEnumerator);
         }
 
-        bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result)
-        {
-            result = default;
-            return false;
-        }
+        bool INode.CheckForOptimization<TOuter, TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
 
         TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) =>
-            _nodeT.CreateObjectViaFastEnumerator<TResult, SkipFoward<T, FEnumerator>>(new SkipFoward<T, FEnumerator>(fenum, _count));
+            _count <= 0
+                ? _nodeT.CreateObjectViaFastEnumerator<TResult, FEnumerator>(fenum)
+                : _nodeT.CreateObjectViaFastEnumerator<TResult, SkipFoward<T, FEnumerator>>(new SkipFoward<T, FEnumerator>(fenum, _count));
     }
 
     struct SkipFoward<T, Next>

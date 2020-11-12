@@ -519,9 +519,13 @@ namespace Linqs.Tests
         }
 
         [Theory]
-        [InlineData(0, -1)]
-        [InlineData(0, 0)]
-        [InlineData(1, 0)]
+/*
+ * Skip isn't honoured on InlineData...
+ * 
+        [InlineData(0, -1, Skip = "CISTERN.VALUELINQ: Skip isn't created if it's not skipping anything")]
+        [InlineData(0, 0, Skip = "CISTERN.VALUELINQ: Skip isn't created if it's not skipping anything")]
+        [InlineData(1, 0, Skip = "CISTERN.VALUELINQ: Skip isn't created if it's not skipping anything")]
+*/
         [InlineData(2, 1)]
         [InlineData(2, 2)]
         [InlineData(2, 3)]
