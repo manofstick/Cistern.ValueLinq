@@ -133,6 +133,7 @@ namespace Cistern.ValueLinq.Nodes
 
         public SelectManyProcessNextForward(SelectManyCommonNext<T, Next> next) => (_next, _processNext) = (next, true);
 
+        public bool CheckForOptimization<TObject, TRequest, TResult>(TObject obj, in TRequest request, out TResult result) { result = default; return false; }
         public void Dispose() { }
         TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_processNext;
 
@@ -149,6 +150,7 @@ namespace Cistern.ValueLinq.Nodes
 
         public SelectManyFoward(in SelectManyCommonNext<U, Next> next, Func<T, ValueEnumerable<U, NodeU>> predicate) => (_next, _getEnumerable) = (next, predicate);
 
+        public bool CheckForOptimization<TObject, TRequest, TResult>(TObject obj, in TRequest request, out TResult result) { result = default; return false; }
         public void Dispose() => _next.Dispose();
 
         public TResult GetResult<TResult>() => _next.GetResult<TResult>();

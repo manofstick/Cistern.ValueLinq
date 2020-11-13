@@ -88,6 +88,7 @@ namespace Cistern.ValueLinq.Nodes
 
         public TakeFoward(in Next prior, int count) => (_next, _count) = (prior, count);
 
+        public bool CheckForOptimization<TObject, TRequest, TResult>(TObject obj, in TRequest request, out TResult result) { result = default; return false; }
         public void Dispose() => _next.Dispose();
         public TResult GetResult<TResult>() => _next.GetResult<TResult>();
 

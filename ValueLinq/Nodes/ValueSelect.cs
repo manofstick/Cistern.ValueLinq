@@ -76,6 +76,7 @@ namespace Cistern.ValueLinq.Nodes
 
         public ValueSelectFoward(in Next prior, Func predicate) => (_next, _selector) = (prior, predicate);
 
+        public bool CheckForOptimization<TObject, TRequest, TResult>(TObject obj, in TRequest request, out TResult result) { result = default; return false; }
         public void Dispose() => _next.Dispose();
         public TResult GetResult<TResult>() => _next.GetResult<TResult>();
 

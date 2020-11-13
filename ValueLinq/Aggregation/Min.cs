@@ -18,6 +18,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public Min(bool _) => (noData, result) = (true, default);
 
+        public bool CheckForOptimization<TObject, TRequest, TResult>(TObject obj, in TRequest request, out TResult result) { result = default; return false; }
         public void Dispose() { }
         public TResult GetResult<TResult>()
         {
@@ -56,6 +57,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public Min(bool _) => (noData, result) = (true, math.MinInit);
 
+        public bool CheckForOptimization<TObject, TRequest, TResult>(TObject obj, in TRequest request, out TResult result) { result = default; return false; }
         public void Dispose() { }
         public TResult GetResult<TResult>()
         {
@@ -90,6 +92,7 @@ namespace Cistern.ValueLinq.Aggregation
         private T result;
         private bool noData;
 
+        public bool CheckForOptimization<TObject, TRequest, TResult>(TObject obj, in TRequest request, out TResult result) { result = default; return false; }
         public void Dispose() { }
         public MinNullable(bool _) => (noData, result) = (true, math.MinInit);
 

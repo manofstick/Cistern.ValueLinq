@@ -68,12 +68,18 @@ namespace Cistern.ValueLinq.Containers
         internal static TResult FastEnumerate<TIn, TResult, FEnumerator, TObject>(TObject obj, GetSpan<TObject, TIn> getSpan, FEnumerator fenum)
             where FEnumerator : IForwardEnumerator<TIn>
         {
+            if (fenum.CheckForOptimization<TObject, GetSpan<TObject, TIn>, TResult>(obj, getSpan, out var result))
+                return result;
+
+            return FastEnumerate<TIn, TResult, FEnumerator>(getSpan(obj), fenum);
+        }
+
+        internal static TResult FastEnumerate<TIn, TResult, FEnumerator>(ReadOnlySpan<TIn> span, FEnumerator fenum)
+            where FEnumerator : IForwardEnumerator<TIn>
+        {
             try
             {
-                var span = getSpan(obj);
-
                 Loop(span, ref fenum);
-
                 return fenum.GetResult<TResult>();
             }
             finally

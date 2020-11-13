@@ -1,4 +1,5 @@
 ﻿using Cistern.ValueLinq.Maths;
+using System;
 
 namespace Cistern.ValueLinq.Aggregation
 {
@@ -14,6 +15,27 @@ namespace Cistern.ValueLinq.Aggregation
         private Accumulator sum;
 
         public Sum(bool _) => (sum) = (math.Zero);
+
+        public bool CheckForOptimization<TObject, TRequest, TResult>(TObject obj, in TRequest request, out TResult result)
+        {
+            if (typeof(TRequest) == typeof(Containers.GetSpan<TObject, T>))
+            {
+                var getSpan = (Containers.GetSpan<TObject, T>)(object)request;
+                result = (TResult)(object)GetSum(getSpan(obj));
+                return true;
+            }
+
+            result = default;
+            return false;
+        }
+
+        private T GetSum(ReadOnlySpan<T> span)
+        {
+            var sum = math.Zero;
+            foreach (var x in span)
+                sum = math.Add(sum, x);
+            return math.Cast(sum);
+        }
 
         public void Dispose() { }
         public TResult GetResult<TResult>() => (TResult)(object)math.Cast(sum);
@@ -36,6 +58,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         private Accumulator sum;
 
+        public bool CheckForOptimization<TObject, TRequest, TResult>(TObject obj, in TRequest request, out TResult result) { result = default; return false; }
         public void Dispose() { }
         public SumNullable(bool _) => sum = math.Zero;
 

@@ -18,6 +18,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public Max(bool _) => (noData, result) = (true, default);
 
+        public bool CheckForOptimization<TObject, TRequest, TResult>(TObject obj, in TRequest request, out TResult result) { result = default; return false; }
         public void Dispose() { }
         public TResult GetResult<TResult>()
         {
@@ -56,6 +57,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public Max(bool _) => (noData, result) = (true, math.MaxInit);
 
+        public bool CheckForOptimization<TObject, TRequest, TResult>(TObject obj, in TRequest request, out TResult result) { result = default; return false; }
         public void Dispose() { }
         public TResult GetResult<TResult>()
         {
@@ -85,6 +87,7 @@ namespace Cistern.ValueLinq.Aggregation
         private T result;
         private bool noData;
 
+        public bool CheckForOptimization<TObject, TRequest, TResult>(TObject obj, in TRequest request, out TResult result) { result = default; return false; }
         public void Dispose() { }
         public MaxNullable(bool _) => (noData, result) = (true, math.MaxInit);
 

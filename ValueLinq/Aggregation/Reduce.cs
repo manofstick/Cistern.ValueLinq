@@ -11,6 +11,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public ReduceForward(Func<T, T, T> func) => (_func, _hasData, _accumulate) = (func, false, default);
 
+        public bool CheckForOptimization<TObject, TRequest, TResult>(TObject obj, in TRequest request, out TResult result) { result = default; return false; }
         public void Dispose() { }
         TResult IForwardEnumerator<T>.GetResult<TResult>()
         {

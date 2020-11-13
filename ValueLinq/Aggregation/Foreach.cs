@@ -9,6 +9,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public ForeachForward(Action<T> func) => (_func) = (func);
 
+        public bool CheckForOptimization<TObject, TRequest, TResult>(TObject obj, in TRequest request, out TResult result) { result = default; return false; }
         public void Dispose() { }
         TResult IForwardEnumerator<T>.GetResult<TResult>() => default;
 

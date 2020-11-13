@@ -19,6 +19,7 @@ namespace Cistern.ValueLinq.Aggregation
             (_elementAtIndex, _index, _found, _elementAt) = (index, index >= size ? index : - 1, false, default);
         }
 
+        public bool CheckForOptimization<TObject, TRequest, TResult>(TObject obj, in TRequest request, out TResult result) { result = default; return false; }
         public void Dispose() { }
         TResult IForwardEnumerator<T>.GetResult<TResult>()
         {
@@ -54,6 +55,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public ElementAtOrDefault(int index, int? size) => (_elementAtIndex, _index, _elementAt) = (index, (index < 0 || index >= size) ? index : - 1, default);
 
+        public bool CheckForOptimization<TObject, TRequest, TResult>(TObject obj, in TRequest request, out TResult result) { result = default; return false; }
         public void Dispose() { }
         TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_elementAt;
 

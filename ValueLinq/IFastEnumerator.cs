@@ -14,9 +14,10 @@ namespace Cistern.ValueLinq
 
     public interface IForwardEnumerator<T>
     {
-        public abstract bool ProcessNext(T input);
+        public bool ProcessNext(T input);
         TResult GetResult<TResult>();
         void Dispose();
+        bool CheckForOptimization<TObject, TRequest, TResult>(TObject obj, in TRequest request, out TResult result);
     }
 
     abstract class FastEnumerator<EnumeratorElement>
