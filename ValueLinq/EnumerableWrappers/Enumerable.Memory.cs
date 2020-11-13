@@ -4,6 +4,8 @@ using Cistern.ValueLinq.ValueEnumerable;
 using System;
 using System.Collections.Generic;
 
+// TODO: Probably create template to create (List/Array/Memory) forwards
+
 namespace Cistern.ValueLinq
 {
     public static partial class Enumerable
