@@ -290,7 +290,9 @@ namespace Cistern.ValueLinq.Containers
 
         public ConcatFinishFoward(in Next prior) => (_next) = (prior);
 
-        public bool CheckForOptimization<TObject, TRequest, TResult>(TObject obj, in TRequest request, out TResult result) { result = default; return false; }
+        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request)
+            => _next.TryProcessBatch<TObject, TRequest>(obj, in request);
+
         public void Dispose() => _next.Dispose();
 
         public TResult GetResult<TResult>() => _next.GetResult<TResult>();
@@ -309,7 +311,9 @@ namespace Cistern.ValueLinq.Containers
 
         public ConcatStartFoward(in Next prior, in Finish finish) => (_next, _finish, _disposedOrOntoFinish) = (prior, finish, false);
 
-        public bool CheckForOptimization<TObject, TRequest, TResult>(TObject obj, in TRequest request, out TResult result) { result = default; return false; }
+        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) =>
+            _next.TryProcessBatch(obj, in request);
+
         public void Dispose()
         {
             if (!_disposedOrOntoFinish)
@@ -336,6 +340,8 @@ namespace Cistern.ValueLinq.Containers
         public ConcatCommonNext(in Next next) => _next = next;
 
         public bool ProcessNext(T input) => _next.ProcessNext(input);
+
+        public BatchProcessResult CheckForOptimization<TObject, TRequest>(TObject obj, in TRequest request) => _next.TryProcessBatch(obj, in request);
         public void Dispose() { }
         public TResult GetResult<TResult>() => _next.GetResult<TResult>();
     }
@@ -349,7 +355,14 @@ namespace Cistern.ValueLinq.Containers
 
         public ConcatNextForward(ConcatCommonNext<T, Next> next) => (_next, _processNext) = (next, true);
 
-        public bool CheckForOptimization<TObject, TRequest, TResult>(TObject obj, in TRequest request, out TResult result) { result = default; return false; }
+        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request)
+        {
+            var result = _next.CheckForOptimization(obj, in request);
+            if (result == BatchProcessResult.SuccessAndHalt)
+                _processNext = false;
+            return result;
+        }
+
         public void Dispose() { }
         TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_processNext;
 
@@ -365,7 +378,9 @@ namespace Cistern.ValueLinq.Containers
 
         public ConcatListFoward(in Next prior, List<EnumerableNode<T>> nodes) => (_nodes, _common) = (nodes, _common = new ConcatCommonNext<T, Next>(prior));
 
-        public bool CheckForOptimization<TObject, TRequest, TResult>(TObject obj, in TRequest request, out TResult result) { result = default; return false; }
+        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request)
+            => _common.CheckForOptimization(obj, in request);
+
         public void Dispose() => _common.Dispose();
 
         public TResult GetResult<TResult>()

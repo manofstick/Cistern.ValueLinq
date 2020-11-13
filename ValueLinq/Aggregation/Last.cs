@@ -8,7 +8,7 @@ namespace Cistern.ValueLinq.Aggregation
         private T _last;
         private bool _found;
 
-        public bool CheckForOptimization<TObject, TRequest, TResult>(TObject obj, in TRequest request, out TResult result) { result = default; return false; }
+        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() { }
         TResult IForwardEnumerator<T>.GetResult<TResult>()
         {
@@ -32,7 +32,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public LastOrDefault(bool _) => _last = default;
 
-        public bool CheckForOptimization<TObject, TRequest, TResult>(TObject obj, in TRequest request, out TResult result) { result = default; return false; }
+        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() { }
         TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_last;
 

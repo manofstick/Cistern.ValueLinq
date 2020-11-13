@@ -12,12 +12,19 @@ namespace Cistern.ValueLinq
         void Dispose();
     }
 
+    public enum BatchProcessResult
+    {
+        Unavailable,
+        SuccessAndHalt,
+        SuccessAndContinue,
+    }
+
     public interface IForwardEnumerator<T>
     {
+        BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request);
         public bool ProcessNext(T input);
         TResult GetResult<TResult>();
         void Dispose();
-        bool CheckForOptimization<TObject, TRequest, TResult>(TObject obj, in TRequest request, out TResult result);
     }
 
     abstract class FastEnumerator<EnumeratorElement>

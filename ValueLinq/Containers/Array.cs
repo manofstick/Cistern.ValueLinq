@@ -69,10 +69,20 @@ namespace Cistern.ValueLinq.Containers
         internal static TResult FastEnumerate<TIn, TResult, FEnumerator>(TIn[] array, FEnumerator fenum)
             where FEnumerator : IForwardEnumerator<TIn>
         {
-            if (array.Length > 20 && fenum.CheckForOptimization<TIn[], GetSpan<TIn[], TIn>, TResult>(array, in Optimizations.UseSpan<TIn>.FromArray, out var result))
-                return result;
-            
-            return SpanNode.FastEnumerate<TIn, TResult, FEnumerator>(array.AsSpan(), fenum);
+            try
+            {
+                if (array.Length < 20 
+                 || BatchProcessResult.Unavailable == fenum.TryProcessBatch<TIn[], GetSpan<TIn[], TIn>>(array, in Optimizations.UseSpan<TIn>.FromArray))
+                {
+                    SpanNode.Loop<TIn, FEnumerator>(array.AsSpan(), ref fenum);
+                }
+
+                return fenum.GetResult<TResult>();
+            }
+            finally
+            {
+                fenum.Dispose();
+            }
         }
     }
 }

@@ -68,18 +68,10 @@ namespace Cistern.ValueLinq.Containers
         internal static TResult FastEnumerate<TIn, TResult, FEnumerator, TObject>(TObject obj, GetSpan<TObject, TIn> getSpan, FEnumerator fenum)
             where FEnumerator : IForwardEnumerator<TIn>
         {
-            if (fenum.CheckForOptimization<TObject, GetSpan<TObject, TIn>, TResult>(obj, getSpan, out var result))
-                return result;
-
-            return FastEnumerate<TIn, TResult, FEnumerator>(getSpan(obj), fenum);
-        }
-
-        internal static TResult FastEnumerate<TIn, TResult, FEnumerator>(ReadOnlySpan<TIn> span, FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<TIn>
-        {
             try
             {
-                Loop(span, ref fenum);
+                if (BatchProcessResult.Unavailable == fenum.TryProcessBatch<TObject, GetSpan<TObject, TIn>>(obj, getSpan))
+                    Loop(getSpan(obj), ref fenum);
                 return fenum.GetResult<TResult>();
             }
             finally
@@ -88,7 +80,7 @@ namespace Cistern.ValueLinq.Containers
             }
         }
 
-        private static void Loop<TIn, FEnumerator>(ReadOnlySpan<TIn> span, ref FEnumerator fenum)
+        internal static void Loop<TIn, FEnumerator>(ReadOnlySpan<TIn> span, ref FEnumerator fenum)
             where FEnumerator : IForwardEnumerator<TIn>
         {
             for (var i = 0; i < span.Length; ++i)

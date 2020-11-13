@@ -63,7 +63,7 @@ namespace Cistern.ValueLinq.Nodes
 
         public Where_InFoward(in Next prior, InFunc<T, bool> predicate) => (_next, _predicate) = (prior, predicate);
 
-        public bool CheckForOptimization<TObject, TRequest, TResult>(TObject obj, in TRequest request, out TResult result) { result = default; return false; }
+        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() => _next.Dispose();
         public TResult GetResult<TResult>() => _next.GetResult<TResult>();
 

@@ -16,7 +16,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public Average(bool _) => (sum, counter) = (math.Zero, 0);
 
-        public bool CheckForOptimization<TObject, TRequest, TResult>(TObject obj, in TRequest request, out TResult result) { result = default; return false; }
+        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() { }
         public TResult GetResult<TResult>()
         {
@@ -50,7 +50,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public AverageNullable(bool _) => (sum, counter) = (math.Zero, 0);
 
-        public bool CheckForOptimization<TObject, TRequest, TResult>(TObject obj, in TRequest request, out TResult result) { result = default; return false; }
+        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() { }
         public TResult GetResult<TResult>() =>
             counter == 0 

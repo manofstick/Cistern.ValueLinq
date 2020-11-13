@@ -16,25 +16,24 @@ namespace Cistern.ValueLinq.Aggregation
 
         public Sum(bool _) => (sum) = (math.Zero);
 
-        public bool CheckForOptimization<TObject, TRequest, TResult>(TObject obj, in TRequest request, out TResult result)
+        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request)
         {
             if (typeof(TRequest) == typeof(Containers.GetSpan<TObject, T>))
             {
                 var getSpan = (Containers.GetSpan<TObject, T>)(object)request;
-                result = (TResult)(object)GetSum(getSpan(obj));
-                return true;
+                return ProcessBatch(getSpan(obj));
             }
-
-            result = default;
-            return false;
+            return BatchProcessResult.Unavailable;
         }
 
-        private T GetSum(ReadOnlySpan<T> span)
+        private BatchProcessResult ProcessBatch(ReadOnlySpan<T> span)
         {
-            var sum = math.Zero;
+            var sum = this.sum;
             foreach (var x in span)
                 sum = math.Add(sum, x);
-            return math.Cast(sum);
+            this.sum = sum;
+
+            return BatchProcessResult.SuccessAndContinue;
         }
 
         public void Dispose() { }
@@ -58,7 +57,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         private Accumulator sum;
 
-        public bool CheckForOptimization<TObject, TRequest, TResult>(TObject obj, in TRequest request, out TResult result) { result = default; return false; }
+        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() { }
         public SumNullable(bool _) => sum = math.Zero;
 

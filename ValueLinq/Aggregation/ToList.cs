@@ -206,7 +206,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public ToListForward(int? size) => _list = size.HasValue ? new List<T>(size.Value) : new List<T>();
 
-        public bool CheckForOptimization<TObject, TRequest, TResult>(TObject obj, in TRequest request, out TResult result) { result = default; return false; }
+        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() { }
         TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_list;
 
@@ -358,7 +358,7 @@ namespace Cistern.ValueLinq.Aggregation
                 && Return(ref _1000_0000) && Return(ref _2000_0000) && Return(ref _4000_0000);
         }
 
-        public bool CheckForOptimization<TObject, TRequest, TResult>(TObject obj, in TRequest request, out TResult result) { result = default; return false; }
+        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() => ReturnArrays(); 
         TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
 
