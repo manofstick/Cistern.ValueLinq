@@ -66,7 +66,7 @@ namespace Cistern.ValueLinq.Containers
         }
 
         TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
-            => GenericEnumeratorNode.FastEnumerate<T, TResult, FEnumerator, Enumerator>(_f(_e), _count, fenum);
+            => GenericEnumeratorNode.FastEnumerate<T, TResult, FEnumerator, Enumerator>(_f(_e), fenum);
     }
 
     static class GenericEnumeratorNode
@@ -80,13 +80,13 @@ namespace Cistern.ValueLinq.Containers
             return nodes.CreateObject<CreationType, T, GenericEnumeratorFastEnumerator<T, Enumerator>>(ref enumerator);
         }
 
-        internal static TResult FastEnumerate<T, TResult, FEnumerator, Enumerator>(Enumerator enumerator, int? count, FEnumerator fenum)
+        internal static TResult FastEnumerate<T, TResult, FEnumerator, Enumerator>(Enumerator enumerator, FEnumerator fenum)
             where FEnumerator : IForwardEnumerator<T>
             where Enumerator : IEnumerator<T>
         {
             try
             {
-                InnerLoop<T, FEnumerator, Enumerator>(enumerator, fenum);
+                InnerLoop<T, FEnumerator, Enumerator>(enumerator, ref fenum);
                 return fenum.GetResult<TResult>();
             }
             finally
@@ -96,7 +96,7 @@ namespace Cistern.ValueLinq.Containers
             }
         }
 
-        private static void InnerLoop<T, FEnumerator, Enumerator>(Enumerator enumerator, FEnumerator fenum)
+        private static void InnerLoop<T, FEnumerator, Enumerator>(Enumerator enumerator, ref FEnumerator fenum)
             where FEnumerator : IForwardEnumerator<T>
             where Enumerator : IEnumerator<T>
         {
