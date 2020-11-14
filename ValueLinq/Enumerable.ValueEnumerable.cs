@@ -213,6 +213,26 @@ namespace Cistern.ValueLinq
             return inner.Node.CreateObjectViaFastEnumerator<T[], ToArrayViaAllocatorForward<T, ArrayPoolAllocator<T>>>(new ToArrayViaAllocatorForward<T, ArrayPoolAllocator<T>>(new ArrayPoolAllocator<T>(arrayPoolInfo.Value.arrayPool, arrayPoolInfo.Value.cleanBuffers), 0, info.ActualSize));
         }
 
+        public static T[] ToArrayUsePool<T, Inner>(in this ValueEnumerable<T, Inner> inner, ArrayPool<T> maybeArrayPool = null, bool? maybeCleanBuffers = null, bool viaPull = false)
+            where Inner : INode<T>
+        {
+            inner.GetCountInformation(out var info);
+
+            var cleanBuffers = maybeCleanBuffers ?? !CachedTypeInfo<T>.IsPrimitive;
+            var arrayPool = maybeArrayPool ?? ArrayPool<T>.Shared;
+
+            return viaPull
+                ? Nodes<T[]>.Aggregation<Inner, ToArrayViaArrayPool<T>>(in inner.Node, new ToArrayViaArrayPool<T>(arrayPool, cleanBuffers, info.ActualSize))
+                : inner.Node.CreateObjectViaFastEnumerator<T[], ToArrayViaAllocatorForward<T, ArrayPoolAllocator<T>>>(new ToArrayViaAllocatorForward<T, ArrayPoolAllocator<T>>(new ArrayPoolAllocator<T>(arrayPool, cleanBuffers), 0, info.ActualSize));
+        }
+
+        public static T[] ToArrayUseStack<T, Inner>(in this ValueEnumerable<T, Inner> inner, int maxStackItemCount = 64, (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo = null)
+            where Inner : INode<T>
+            => arrayPoolInfo.HasValue
+                ? Nodes<T[]>.Aggregation<Inner, ToArrayViaStackMemoryPool<T>>(in inner.Node, new ToArrayViaStackMemoryPool<T>(maxStackItemCount, arrayPoolInfo.Value.arrayPool, arrayPoolInfo.Value.cleanBuffers))
+                : Nodes<T[]>.Aggregation<Inner, ToArrayViaStackAndGarbage<T>>(in inner.Node, new ToArrayViaStackAndGarbage<T>(maxStackItemCount));
+
+
         public static List<T> ToList<T, Inner>(in this ValueEnumerable<T, Inner> inner, int? maybeMaxCountForStackBasedPath = 64, (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo = null)
             where Inner : INode<T>
         {
