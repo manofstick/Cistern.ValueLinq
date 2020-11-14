@@ -29,21 +29,36 @@ namespace Cistern.Benchmarks.ImmutableArray
             .ToList();
 
         [Benchmark]
-        public List<double> CisternValueLinq_ViaMemorySharedPool() =>
+        public List<double> CisternValueLinq_ViaMemorySharedPool_Push() =>
             _double
             .AsMemory()
             .Where(x => x > 0)
             .Select(x => x + 1)
-            .ToListUseSharedPool();
+            .ToListUsePool(viaPull: false);
+
+        [Benchmark]
+        public List<double> CisternValueLinq_ViaMemorySharedPool_Pull() =>
+            _double
+            .AsMemory()
+            .Where(x => x > 0)
+            .Select(x => x + 1)
+            .ToListUsePool(viaPull: true);
 
         struct GreaterThanZero : IFunc<double, bool> { public bool Invoke(double x) => x > 0; }
         struct AddOne : IFunc<double, double> { public double Invoke(double x) => x + 1; }
         [Benchmark]
-        public List<double> CisternValueLinq_ViaMemorySharedPoolValueLambda() =>
+        public List<double> CisternValueLinq_ViaMemorySharedPoolValueLambda_Push() =>
             _double
             .AsMemory()
             .Where(new GreaterThanZero())
             .Select(new AddOne(), default(double))
-            .ToListUseSharedPool();
+            .ToListUsePool(viaPull:false);
+        [Benchmark]
+        public List<double> CisternValueLinq_ViaMemorySharedPoolValueLambda_Pull() =>
+            _double
+            .AsMemory()
+            .Where(new GreaterThanZero())
+            .Select(new AddOne(), default(double))
+            .ToListUsePool(viaPull:true);
     }
 }

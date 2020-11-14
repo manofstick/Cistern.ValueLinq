@@ -32,7 +32,7 @@ namespace Cistern.Benchmarks.ImmutableArray
         {
             var check = new WhereSelectToList();
 
-            check.Length = 100;
+            check.Length = 0;
             check.SetupData();
 
             var baseline = check.Linq();
@@ -46,6 +46,18 @@ namespace Cistern.Benchmarks.ImmutableArray
 
             var cisternvaluelinq_viaspan = check.CisternValueLinq_ViaSpan();
             if (!Enumerable.SequenceEqual(baseline, cisternvaluelinq_viaspan)) throw new Exception();
+
+            var cisternvaluelinq_viamemorysharedpool_pull = check.CisternValueLinq_ViaMemorySharedPool_Pull();
+            if (!Enumerable.SequenceEqual(baseline, cisternvaluelinq_viamemorysharedpool_pull)) throw new Exception();
+
+            var cisternvaluelinq_viamemorysharedpool_push = check.CisternValueLinq_ViaMemorySharedPool_Push();
+            if (!Enumerable.SequenceEqual(baseline, cisternvaluelinq_viamemorysharedpool_push)) throw new Exception();
+
+            var cisternvaluelinq_viamemorysharedpoolvaluelambda_pull = check.CisternValueLinq_ViaMemorySharedPoolValueLambda_Pull();
+            if (!Enumerable.SequenceEqual(baseline, cisternvaluelinq_viamemorysharedpoolvaluelambda_pull)) throw new Exception();
+
+            var cisternvaluelinq_viamemorysharedpoolvaluelambda_push = check.CisternValueLinq_ViaMemorySharedPoolValueLambda_Push();
+            if (!Enumerable.SequenceEqual(baseline, cisternvaluelinq_viamemorysharedpoolvaluelambda_push)) throw new Exception();
         }
     }
 }
