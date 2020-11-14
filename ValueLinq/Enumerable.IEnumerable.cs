@@ -2,6 +2,7 @@
 using Cistern.ValueLinq.Nodes;
 using Cistern.ValueLinq.ValueEnumerable;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 
 namespace Cistern.ValueLinq
@@ -66,6 +67,27 @@ namespace Cistern.ValueLinq
                 ? source.OfEnumerable().ToList()
                 : new List<T>(source);
         }
+
+        public static List<T> ToListUseStack<T>(this IEnumerable<T> source, int maxStackItemCount = 64, (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo = null)
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+
+            return source is ICollection<T>
+                ? new List<T>(source)
+                : source.OfEnumerable().ToListUseStack(maxStackItemCount, arrayPoolInfo);
+        }
+
+        public static List<T> ToListUsePool<T>(this IEnumerable<T> source, ArrayPool<T> maybeArrayPool = null, bool? maybeCleanBuffers = null, bool viaPull = false)
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+
+            return source is ICollection<T>
+                ? new List<T>(source)
+                : source.OfEnumerable().ToListUsePool(maybeArrayPool, maybeCleanBuffers, viaPull);
+        }
+
 
         public static decimal Average(this IEnumerable<decimal> inner) => inner.OfEnumerable().Average();
         public static double  Average(this IEnumerable<double>  inner) => inner.OfEnumerable().Average();

@@ -74,7 +74,7 @@ namespace Cistern.ValueLinq.Aggregation
                 return list;
             }
 
-            public static List<T> Create(Memory<T> memory)
+            public static List<T> Create(Memory<T> memory, int startIdx)
             {
                 if (memory.Length <= 10)
                     return CreateSmall(memory);
@@ -84,9 +84,11 @@ namespace Cistern.ValueLinq.Aggregation
                     listCreator = new CreateListFromSectionOfArray<T>();
 
                 listCreator.memory = memory;
+                listCreator.startIdx = startIdx;
 
                 var list = new List<T>(listCreator);
 
+                listCreator.startIdx = int.MinValue;
                 listCreator.memory = default;
 
                 _maybeInstance = listCreator; // might splat another, might not get flushed in time, but we don't care
@@ -95,29 +97,55 @@ namespace Cistern.ValueLinq.Aggregation
             }
 
             Memory<T> memory;
+            int startIdx;
 
-            public override int Count => memory.Length;
+            public override int Count => startIdx + memory.Length;
 
             public override void CopyTo(T[] array, int arrayIndex)
             {
                 var srcSpan = memory.Span;
-                var dstSpan = new Span<T>(array, arrayIndex, array.Length - arrayIndex);
+                var dstSpan = new Span<T>(array, startIdx+arrayIndex, array.Length - arrayIndex);
 
                 srcSpan.CopyTo(dstSpan);
             }
         }
     }
 
-    struct ToListViaStack
+    struct ToListViaStackMemoryPool<T>
         : INode
     {
+        int _maxStackItemCount;
+        ArrayPool<T> _arrayPool;
+        bool _cleanBuffers;
+
+        public ToListViaStackMemoryPool(int maxStackItemCount, ArrayPool<T> arrayPool, bool cleanBuffers) => (_maxStackItemCount, _arrayPool, _cleanBuffers) = (maxStackItemCount, arrayPool, cleanBuffers);
+
         public void GetCountInformation(out CountInformation info) => Impl.CountInfo(out info);
 
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
             => Impl.CreateObjectDescent<CreationType>();
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator enumerator)
-            => (CreationType)(object)Impl.ToListViaStack<EnumeratorElement, Enumerator>(ref enumerator);
+            => (CreationType)(object)Impl.ToListViaStack<EnumeratorElement, Enumerator, ArrayPoolAllocator<EnumeratorElement>>(_maxStackItemCount, new ArrayPoolAllocator<EnumeratorElement>((ArrayPool<EnumeratorElement>)(object)_arrayPool, _cleanBuffers), ref enumerator);
+
+        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+            => Impl.CheckForOptimization(out result);
+    }
+
+    struct ToListViaStackAndGarbage<T>
+        : INode
+    {
+        int _maxStackItemCount;
+
+        public ToListViaStackAndGarbage(int maxStackItemCount) => (_maxStackItemCount) = (maxStackItemCount);
+
+        public void GetCountInformation(out CountInformation info) => Impl.CountInfo(out info);
+
+        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+            => Impl.CreateObjectDescent<CreationType>();
+
+        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator enumerator)
+            => (CreationType)(object)Impl.ToListViaStack<EnumeratorElement, Enumerator, GarbageCollectedAllocator<EnumeratorElement>>(_maxStackItemCount, default, ref enumerator);
 
         bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
             => Impl.CheckForOptimization(out result);
@@ -125,23 +153,27 @@ namespace Cistern.ValueLinq.Aggregation
 
     static partial class Impl
     {
-        internal static List<EnumeratorElement> ToListViaStack<EnumeratorElement, Enumerator>(ref Enumerator enumerator)
+        internal static List<EnumeratorElement> ToListViaStack<EnumeratorElement, Enumerator, Allocator>(int maxStackItemCount, Allocator allocator, ref Enumerator enumerator)
                 where Enumerator : IFastEnumerator<EnumeratorElement>
+                where Allocator : IArrayAllocator<EnumeratorElement>
         {
             try
             {
-                return DoToList(ref enumerator);
+                return DoToList(ref allocator, ref enumerator, maxStackItemCount);
             }
             finally
             {
                 enumerator.Dispose();
             }
-
+        
             static List<EnumeratorElement> Create(int size) =>
                 ToListImpl.CreatedEmptyIndexableList<EnumeratorElement>.Create(size);
 
-            static List<EnumeratorElement> StackBasedPopulate(ref Enumerator enumerator, int idx)
+            static List<EnumeratorElement> StackBasedPopulate(ref Allocator allocator, ref Enumerator enumerator, int remaining, int idx)
             {
+                if (remaining <= 0)
+                    return PopulateRemainingUsingAllocator<Allocator, EnumeratorElement, Enumerator>(ref allocator, ref enumerator, idx);
+
                 List<EnumeratorElement> result;
 
                 if (!enumerator.TryGetNext(out var t1))
@@ -165,7 +197,7 @@ namespace Cistern.ValueLinq.Aggregation
                     goto _3;
                 }
 
-                result = StackBasedPopulate(ref enumerator, idx+4);
+                result = StackBasedPopulate(ref allocator, ref enumerator, remaining-4, idx+4);
 
                 result[idx + 3] = t4;
             _3: result[idx + 2] = t3;
@@ -175,13 +207,14 @@ namespace Cistern.ValueLinq.Aggregation
             _0: return result;
             }
 
-            static List<EnumeratorElement> DoToList(ref Enumerator enumerator) => StackBasedPopulate(ref enumerator, 0);
+            static List<EnumeratorElement> DoToList(ref Allocator allocator, ref Enumerator enumerator, int remaining) => StackBasedPopulate(ref allocator, ref enumerator, remaining, 0);
         }
 
-        internal static List<T> ToListViaArrayPool<T, Enumerator>(ArrayPool<T> arrayPool, bool cleanBuffers, int? size, ref Enumerator enumerator)
-                where Enumerator : IFastEnumerator<T>
+        private static List<EnumeratorElement> PopulateRemainingUsingAllocator<Allocator, EnumeratorElement, Enumerator>(ref Allocator allocator, ref Enumerator enumerator, int idx)
+            where Allocator : IArrayAllocator<EnumeratorElement>
+            where Enumerator : IFastEnumerator<EnumeratorElement>
         {
-            var creator = new ToListViaArrayPoolForward<T, ArrayPoolAllocator<T>>(new ArrayPoolAllocator<T>(arrayPool, cleanBuffers), size);
+            var creator = new ToListViaArrayPoolForward<EnumeratorElement, Allocator>(allocator, idx, null);
             try
             {
                 creator.Populate(ref enumerator);
@@ -190,10 +223,22 @@ namespace Cistern.ValueLinq.Aggregation
             finally
             {
                 creator.Dispose();
-                enumerator.Dispose();
             }
         }
 
+        internal static List<T> ToListViaArrayPool<T, Enumerator>(ArrayPool<T> arrayPool, bool cleanBuffers, int? size, ref Enumerator enumerator)
+                where Enumerator : IFastEnumerator<T>
+        {
+            try
+            {
+                var allocator = new ArrayPoolAllocator<T>(arrayPool, cleanBuffers);
+                return PopulateRemainingUsingAllocator<ArrayPoolAllocator<T>, T, Enumerator>(ref allocator, ref enumerator, 0);
+            }
+            finally
+            {
+                enumerator.Dispose();
+            }
+        }
     }
 
     struct ToListForward<T>
@@ -240,8 +285,9 @@ namespace Cistern.ValueLinq.Aggregation
         where Allocator : IArrayAllocator<T>
     {
         ItemCollector<T, Allocator> collector;
+        int _startIdx;
 
-        public ToListViaArrayPoolForward(Allocator allocator, int? size) => collector = new ItemCollector<T, Allocator>(allocator, size);
+        public ToListViaArrayPoolForward(Allocator allocator, int startIdx, int? size) => (_startIdx, collector) = (startIdx, new ItemCollector<T, Allocator>(allocator, size));
 
         public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() => collector.Dispose(); 
@@ -249,8 +295,8 @@ namespace Cistern.ValueLinq.Aggregation
 
         public List<T> GetResult() =>
             collector.TryGetKnownSized(out var memory)
-                ? ToListImpl.CreateListFromSectionOfArray<T>.Create(memory)
-                : CreateListFromArrayCollection.Create(ref collector);
+                ? ToListImpl.CreateListFromSectionOfArray<T>.Create(memory, _startIdx)
+                : CreateListFromArrayCollection.Create(ref collector, _startIdx);
 
         public bool ProcessNext(T input) => collector.Add(input);
 
@@ -262,16 +308,18 @@ namespace Cistern.ValueLinq.Aggregation
         {
             static CreateListFromArrayCollection _maybeInstance;
 
-            public static List<T> Create(ref ItemCollector<T, Allocator> p)
+            public static List<T> Create(ref ItemCollector<T, Allocator> p, int startIdx)
             {
                 var listCreator = Interlocked.Exchange(ref _maybeInstance, null);
                 if (listCreator == null)
                     listCreator = new CreateListFromArrayCollection();
 
                 listCreator._p = p;
+                listCreator.startIdx = startIdx;
 
                 var list = new List<T>(listCreator);
 
+                listCreator.startIdx = int.MinValue;
                 listCreator._p = default; // release references
 
                 _maybeInstance = listCreator; // might splat another, might not get flushed in time, but we don't care
@@ -284,10 +332,11 @@ namespace Cistern.ValueLinq.Aggregation
             // The polite thing here would be to ensure that the IEnumerator<T> interface works, rather than
             // relying on the List<> constructor using ICollection<T>.CopyTo
             ItemCollector<T, Allocator> _p;
+            int startIdx;
 
-            public override int Count => _p.Count;
+            public override int Count => startIdx+_p.Count;
 
-            public override void CopyTo(T[] array, int arrayIndex) => _p.CopyTo(array, arrayIndex);
+            public override void CopyTo(T[] array, int arrayIndex) => _p.CopyTo(array, startIdx+arrayIndex);
         }
     }
 }

@@ -53,6 +53,7 @@ using SumFloatNullable   = Cistern.ValueLinq.Aggregation.SumNullable<float,   do
 using SumIntNullable     = Cistern.ValueLinq.Aggregation.SumNullable<int,     int,     double,  Cistern.ValueLinq.Maths.OpsInt>;
 using SumLongNullable    = Cistern.ValueLinq.Aggregation.SumNullable<long,    long,    double,  Cistern.ValueLinq.Maths.OpsLong>;
 using System.Buffers;
+using Cistern.ValueLinq.Utils;
 
 namespace Cistern.ValueLinq
 {
@@ -201,13 +202,15 @@ namespace Cistern.ValueLinq
                 return inner.Node.CreateObjectViaFastEnumerator<List<T>, ToListForward<T>>(new ToListForward<T>(info.ActualSize));
             }
 
-            if (info.MaximumLength <= maybeMaxCountForStackBasedPath.GetValueOrDefault())
-                return Nodes<List<T>>.Aggregation<Inner, ToListViaStack>(in inner.Node);
-
             if (!arrayPoolInfo.HasValue)
-                return inner.Node.CreateObjectViaFastEnumerator<List<T>, ToListForward<T>>(new ToListForward<T>(null));
+            {
+                if (info.MaximumLength <= maybeMaxCountForStackBasedPath.GetValueOrDefault())
+                    return Nodes<List<T>>.Aggregation<Inner, ToListViaStackAndGarbage<T>>(in inner.Node, new ToListViaStackAndGarbage<T>(maybeMaxCountForStackBasedPath.Value));
 
-            return inner.Node.CreateObjectViaFastEnumerator<List<T>, ToListViaArrayPoolForward<T, ArrayPoolAllocator<T>>>(new ToListViaArrayPoolForward<T, ArrayPoolAllocator<T>>(new ArrayPoolAllocator<T>(arrayPoolInfo.Value.arrayPool, arrayPoolInfo.Value.cleanBuffers), null));
+                return inner.Node.CreateObjectViaFastEnumerator<List<T>, ToListForward<T>>(new ToListForward<T>(null));
+            }
+
+            return inner.Node.CreateObjectViaFastEnumerator<List<T>, ToListViaArrayPoolForward<T, ArrayPoolAllocator<T>>>(new ToListViaArrayPoolForward<T, ArrayPoolAllocator<T>>(new ArrayPoolAllocator<T>(arrayPoolInfo.Value.arrayPool, arrayPoolInfo.Value.cleanBuffers), 0, null));
         }
 
         public static List<T> ToListUsePool<T, Inner>(in this ValueEnumerable<T, Inner> inner, ArrayPool<T> maybeArrayPool = null, bool? maybeCleanBuffers = null, bool viaPull = false)
@@ -220,12 +223,14 @@ namespace Cistern.ValueLinq
 
             return viaPull
                 ? Nodes<List<T>>.Aggregation<Inner, ToListViaArrayPool<T>>(in inner.Node, new ToListViaArrayPool<T>(arrayPool, cleanBuffers, info.ActualSize))
-                : inner.Node.CreateObjectViaFastEnumerator<List<T>, ToListViaArrayPoolForward<T, ArrayPoolAllocator<T>>>(new ToListViaArrayPoolForward<T, ArrayPoolAllocator<T>>(new ArrayPoolAllocator<T>(arrayPool, cleanBuffers), info.ActualSize));
+                : inner.Node.CreateObjectViaFastEnumerator<List<T>, ToListViaArrayPoolForward<T, ArrayPoolAllocator<T>>>(new ToListViaArrayPoolForward<T, ArrayPoolAllocator<T>>(new ArrayPoolAllocator<T>(arrayPool, cleanBuffers), 0, info.ActualSize));
         }
 
-        public static List<T> ToListUseStack<T, Inner>(in this ValueEnumerable<T, Inner> inner)
+        public static List<T> ToListUseStack<T, Inner>(in this ValueEnumerable<T, Inner> inner, int maxStackItemCount = 64, (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo = null)
             where Inner : INode<T>
-            => Nodes<List<T>>.Aggregation<Inner, ToListViaStack>(in inner.Node);
+            => arrayPoolInfo.HasValue
+                ? Nodes<List<T>>.Aggregation<Inner, ToListViaStackMemoryPool<T>>(in inner.Node, new ToListViaStackMemoryPool<T>(maxStackItemCount, arrayPoolInfo.Value.arrayPool, arrayPoolInfo.Value.cleanBuffers))
+                : Nodes<List<T>>.Aggregation<Inner, ToListViaStackAndGarbage<T>>(in inner.Node, new ToListViaStackAndGarbage<T>(maxStackItemCount));
 
         public static T Last<T, Inner>(in this ValueEnumerable<T, Inner> inner)
             where Inner : INode<T> =>
