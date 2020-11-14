@@ -207,7 +207,7 @@ namespace Cistern.ValueLinq
             if (!arrayPoolInfo.HasValue)
                 return inner.Node.CreateObjectViaFastEnumerator<List<T>, ToListForward<T>>(new ToListForward<T>(null));
 
-            return inner.Node.CreateObjectViaFastEnumerator<List<T>, ToListViaArrayPoolForward<T>>(new ToListViaArrayPoolForward<T>(arrayPoolInfo.Value.arrayPool, arrayPoolInfo.Value.cleanBuffers, null));
+            return inner.Node.CreateObjectViaFastEnumerator<List<T>, ToListViaArrayPoolForward<T, ArrayPoolAllocator<T>>>(new ToListViaArrayPoolForward<T, ArrayPoolAllocator<T>>(new ArrayPoolAllocator<T>(arrayPoolInfo.Value.arrayPool, arrayPoolInfo.Value.cleanBuffers), null));
         }
 
         public static List<T> ToListUsePool<T, Inner>(in this ValueEnumerable<T, Inner> inner, ArrayPool<T> maybeArrayPool = null, bool? maybeCleanBuffers = null, bool viaPull = false)
@@ -220,7 +220,7 @@ namespace Cistern.ValueLinq
 
             return viaPull
                 ? Nodes<List<T>>.Aggregation<Inner, ToListViaArrayPool<T>>(in inner.Node, new ToListViaArrayPool<T>(arrayPool, cleanBuffers, info.ActualSize))
-                : inner.Node.CreateObjectViaFastEnumerator<List<T>, ToListViaArrayPoolForward<T>>(new ToListViaArrayPoolForward<T>(arrayPool, cleanBuffers, info.ActualSize));
+                : inner.Node.CreateObjectViaFastEnumerator<List<T>, ToListViaArrayPoolForward<T, ArrayPoolAllocator<T>>>(new ToListViaArrayPoolForward<T, ArrayPoolAllocator<T>>(new ArrayPoolAllocator<T>(arrayPool, cleanBuffers), info.ActualSize));
         }
 
         public static List<T> ToListUseStack<T, Inner>(in this ValueEnumerable<T, Inner> inner)

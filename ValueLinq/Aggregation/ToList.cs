@@ -1,9 +1,8 @@
-﻿using System;
+﻿using Cistern.ValueLinq.Utils;
+using System;
 using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace Cistern.ValueLinq.Aggregation
@@ -66,44 +65,42 @@ namespace Cistern.ValueLinq.Aggregation
         {
             private static CreateListFromSectionOfArray<T> _maybeInstance; // cache and reuse or discard
 
-            private static List<T> CreateSmall(T[] data, int count)
+            private static List<T> CreateSmall(Memory<T> memory)
             {
-                var list = new List<T>(count);
-                for (var i = 0; i < count; ++i)
+                var data = memory.Span;
+                var list = new List<T>(data.Length);
+                for (var i = 0; i < data.Length; ++i)
                     list.Add(data[i]);
                 return list;
             }
 
-            public static List<T> Create(T[] data, int count)
+            public static List<T> Create(Memory<T> memory)
             {
-                if (count <= 10)
-                    return CreateSmall(data, count);
+                if (memory.Length <= 10)
+                    return CreateSmall(memory);
 
                 var listCreator = Interlocked.Exchange(ref _maybeInstance, null);
                 if (listCreator == null)
                     listCreator = new CreateListFromSectionOfArray<T>();
 
-                listCreator._data = data;
-                listCreator._count = count;
+                listCreator.memory = memory;
 
                 var list = new List<T>(listCreator);
 
-                listCreator._count = int.MinValue;
-                listCreator._data = null;
+                listCreator.memory = default;
 
                 _maybeInstance = listCreator; // might splat another, might not get flushed in time, but we don't care
 
                 return list;
             }
 
-            T[] _data;
-            int _count;
+            Memory<T> memory;
 
-            public override int Count => _count;
+            public override int Count => memory.Length;
 
             public override void CopyTo(T[] array, int arrayIndex)
             {
-                var srcSpan = new Span<T>(_data, 0, _count);
+                var srcSpan = memory.Span;
                 var dstSpan = new Span<T>(array, arrayIndex, array.Length - arrayIndex);
 
                 srcSpan.CopyTo(dstSpan);
@@ -181,10 +178,10 @@ namespace Cistern.ValueLinq.Aggregation
             static List<EnumeratorElement> DoToList(ref Enumerator enumerator) => StackBasedPopulate(ref enumerator, 0);
         }
 
-        internal static List<EnumeratorElement> ToListViaArrayPool<EnumeratorElement, Enumerator>(ArrayPool<EnumeratorElement> arrayPool, bool cleanBuffers, int? size, ref Enumerator enumerator)
-                where Enumerator : IFastEnumerator<EnumeratorElement>
+        internal static List<T> ToListViaArrayPool<T, Enumerator>(ArrayPool<T> arrayPool, bool cleanBuffers, int? size, ref Enumerator enumerator)
+                where Enumerator : IFastEnumerator<T>
         {
-            var creator = new ToListViaArrayPoolForward<EnumeratorElement>(arrayPool, cleanBuffers, size);
+            var creator = new ToListViaArrayPoolForward<T, ArrayPoolAllocator<T>>(new ArrayPoolAllocator<T>(arrayPool, cleanBuffers), size);
             try
             {
                 creator.Populate(ref enumerator);
@@ -238,187 +235,34 @@ namespace Cistern.ValueLinq.Aggregation
             => Impl.CheckForOptimization(out result);
     }
 
-    struct ToListViaArrayPoolForward<T>
+    struct ToListViaArrayPoolForward<T, Allocator>
         : IForwardEnumerator<T>
+        where Allocator : IArrayAllocator<T>
     {
-        // logic requires that these constants be negative
-        const int KNOWN_SIZE = int.MinValue;
-        const int INIT = -1;
+        ItemCollector<T, Allocator> collector;
 
-        ArrayPool<T> _pool;
-        bool _cleanBuffers;
-
-        T[] _0000_0010, _0000_0020, _0000_0040, _0000_0080;
-        T[] _0000_0100, _0000_0200, _0000_0400, _0000_0800;
-        T[] _0000_1000, _0000_2000, _0000_4000, _0000_8000;
-        T[] _0001_0000, _0002_0000, _0004_0000, _0008_0000;
-        T[] _0010_0000, _0020_0000, _0040_0000, _0080_0000;
-        T[] _0100_0000, _0200_0000, _0400_0000, _0800_0000;
-        T[] _1000_0000, _2000_0000, _4000_0000;
-
-        T[] _current;
-        int _currentIdx;
-        int _arrayIdx;
-
-        public ToListViaArrayPoolForward(ArrayPool<T> pool, bool cleanBuffers, int? size)
-        {
-            _0000_0010 = _0000_0020 = _0000_0040 = _0000_0080 = null;
-            _0000_0100 = _0000_0200 = _0000_0400 = _0000_0800 = null;
-            _0000_1000 = _0000_2000 = _0000_4000 = _0000_8000 = null;
-            _0001_0000 = _0002_0000 = _0004_0000 = _0008_0000 = null;
-            _0010_0000 = _0020_0000 = _0040_0000 = _0080_0000 = null;
-            _0100_0000 = _0200_0000 = _0400_0000 = _0800_0000 = null;
-            _1000_0000 = _2000_0000 = _4000_0000              = null;
-
-            _pool = pool;
-            _cleanBuffers = cleanBuffers;
-
-            _current = Array.Empty<T>();
-            _currentIdx = 0;
-            _arrayIdx = INIT;
-
-            if (size.HasValue)
-            {
-                Rent(ref _0000_0010, size.Value);
-                _arrayIdx = KNOWN_SIZE;
-            }
-        }
-
-        private void Rent(ref T[] array, int size)
-        {
-            array = _pool.Rent(size);
-
-            _current = array;
-            _currentIdx = 0;
-
-            _arrayIdx++;
-        }
-
-        private void RentNextArray()
-        {
-            switch(_arrayIdx)
-            {
-                case INIT:
-                         Rent(ref _0000_0010, 0x_0000_0010); return;
-                case 00: Rent(ref _0000_0020, 0x_0000_0020); return;
-                case 01: Rent(ref _0000_0040, 0x_0000_0040); return;
-                case 02: Rent(ref _0000_0080, 0x_0000_0080); return;
-
-                case 03: Rent(ref _0000_0100, 0x_0000_0100); return;
-                case 04: Rent(ref _0000_0200, 0x_0000_0200); return;
-                case 05: Rent(ref _0000_0400, 0x_0000_0400); return;
-                case 06: Rent(ref _0000_0800, 0x_0000_0800); return;
-
-                case 07: Rent(ref _0000_1000, 0x_0000_1000); return;
-                case 08: Rent(ref _0000_2000, 0x_0000_2000); return;
-                case 09: Rent(ref _0000_4000, 0x_0000_4000); return;
-                case 10: Rent(ref _0000_8000, 0x_0000_8000); return;
-
-                case 11: Rent(ref _0001_0000, 0x_0001_0000); return;
-                case 12: Rent(ref _0002_0000, 0x_0002_0000); return;
-                case 13: Rent(ref _0004_0000, 0x_0004_0000); return;
-                case 14: Rent(ref _0008_0000, 0x_0008_0000); return;
-
-                case 15: Rent(ref _0010_0000, 0x_0010_0000); return;
-                case 16: Rent(ref _0020_0000, 0x_0020_0000); return;
-                case 17: Rent(ref _0040_0000, 0x_0040_0000); return;
-                case 18: Rent(ref _0080_0000, 0x_0080_0000); return;
-
-                case 19: Rent(ref _0100_0000, 0x_0100_0000); return;
-                case 20: Rent(ref _0200_0000, 0x_0200_0000); return;
-                case 21: Rent(ref _0400_0000, 0x_0400_0000); return;
-                case 22: Rent(ref _0800_0000, 0x_0800_0000); return;
-
-                case 23: Rent(ref _1000_0000, 0x_1000_0000); return;
-                case 24: Rent(ref _2000_0000, 0x_2000_0000); return;
-                case 25: Rent(ref _4000_0000, 0x_4000_0000); return;
-            }
-        }
-
-        private bool Return(ref T[] _array)
-        {
-            if (_array == null)
-                return false;
-
-            _pool.Return(_array, _cleanBuffers);
-            _array = null;
-
-            return true;
-        }
-
-        private void ReturnArrays()
-        {
-            var _ = true
-                && Return(ref _0000_0010) && Return(ref _0000_0020) && Return(ref _0000_0040) && Return(ref _0000_0080)
-                && Return(ref _0000_0100) && Return(ref _0000_0200) && Return(ref _0000_0400) && Return(ref _0000_0800)
-                && Return(ref _0000_1000) && Return(ref _0000_2000) && Return(ref _0000_4000) && Return(ref _0000_8000)
-                && Return(ref _0001_0000) && Return(ref _0002_0000) && Return(ref _0004_0000) && Return(ref _0008_0000)
-                && Return(ref _0010_0000) && Return(ref _0020_0000) && Return(ref _0040_0000) && Return(ref _0080_0000)
-                && Return(ref _0100_0000) && Return(ref _0200_0000) && Return(ref _0400_0000) && Return(ref _0800_0000)
-                && Return(ref _1000_0000) && Return(ref _2000_0000) && Return(ref _4000_0000);
-        }
+        public ToListViaArrayPoolForward(Allocator allocator, int? size) => collector = new ItemCollector<T, Allocator>(allocator, size);
 
         public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
-        public void Dispose() => ReturnArrays(); 
+        public void Dispose() => collector.Dispose(); 
         TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
 
-        public List<T> GetResult()
-        {
-            var list = 
-                (_arrayIdx == 0 || _arrayIdx == KNOWN_SIZE)
-                    ? ToListImpl.CreateListFromSectionOfArray<T>.Create(_current, _currentIdx)
-                    : CreateListFromArrayCollection.Create(ref this);
+        public List<T> GetResult() =>
+            collector.TryGetKnownSized(out var memory)
+                ? ToListImpl.CreateListFromSectionOfArray<T>.Create(memory)
+                : CreateListFromArrayCollection.Create(ref collector);
 
-            return list;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool ProcessNext(T input)
-        {
-            for (;;)
-            {
-                if (_currentIdx < _current.Length)
-                {
-                    _current[_currentIdx] = input;
-                    _currentIdx++;
-                    return true;
-                }
-
-                RentNextArray();
-            }
-        }
+        public bool ProcessNext(T input) => collector.Add(input);
 
         internal void Populate<Enumerator>(ref Enumerator enumerator)
-            where Enumerator : IFastEnumerator<T>
-        {
-            for (;;)
-            {
-                RentNextArray();
-
-                var current = _current;
-                for (var i=0; i < current.Length; ++i)
-                {
-                    if (!enumerator.TryGetNext(out current[i]))
-                    {
-                        _currentIdx = i;
-                        return;
-                    }
-                }
-
-                if (_arrayIdx == KNOWN_SIZE)
-                {
-                    _currentIdx = current.Length;
-                    return;
-                }
-            }
-        }
+            where Enumerator : IFastEnumerator<T> => collector.Populate(ref enumerator);
 
         class CreateListFromArrayCollection
             : ToListImpl.ListPopulator<T>
         {
             static CreateListFromArrayCollection _maybeInstance;
 
-            public static List<T> Create(ref ToListViaArrayPoolForward<T> p)
+            public static List<T> Create(ref ItemCollector<T, Allocator> p)
             {
                 var listCreator = Interlocked.Exchange(ref _maybeInstance, null);
                 if (listCreator == null)
@@ -439,67 +283,11 @@ namespace Cistern.ValueLinq.Aggregation
 
             // The polite thing here would be to ensure that the IEnumerator<T> interface works, rather than
             // relying on the List<> constructor using ICollection<T>.CopyTo
-            ToListViaArrayPoolForward<T> _p;
+            ItemCollector<T, Allocator> _p;
 
-            public override int Count =>
-                _p._arrayIdx < 0 /* KNOWN_SIZE, INIT */
-                    ? _p._currentIdx
-                    : (0x_0000_0010 << _p._arrayIdx) - 0x_0000_0010 + _p._currentIdx;
+            public override int Count => _p.Count;
 
-            public override void CopyTo(T[] array, int arrayIndex)
-            {
-                var remaining = Count;
-
-                var _ = true
-                    && DoCopy(array, ref arrayIndex, _p._0000_0010, ref remaining)
-                    && DoCopy(array, ref arrayIndex, _p._0000_0020, ref remaining)
-                    && DoCopy(array, ref arrayIndex, _p._0000_0040, ref remaining)
-                    && DoCopy(array, ref arrayIndex, _p._0000_0080, ref remaining)
-
-                    && DoCopy(array, ref arrayIndex, _p._0000_0100, ref remaining)
-                    && DoCopy(array, ref arrayIndex, _p._0000_0200, ref remaining)
-                    && DoCopy(array, ref arrayIndex, _p._0000_0400, ref remaining)
-                    && DoCopy(array, ref arrayIndex, _p._0000_0800, ref remaining)
-
-                    && DoCopy(array, ref arrayIndex, _p._0000_1000, ref remaining)
-                    && DoCopy(array, ref arrayIndex, _p._0000_2000, ref remaining)
-                    && DoCopy(array, ref arrayIndex, _p._0000_4000, ref remaining)
-                    && DoCopy(array, ref arrayIndex, _p._0000_8000, ref remaining)
-
-                    && DoCopy(array, ref arrayIndex, _p._0001_0000, ref remaining)
-                    && DoCopy(array, ref arrayIndex, _p._0002_0000, ref remaining)
-                    && DoCopy(array, ref arrayIndex, _p._0004_0000, ref remaining)
-                    && DoCopy(array, ref arrayIndex, _p._0008_0000, ref remaining)
-
-                    && DoCopy(array, ref arrayIndex, _p._0010_0000, ref remaining)
-                    && DoCopy(array, ref arrayIndex, _p._0020_0000, ref remaining)
-                    && DoCopy(array, ref arrayIndex, _p._0040_0000, ref remaining)
-                    && DoCopy(array, ref arrayIndex, _p._0080_0000, ref remaining)
-
-                    && DoCopy(array, ref arrayIndex, _p._0100_0000, ref remaining)
-                    && DoCopy(array, ref arrayIndex, _p._0200_0000, ref remaining)
-                    && DoCopy(array, ref arrayIndex, _p._0400_0000, ref remaining)
-                    && DoCopy(array, ref arrayIndex, _p._0800_0000, ref remaining)
-
-                    && DoCopy(array, ref arrayIndex, _p._1000_0000, ref remaining)
-                    && DoCopy(array, ref arrayIndex, _p._2000_0000, ref remaining)
-                    && DoCopy(array, ref arrayIndex, _p._4000_0000, ref remaining)
-                ;
-
-                static bool DoCopy(T[] dst, ref int arrayIndex, T[] src, ref int remaining)
-                {
-                    var toCopy = Math.Min(src.Length, remaining);
-
-                    var srcSpan = new Span<T>(src, 0, toCopy);
-                    var dstSpan = new Span<T>(dst, arrayIndex, dst.Length - arrayIndex);
-                    srcSpan.CopyTo(dstSpan);
-
-                    remaining -= toCopy;
-                    arrayIndex += toCopy;
-
-                    return remaining > 0;
-                }
-            }
+            public override void CopyTo(T[] array, int arrayIndex) => _p.CopyTo(array, arrayIndex);
         }
     }
 }
