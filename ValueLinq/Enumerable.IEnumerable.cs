@@ -58,6 +58,24 @@ namespace Cistern.ValueLinq
         public static TSource Last<TSource>(this IEnumerable<TSource> source) => source.OfEnumerable().Last();
         public static TSource LastOrDefault<TSource>(this IEnumerable<TSource> source) => source.OfEnumerable().LastOrDefault();
 
+        public static T[] ToArray<T>(this IEnumerable<T> source)
+        {
+            return source is ICollection<T> c
+                ? ICollectionToArray(c)
+                : source.OfEnumerable().ToArray();
+
+            static T[] ICollectionToArray(ICollection<T> c)
+            {
+                var count = c.Count;
+                if (count == 0)
+                    return Array.Empty<T>();
+
+                var result = new T[count];
+                c.CopyTo(result, 0);
+                return result;
+            }
+        }
+
         public static List<T> ToList<T>(this IEnumerable<T> source)
         {
             if (source == null)

@@ -189,6 +189,30 @@ namespace Cistern.ValueLinq
             where TPrior : INode<T>
                 => new ValueEnumerable<T, TakeNode<T, TPrior>>(new TakeNode<T, TPrior>(in prior.Node, count));
 
+        public static T[] ToArray<T, Inner>(in this ValueEnumerable<T, Inner> inner, int? maybeMaxCountForStackBasedPath = 64, (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo = null)
+            where Inner : INode<T>
+        {
+            inner.GetCountInformation(out var info);
+
+            if (info.ActualLengthIsMaximumLength)
+            {
+                if (info.MaximumLength == 0)
+                    return Array.Empty<T>();
+
+                return inner.Node.CreateObjectViaFastEnumerator<T[], ToArrayForward<T>>(new ToArrayForward<T>(info.ActualSize.Value));
+            }
+
+            if (!arrayPoolInfo.HasValue)
+            {
+                if (info.MaximumLength <= maybeMaxCountForStackBasedPath.GetValueOrDefault())
+                    return Nodes<T[]>.Aggregation<Inner, ToArrayViaStackAndGarbage<T>>(in inner.Node, new ToArrayViaStackAndGarbage<T>(maybeMaxCountForStackBasedPath.Value));
+
+                return inner.Node.CreateObjectViaFastEnumerator<T[], ToArrayViaAllocatorForward<T, GarbageCollectedAllocator<T>>>(new ToArrayViaAllocatorForward<T, GarbageCollectedAllocator<T>>(default, 0, null));
+            }
+
+            return inner.Node.CreateObjectViaFastEnumerator<T[], ToArrayViaAllocatorForward<T, ArrayPoolAllocator<T>>>(new ToArrayViaAllocatorForward<T, ArrayPoolAllocator<T>>(new ArrayPoolAllocator<T>(arrayPoolInfo.Value.arrayPool, arrayPoolInfo.Value.cleanBuffers), 0, info.ActualSize));
+        }
+
         public static List<T> ToList<T, Inner>(in this ValueEnumerable<T, Inner> inner, int? maybeMaxCountForStackBasedPath = 64, (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo = null)
             where Inner : INode<T>
         {

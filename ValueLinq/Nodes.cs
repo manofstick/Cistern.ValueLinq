@@ -19,11 +19,11 @@ namespace Cistern.ValueLinq
 
         public CountInformation(long? size, bool isImmutable)
         {
-            _flags = Flags.ActualLengthIsMaximumLength | Flags.CountingDepth;
+            _flags = Flags.CountingDepth;
             
             _maybeMaximumLength = size.GetValueOrDefault();
             if (size.HasValue)
-                _flags |= Flags.HasMaximumLength;
+                _flags |= Flags.HasMaximumLength | Flags.ActualLengthIsMaximumLength;
             
             if (isImmutable)
                 _flags |= Flags.IsImmutable;
