@@ -78,7 +78,6 @@ namespace Cistern.ValueLinq.Nodes
 
         public ValueWhereFoward(in Next prior, Predicate predicate) => (_next, _predicate) = (prior, predicate);
 
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() => _next.Dispose();
         public TResult GetResult<TResult>() => _next.GetResult<TResult>();
 
@@ -94,6 +93,44 @@ namespace Cistern.ValueLinq.Nodes
             if (filtered)
                 return _next.ProcessNext(input);
             return true;
+        }
+
+        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request)
+        {
+            if (typeof(TRequest) == typeof(Containers.GetSpan<TObject, T>))
+            {
+                var getSpan = (Containers.GetSpan<TObject, T>)(object)request;
+
+                var span = getSpan(obj);
+
+                if (_predicate is IFunc<T, bool>)   return ProcessBatch(span);
+                if (_predicate is IInFunc<T, bool>) return ProcessBatchRef(span);
+
+                throw new NotImplementedException();
+            }
+            return BatchProcessResult.Unavailable;
+        }
+
+        private BatchProcessResult ProcessBatch(ReadOnlySpan<T> data)
+        {
+            for (var i=0; i < data.Length; ++i)
+            {
+                if (((IFunc<T, bool>)_predicate).Invoke(data[i]))
+                    if (!_next.ProcessNext(data[i]))
+                        return BatchProcessResult.SuccessAndHalt;
+            }
+            return BatchProcessResult.SuccessAndContinue;
+        }
+
+        private BatchProcessResult ProcessBatchRef(ReadOnlySpan<T> data)
+        {
+            for (var i = 0; i < data.Length; ++i)
+            {
+                if (((IInFunc<T, bool>)_predicate).Invoke(in data[i]))
+                    if (!_next.ProcessNext(data[i]))
+                        return BatchProcessResult.SuccessAndHalt;
+            }
+            return BatchProcessResult.SuccessAndContinue;
         }
     }
 }
