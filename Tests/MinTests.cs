@@ -758,5 +758,17 @@ namespace Linqs.Tests
         {
             Assert.Throws<InvalidOperationException>(() => Enumerable.Empty<bool>().Min());
         }
+
+        [Fact]
+        public void TestVectorMin()
+        {
+            var source = Enumerable.Repeat(0, 1000).ToArray();
+            for (var i = 0; i < source.Length; ++i)
+            {
+                source[i] = -i;
+                Assert.Equal(source.Min(), -i);
+                source[i] = 0;
+            }
+        }
     }
 }

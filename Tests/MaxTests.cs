@@ -1105,5 +1105,18 @@ namespace Linqs.Tests
         {
             Assert.Throws<InvalidOperationException>(() => Enumerable.Empty<bool>().Max());
         }
+
+        [Fact]
+        public void TestVectorMax()
+        {
+            var source = Enumerable.Repeat(0, 1000).ToArray();
+            for(var i=0; i < source.Length; ++i)
+            {
+                source[i] = i;
+                Assert.Equal(source.Max(), i);
+                source[i] = 0;
+            }
+        }
+
     }
 }
