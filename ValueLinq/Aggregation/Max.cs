@@ -81,7 +81,7 @@ namespace Cistern.ValueLinq.Aggregation
             }
 
             const int NumberOfVectorsToMakeThisWorthwhile = 5; // from some random testing
-            if (math.SupportsVectorization && ((source.Length - idx) / Vector<T>.Count > NumberOfVectorsToMakeThisWorthwhile))
+            if (Vector.IsHardwareAccelerated && math.SupportsVectorization && ((source.Length - idx) / Vector<T>.Count > NumberOfVectorsToMakeThisWorthwhile))
             {
                 var remainder = source.Slice(idx);
                 var asVector = MemoryMarshal.Cast<T, Vector<T>>(remainder);

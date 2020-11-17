@@ -78,7 +78,7 @@ namespace Cistern.ValueLinq.Aggregation
             var idx = 0;
 
             const int NumberOfVectorsToMakeThisWorthwhile = 5; // from some random testing
-            if (math.SupportsVectorization && ((source.Length - idx) / Vector<T>.Count > NumberOfVectorsToMakeThisWorthwhile))
+            if (Vector.IsHardwareAccelerated && math.SupportsVectorization && ((source.Length - idx) / Vector<T>.Count > NumberOfVectorsToMakeThisWorthwhile))
             {
                 var asVector = MemoryMarshal.Cast<T, Vector<T>>(source);
                 var mins = new Vector<T>(result);
