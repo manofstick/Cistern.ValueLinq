@@ -74,7 +74,7 @@ namespace Cistern.ValueLinq.Containers
                 if (array.Length < 20 
                  || BatchProcessResult.Unavailable == fenum.TryProcessBatch<TIn[], GetSpan<TIn[], TIn>>(array, in Optimizations.UseSpan<TIn>.FromArray))
                 {
-                    SpanNode.Loop<TIn, FEnumerator>(array.AsSpan(), ref fenum);
+                    Loop<TIn, FEnumerator>(array, ref fenum);
                 }
 
                 return fenum.GetResult<TResult>();
@@ -84,5 +84,15 @@ namespace Cistern.ValueLinq.Containers
                 fenum.Dispose();
             }
         }
+        internal static void Loop<TIn, FEnumerator>(TIn[] array, ref FEnumerator fenum)
+            where FEnumerator : IForwardEnumerator<TIn>
+        {
+            for (var i = 0; i < array.Length; ++i)
+            {
+                if (!fenum.ProcessNext(array[i]))
+                    break;
+            }
+        }
+
     }
 }
