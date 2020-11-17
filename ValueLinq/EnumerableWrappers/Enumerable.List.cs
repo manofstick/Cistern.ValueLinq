@@ -66,17 +66,17 @@ namespace Cistern.ValueLinq
         public static float?   Average(this List<float?>   inner) => inner.OfList().Average();
         public static double?  Average(this List<long?>    inner) => inner.OfList().Average();
 
-        public static decimal Average<TSource>(this List<TSource> inner, Func<TSource, decimal> selector) => inner.OfList().Select(selector).Average();
-        public static double  Average<TSource>(this List<TSource> inner, Func<TSource, double > selector) => inner.OfList().Select(selector).Average();
-        public static double  Average<TSource>(this List<TSource> inner, Func<TSource, int    > selector) => inner.OfList().Select(selector).Average();
-        public static double  Average<TSource>(this List<TSource> inner, Func<TSource, float  > selector) => inner.OfList().Select(selector).Average();
-        public static double  Average<TSource>(this List<TSource> inner, Func<TSource, long   > selector) => inner.OfList().Select(selector).Average();
+        public static decimal Average<TSource>(this List<TSource> inner, Func<TSource, decimal> selector) => inner.OfList().Average(selector);
+        public static double  Average<TSource>(this List<TSource> inner, Func<TSource, double > selector) => inner.OfList().Average(selector);
+        public static double  Average<TSource>(this List<TSource> inner, Func<TSource, int    > selector) => inner.OfList().Average(selector);
+        public static double  Average<TSource>(this List<TSource> inner, Func<TSource, float  > selector) => inner.OfList().Average(selector);
+        public static double  Average<TSource>(this List<TSource> inner, Func<TSource, long   > selector) => inner.OfList().Average(selector);
 
-        public static decimal? Average<TSource>(this List<TSource> inner, Func<TSource, decimal?> selector) => inner.OfList().Select(selector).Average();
-        public static double?  Average<TSource>(this List<TSource> inner, Func<TSource, double? > selector) => inner.OfList().Select(selector).Average();
-        public static double?  Average<TSource>(this List<TSource> inner, Func<TSource, int?    > selector) => inner.OfList().Select(selector).Average();
-        public static float?   Average<TSource>(this List<TSource> inner, Func<TSource, float?  > selector) => inner.OfList().Select(selector).Average();
-        public static double?  Average<TSource>(this List<TSource> inner, Func<TSource, long?   > selector) => inner.OfList().Select(selector).Average();
+        public static decimal? Average<TSource>(this List<TSource> inner, Func<TSource, decimal?> selector) => inner.OfList().Average(selector);
+        public static double?  Average<TSource>(this List<TSource> inner, Func<TSource, double? > selector) => inner.OfList().Average(selector);
+        public static double?  Average<TSource>(this List<TSource> inner, Func<TSource, int?    > selector) => inner.OfList().Average(selector);
+        public static float?   Average<TSource>(this List<TSource> inner, Func<TSource, float?  > selector) => inner.OfList().Average(selector);
+        public static double?  Average<TSource>(this List<TSource> inner, Func<TSource, long?   > selector) => inner.OfList().Average(selector);
 
         public static decimal Min(this List<decimal> inner) => inner.OfList().Min();
         public static double  Min(this List<double>  inner) => inner.OfList().Min();
@@ -91,18 +91,18 @@ namespace Cistern.ValueLinq
         public static float?   Min(this List<float?>   inner) => inner.OfList().Min();
         public static long?    Min(this List<long?>    inner) => inner.OfList().Min();
 
-        public static decimal Min<TSource>(this List<TSource> inner, Func<TSource, decimal> selector) => inner.OfList().Select(selector).Min();
-        public static double  Min<TSource>(this List<TSource> inner, Func<TSource, double > selector) => inner.OfList().Select(selector).Min();
-        public static int     Min<TSource>(this List<TSource> inner, Func<TSource, int    > selector) => inner.OfList().Select(selector).Min();
-        public static float   Min<TSource>(this List<TSource> inner, Func<TSource, float  > selector) => inner.OfList().Select(selector).Min();
-        public static long    Min<TSource>(this List<TSource> inner, Func<TSource, long   > selector) => inner.OfList().Select(selector).Min();
-        public static T       Min<TSource, T>(this List<TSource> inner, Func<TSource, T> selector) => inner.OfList().Select(selector).Min();
+        public static decimal Min<TSource>(this List<TSource> inner, Func<TSource, decimal> selector) => inner.OfList().Min(selector);
+        public static double  Min<TSource>(this List<TSource> inner, Func<TSource, double > selector) => inner.OfList().Min(selector);
+        public static int     Min<TSource>(this List<TSource> inner, Func<TSource, int    > selector) => inner.OfList().Min(selector);
+        public static float   Min<TSource>(this List<TSource> inner, Func<TSource, float  > selector) => inner.OfList().Min(selector);
+        public static long    Min<TSource>(this List<TSource> inner, Func<TSource, long   > selector) => inner.OfList().Min(selector);
+        public static T       Min<TSource, T>(this List<TSource> inner, Func<TSource, T> selector) => inner.OfList().Min(selector);
 
-        public static decimal? Min<TSource>(this List<TSource> inner, Func<TSource, decimal?> selector) => inner.OfList().Select(selector).Min();
-        public static double?  Min<TSource>(this List<TSource> inner, Func<TSource, double? > selector) => inner.OfList().Select(selector).Min();
-        public static int?     Min<TSource>(this List<TSource> inner, Func<TSource, int?    > selector) => inner.OfList().Select(selector).Min();
-        public static float?   Min<TSource>(this List<TSource> inner, Func<TSource, float?  > selector) => inner.OfList().Select(selector).Min();
-        public static long?    Min<TSource>(this List<TSource> inner, Func<TSource, long?   > selector) => inner.OfList().Select(selector).Min();
+        public static decimal? Min<TSource>(this List<TSource> inner, Func<TSource, decimal?> selector) => inner.OfList().Min(selector);
+        public static double?  Min<TSource>(this List<TSource> inner, Func<TSource, double? > selector) => inner.OfList().Min(selector);
+        public static int?     Min<TSource>(this List<TSource> inner, Func<TSource, int?    > selector) => inner.OfList().Min(selector);
+        public static float?   Min<TSource>(this List<TSource> inner, Func<TSource, float?  > selector) => inner.OfList().Min(selector);
+        public static long?    Min<TSource>(this List<TSource> inner, Func<TSource, long?   > selector) => inner.OfList().Min(selector);
 
 
         public static decimal Max(this List<decimal> inner) => inner.OfList().Max();
@@ -118,18 +118,18 @@ namespace Cistern.ValueLinq
         public static float?   Max(this List<float?>   inner) => inner.OfList().Max();
         public static long?    Max(this List<long?>    inner) => inner.OfList().Max();
 
-        public static decimal Max<TSource>(this List<TSource> inner, Func<TSource, decimal> selector) => inner.OfList().Select(selector).Max();
-        public static double  Max<TSource>(this List<TSource> inner, Func<TSource, double > selector) => inner.OfList().Select(selector).Max();
-        public static int     Max<TSource>(this List<TSource> inner, Func<TSource, int    > selector) => inner.OfList().Select(selector).Max();
-        public static float   Max<TSource>(this List<TSource> inner, Func<TSource, float  > selector) => inner.OfList().Select(selector).Max();
-        public static long    Max<TSource>(this List<TSource> inner, Func<TSource, long   > selector) => inner.OfList().Select(selector).Max();
-        public static T       Max<TSource, T>(this List<TSource> inner, Func<TSource, T> selector) => inner.OfList().Select(selector).Max();
+        public static decimal Max<TSource>(this List<TSource> inner, Func<TSource, decimal> selector) => inner.OfList().Max(selector);
+        public static double  Max<TSource>(this List<TSource> inner, Func<TSource, double > selector) => inner.OfList().Max(selector);
+        public static int     Max<TSource>(this List<TSource> inner, Func<TSource, int    > selector) => inner.OfList().Max(selector);
+        public static float   Max<TSource>(this List<TSource> inner, Func<TSource, float  > selector) => inner.OfList().Max(selector);
+        public static long    Max<TSource>(this List<TSource> inner, Func<TSource, long   > selector) => inner.OfList().Max(selector);
+        public static T       Max<TSource, T>(this List<TSource> inner, Func<TSource, T> selector) => inner.OfList().Max(selector);
 
-        public static decimal? Max<TSource>(this List<TSource> inner, Func<TSource, decimal?> selector) => inner.OfList().Select(selector).Max();
-        public static double?  Max<TSource>(this List<TSource> inner, Func<TSource, double? > selector) => inner.OfList().Select(selector).Max();
-        public static int?     Max<TSource>(this List<TSource> inner, Func<TSource, int?    > selector) => inner.OfList().Select(selector).Max();
-        public static float?   Max<TSource>(this List<TSource> inner, Func<TSource, float?  > selector) => inner.OfList().Select(selector).Max();
-        public static long?    Max<TSource>(this List<TSource> inner, Func<TSource, long?   > selector) => inner.OfList().Select(selector).Max();
+        public static decimal? Max<TSource>(this List<TSource> inner, Func<TSource, decimal?> selector) => inner.OfList().Max(selector);
+        public static double?  Max<TSource>(this List<TSource> inner, Func<TSource, double? > selector) => inner.OfList().Max(selector);
+        public static int?     Max<TSource>(this List<TSource> inner, Func<TSource, int?    > selector) => inner.OfList().Max(selector);
+        public static float?   Max<TSource>(this List<TSource> inner, Func<TSource, float?  > selector) => inner.OfList().Max(selector);
+        public static long?    Max<TSource>(this List<TSource> inner, Func<TSource, long?   > selector) => inner.OfList().Max(selector);
 
         public static decimal Sum(this List<decimal> inner) => inner.OfList().Sum();
         public static double  Sum(this List<double>  inner) => inner.OfList().Sum();
@@ -143,17 +143,17 @@ namespace Cistern.ValueLinq
         public static float?   Sum(this List<float?>   inner) => inner.OfList().Sum();
         public static long?    Sum(this List<long?>    inner) => inner.OfList().Sum();
 
-        public static decimal Sum<TSource>(this List<TSource> inner, Func<TSource, decimal> selector) => inner.OfList().Select(selector).Sum();
-        public static double  Sum<TSource>(this List<TSource> inner, Func<TSource, double > selector) => inner.OfList().Select(selector).Sum();
-        public static int     Sum<TSource>(this List<TSource> inner, Func<TSource, int    > selector) => inner.OfList().Select(selector).Sum();
-        public static float   Sum<TSource>(this List<TSource> inner, Func<TSource, float  > selector) => inner.OfList().Select(selector).Sum();
-        public static long    Sum<TSource>(this List<TSource> inner, Func<TSource, long   > selector) => inner.OfList().Select(selector).Sum();
+        public static decimal Sum<TSource>(this List<TSource> inner, Func<TSource, decimal> selector) => inner.OfList().Sum(selector);
+        public static double  Sum<TSource>(this List<TSource> inner, Func<TSource, double > selector) => inner.OfList().Sum(selector);
+        public static int     Sum<TSource>(this List<TSource> inner, Func<TSource, int    > selector) => inner.OfList().Sum(selector);
+        public static float   Sum<TSource>(this List<TSource> inner, Func<TSource, float  > selector) => inner.OfList().Sum(selector);
+        public static long    Sum<TSource>(this List<TSource> inner, Func<TSource, long   > selector) => inner.OfList().Sum(selector);
 
-        public static decimal? Sum<TSource>(this List<TSource> inner, Func<TSource, decimal?> selector) => inner.OfList().Select(selector).Sum();
-        public static double?  Sum<TSource>(this List<TSource> inner, Func<TSource, double? > selector) => inner.OfList().Select(selector).Sum();
-        public static int?     Sum<TSource>(this List<TSource> inner, Func<TSource, int?    > selector) => inner.OfList().Select(selector).Sum();
-        public static float?   Sum<TSource>(this List<TSource> inner, Func<TSource, float?  > selector) => inner.OfList().Select(selector).Sum();
-        public static long?    Sum<TSource>(this List<TSource> inner, Func<TSource, long?   > selector) => inner.OfList().Select(selector).Sum();
+        public static decimal? Sum<TSource>(this List<TSource> inner, Func<TSource, decimal?> selector) => inner.OfList().Sum(selector);
+        public static double?  Sum<TSource>(this List<TSource> inner, Func<TSource, double? > selector) => inner.OfList().Sum(selector);
+        public static int?     Sum<TSource>(this List<TSource> inner, Func<TSource, int?    > selector) => inner.OfList().Sum(selector);
+        public static float?   Sum<TSource>(this List<TSource> inner, Func<TSource, float?  > selector) => inner.OfList().Sum(selector);
+        public static long?    Sum<TSource>(this List<TSource> inner, Func<TSource, long?   > selector) => inner.OfList().Sum(selector);
 
 
         public static int Count<T>(this List<T> inner) => inner.OfList().Count();

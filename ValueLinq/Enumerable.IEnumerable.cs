@@ -119,17 +119,17 @@ namespace Cistern.ValueLinq
         public static float?   Average(this IEnumerable<float?>   inner) => inner.OfEnumerable().Average();
         public static double?  Average(this IEnumerable<long?>    inner) => inner.OfEnumerable().Average();
 
-        public static decimal Average<TSource>(this IEnumerable<TSource> inner, Func<TSource, decimal> selector) => inner.OfEnumerable().Select(selector).Average();
-        public static double  Average<TSource>(this IEnumerable<TSource> inner, Func<TSource, double > selector) => inner.OfEnumerable().Select(selector).Average();
-        public static double  Average<TSource>(this IEnumerable<TSource> inner, Func<TSource, int    > selector) => inner.OfEnumerable().Select(selector).Average();
-        public static double  Average<TSource>(this IEnumerable<TSource> inner, Func<TSource, float  > selector) => inner.OfEnumerable().Select(selector).Average();
-        public static double  Average<TSource>(this IEnumerable<TSource> inner, Func<TSource, long   > selector) => inner.OfEnumerable().Select(selector).Average();
+        public static decimal Average<TSource>(this IEnumerable<TSource> inner, Func<TSource, decimal> selector) => inner.OfEnumerable().Average(selector);
+        public static double  Average<TSource>(this IEnumerable<TSource> inner, Func<TSource, double > selector) => inner.OfEnumerable().Average(selector);
+        public static double  Average<TSource>(this IEnumerable<TSource> inner, Func<TSource, int    > selector) => inner.OfEnumerable().Average(selector);
+        public static double  Average<TSource>(this IEnumerable<TSource> inner, Func<TSource, float  > selector) => inner.OfEnumerable().Average(selector);
+        public static double  Average<TSource>(this IEnumerable<TSource> inner, Func<TSource, long   > selector) => inner.OfEnumerable().Average(selector);
 
-        public static decimal? Average<TSource>(this IEnumerable<TSource> inner, Func<TSource, decimal?> selector) => inner.OfEnumerable().Select(selector).Average();
-        public static double?  Average<TSource>(this IEnumerable<TSource> inner, Func<TSource, double? > selector) => inner.OfEnumerable().Select(selector).Average();
-        public static double?  Average<TSource>(this IEnumerable<TSource> inner, Func<TSource, int?    > selector) => inner.OfEnumerable().Select(selector).Average();
-        public static float?   Average<TSource>(this IEnumerable<TSource> inner, Func<TSource, float?  > selector) => inner.OfEnumerable().Select(selector).Average();
-        public static double?  Average<TSource>(this IEnumerable<TSource> inner, Func<TSource, long?   > selector) => inner.OfEnumerable().Select(selector).Average();
+        public static decimal? Average<TSource>(this IEnumerable<TSource> inner, Func<TSource, decimal?> selector) => inner.OfEnumerable().Average(selector);
+        public static double?  Average<TSource>(this IEnumerable<TSource> inner, Func<TSource, double? > selector) => inner.OfEnumerable().Average(selector);
+        public static double?  Average<TSource>(this IEnumerable<TSource> inner, Func<TSource, int?    > selector) => inner.OfEnumerable().Average(selector);
+        public static float?   Average<TSource>(this IEnumerable<TSource> inner, Func<TSource, float?  > selector) => inner.OfEnumerable().Average(selector);
+        public static double?  Average<TSource>(this IEnumerable<TSource> inner, Func<TSource, long?   > selector) => inner.OfEnumerable().Average(selector);
 
         public static decimal Min(this IEnumerable<decimal> inner) => inner.OfEnumerable().Min();
         public static double  Min(this IEnumerable<double>  inner) => inner.OfEnumerable().Min();
@@ -144,18 +144,18 @@ namespace Cistern.ValueLinq
         public static float?   Min(this IEnumerable<float?>   inner) => inner.OfEnumerable().Min();
         public static long?    Min(this IEnumerable<long?>    inner) => inner.OfEnumerable().Min();
 
-        public static decimal Min<TSource>(this IEnumerable<TSource> inner, Func<TSource, decimal> selector) => inner.OfEnumerable().Select(selector).Min();
-        public static double  Min<TSource>(this IEnumerable<TSource> inner, Func<TSource, double > selector) => inner.OfEnumerable().Select(selector).Min();
-        public static int     Min<TSource>(this IEnumerable<TSource> inner, Func<TSource, int    > selector) => inner.OfEnumerable().Select(selector).Min();
-        public static float   Min<TSource>(this IEnumerable<TSource> inner, Func<TSource, float  > selector) => inner.OfEnumerable().Select(selector).Min();
-        public static long    Min<TSource>(this IEnumerable<TSource> inner, Func<TSource, long   > selector) => inner.OfEnumerable().Select(selector).Min();
-        public static T       Min<TSource, T>(this IEnumerable<TSource> inner, Func<TSource, T> selector) => inner.OfEnumerable().Select(selector).Min();
+        public static decimal Min<TSource>(this IEnumerable<TSource> inner, Func<TSource, decimal> selector) => inner.OfEnumerable().Min(selector);
+        public static double  Min<TSource>(this IEnumerable<TSource> inner, Func<TSource, double > selector) => inner.OfEnumerable().Min(selector);
+        public static int     Min<TSource>(this IEnumerable<TSource> inner, Func<TSource, int    > selector) => inner.OfEnumerable().Min(selector);
+        public static float   Min<TSource>(this IEnumerable<TSource> inner, Func<TSource, float  > selector) => inner.OfEnumerable().Min(selector);
+        public static long    Min<TSource>(this IEnumerable<TSource> inner, Func<TSource, long   > selector) => inner.OfEnumerable().Min(selector);
+        public static T       Min<TSource, T>(this IEnumerable<TSource> inner, Func<TSource, T> selector) => inner.OfEnumerable().Min(selector);
 
-        public static decimal? Min<TSource>(this IEnumerable<TSource> inner, Func<TSource, decimal?> selector) => inner.OfEnumerable().Select(selector).Min();
-        public static double?  Min<TSource>(this IEnumerable<TSource> inner, Func<TSource, double? > selector) => inner.OfEnumerable().Select(selector).Min();
-        public static int?     Min<TSource>(this IEnumerable<TSource> inner, Func<TSource, int?    > selector) => inner.OfEnumerable().Select(selector).Min();
-        public static float?   Min<TSource>(this IEnumerable<TSource> inner, Func<TSource, float?  > selector) => inner.OfEnumerable().Select(selector).Min();
-        public static long?    Min<TSource>(this IEnumerable<TSource> inner, Func<TSource, long?   > selector) => inner.OfEnumerable().Select(selector).Min();
+        public static decimal? Min<TSource>(this IEnumerable<TSource> inner, Func<TSource, decimal?> selector) => inner.OfEnumerable().Min(selector);
+        public static double?  Min<TSource>(this IEnumerable<TSource> inner, Func<TSource, double? > selector) => inner.OfEnumerable().Min(selector);
+        public static int?     Min<TSource>(this IEnumerable<TSource> inner, Func<TSource, int?    > selector) => inner.OfEnumerable().Min(selector);
+        public static float?   Min<TSource>(this IEnumerable<TSource> inner, Func<TSource, float?  > selector) => inner.OfEnumerable().Min(selector);
+        public static long?    Min<TSource>(this IEnumerable<TSource> inner, Func<TSource, long?   > selector) => inner.OfEnumerable().Min(selector);
 
 
         public static decimal Max(this IEnumerable<decimal> inner) => inner.OfEnumerable().Max();
@@ -171,18 +171,18 @@ namespace Cistern.ValueLinq
         public static float?   Max(this IEnumerable<float?>   inner) => inner.OfEnumerable().Max();
         public static long?    Max(this IEnumerable<long?>    inner) => inner.OfEnumerable().Max();
 
-        public static decimal Max<TSource>(this IEnumerable<TSource> inner, Func<TSource, decimal> selector) => inner.OfEnumerable().Select(selector).Max();
-        public static double  Max<TSource>(this IEnumerable<TSource> inner, Func<TSource, double > selector) => inner.OfEnumerable().Select(selector).Max();
-        public static int     Max<TSource>(this IEnumerable<TSource> inner, Func<TSource, int    > selector) => inner.OfEnumerable().Select(selector).Max();
-        public static float   Max<TSource>(this IEnumerable<TSource> inner, Func<TSource, float  > selector) => inner.OfEnumerable().Select(selector).Max();
-        public static long    Max<TSource>(this IEnumerable<TSource> inner, Func<TSource, long   > selector) => inner.OfEnumerable().Select(selector).Max();
-        public static T       Max<TSource, T>(this IEnumerable<TSource> inner, Func<TSource, T> selector) => inner.OfEnumerable().Select(selector).Max();
+        public static decimal Max<TSource>(this IEnumerable<TSource> inner, Func<TSource, decimal> selector) => inner.OfEnumerable().Max(selector);
+        public static double  Max<TSource>(this IEnumerable<TSource> inner, Func<TSource, double > selector) => inner.OfEnumerable().Max(selector);
+        public static int     Max<TSource>(this IEnumerable<TSource> inner, Func<TSource, int    > selector) => inner.OfEnumerable().Max(selector);
+        public static float   Max<TSource>(this IEnumerable<TSource> inner, Func<TSource, float  > selector) => inner.OfEnumerable().Max(selector);
+        public static long    Max<TSource>(this IEnumerable<TSource> inner, Func<TSource, long   > selector) => inner.OfEnumerable().Max(selector);
+        public static T       Max<TSource, T>(this IEnumerable<TSource> inner, Func<TSource, T> selector) => inner.OfEnumerable().Max(selector);
 
-        public static decimal? Max<TSource>(this IEnumerable<TSource> inner, Func<TSource, decimal?> selector) => inner.OfEnumerable().Select(selector).Max();
-        public static double?  Max<TSource>(this IEnumerable<TSource> inner, Func<TSource, double? > selector) => inner.OfEnumerable().Select(selector).Max();
-        public static int?     Max<TSource>(this IEnumerable<TSource> inner, Func<TSource, int?    > selector) => inner.OfEnumerable().Select(selector).Max();
-        public static float?   Max<TSource>(this IEnumerable<TSource> inner, Func<TSource, float?  > selector) => inner.OfEnumerable().Select(selector).Max();
-        public static long?    Max<TSource>(this IEnumerable<TSource> inner, Func<TSource, long?   > selector) => inner.OfEnumerable().Select(selector).Max();
+        public static decimal? Max<TSource>(this IEnumerable<TSource> inner, Func<TSource, decimal?> selector) => inner.OfEnumerable().Max(selector);
+        public static double?  Max<TSource>(this IEnumerable<TSource> inner, Func<TSource, double? > selector) => inner.OfEnumerable().Max(selector);
+        public static int?     Max<TSource>(this IEnumerable<TSource> inner, Func<TSource, int?    > selector) => inner.OfEnumerable().Max(selector);
+        public static float?   Max<TSource>(this IEnumerable<TSource> inner, Func<TSource, float?  > selector) => inner.OfEnumerable().Max(selector);
+        public static long?    Max<TSource>(this IEnumerable<TSource> inner, Func<TSource, long?   > selector) => inner.OfEnumerable().Max(selector);
 
         public static decimal Sum(this IEnumerable<decimal> inner) => inner.OfEnumerable().Sum();
         public static double  Sum(this IEnumerable<double>  inner) => inner.OfEnumerable().Sum();
@@ -196,17 +196,17 @@ namespace Cistern.ValueLinq
         public static float?   Sum(this IEnumerable<float?>   inner) => inner.OfEnumerable().Sum();
         public static long?    Sum(this IEnumerable<long?>    inner) => inner.OfEnumerable().Sum();
 
-        public static decimal Sum<TSource>(this IEnumerable<TSource> inner, Func<TSource, decimal> selector) => inner.OfEnumerable().Select(selector).Sum();
-        public static double  Sum<TSource>(this IEnumerable<TSource> inner, Func<TSource, double > selector) => inner.OfEnumerable().Select(selector).Sum();
-        public static int     Sum<TSource>(this IEnumerable<TSource> inner, Func<TSource, int    > selector) => inner.OfEnumerable().Select(selector).Sum();
-        public static float   Sum<TSource>(this IEnumerable<TSource> inner, Func<TSource, float  > selector) => inner.OfEnumerable().Select(selector).Sum();
-        public static long    Sum<TSource>(this IEnumerable<TSource> inner, Func<TSource, long   > selector) => inner.OfEnumerable().Select(selector).Sum();
+        public static decimal Sum<TSource>(this IEnumerable<TSource> inner, Func<TSource, decimal> selector) => inner.OfEnumerable().Sum(selector);
+        public static double  Sum<TSource>(this IEnumerable<TSource> inner, Func<TSource, double > selector) => inner.OfEnumerable().Sum(selector);
+        public static int     Sum<TSource>(this IEnumerable<TSource> inner, Func<TSource, int    > selector) => inner.OfEnumerable().Sum(selector);
+        public static float   Sum<TSource>(this IEnumerable<TSource> inner, Func<TSource, float  > selector) => inner.OfEnumerable().Sum(selector);
+        public static long    Sum<TSource>(this IEnumerable<TSource> inner, Func<TSource, long   > selector) => inner.OfEnumerable().Sum(selector);
 
-        public static decimal? Sum<TSource>(this IEnumerable<TSource> inner, Func<TSource, decimal?> selector) => inner.OfEnumerable().Select(selector).Sum();
-        public static double?  Sum<TSource>(this IEnumerable<TSource> inner, Func<TSource, double? > selector) => inner.OfEnumerable().Select(selector).Sum();
-        public static int?     Sum<TSource>(this IEnumerable<TSource> inner, Func<TSource, int?    > selector) => inner.OfEnumerable().Select(selector).Sum();
-        public static float?   Sum<TSource>(this IEnumerable<TSource> inner, Func<TSource, float?  > selector) => inner.OfEnumerable().Select(selector).Sum();
-        public static long?    Sum<TSource>(this IEnumerable<TSource> inner, Func<TSource, long?   > selector) => inner.OfEnumerable().Select(selector).Sum();
+        public static decimal? Sum<TSource>(this IEnumerable<TSource> inner, Func<TSource, decimal?> selector) => inner.OfEnumerable().Sum(selector);
+        public static double?  Sum<TSource>(this IEnumerable<TSource> inner, Func<TSource, double? > selector) => inner.OfEnumerable().Sum(selector);
+        public static int?     Sum<TSource>(this IEnumerable<TSource> inner, Func<TSource, int?    > selector) => inner.OfEnumerable().Sum(selector);
+        public static float?   Sum<TSource>(this IEnumerable<TSource> inner, Func<TSource, float?  > selector) => inner.OfEnumerable().Sum(selector);
+        public static long?    Sum<TSource>(this IEnumerable<TSource> inner, Func<TSource, long?   > selector) => inner.OfEnumerable().Sum(selector);
 
 
         public static int Count<T>(this IEnumerable<T> inner, bool ignorePotentialSideEffects = false) => inner.OfEnumerable().Count(ignorePotentialSideEffects);

@@ -67,7 +67,13 @@ namespace Cistern.ValueLinq.Nodes
         Next _next;
         Func<T, U> _selector;
 
-        public SelectFoward(in Next prior, Func<T, U> predicate) => (_next, _selector) = (prior, predicate);
+        public SelectFoward(in Next prior, Func<T, U> selector)
+        {
+            if (selector == null)
+                throw new ArgumentNullException(nameof(selector));
+
+            (_next, _selector) = (prior, selector);
+        }
 
         public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() => _next.Dispose();

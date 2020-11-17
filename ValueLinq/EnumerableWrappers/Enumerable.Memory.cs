@@ -73,17 +73,17 @@ namespace Cistern.ValueLinq
         public static float?   Average(this ReadOnlyMemory<float?>   inner) => inner.OfMemory().Average();
         public static double?  Average(this ReadOnlyMemory<long?>    inner) => inner.OfMemory().Average();
 
-        public static decimal Average<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, decimal> selector) => inner.OfMemory().Select(selector).Average();
-        public static double  Average<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, double > selector) => inner.OfMemory().Select(selector).Average();
-        public static double  Average<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, int    > selector) => inner.OfMemory().Select(selector).Average();
-        public static double  Average<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, float  > selector) => inner.OfMemory().Select(selector).Average();
-        public static double  Average<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, long   > selector) => inner.OfMemory().Select(selector).Average();
+        public static decimal Average<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, decimal> selector) => inner.OfMemory().Average(selector);
+        public static double  Average<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, double > selector) => inner.OfMemory().Average(selector);
+        public static double  Average<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, int    > selector) => inner.OfMemory().Average(selector);
+        public static double  Average<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, float  > selector) => inner.OfMemory().Average(selector);
+        public static double  Average<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, long   > selector) => inner.OfMemory().Average(selector);
 
-        public static decimal? Average<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, decimal?> selector) => inner.OfMemory().Select(selector).Average();
-        public static double?  Average<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, double? > selector) => inner.OfMemory().Select(selector).Average();
-        public static double?  Average<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, int?    > selector) => inner.OfMemory().Select(selector).Average();
-        public static float?   Average<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, float?  > selector) => inner.OfMemory().Select(selector).Average();
-        public static double?  Average<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, long?   > selector) => inner.OfMemory().Select(selector).Average();
+        public static decimal? Average<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, decimal?> selector) => inner.OfMemory().Average(selector);
+        public static double?  Average<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, double? > selector) => inner.OfMemory().Average(selector);
+        public static double?  Average<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, int?    > selector) => inner.OfMemory().Average(selector);
+        public static float?   Average<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, float?  > selector) => inner.OfMemory().Average(selector);
+        public static double?  Average<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, long?   > selector) => inner.OfMemory().Average(selector);
 
         public static decimal Min(this ReadOnlyMemory<decimal> inner) => inner.OfMemory().Min();
         public static double  Min(this ReadOnlyMemory<double>  inner) => inner.OfMemory().Min();
@@ -98,18 +98,18 @@ namespace Cistern.ValueLinq
         public static float?   Min(this ReadOnlyMemory<float?>   inner) => inner.OfMemory().Min();
         public static long?    Min(this ReadOnlyMemory<long?>    inner) => inner.OfMemory().Min();
 
-        public static decimal Min<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, decimal> selector) => inner.OfMemory().Select(selector).Min();
-        public static double  Min<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, double > selector) => inner.OfMemory().Select(selector).Min();
-        public static int     Min<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, int    > selector) => inner.OfMemory().Select(selector).Min();
-        public static float   Min<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, float  > selector) => inner.OfMemory().Select(selector).Min();
-        public static long    Min<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, long   > selector) => inner.OfMemory().Select(selector).Min();
-        public static T       Min<TSource, T>(this ReadOnlyMemory<TSource> inner, Func<TSource, T> selector) => inner.OfMemory().Select(selector).Min();
+        public static decimal Min<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, decimal> selector) => inner.OfMemory().Min(selector);
+        public static double  Min<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, double > selector) => inner.OfMemory().Min(selector);
+        public static int     Min<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, int    > selector) => inner.OfMemory().Min(selector);
+        public static float   Min<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, float  > selector) => inner.OfMemory().Min(selector);
+        public static long    Min<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, long   > selector) => inner.OfMemory().Min(selector);
+        public static T       Min<TSource, T>(this ReadOnlyMemory<TSource> inner, Func<TSource, T> selector) => inner.OfMemory().Min(selector);
 
-        public static decimal? Min<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, decimal?> selector) => inner.OfMemory().Select(selector).Min();
-        public static double?  Min<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, double? > selector) => inner.OfMemory().Select(selector).Min();
-        public static int?     Min<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, int?    > selector) => inner.OfMemory().Select(selector).Min();
-        public static float?   Min<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, float?  > selector) => inner.OfMemory().Select(selector).Min();
-        public static long?    Min<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, long?   > selector) => inner.OfMemory().Select(selector).Min();
+        public static decimal? Min<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, decimal?> selector) => inner.OfMemory().Min(selector);
+        public static double?  Min<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, double? > selector) => inner.OfMemory().Min(selector);
+        public static int?     Min<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, int?    > selector) => inner.OfMemory().Min(selector);
+        public static float?   Min<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, float?  > selector) => inner.OfMemory().Min(selector);
+        public static long?    Min<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, long?   > selector) => inner.OfMemory().Min(selector);
 
 
         public static decimal Max(this ReadOnlyMemory<decimal> inner) => inner.OfMemory().Max();
@@ -125,18 +125,18 @@ namespace Cistern.ValueLinq
         public static float?   Max(this ReadOnlyMemory<float?>   inner) => inner.OfMemory().Max();
         public static long?    Max(this ReadOnlyMemory<long?>    inner) => inner.OfMemory().Max();
 
-        public static decimal Max<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, decimal> selector) => inner.OfMemory().Select(selector).Max();
-        public static double  Max<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, double > selector) => inner.OfMemory().Select(selector).Max();
-        public static int     Max<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, int    > selector) => inner.OfMemory().Select(selector).Max();
-        public static float   Max<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, float  > selector) => inner.OfMemory().Select(selector).Max();
-        public static long    Max<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, long   > selector) => inner.OfMemory().Select(selector).Max();
-        public static T       Max<TSource, T>(this ReadOnlyMemory<TSource> inner, Func<TSource, T> selector) => inner.OfMemory().Select(selector).Max();
+        public static decimal Max<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, decimal> selector) => inner.OfMemory().Max(selector);
+        public static double  Max<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, double > selector) => inner.OfMemory().Max(selector);
+        public static int     Max<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, int    > selector) => inner.OfMemory().Max(selector);
+        public static float   Max<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, float  > selector) => inner.OfMemory().Max(selector);
+        public static long    Max<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, long   > selector) => inner.OfMemory().Max(selector);
+        public static T       Max<TSource, T>(this ReadOnlyMemory<TSource> inner, Func<TSource, T> selector) => inner.OfMemory().Max(selector);
 
-        public static decimal? Max<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, decimal?> selector) => inner.OfMemory().Select(selector).Max();
-        public static double?  Max<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, double? > selector) => inner.OfMemory().Select(selector).Max();
-        public static int?     Max<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, int?    > selector) => inner.OfMemory().Select(selector).Max();
-        public static float?   Max<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, float?  > selector) => inner.OfMemory().Select(selector).Max();
-        public static long?    Max<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, long?   > selector) => inner.OfMemory().Select(selector).Max();
+        public static decimal? Max<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, decimal?> selector) => inner.OfMemory().Max(selector);
+        public static double?  Max<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, double? > selector) => inner.OfMemory().Max(selector);
+        public static int?     Max<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, int?    > selector) => inner.OfMemory().Max(selector);
+        public static float?   Max<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, float?  > selector) => inner.OfMemory().Max(selector);
+        public static long?    Max<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, long?   > selector) => inner.OfMemory().Max(selector);
 
         public static decimal Sum(this ReadOnlyMemory<decimal> inner) => inner.OfMemory().Sum();
         public static double  Sum(this ReadOnlyMemory<double>  inner) => inner.OfMemory().Sum();
@@ -150,17 +150,17 @@ namespace Cistern.ValueLinq
         public static float?   Sum(this ReadOnlyMemory<float?>   inner) => inner.OfMemory().Sum();
         public static long?    Sum(this ReadOnlyMemory<long?>    inner) => inner.OfMemory().Sum();
 
-        public static decimal Sum<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, decimal> selector) => inner.OfMemory().Select(selector).Sum();
-        public static double  Sum<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, double > selector) => inner.OfMemory().Select(selector).Sum();
-        public static int     Sum<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, int    > selector) => inner.OfMemory().Select(selector).Sum();
-        public static float   Sum<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, float  > selector) => inner.OfMemory().Select(selector).Sum();
-        public static long    Sum<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, long   > selector) => inner.OfMemory().Select(selector).Sum();
+        public static decimal Sum<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, decimal> selector) => inner.OfMemory().Sum(selector);
+        public static double  Sum<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, double > selector) => inner.OfMemory().Sum(selector);
+        public static int     Sum<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, int    > selector) => inner.OfMemory().Sum(selector);
+        public static float   Sum<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, float  > selector) => inner.OfMemory().Sum(selector);
+        public static long    Sum<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, long   > selector) => inner.OfMemory().Sum(selector);
 
-        public static decimal? Sum<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, decimal?> selector) => inner.OfMemory().Select(selector).Sum();
-        public static double?  Sum<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, double? > selector) => inner.OfMemory().Select(selector).Sum();
-        public static int?     Sum<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, int?    > selector) => inner.OfMemory().Select(selector).Sum();
-        public static float?   Sum<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, float?  > selector) => inner.OfMemory().Select(selector).Sum();
-        public static long?    Sum<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, long?   > selector) => inner.OfMemory().Select(selector).Sum();
+        public static decimal? Sum<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, decimal?> selector) => inner.OfMemory().Sum(selector);
+        public static double?  Sum<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, double? > selector) => inner.OfMemory().Sum(selector);
+        public static int?     Sum<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, int?    > selector) => inner.OfMemory().Sum(selector);
+        public static float?   Sum<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, float?  > selector) => inner.OfMemory().Sum(selector);
+        public static long?    Sum<TSource>(this ReadOnlyMemory<TSource> inner, Func<TSource, long?   > selector) => inner.OfMemory().Sum(selector);
 
 
         public static int Count<T>(this ReadOnlyMemory<T> inner) => inner.OfMemory().Count();
