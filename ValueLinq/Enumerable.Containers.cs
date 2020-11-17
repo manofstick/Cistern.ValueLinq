@@ -29,6 +29,14 @@ namespace Cistern.ValueLinq
         public static ValueEnumerable<T, SpanNode<TObject, T>> FromSpan<TObject, T>(TObject obj, GetSpan<TObject,T> getSpan) =>
             new ValueEnumerable<T, SpanNode<TObject, T>>(new SpanNode<TObject, T>(obj, getSpan));
 
+        public static ValueEnumerable<T, ListNode<T>> OfList<T>(this List<T> source)
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+
+            return new ValueEnumerable<T, ListNode<T>>(new ListNode<T>(source));
+        }
+
         public static ValueEnumerable<T, ListByIndexNode<T>> OfListByIndex<T>(this List<T> source)
         {
             if (source == null)

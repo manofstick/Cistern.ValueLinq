@@ -72,6 +72,7 @@ namespace Cistern.ValueLinq.Containers
             {
                 if (BatchProcessResult.Unavailable == fenum.TryProcessBatch<TObject, GetSpan<TObject, TIn>>(obj, getSpan))
                     Loop(getSpan(obj), ref fenum);
+
                 return fenum.GetResult<TResult>();
             }
             finally

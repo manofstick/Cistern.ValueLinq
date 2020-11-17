@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 
 namespace Cistern.ValueLinq.Containers
 {
@@ -75,7 +74,14 @@ namespace Cistern.ValueLinq.Containers
         {
             try
             {
-                DoLoop(list, ref fenum);
+                if (list.Count < 20) // thumb in the air # from some random testing; depends on multiple things, so impossible to get 'perfect'
+                {
+                    DoLoop<TIn, FEnumerator>(list, ref fenum);
+                }
+                else if (BatchProcessResult.Unavailable == fenum.TryProcessBatch<List<TIn>, GetSpan<List<TIn>, TIn>>(list, in Optimizations.UseSpan<TIn>.FromList))
+                {
+                    SpanNode.Loop<TIn, FEnumerator>(System.Runtime.InteropServices.CollectionsMarshal.AsSpan(list), ref fenum);
+                }
                 return fenum.GetResult<TResult>();
             }
             finally
@@ -94,5 +100,4 @@ namespace Cistern.ValueLinq.Containers
             }
         }
     }
-
 }
