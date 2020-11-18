@@ -22,11 +22,13 @@ namespace Cistern.ValueLinq.Aggregation
 
         public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() { }
-        public TResult GetResult<TResult>()
+        public TResult GetResult<TResult>() => (TResult)(object)GetResult();
+        
+        public T GetResult()
         {
-            if (noData && default(TResult) != null)
+            if (noData && default(T) != null)
                 ThrowHelper.ThrowNoElementsException();
-            return (TResult)(object)result;
+            return result;
         }
 
         public bool ProcessNext(T input)
@@ -131,11 +133,12 @@ namespace Cistern.ValueLinq.Aggregation
         }
 
         public void Dispose() { }
-        public TResult GetResult<TResult>()
+        public TResult GetResult<TResult>() => (TResult)(object)GetResult();
+        public T GetResult()
         {
             if (_noData)
                 ThrowHelper.ThrowNoElementsException();
-            return (TResult)(object)_result;
+            return _result;
         }
 
         public bool ProcessNext(T input)
@@ -168,8 +171,9 @@ namespace Cistern.ValueLinq.Aggregation
         public void Dispose() { }
         public MinNullable(bool _) => (noData, result) = (true, math.MinInit);
 
-        public TResult GetResult<TResult>() =>
-            noData ? default : (TResult)(object)result;
+        public TResult GetResult<TResult>() => (TResult)(object)GetResult();
+
+        public T? GetResult() => noData ? (T?)null : result;
 
         public bool ProcessNext(T? input)
         {

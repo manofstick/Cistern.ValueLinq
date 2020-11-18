@@ -71,15 +71,7 @@ namespace Cistern.ValueLinq.Containers
         {
             try
             {
-                if (array == null)
-                    throw new ArgumentNullException("source"); // name used to match System.Linq's exceptions
-
-                if (array.Length < 20 
-                 || BatchProcessResult.Unavailable == fenum.TryProcessBatch<TIn[], GetSpan<TIn[], TIn>>(array, in Optimizations.UseSpan<TIn>.FromArray))
-                {
-                    Loop<TIn, FEnumerator>(array, ref fenum);
-                }
-
+                ProcessArray<TIn, FEnumerator>(array, ref fenum);
                 return fenum.GetResult<TResult>();
             }
             finally
@@ -87,6 +79,27 @@ namespace Cistern.ValueLinq.Containers
                 fenum.Dispose();
             }
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TIn"></typeparam>
+        /// <typeparam name="FEnumerator"></typeparam>
+        /// <param name="array"></param>
+        /// <param name="fenum"></param>
+        internal static void ProcessArray<TIn, FEnumerator>(TIn[] array, ref FEnumerator fenum)
+            where FEnumerator : IForwardEnumerator<TIn>
+        {
+            if (array == null)
+                throw new ArgumentNullException("source"); // name used to match System.Linq's exceptions
+
+            if (array.Length < 20
+             || BatchProcessResult.Unavailable == fenum.TryProcessBatch<TIn[], GetSpan<TIn[], TIn>>(array, in Optimizations.UseSpan<TIn>.FromArray))
+            {
+                Loop<TIn, FEnumerator>(array, ref fenum);
+            }
+        }
+
         internal static void Loop<TIn, FEnumerator>(TIn[] array, ref FEnumerator fenum)
             where FEnumerator : IForwardEnumerator<TIn>
         {

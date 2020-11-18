@@ -10,28 +10,32 @@
             StaticClassName:"Enumerable",
             IsNullable:true,
             CollectionType:new Func<string, string>((string type) => $"IEnumerable<{type}>"),
-            FastEnumerate:"EnumerableNode.FastEnumerateSwitch"
+            FastEnumerate:"EnumerableNode.FastEnumerateSwitch",
+            OptimizedCall:(string)null // can't guarantee that ref object is the same
         ),
 
         (
             StaticClassName:"ValueLinqArray",
             IsNullable:true,
             CollectionType:new Func<string, string>((string type) => $"{type}[]"),
-            FastEnumerate:"ArrayNode.FastEnumerate"
+            FastEnumerate:"ArrayNode.FastEnumerate",
+            OptimizedCall:"ArrayNode.ProcessArray"
         ),
 
         (
             StaticClassName:"ValueLinqList",
             IsNullable:true,
             CollectionType:new Func<string, string>((string type) => $"List<{type}>"),
-            FastEnumerate:"ListByIndexNode.FastEnumerate"
+            FastEnumerate:"ListByIndexNode.FastEnumerate",
+            OptimizedCall:"ListByIndexNode.ProcessList"
         ),
 
         (
             StaticClassName:"ValueLinqMemory",
             IsNullable:false,
             CollectionType:new Func<string, string>(type => $"ReadOnlyMemory<{type}>"),
-            FastEnumerate:"MemoryNode.FastEnumerate"
+            FastEnumerate:"MemoryNode.FastEnumerate",
+            OptimizedCall:"MemoryNode.ProcessMemory"
         ),
     };
 
@@ -210,6 +214,28 @@ namespace Cistern.ValueLinq
                 var collectionType = collection.CollectionType(mathType.ActualType);
                 var aggregationType = $"{function}{mathType.Name}";
                 var selectForward = $"SelectFoward<{genericArg}, {mathType.ActualType}, {aggregationType}>";
+
+                if (collection.OptimizedCall != null)
+                {
+#>
+        public static <#= returnType #> <#= function #>(this <#= collectionType #> source)
+        {
+            var aggregate = new <#= aggregationType #>(true);
+            <#= collection.OptimizedCall #>(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        public static <#= returnType #> <#= function #><<#= genericArg #>>(this <#= genericCollectionType #> source, Func<<#= genericArg #>, <#= mathType.ActualType #>> selector)
+        {
+            var select = new <#= selectForward #>(new <#= aggregationType #>(true), selector);
+            <#= collection.OptimizedCall #>(source, ref select);
+            return select._next.GetResult();
+        }
+
+<#
+                }
+                else
+                {
 #>
         public static <#= returnType #> <#= function #>(this <#= collectionType #> source) =>
             <#= collection.FastEnumerate #><<#= mathType.ActualType #>, <#= returnType #>, <#= aggregationType #>>(source, new <#= aggregationType #>(true));
@@ -218,11 +244,33 @@ namespace Cistern.ValueLinq
             <#= collection.FastEnumerate #><<#= genericArg #>, <#= returnType #>, <#= selectForward #>>(source, new <#= selectForward #>(new <#= aggregationType #>(true), selector));
 
 <#
+                }
             }
             if (mathFunction.HasGenericVersion)
             {
                 var aggregationType = $"{function}<{genericArg}>";
                 var selectForward = $"SelectFoward<{genericArg}, T, {function}<T>>";
+
+                if (collection.OptimizedCall != null)
+                {
+#>
+        public static <#= genericArg #> <#= function #><<#= genericArg #>>(this <#= genericCollectionType #> source)
+        {
+            var aggregate = new <#= aggregationType #>(true);
+            <#= collection.OptimizedCall #>(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        public static T <#= function #><<#= genericArg #>, T>(this <#= genericCollectionType #> source, Func<<#= genericArg #>, T> selector)
+        {
+            var select = new <#= selectForward #>(new <#= function #><T>(true), selector);
+            <#= collection.OptimizedCall #>(source, ref select);
+            return select._next.GetResult();
+        }
+<#
+                }
+                else
+                {
 #>
         public static <#= genericArg #> <#= function #><<#= genericArg #>>(this <#= genericCollectionType #> source) =>
             <#= collection.FastEnumerate #><<#= genericArg #>, <#= genericArg #>, <#= aggregationType #>>(source, new <#= aggregationType #>(true));
@@ -231,6 +279,7 @@ namespace Cistern.ValueLinq
             <#= collection.FastEnumerate #><<#= genericArg #>, T, <#= selectForward #>>(source, new <#= selectForward #>(new <#= function #><T>(true), selector));
 
 <#
+                }
             }
         }
 #>

@@ -64,7 +64,8 @@ namespace Cistern.ValueLinq.Nodes
         : IForwardEnumerator<T>
         where Next : IForwardEnumerator<U>
     {
-        Next _next;
+        internal Next _next;
+
         Func<T, U> _selector;
 
         public SelectFoward(in Next prior, Func<T, U> selector)

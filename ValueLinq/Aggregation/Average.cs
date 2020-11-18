@@ -18,14 +18,16 @@ namespace Cistern.ValueLinq.Aggregation
 
         public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() { }
-        public TResult GetResult<TResult>()
+        public TResult GetResult<TResult>() => (TResult)(object)GetResult();
+
+        public Quotient GetResult()
         {
             if (counter == 0)
             {
                 ThrowHelper.ThrowNoElementsException();
             }
 
-            return (TResult)(object)math.DivLong(sum, counter);
+            return math.DivLong(sum, counter);
         }
 
         public bool ProcessNext(T input)
@@ -52,10 +54,12 @@ namespace Cistern.ValueLinq.Aggregation
 
         public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() { }
-        public TResult GetResult<TResult>() =>
+        public TResult GetResult<TResult>() => (TResult)(object)GetResult();
+
+        internal Quotient? GetResult() =>
             counter == 0 
-                ? default
-                : (TResult)(object)math.DivLong(sum, counter);
+                ? null
+                : math.DivLong(sum, counter);
 
         public bool ProcessNext(T? input)
         {
@@ -68,5 +72,4 @@ namespace Cistern.ValueLinq.Aggregation
             return true;
         }
     }
-
 }

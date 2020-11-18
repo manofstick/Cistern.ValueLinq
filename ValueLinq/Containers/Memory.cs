@@ -60,17 +60,22 @@ namespace Cistern.ValueLinq.Containers
             return nodes.CreateObject<CreationType, T, MemoryFastEnumerator<T>>(ref enumerator);
         }
 
+        internal static void ProcessMemory<TIn, FEnumerator>(ReadOnlyMemory<TIn> memory, ref FEnumerator fenum)
+            where FEnumerator : IForwardEnumerator<TIn>
+        {
+            if (memory.Length < 20
+             || BatchProcessResult.Unavailable == fenum.TryProcessBatch<ReadOnlyMemory<TIn>, GetSpan<ReadOnlyMemory<TIn>, TIn>>(memory, in Optimizations.UseSpan<TIn>.FromMemory))
+            {
+                SpanNode.Loop<TIn, FEnumerator>(memory.Span, ref fenum);
+            }
+        }
+
         internal static TResult FastEnumerate<TIn, TResult, FEnumerator>(ReadOnlyMemory<TIn> memory, FEnumerator fenum)
             where FEnumerator : IForwardEnumerator<TIn>
         {
             try
             {
-                if (memory.Length < 20
-                 || BatchProcessResult.Unavailable == fenum.TryProcessBatch<ReadOnlyMemory<TIn>, GetSpan<ReadOnlyMemory<TIn>, TIn>>(memory, in Optimizations.UseSpan<TIn>.FromMemory))
-                {
-                    SpanNode.Loop<TIn, FEnumerator>(memory.Span, ref fenum);
-                }
-
+                ProcessMemory(memory, ref fenum);
                 return fenum.GetResult<TResult>();
             }
             finally

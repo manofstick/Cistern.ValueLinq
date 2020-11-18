@@ -74,22 +74,28 @@ namespace Cistern.ValueLinq.Containers
         {
             try
             {
-                if (list == null)
-                    throw new ArgumentNullException("source"); // name used to match System.Linq's exceptions
-
-                if (list.Count < 20) // thumb in the air # from some random testing; depends on multiple things, so impossible to get 'perfect'
-                {
-                    DoLoop<TIn, FEnumerator>(list, ref fenum);
-                }
-                else if (BatchProcessResult.Unavailable == fenum.TryProcessBatch<List<TIn>, GetSpan<List<TIn>, TIn>>(list, in Optimizations.UseSpan<TIn>.FromList))
-                {
-                    SpanNode.Loop<TIn, FEnumerator>(System.Runtime.InteropServices.CollectionsMarshal.AsSpan(list), ref fenum);
-                }
+                ProcessList(list, ref fenum);
                 return fenum.GetResult<TResult>();
             }
             finally
             {
                 fenum.Dispose();
+            }
+        }
+
+        internal static void ProcessList<TIn, FEnumerator>(List<TIn> list, ref FEnumerator fenum)
+            where FEnumerator : IForwardEnumerator<TIn>
+        {
+            if (list == null)
+                throw new ArgumentNullException("source"); // name used to match System.Linq's exceptions
+
+            if (list.Count < 20) // thumb in the air # from some random testing; depends on multiple things, so impossible to get 'perfect'
+            {
+                DoLoop<TIn, FEnumerator>(list, ref fenum);
+            }
+            else if (BatchProcessResult.Unavailable == fenum.TryProcessBatch<List<TIn>, GetSpan<List<TIn>, TIn>>(list, in Optimizations.UseSpan<TIn>.FromList))
+            {
+                SpanNode.Loop<TIn, FEnumerator>(System.Runtime.InteropServices.CollectionsMarshal.AsSpan(list), ref fenum);
             }
         }
 
