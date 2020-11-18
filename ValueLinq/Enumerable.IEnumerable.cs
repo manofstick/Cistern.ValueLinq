@@ -9,11 +9,11 @@ namespace Cistern.ValueLinq
 {
     public static partial class Enumerable
     {
-        public static TSource Aggregate<TSource>(this IEnumerable<TSource> source, Func<TSource, TSource, TSource> func)
-            => source.OfEnumerable().Aggregate(func);
+        //public static TSource Aggregate<TSource>(this IEnumerable<TSource> source, Func<TSource, TSource, TSource> func)
+        //    => source.OfEnumerable().Aggregate(func);
 
-        public static TAccumulate Aggregate<TSource, TAccumulate>(this IEnumerable<TSource> source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func)
-            => source.OfEnumerable().Aggregate(seed, func);
+        //public static TAccumulate Aggregate<TSource, TAccumulate>(this IEnumerable<TSource> source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func)
+        //    => source.OfEnumerable().Aggregate(seed, func);
 
         public static TResult Aggregate<TSource, TAccumulate, TResult>(this IEnumerable<TSource> source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func, Func<TAccumulate, TResult> resultSelector)
             => source.OfEnumerable().Aggregate(seed, func, resultSelector);

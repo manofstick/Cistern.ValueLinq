@@ -1,0 +1,36 @@
+﻿<#
+    var collections = new []
+    {
+        (
+            StaticClassName:"Enumerable",
+            IsNullable:true,
+            CollectionType:new Func<string, string>((string type) => $"IEnumerable<{type}>"),
+            FastEnumerate:"EnumerableNode.FastEnumerateSwitch",
+            OptimizedCall:(string)null // can't guarantee that ref object is the same
+        ),
+
+        (
+            StaticClassName:"ValueLinqArray",
+            IsNullable:true,
+            CollectionType:new Func<string, string>((string type) => $"{type}[]"),
+            FastEnumerate:"ArrayNode.FastEnumerate",
+            OptimizedCall:"ArrayNode.ProcessArray"
+        ),
+
+        (
+            StaticClassName:"ValueLinqList",
+            IsNullable:true,
+            CollectionType:new Func<string, string>((string type) => $"List<{type}>"),
+            FastEnumerate:"ListByIndexNode.FastEnumerate",
+            OptimizedCall:"ListByIndexNode.ProcessList"
+        ),
+
+        (
+            StaticClassName:"ValueLinqMemory",
+            IsNullable:false,
+            CollectionType:new Func<string, string>(type => $"ReadOnlyMemory<{type}>"),
+            FastEnumerate:"MemoryNode.FastEnumerate",
+            OptimizedCall:"MemoryNode.ProcessMemory"
+        ),
+    };
+#>

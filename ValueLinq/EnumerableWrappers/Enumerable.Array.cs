@@ -10,11 +10,11 @@ namespace Cistern.ValueLinq
 {
     public static partial class CisternArrayExtensions
     {
-        public static TSource Aggregate<TSource>(this TSource[] source, Func<TSource, TSource, TSource> func)
-            => source.OfArray().Aggregate(func);
+        //public static TSource Aggregate<TSource>(this TSource[] source, Func<TSource, TSource, TSource> func)
+        //    => source.OfArray().Aggregate(func);
 
-        public static TAccumulate Aggregate<TSource, TAccumulate>(this TSource[] source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func)
-            => source.OfArray().Aggregate(seed, func);
+        //public static TAccumulate Aggregate<TSource, TAccumulate>(this TSource[] source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func)
+        //    => source.OfArray().Aggregate(seed, func);
 
         public static TResult Aggregate<TSource, TAccumulate, TResult>(this TSource[] source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func, Func<TAccumulate, TResult> resultSelector)
             => source.OfArray().Aggregate(seed, func, resultSelector);

@@ -5,11 +5,16 @@
     <RootNamespace>Cistern.ValueLinq</RootNamespace>
     <AssemblyName>Cistern.ValueLinq</AssemblyName>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Update="EnumerableWrappers\Aggregates.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Aggregates.tt</DependentUpon>
+    </Compile>
     <Compile Update="EnumerableWrappers\Maths.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -34,6 +39,11 @@
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
+    <None Include="EnumerableWrappers\Aggregates.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Aggregates.tt</DependentUpon>
+    </None>
     <None Include="EnumerableWrappers\Maths.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -46,6 +56,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="EnumerableWrappers\Aggregates.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Aggregates.cs</LastGenOutput>
+    </None>
+    <None Update="EnumerableWrappers\Collections.tth">
+      <Generator></Generator>
+    </None>
     <None Update="EnumerableWrappers\Maths.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Maths.cs</LastGenOutput>

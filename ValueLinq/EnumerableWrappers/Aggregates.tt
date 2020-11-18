@@ -1,0 +1,72 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ include file="Collections.tth" #>
+
+using Cistern.ValueLinq.Aggregation;
+using Cistern.ValueLinq.Containers;
+using Cistern.ValueLinq.Nodes;
+using System;
+using System.Collections.Generic;
+
+namespace Cistern.ValueLinq
+{
+<#
+    foreach(var collection in collections)
+    {
+        var genericArg = "TSource";
+        var genericCollectionType = collection.CollectionType(genericArg);
+#>
+    public static partial class <#= collection.StaticClassName #>
+    {
+        public static TSource Aggregate<<#= genericArg #>>(this <#= genericCollectionType #> source, Func<<#= genericArg #>, <#= genericArg #>, <#= genericArg #>> func)
+<#
+        if (collection.OptimizedCall != null)
+        {
+#>
+        {
+            var aggregate = new ReduceForward<<#= genericArg #>>(func);
+            <#= collection.OptimizedCall #>(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+<#
+        }
+        else
+        {
+#>
+             => <#= collection.FastEnumerate #><<#= genericArg #>, <#= genericArg #>, ReduceForward<<#= genericArg #>>>(source, new ReduceForward<<#= genericArg #>>(func));
+<#
+        }
+#>
+
+        public static TAccumulate Aggregate<<#= genericArg #>, TAccumulate>(this <#= genericCollectionType #> source, TAccumulate seed, Func<TAccumulate, <#= genericArg #>, TAccumulate> func)
+<#
+        if (collection.OptimizedCall != null)
+        {
+#>
+        {
+            var aggregate = new FoldForward<<#= genericArg #>, TAccumulate>(func, seed);
+            <#= collection.OptimizedCall #>(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+<#
+        }
+        else
+        {
+#>
+             => <#= collection.FastEnumerate #><<#= genericArg #>, TAccumulate, FoldForward<<#= genericArg #>, TAccumulate>>(source, new FoldForward<<#= genericArg #>, TAccumulate>(func, seed));
+<#
+        }
+#>
+        
+    }
+<#
+    }
+#>
+}
+
+
+
+

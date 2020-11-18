@@ -3,42 +3,8 @@
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Text" #>
 <#@ import namespace="System.Collections.Generic" #>
+<#@ include file="Collections.tth" #>
 <#
-    var collections = new []
-    {
-        (
-            StaticClassName:"Enumerable",
-            IsNullable:true,
-            CollectionType:new Func<string, string>((string type) => $"IEnumerable<{type}>"),
-            FastEnumerate:"EnumerableNode.FastEnumerateSwitch",
-            OptimizedCall:(string)null // can't guarantee that ref object is the same
-        ),
-
-        (
-            StaticClassName:"ValueLinqArray",
-            IsNullable:true,
-            CollectionType:new Func<string, string>((string type) => $"{type}[]"),
-            FastEnumerate:"ArrayNode.FastEnumerate",
-            OptimizedCall:"ArrayNode.ProcessArray"
-        ),
-
-        (
-            StaticClassName:"ValueLinqList",
-            IsNullable:true,
-            CollectionType:new Func<string, string>((string type) => $"List<{type}>"),
-            FastEnumerate:"ListByIndexNode.FastEnumerate",
-            OptimizedCall:"ListByIndexNode.ProcessList"
-        ),
-
-        (
-            StaticClassName:"ValueLinqMemory",
-            IsNullable:false,
-            CollectionType:new Func<string, string>(type => $"ReadOnlyMemory<{type}>"),
-            FastEnumerate:"MemoryNode.FastEnumerate",
-            OptimizedCall:"MemoryNode.ProcessMemory"
-        ),
-    };
-
     var mathTypes = new []
     {
         (
@@ -198,14 +164,17 @@ using <#= $"{mathFunction.Name}{mathType.Name}" #> = <#= mathFunction.GetFullNam
 
 namespace Cistern.ValueLinq
 {
-<#  foreach(var collection in collections) { #>
+<#
+    foreach(var collection in collections)
+    {
+        var genericArg = "TSource";
+        var genericCollectionType = collection.CollectionType(genericArg);
+#>
     public static partial class <#= collection.StaticClassName #>
     {
 <#
         foreach(var mathFunction in mathFunctions)
         {
-            var genericArg = "TSource";
-            var genericCollectionType = collection.CollectionType(genericArg);
             var function = mathFunction.Name;
 
             foreach(var mathType in mathTypes)

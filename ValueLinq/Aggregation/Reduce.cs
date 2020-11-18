@@ -13,12 +13,14 @@ namespace Cistern.ValueLinq.Aggregation
 
         public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() { }
-        TResult IForwardEnumerator<T>.GetResult<TResult>()
+        TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
+
+        internal T GetResult()
         {
             if (!_hasData)
                 throw new InvalidOperationException();
 
-            return (TResult)(object)_accumulate;
+            return _accumulate;
         }
 
         bool IForwardEnumerator<T>.ProcessNext(T input)
