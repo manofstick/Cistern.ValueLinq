@@ -10,6 +10,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Update="EnumerableWrappers\Maths.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Maths.tt</DependentUpon>
+    </Compile>
     <Compile Update="Properties\SR.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -25,9 +30,25 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\StructLinq\LICENSE">
+    <None Include="..\LICENSE">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
+    </None>
+    <None Include="EnumerableWrappers\Maths.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Maths.tt</DependentUpon>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="EnumerableWrappers\Maths.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Maths.cs</LastGenOutput>
     </None>
   </ItemGroup>
 

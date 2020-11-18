@@ -71,6 +71,9 @@ namespace Cistern.ValueLinq.Containers
         {
             try
             {
+                if (array == null)
+                    throw new ArgumentNullException("source"); // name used to match System.Linq's exceptions
+
                 if (array.Length < 20 
                  || BatchProcessResult.Unavailable == fenum.TryProcessBatch<TIn[], GetSpan<TIn[], TIn>>(array, in Optimizations.UseSpan<TIn>.FromArray))
                 {

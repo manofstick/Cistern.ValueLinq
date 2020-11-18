@@ -1,0 +1,241 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#
+    var collections = new []
+    {
+        (
+            StaticClassName:"Enumerable",
+            IsNullable:true,
+            CollectionType:new Func<string, string>((string type) => $"IEnumerable<{type}>"),
+            FastEnumerate:"EnumerableNode.FastEnumerateSwitch"
+        ),
+
+        (
+            StaticClassName:"ValueLinqArray",
+            IsNullable:true,
+            CollectionType:new Func<string, string>((string type) => $"{type}[]"),
+            FastEnumerate:"ArrayNode.FastEnumerate"
+        ),
+
+        (
+            StaticClassName:"ValueLinqList",
+            IsNullable:true,
+            CollectionType:new Func<string, string>((string type) => $"List<{type}>"),
+            FastEnumerate:"ListByIndexNode.FastEnumerate"
+        ),
+
+        (
+            StaticClassName:"ValueLinqMemory",
+            IsNullable:false,
+            CollectionType:new Func<string, string>(type => $"ReadOnlyMemory<{type}>"),
+            FastEnumerate:"MemoryNode.FastEnumerate"
+        ),
+    };
+
+    var mathTypes = new []
+    {
+        (
+            Name:"Decimal",
+            ActualType:"decimal",
+            AverageType:"decimal",
+            IsNullable:false,
+            UnderlyingType:"decimal",
+            AccumulatorType:"decimal",
+            QuotientType:"decimal",
+            Ops:"Cistern.ValueLinq.Maths.OpsDecimal"
+        ),
+        (
+            Name:"DecimalNullable",
+            ActualType:"decimal?",
+            AverageType:"decimal?",
+            IsNullable:true,
+            UnderlyingType:"decimal",
+            AccumulatorType:"decimal",
+            QuotientType:"decimal",
+            Ops:"Cistern.ValueLinq.Maths.OpsDecimal"
+        ),
+
+        (
+            Name:"Double",
+            ActualType:"double",
+            AverageType:"double",
+            IsNullable:false,
+            UnderlyingType:"double",
+            AccumulatorType:"double",
+            QuotientType:"double",
+            Ops:"Cistern.ValueLinq.Maths.OpsDouble"
+        ),
+        (
+            Name:"DoubleNullable",
+            ActualType:"double?",
+            AverageType:"double?",
+            IsNullable:true,
+            UnderlyingType:"double",
+            AccumulatorType:"double",
+            QuotientType:"double",
+            Ops:"Cistern.ValueLinq.Maths.OpsDouble"
+        ),
+
+        (
+            Name:"Float",
+            ActualType:"float",
+            AverageType:"float",
+            IsNullable:false,
+            UnderlyingType:"float",
+            AccumulatorType:"double",
+            QuotientType:"float",
+            Ops:"Cistern.ValueLinq.Maths.OpsFloat"
+        ),
+        (
+            Name:"FloatNullable",
+            ActualType:"float?",
+            AverageType:"float?",
+            IsNullable:true,
+            UnderlyingType:"float",
+            AccumulatorType:"double",
+            QuotientType:"float",
+            Ops:"Cistern.ValueLinq.Maths.OpsFloat"
+        ),
+
+        (
+            Name:"Int",
+            ActualType:"int",
+            AverageType:"double",
+            IsNullable:false,
+            UnderlyingType:"int",
+            AccumulatorType:"int",
+            QuotientType:"double",
+            Ops:"Cistern.ValueLinq.Maths.OpsInt"
+        ),
+        (
+            Name:"IntNullable",
+            ActualType:"int?",
+            AverageType:"double?",
+            IsNullable:true,
+            UnderlyingType:"int",
+            AccumulatorType:"int",
+            QuotientType:"double",
+            Ops:"Cistern.ValueLinq.Maths.OpsInt"
+        ),
+
+        (
+            Name:"Long",
+            ActualType:"long",
+            AverageType:"double",
+            IsNullable:false,
+            UnderlyingType:"long",
+            AccumulatorType:"long",
+            QuotientType:"double",
+            Ops:"Cistern.ValueLinq.Maths.OpsLong"
+        ),
+        (
+            Name:"LongNullable",
+            ActualType:"long?",
+            AverageType:"double?",
+            IsNullable:true,
+            UnderlyingType:"long",
+            AccumulatorType:"long",
+            QuotientType:"double",
+            Ops:"Cistern.ValueLinq.Maths.OpsLong"
+        ),
+        
+    };
+
+    var mathFunctions = new []
+    {
+        (
+            Name:"Average",
+            GetFullName:new Func<bool, string>(isNullable => "Cistern.ValueLinq.Aggregation.Average" + (isNullable ? "Nullable" : "")),
+            IsAverage:true,
+            HasGenericVersion:false
+        ),
+        (
+            Name:"Min",
+            GetFullName:new Func<bool, string>(isNullable => "Cistern.ValueLinq.Aggregation.Min" + (isNullable ? "Nullable" : "")),
+            IsAverage:false,
+            HasGenericVersion:true
+        ),
+        (
+            Name:"Max",
+            GetFullName:new Func<bool, string>(isNullable => "Cistern.ValueLinq.Aggregation.Max" + (isNullable ? "Nullable" : "")),
+            IsAverage:false,
+            HasGenericVersion:true
+        ),
+        (
+            Name:"Sum",
+            GetFullName:new Func<bool, string>(isNullable => "Cistern.ValueLinq.Aggregation.Sum" + (isNullable ? "Nullable" : "")),
+            IsAverage:false,
+            HasGenericVersion:false
+        ),
+    };
+
+    string GetReturnType(string actual, string average, bool isAverage) => isAverage ? average : actual;
+#>
+using Cistern.ValueLinq.Aggregation;
+using Cistern.ValueLinq.Containers;
+using Cistern.ValueLinq.Nodes;
+using System;
+using System.Collections.Generic;
+
+<#
+    foreach(var mathFunction in mathFunctions)
+    {
+        foreach(var mathType in mathTypes)
+        {
+#>
+using <#= $"{mathFunction.Name}{mathType.Name}" #> = <#= mathFunction.GetFullName(mathType.IsNullable) #><<#= mathType.UnderlyingType #>, <#= mathType.AccumulatorType #>, <#= mathType.QuotientType #>, <#= mathType.Ops #>>;
+<#
+        }
+    }
+#>
+
+namespace Cistern.ValueLinq
+{
+<#  foreach(var collection in collections) { #>
+    public static partial class <#= collection.StaticClassName #>
+    {
+<#
+        foreach(var mathFunction in mathFunctions)
+        {
+            var genericArg = "TSource";
+            var genericCollectionType = collection.CollectionType(genericArg);
+            var function = mathFunction.Name;
+
+            foreach(var mathType in mathTypes)
+            {
+                var returnType = GetReturnType(mathType.ActualType, mathType.AverageType, mathFunction.IsAverage);
+                var collectionType = collection.CollectionType(mathType.ActualType);
+                var aggregationType = $"{function}{mathType.Name}";
+                var selectForward = $"SelectFoward<{genericArg}, {mathType.ActualType}, {aggregationType}>";
+#>
+        public static <#= returnType #> <#= function #>(this <#= collectionType #> source) =>
+            <#= collection.FastEnumerate #><<#= mathType.ActualType #>, <#= returnType #>, <#= aggregationType #>>(source, new <#= aggregationType #>(true));
+
+        public static <#= returnType #> <#= function #><<#= genericArg #>>(this <#= genericCollectionType #> source, Func<<#= genericArg #>, <#= mathType.ActualType #>> selector) =>
+            <#= collection.FastEnumerate #><<#= genericArg #>, <#= returnType #>, <#= selectForward #>>(source, new <#= selectForward #>(new <#= aggregationType #>(true), selector));
+
+<#
+            }
+            if (mathFunction.HasGenericVersion)
+            {
+                var aggregationType = $"{function}<{genericArg}>";
+                var selectForward = $"SelectFoward<{genericArg}, T, {function}<T>>";
+#>
+        public static <#= genericArg #> <#= function #><<#= genericArg #>>(this <#= genericCollectionType #> source) =>
+            <#= collection.FastEnumerate #><<#= genericArg #>, <#= genericArg #>, <#= aggregationType #>>(source, new <#= aggregationType #>(true));
+
+        public static T <#= function #><<#= genericArg #>, T>(this <#= genericCollectionType #> source, Func<<#= genericArg #>, T> selector) =>
+            <#= collection.FastEnumerate #><<#= genericArg #>, T, <#= selectForward #>>(source, new <#= selectForward #>(new <#= function #><T>(true), selector));
+
+<#
+            }
+        }
+#>
+    }
+
+<#
+}
+#>}

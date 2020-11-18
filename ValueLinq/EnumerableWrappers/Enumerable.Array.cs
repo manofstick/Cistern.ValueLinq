@@ -3,10 +3,12 @@ using Cistern.ValueLinq.Nodes;
 using Cistern.ValueLinq.ValueEnumerable;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
+using AverageInt = Cistern.ValueLinq.Aggregation.Average<int, int, double, Cistern.ValueLinq.Maths.OpsInt>;
 
 namespace Cistern.ValueLinq
 {
-    public static partial class Enumerable
+    public static partial class CisternArrayExtensions
     {
         public static TSource Aggregate<TSource>(this TSource[] source, Func<TSource, TSource, TSource> func)
             => source.OfArray().Aggregate(func);
@@ -51,108 +53,6 @@ namespace Cistern.ValueLinq
         public static TSource LastOrDefault<TSource>(this TSource[] source) => source.OfArray().LastOrDefault();
 
         public static List<T> ToList<T>(this T[] source) => source.OfArray().ToList();
-
-        public static decimal Average(this decimal[] inner) => inner.OfArray().Average();
-        public static double  Average(this double[]  inner) => inner.OfArray().Average();
-        public static double  Average(this int[]     inner) => inner.OfArray().Average();
-        public static float   Average(this float[]   inner) => inner.OfArray().Average();
-        public static double  Average(this long[]    inner) => inner.OfArray().Average();
-
-        public static decimal? Average(this decimal?[] inner) => inner.OfArray().Average();
-        public static double?  Average(this double?[]  inner) => inner.OfArray().Average();
-        public static double?  Average(this int?[]     inner) => inner.OfArray().Average();
-        public static float?   Average(this float?[]   inner) => inner.OfArray().Average();
-        public static double?  Average(this long?[]    inner) => inner.OfArray().Average();
-
-        public static decimal Average<TSource>(this TSource[] inner, Func<TSource, decimal> selector) => inner.OfArray().Average(selector);
-        public static double  Average<TSource>(this TSource[] inner, Func<TSource, double > selector) => inner.OfArray().Average(selector);
-        public static double  Average<TSource>(this TSource[] inner, Func<TSource, int    > selector) => inner.OfArray().Average(selector);
-        public static double  Average<TSource>(this TSource[] inner, Func<TSource, float  > selector) => inner.OfArray().Average(selector);
-        public static double  Average<TSource>(this TSource[] inner, Func<TSource, long   > selector) => inner.OfArray().Average(selector);
-
-        public static decimal? Average<TSource>(this TSource[] inner, Func<TSource, decimal?> selector) => inner.OfArray().Average(selector);
-        public static double?  Average<TSource>(this TSource[] inner, Func<TSource, double? > selector) => inner.OfArray().Average(selector);
-        public static double?  Average<TSource>(this TSource[] inner, Func<TSource, int?    > selector) => inner.OfArray().Average(selector);
-        public static float?   Average<TSource>(this TSource[] inner, Func<TSource, float?  > selector) => inner.OfArray().Average(selector);
-        public static double?  Average<TSource>(this TSource[] inner, Func<TSource, long?   > selector) => inner.OfArray().Average(selector);
-
-        public static decimal Min(this decimal[] inner) => inner.OfArray().Min();
-        public static double  Min(this double[]  inner) => inner.OfArray().Min();
-        public static int     Min(this int[]     inner) => inner.OfArray().Min();
-        public static float   Min(this float[]   inner) => inner.OfArray().Min();
-        public static long    Min(this long[]    inner) => inner.OfArray().Min();
-        public static T       Min<T>(this T[]    inner) => inner.OfArray().Min();
-
-        public static decimal? Min(this decimal?[] inner) => inner.OfArray().Min();
-        public static double?  Min(this double?[]  inner) => inner.OfArray().Min();
-        public static int?     Min(this int?[]     inner) => inner.OfArray().Min();
-        public static float?   Min(this float?[]   inner) => inner.OfArray().Min();
-        public static long?    Min(this long?[]    inner) => inner.OfArray().Min();
-
-        public static decimal Min<TSource>(this TSource[] inner, Func<TSource, decimal> selector) => inner.OfArray().Min(selector);
-        public static double  Min<TSource>(this TSource[] inner, Func<TSource, double > selector) => inner.OfArray().Min(selector);
-        public static int     Min<TSource>(this TSource[] inner, Func<TSource, int    > selector) => inner.OfArray().Min(selector);
-        public static float   Min<TSource>(this TSource[] inner, Func<TSource, float  > selector) => inner.OfArray().Min(selector);
-        public static long    Min<TSource>(this TSource[] inner, Func<TSource, long   > selector) => inner.OfArray().Min(selector);
-        public static T       Min<TSource, T>(this TSource[] inner, Func<TSource, T> selector) => inner.OfArray().Min(selector);
-
-        public static decimal? Min<TSource>(this TSource[] inner, Func<TSource, decimal?> selector) => inner.OfArray().Min(selector);
-        public static double?  Min<TSource>(this TSource[] inner, Func<TSource, double? > selector) => inner.OfArray().Min(selector);
-        public static int?     Min<TSource>(this TSource[] inner, Func<TSource, int?    > selector) => inner.OfArray().Min(selector);
-        public static float?   Min<TSource>(this TSource[] inner, Func<TSource, float?  > selector) => inner.OfArray().Min(selector);
-        public static long?    Min<TSource>(this TSource[] inner, Func<TSource, long?   > selector) => inner.OfArray().Min(selector);
-
-
-        public static decimal Max(this decimal[] inner) => inner.OfArray().Max();
-        public static double  Max(this double[]  inner) => inner.OfArray().Max();
-        public static int     Max(this int[]     inner) => inner.OfArray().Max();
-        public static float   Max(this float[]   inner) => inner.OfArray().Max();
-        public static long    Max(this long[]    inner) => inner.OfArray().Max();
-        public static T       Max<T>(this T[]    inner) => inner.OfArray().Max();
-
-        public static decimal? Max(this decimal?[] inner) => inner.OfArray().Max();
-        public static double?  Max(this double?[]  inner) => inner.OfArray().Max();
-        public static int?     Max(this int?[]     inner) => inner.OfArray().Max();
-        public static float?   Max(this float?[]   inner) => inner.OfArray().Max();
-        public static long?    Max(this long?[]    inner) => inner.OfArray().Max();
-
-        public static decimal Max<TSource>(this TSource[] inner, Func<TSource, decimal> selector) => inner.OfArray().Max(selector);
-        public static double  Max<TSource>(this TSource[] inner, Func<TSource, double > selector) => inner.OfArray().Max(selector);
-        public static int     Max<TSource>(this TSource[] inner, Func<TSource, int    > selector) => inner.OfArray().Max(selector);
-        public static float   Max<TSource>(this TSource[] inner, Func<TSource, float  > selector) => inner.OfArray().Max(selector);
-        public static long    Max<TSource>(this TSource[] inner, Func<TSource, long   > selector) => inner.OfArray().Max(selector);
-        public static T       Max<TSource, T>(this TSource[] inner, Func<TSource, T> selector) => inner.OfArray().Max(selector);
-
-        public static decimal? Max<TSource>(this TSource[] inner, Func<TSource, decimal?> selector) => inner.OfArray().Max(selector);
-        public static double?  Max<TSource>(this TSource[] inner, Func<TSource, double? > selector) => inner.OfArray().Max(selector);
-        public static int?     Max<TSource>(this TSource[] inner, Func<TSource, int?    > selector) => inner.OfArray().Max(selector);
-        public static float?   Max<TSource>(this TSource[] inner, Func<TSource, float?  > selector) => inner.OfArray().Max(selector);
-        public static long?    Max<TSource>(this TSource[] inner, Func<TSource, long?   > selector) => inner.OfArray().Max(selector);
-
-        public static decimal Sum(this decimal[] inner) => inner.OfArray().Sum();
-        public static double  Sum(this double[]  inner) => inner.OfArray().Sum();
-        public static int     Sum(this int[]     inner) => inner.OfArray().Sum();
-        public static float   Sum(this float[]   inner) => inner.OfArray().Sum();
-        public static long    Sum(this long[]    inner) => inner.OfArray().Sum();
-
-        public static decimal? Sum(this decimal?[] inner) => inner.OfArray().Sum();
-        public static double?  Sum(this double?[]  inner) => inner.OfArray().Sum();
-        public static int?     Sum(this int?[]     inner) => inner.OfArray().Sum();
-        public static float?   Sum(this float?[]   inner) => inner.OfArray().Sum();
-        public static long?    Sum(this long?[]    inner) => inner.OfArray().Sum();
-
-        public static decimal Sum<TSource>(this TSource[] inner, Func<TSource, decimal> selector) => inner.OfArray().Sum(selector);
-        public static double  Sum<TSource>(this TSource[] inner, Func<TSource, double > selector) => inner.OfArray().Sum(selector);
-        public static int     Sum<TSource>(this TSource[] inner, Func<TSource, int    > selector) => inner.OfArray().Sum(selector);
-        public static float   Sum<TSource>(this TSource[] inner, Func<TSource, float  > selector) => inner.OfArray().Sum(selector);
-        public static long    Sum<TSource>(this TSource[] inner, Func<TSource, long   > selector) => inner.OfArray().Sum(selector);
-
-        public static decimal? Sum<TSource>(this TSource[] inner, Func<TSource, decimal?> selector) => inner.OfArray().Sum(selector);
-        public static double?  Sum<TSource>(this TSource[] inner, Func<TSource, double? > selector) => inner.OfArray().Sum(selector);
-        public static int?     Sum<TSource>(this TSource[] inner, Func<TSource, int?    > selector) => inner.OfArray().Sum(selector);
-        public static float?   Sum<TSource>(this TSource[] inner, Func<TSource, float?  > selector) => inner.OfArray().Sum(selector);
-        public static long?    Sum<TSource>(this TSource[] inner, Func<TSource, long?   > selector) => inner.OfArray().Sum(selector);
-
 
         public static int Count<T>(this T[] inner) => inner.OfArray().Count();
 

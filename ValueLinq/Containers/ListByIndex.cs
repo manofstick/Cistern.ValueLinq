@@ -74,6 +74,9 @@ namespace Cistern.ValueLinq.Containers
         {
             try
             {
+                if (list == null)
+                    throw new ArgumentNullException("source"); // name used to match System.Linq's exceptions
+
                 if (list.Count < 20) // thumb in the air # from some random testing; depends on multiple things, so impossible to get 'perfect'
                 {
                     DoLoop<TIn, FEnumerator>(list, ref fenum);

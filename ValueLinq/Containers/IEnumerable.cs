@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace Cistern.ValueLinq.Containers
 {
@@ -79,13 +80,7 @@ namespace Cistern.ValueLinq.Containers
         }
 
         TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) =>
-            _enumerable switch
-            {
-                T[] array => ArrayNode.FastEnumerate<T, TResult, FEnumerator>(array, fenum),
-                List<T> list => ListByIndexNode.FastEnumerate<T, TResult, FEnumerator>(list, fenum),
-                INode<T> n => n.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum),
-                var e => EnumerableNode.FastEnumerate<T, TResult, FEnumerator>(e, fenum),
-            };
+            EnumerableNode.FastEnumerateSwitch<T, TResult, FEnumerator>(_enumerable, in fenum);
     }
 
     static class EnumerableNode
@@ -121,10 +116,23 @@ namespace Cistern.ValueLinq.Containers
             return nodes.CreateObject<CreationType, T, EnumerableFastEnumerator<T>>(ref e);
         }
 
+        internal static TResult FastEnumerateSwitch<T, TResult, FEnumerator>(IEnumerable<T> _enumerable, in FEnumerator fenum)
+             where FEnumerator : IForwardEnumerator<T>
+            => _enumerable switch
+            {
+                T[] array => ArrayNode.FastEnumerate<T, TResult, FEnumerator>(array, fenum),
+                List<T> list => ListByIndexNode.FastEnumerate<T, TResult, FEnumerator>(list, fenum),
+                INode<T> n => n.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum),
+                var e => EnumerableNode.FastEnumerate<T, TResult, FEnumerator>(e, fenum),
+            };
+
         internal static TResult FastEnumerate<TIn, TResult, FEnumerator>(IEnumerable<TIn> e, FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
         {
             try
-            { 
+            {
+                if (e == null)
+                    throw new ArgumentNullException("source"); // name used to match System.Linq's exceptions
+
                 Loop(e, ref fenum);
                 return fenum.GetResult<TResult>();
             }
