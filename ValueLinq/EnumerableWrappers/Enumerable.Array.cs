@@ -3,25 +3,11 @@ using Cistern.ValueLinq.Nodes;
 using Cistern.ValueLinq.ValueEnumerable;
 using System;
 using System.Collections.Generic;
-using System.Data.SqlTypes;
-using AverageInt = Cistern.ValueLinq.Aggregation.Average<int, int, double, Cistern.ValueLinq.Maths.OpsInt>;
 
 namespace Cistern.ValueLinq
 {
     public static partial class CisternArrayExtensions
     {
-        //public static TSource Aggregate<TSource>(this TSource[] source, Func<TSource, TSource, TSource> func)
-        //    => source.OfArray().Aggregate(func);
-
-        //public static TAccumulate Aggregate<TSource, TAccumulate>(this TSource[] source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func)
-        //    => source.OfArray().Aggregate(seed, func);
-
-        public static TResult Aggregate<TSource, TAccumulate, TResult>(this TSource[] source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func, Func<TAccumulate, TResult> resultSelector)
-            => source.OfArray().Aggregate(seed, func, resultSelector);
-
-        public static bool All<TSource>(this TSource[] source, Func<TSource, bool> predicate)
-            => source.OfArray().All(predicate);
-
         public static bool Any<TSource>(this TSource[] source) => source.Length > 0;
 
         public static bool Any<TSource>(this TSource[] source, Func<TSource, bool> predicate)
@@ -29,12 +15,7 @@ namespace Cistern.ValueLinq
             if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
 
-            return source switch
-            {
-                ICollection<TSource> { Count: 0 } => false,
-                IReadOnlyCollection<TSource> { Count: 0 } => false,
-                _ => source.OfArray().Any(predicate),
-            };
+            return source.Length == 0 ? false : source.OfArray().Any(predicate);
         }
 
         // --

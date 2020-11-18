@@ -5,6 +5,45 @@
 <#@ import namespace="System.Collections.Generic" #>
 <#@ include file="Collections.tth" #>
 
+<#
+    var aggregateTypes = new []
+    {
+        (
+            Signature: new Func<string, string>(collection => $"Aggregate<TSource>(this {collection} source, Func<TSource, TSource, TSource> func)"),
+            Class: "ReduceForward<TSource>",
+            Args: "func",
+            AggregateReturns: "TSource",
+            FunctionReturns: "TSource",
+            WrapReturn: new Func<string, string>(s => s)
+        ),
+        (
+            Signature: new Func<string, string>(collection => $"Aggregate<TSource, TAccumulate>(this {collection} source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func)"),
+            Class: "FoldForward<TSource, TAccumulate>",
+            Args: "func, seed",
+            AggregateReturns: "TAccumulate",
+            FunctionReturns: "TAccumulate",
+            WrapReturn: new Func<string, string>(s => s)
+        ),
+        (
+            Signature: new Func<string, string>(collection => $"Aggregate<TSource, TAccumulate, TResult>(this {collection} source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func, Func<TAccumulate, TResult> resultSelector)"),
+            Class: "FoldForward<TSource, TAccumulate>",
+            Args: "func, seed",
+            AggregateReturns: "TAccumulate",
+            FunctionReturns: "TResult",
+            WrapReturn: new Func<string, string>(s => $"resultSelector({s})")
+        ),
+        (
+            Signature: new Func<string, string>(collection => $"All<TSource>(this {collection} source, Func<TSource, bool> predicate)"),
+            Class: "All<TSource, FuncToIFunc<TSource, bool>>",
+            Args: "new FuncToIFunc<TSource, bool>(predicate)",
+            AggregateReturns: "bool",
+            FunctionReturns: "bool",
+            WrapReturn: new Func<string, string>(s => s)
+        ),
+
+    };
+#>
+
 using Cistern.ValueLinq.Aggregation;
 using Cistern.ValueLinq.Containers;
 using Cistern.ValueLinq.Nodes;
@@ -16,51 +55,37 @@ namespace Cistern.ValueLinq
 <#
     foreach(var collection in collections)
     {
-        var genericArg = "TSource";
-        var genericCollectionType = collection.CollectionType(genericArg);
+        var genericCollectionType = collection.CollectionType("TSource");
 #>
     public static partial class <#= collection.StaticClassName #>
     {
-        public static TSource Aggregate<<#= genericArg #>>(this <#= genericCollectionType #> source, Func<<#= genericArg #>, <#= genericArg #>, <#= genericArg #>> func)
 <#
-        if (collection.OptimizedCall != null)
+        foreach(var aggregate in aggregateTypes)
         {
-#>
-        {
-            var aggregate = new ReduceForward<<#= genericArg #>>(func);
-            <#= collection.OptimizedCall #>(source, ref aggregate);
-            return aggregate.GetResult();
-        }
-<#
-        }
-        else
-        {
-#>
-             => <#= collection.FastEnumerate #><<#= genericArg #>, <#= genericArg #>, ReduceForward<<#= genericArg #>>>(source, new ReduceForward<<#= genericArg #>>(func));
-<#
-        }
-#>
+            var signature = $"public static {aggregate.FunctionReturns} {aggregate.Signature(genericCollectionType)}";
 
-        public static TAccumulate Aggregate<<#= genericArg #>, TAccumulate>(this <#= genericCollectionType #> source, TAccumulate seed, Func<TAccumulate, <#= genericArg #>, TAccumulate> func)
-<#
-        if (collection.OptimizedCall != null)
-        {
+            if (collection.OptimizedCall != null)
+            {
 #>
+        <#= signature #>
         {
-            var aggregate = new FoldForward<<#= genericArg #>, TAccumulate>(func, seed);
+            var aggregate = new <#= aggregate.Class #>(<#= aggregate.Args #>);
             <#= collection.OptimizedCall #>(source, ref aggregate);
-            return aggregate.GetResult();
+            return <#= aggregate.WrapReturn("aggregate.GetResult()") #>;
         }
+
 <#
-        }
-        else
-        {
+            }
+            else
+            {
 #>
-             => <#= collection.FastEnumerate #><<#= genericArg #>, TAccumulate, FoldForward<<#= genericArg #>, TAccumulate>>(source, new FoldForward<<#= genericArg #>, TAccumulate>(func, seed));
+        <#= signature #> =>
+            <#= aggregate.WrapReturn($"{collection.FastEnumerate}<TSource, {aggregate.AggregateReturns}, {aggregate.Class}>(source, new {aggregate.Class}({aggregate.Args}))") #>; 
+
 <#
+            }
         }
 #>
-        
     }
 <#
     }

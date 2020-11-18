@@ -1,4 +1,5 @@
 ﻿
+
 using Cistern.ValueLinq.Aggregation;
 using Cistern.ValueLinq.Containers;
 using Cistern.ValueLinq.Nodes;
@@ -9,12 +10,18 @@ namespace Cistern.ValueLinq
 {
     public static partial class Enumerable
     {
-        public static TSource Aggregate<TSource>(this IEnumerable<TSource> source, Func<TSource, TSource, TSource> func)
-             => EnumerableNode.FastEnumerateSwitch<TSource, TSource, ReduceForward<TSource>>(source, new ReduceForward<TSource>(func));
+        public static TSource Aggregate<TSource>(this IEnumerable<TSource> source, Func<TSource, TSource, TSource> func) =>
+            EnumerableNode.FastEnumerateSwitch<TSource, TSource, ReduceForward<TSource>>(source, new ReduceForward<TSource>(func)); 
 
-        public static TAccumulate Aggregate<TSource, TAccumulate>(this IEnumerable<TSource> source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func)
-             => EnumerableNode.FastEnumerateSwitch<TSource, TAccumulate, FoldForward<TSource, TAccumulate>>(source, new FoldForward<TSource, TAccumulate>(func, seed));
-        
+        public static TAccumulate Aggregate<TSource, TAccumulate>(this IEnumerable<TSource> source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func) =>
+            EnumerableNode.FastEnumerateSwitch<TSource, TAccumulate, FoldForward<TSource, TAccumulate>>(source, new FoldForward<TSource, TAccumulate>(func, seed)); 
+
+        public static TResult Aggregate<TSource, TAccumulate, TResult>(this IEnumerable<TSource> source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func, Func<TAccumulate, TResult> resultSelector) =>
+            resultSelector(EnumerableNode.FastEnumerateSwitch<TSource, TAccumulate, FoldForward<TSource, TAccumulate>>(source, new FoldForward<TSource, TAccumulate>(func, seed))); 
+
+        public static bool All<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) =>
+            EnumerableNode.FastEnumerateSwitch<TSource, bool, All<TSource, FuncToIFunc<TSource, bool>>>(source, new All<TSource, FuncToIFunc<TSource, bool>>(new FuncToIFunc<TSource, bool>(predicate))); 
+
     }
     public static partial class ValueLinqArray
     {
@@ -31,7 +38,21 @@ namespace Cistern.ValueLinq
             ArrayNode.ProcessArray(source, ref aggregate);
             return aggregate.GetResult();
         }
-        
+
+        public static TResult Aggregate<TSource, TAccumulate, TResult>(this TSource[] source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func, Func<TAccumulate, TResult> resultSelector)
+        {
+            var aggregate = new FoldForward<TSource, TAccumulate>(func, seed);
+            ArrayNode.ProcessArray(source, ref aggregate);
+            return resultSelector(aggregate.GetResult());
+        }
+
+        public static bool All<TSource>(this TSource[] source, Func<TSource, bool> predicate)
+        {
+            var aggregate = new All<TSource, FuncToIFunc<TSource, bool>>(new FuncToIFunc<TSource, bool>(predicate));
+            ArrayNode.ProcessArray(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
     }
     public static partial class ValueLinqList
     {
@@ -48,7 +69,21 @@ namespace Cistern.ValueLinq
             ListByIndexNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
-        
+
+        public static TResult Aggregate<TSource, TAccumulate, TResult>(this List<TSource> source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func, Func<TAccumulate, TResult> resultSelector)
+        {
+            var aggregate = new FoldForward<TSource, TAccumulate>(func, seed);
+            ListByIndexNode.ProcessList(source, ref aggregate);
+            return resultSelector(aggregate.GetResult());
+        }
+
+        public static bool All<TSource>(this List<TSource> source, Func<TSource, bool> predicate)
+        {
+            var aggregate = new All<TSource, FuncToIFunc<TSource, bool>>(new FuncToIFunc<TSource, bool>(predicate));
+            ListByIndexNode.ProcessList(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
     }
     public static partial class ValueLinqMemory
     {
@@ -65,7 +100,21 @@ namespace Cistern.ValueLinq
             MemoryNode.ProcessMemory(source, ref aggregate);
             return aggregate.GetResult();
         }
-        
+
+        public static TResult Aggregate<TSource, TAccumulate, TResult>(this ReadOnlyMemory<TSource> source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func, Func<TAccumulate, TResult> resultSelector)
+        {
+            var aggregate = new FoldForward<TSource, TAccumulate>(func, seed);
+            MemoryNode.ProcessMemory(source, ref aggregate);
+            return resultSelector(aggregate.GetResult());
+        }
+
+        public static bool All<TSource>(this ReadOnlyMemory<TSource> source, Func<TSource, bool> predicate)
+        {
+            var aggregate = new All<TSource, FuncToIFunc<TSource, bool>>(new FuncToIFunc<TSource, bool>(predicate));
+            MemoryNode.ProcessMemory(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
     }
 }
 

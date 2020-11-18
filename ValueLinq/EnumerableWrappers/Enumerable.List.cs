@@ -4,24 +4,10 @@ using Cistern.ValueLinq.ValueEnumerable;
 using System;
 using System.Collections.Generic;
 
-// TODO: Probably create template to create (List/Array/Memory) forwards
-
 namespace Cistern.ValueLinq
 {
     public static partial class Enumerable
     {
-        //public static TSource Aggregate<TSource>(this List<TSource> source, Func<TSource, TSource, TSource> func)
-        //    => source.OfList().Aggregate(func);
-
-        //public static TAccumulate Aggregate<TSource, TAccumulate>(this List<TSource> source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func)
-        //    => source.OfList().Aggregate(seed, func);
-
-        public static TResult Aggregate<TSource, TAccumulate, TResult>(this List<TSource> source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func, Func<TAccumulate, TResult> resultSelector)
-            => source.OfList().Aggregate(seed, func, resultSelector);
-
-        public static bool All<TSource>(this List<TSource> source, Func<TSource, bool> predicate)
-            => source.OfList().All(predicate);
-
         public static bool Any<TSource>(this List<TSource> source) => source.Count() > 0;
 
         public static bool Any<TSource>(this List<TSource> source, Func<TSource, bool> predicate)
@@ -29,12 +15,7 @@ namespace Cistern.ValueLinq
             if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
 
-            return source switch
-            {
-                ICollection<TSource> { Count: 0 } => false,
-                IReadOnlyCollection<TSource> { Count: 0 } => false,
-                _ => source.OfList().Any(predicate),
-            };
+            return source.Count == 0 ? false : source.OfList().Any(predicate);
         }
 
         // --

@@ -4,44 +4,19 @@ using Cistern.ValueLinq.ValueEnumerable;
 using System;
 using System.Collections.Generic;
 
-// TODO: Probably create template to create (List/Array/Memory) forwards
 
 namespace Cistern.ValueLinq
 {
     public static partial class Enumerable
     {
-        //public static TSource Aggregate<TSource>(this ReadOnlyMemory<TSource> source, Func<TSource, TSource, TSource> func)
-        //    => source.OfMemory().Aggregate(func);
-
-        //public static TAccumulate Aggregate<TSource, TAccumulate>(this ReadOnlyMemory<TSource> source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func)
-        //    => source.OfMemory().Aggregate(seed, func);
-
-        public static TResult Aggregate<TSource, TAccumulate, TResult>(this ReadOnlyMemory<TSource> source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func, Func<TAccumulate, TResult> resultSelector)
-            => source.OfMemory().Aggregate(seed, func, resultSelector);
-
-        public static bool All<TSource>(this ReadOnlyMemory<TSource> source, Func<TSource, bool> predicate)
-            => source.OfMemory().All(predicate);
-
-        public static bool Any<TSource>(this ReadOnlyMemory<TSource> source)
-            => source switch
-            {
-                System.Collections.ICollection c => c.Count > 0,
-                ICollection<TSource> c => c.Count > 0,
-                IReadOnlyCollection<TSource> c => c.Count > 0,
-                _ => source.OfMemory().Any()
-            };
+        public static bool Any<TSource>(this ReadOnlyMemory<TSource> source) => source.Length > 0;
 
         public static bool Any<TSource>(this ReadOnlyMemory<TSource> source, Func<TSource, bool> predicate)
         {
             if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
 
-            return source switch
-            {
-                ICollection<TSource> { Count: 0 } => false,
-                IReadOnlyCollection<TSource> { Count: 0 } => false,
-                _ => source.OfMemory().Any(predicate),
-            };
+            return source.Length == 0 ? false : source.OfMemory().Any(predicate);
         }
 
         // --
