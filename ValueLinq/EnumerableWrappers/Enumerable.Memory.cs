@@ -36,7 +36,7 @@ namespace Cistern.ValueLinq
 
         public static List<T> ToList<T>(this ReadOnlyMemory<T> source) => source.OfMemory().ToList();
 
-        public static int Count<T>(this ReadOnlyMemory<T> inner) => inner.OfMemory().Count();
+        public static int Count<T>(this ReadOnlyMemory<T> inner) => inner.Length;
 
         public static ValueEnumerable<TResult, SelectManyNode<TSource, TResult, MemoryNode<TSource>, EnumerableNode<TResult>>> SelectMany<TSource, TResult>(this ReadOnlyMemory<TSource> source, Func<TSource, IEnumerable<TResult>> selector)
         {

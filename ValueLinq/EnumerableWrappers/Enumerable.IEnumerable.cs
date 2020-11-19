@@ -43,9 +43,11 @@ namespace Cistern.ValueLinq
             return new ValueEnumerable<U, SelectLegacyNode<T,U>>(new SelectLegacyNode<T, U>(source, selector));
         }
 
-        public static ValueEnumerable<U, Select_InNode<T, U, EnumerableNode<T>>> Select<T, U>(this IEnumerable<T> inner, InFunc<T, U> f) => inner.OfEnumerable().Select(f);
+        public static ValueEnumerable<U, Select_InNode<T, U, EnumerableNode<T>>> Select<T, U>(this IEnumerable<T> inner, InFunc<T, U> f) =>
+            inner.OfEnumerable().Select(f);
 
-        public static ValueEnumerable<U, SelectIdxNode<T, U, EnumerableNode<T>>> Select<T, U>(this IEnumerable<T> inner, Func<T, int, U> f) => inner.OfEnumerable().Select(f);
+        public static ValueEnumerable<U, SelectIdxNode<T, U, EnumerableNode<T>>> Select<T, U>(this IEnumerable<T> inner, Func<T, int, U> f) =>
+            inner.OfEnumerable().Select(f);
 
         public static ValueEnumerable<T, WhereLegacyNode<T>> Where<T>(this IEnumerable<T> source, Func<T, bool> predicate)
         {
@@ -57,10 +59,14 @@ namespace Cistern.ValueLinq
             return new ValueEnumerable<T, WhereLegacyNode<T>>(new WhereLegacyNode<T>(source, predicate));
         }
 
-        public static ValueEnumerable<T, Where_InNode<T, EnumerableNode<T>>> Where<T>(this IEnumerable<T> inner, InFunc<T, bool> f) => inner.OfEnumerable().Where(f);
+        public static ValueEnumerable<T, Where_InNode<T, EnumerableNode<T>>> Where<T>(this IEnumerable<T> inner, InFunc<T, bool> f) =>
+            inner.OfEnumerable().Where(f);
 
-        public static TSource Last<TSource>(this IEnumerable<TSource> source) => source.OfEnumerable().Last();
-        public static TSource LastOrDefault<TSource>(this IEnumerable<TSource> source) => source.OfEnumerable().LastOrDefault();
+        public static TSource Last<TSource>(this IEnumerable<TSource> source) =>
+            source.OfEnumerable().Last();
+
+        public static TSource LastOrDefault<TSource>(this IEnumerable<TSource> source) =>
+            source.OfEnumerable().LastOrDefault();
 
         public static T[] ToArray<T>(this IEnumerable<T> source)
         {
@@ -111,7 +117,8 @@ namespace Cistern.ValueLinq
         }
 
 
-        public static int Count<T>(this IEnumerable<T> inner, bool ignorePotentialSideEffects = false) => inner.OfEnumerable().Count(ignorePotentialSideEffects);
+        public static int Count<T>(this IEnumerable<T> inner, bool ignorePotentialSideEffects = false) =>
+            inner.OfEnumerable().Count(ignorePotentialSideEffects);
 
         public static ValueEnumerable<TResult, SelectManyNode<TSource, TResult, EnumerableNode<TSource>, EnumerableNode<TResult>>> SelectMany<TSource, TResult>(this IEnumerable<TSource> source, Func<TSource, IEnumerable<TResult>> selector)
         {
@@ -140,7 +147,9 @@ namespace Cistern.ValueLinq
             return first.OfEnumerable().Concat(second.OfEnumerable());
         }
 
-        public static TSource ElementAt<TSource>(this IEnumerable<TSource> source, int index) => source.OfEnumerable().ElementAt(index);
+        public static TSource ElementAt<TSource>(this IEnumerable<TSource> source, int index) =>
+            source.OfEnumerable().ElementAt(index);
+
         public static TSource ElementAtOrDefault<TSource>(this IEnumerable<TSource> source, int index) => source.OfEnumerable().ElementAtOrDefault(index);
 
         public static ValueEnumerable<T, SkipNode<T, EnumerableNode<T>>> Skip<T>(this IEnumerable<T> source, int count) => source.OfEnumerable().Skip(count);

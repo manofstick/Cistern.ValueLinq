@@ -35,7 +35,7 @@ namespace Cistern.ValueLinq
 
         public static List<T> ToList<T>(this List<T> source) => source.OfList().ToList();
 
-        public static int Count<T>(this List<T> inner) => inner.OfList().Count();
+        public static int Count<T>(this List<T> inner) => inner.Count;
 
         public static ValueEnumerable<TResult, SelectManyNode<TSource, TResult, ListNode<TSource>, EnumerableNode<TResult>>> SelectMany<TSource, TResult>(this List<TSource> source, Func<TSource, IEnumerable<TResult>> selector)
         {
