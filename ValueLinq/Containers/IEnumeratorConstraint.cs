@@ -9,9 +9,8 @@ namespace Cistern.ValueLinq.Containers
         where Enumerator : IEnumerator<T>
     {
         private Enumerator _enumerator;
-        private readonly int? _count;
 
-        public GenericEnumeratorFastEnumerator(Enumerator e, int? count) => (_enumerator, _count) = (e, count);
+        public GenericEnumeratorFastEnumerator(Enumerator e) => (_enumerator) = (e);
 
         public void Dispose() =>_enumerator.Dispose();
 
@@ -48,7 +47,7 @@ namespace Cistern.ValueLinq.Containers
         }
 
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
-            => GenericEnumeratorNode.Create<T, Head, Tail, CreationType, Enumerator>(_f(_e), _count, ref nodes);
+            => GenericEnumeratorNode.Create<T, Head, Tail, CreationType, Enumerator>(_f(_e), ref nodes);
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator_, Tail>(ref Tail _, ref Enumerator_ __)
             => throw new InvalidOperationException();
@@ -71,12 +70,12 @@ namespace Cistern.ValueLinq.Containers
 
     static class GenericEnumeratorNode
     {
-        public static CreationType Create<T, Head, Tail, CreationType, Enumerator>(Enumerator list, int? count, ref Nodes<Head, Tail> nodes)
+        public static CreationType Create<T, Head, Tail, CreationType, Enumerator>(Enumerator list, ref Nodes<Head, Tail> nodes)
             where Head : INode
             where Tail : INodes
             where Enumerator : IEnumerator<T>
         {
-            var enumerator = new GenericEnumeratorFastEnumerator<T, Enumerator>(list, count);
+            var enumerator = new GenericEnumeratorFastEnumerator<T, Enumerator>(list);
             return nodes.CreateObject<CreationType, T, GenericEnumeratorFastEnumerator<T, Enumerator>>(ref enumerator);
         }
 

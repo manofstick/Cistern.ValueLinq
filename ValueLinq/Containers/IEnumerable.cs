@@ -1,6 +1,6 @@
-﻿using System;
+﻿using Cistern.ValueLinq.Nodes;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 
 namespace Cistern.ValueLinq.Containers
 {
@@ -18,6 +18,51 @@ namespace Cistern.ValueLinq.Containers
             if (_enumerator.MoveNext())
             {
                 current = _enumerator.Current;
+                return true;
+            }
+            current = default;
+            return false;
+        }
+    }
+
+    struct EnumerableFastWhereEnumerator<T>
+        : IFastEnumerator<T>
+    {
+        private readonly IEnumerator<T> _enumerator;
+        private readonly Func<T, bool> _predicate;
+
+        public EnumerableFastWhereEnumerator(IEnumerable<T> enumerable, Func<T, bool> predicate) => (_enumerator, _predicate) = (enumerable.GetEnumerator(), predicate);
+
+        public void Dispose() { _enumerator.Dispose(); }
+
+        public bool TryGetNext(out T current)
+        {
+            while (_enumerator.MoveNext())
+            {
+                current = _enumerator.Current;
+                if (_predicate(current))
+                    return true;
+            }
+            current = default;
+            return false;
+        }
+    }
+
+    struct EnumerableFastSelectEnumerator<T, U>
+        : IFastEnumerator<U>
+    {
+        private readonly IEnumerator<T> _enumerator;
+        private readonly Func<T, U> _map;
+
+        public EnumerableFastSelectEnumerator(IEnumerable<T> enumerable, Func<T, U> map) => (_enumerator, _map) = (enumerable.GetEnumerator(), map);
+
+        public void Dispose() { _enumerator.Dispose(); }
+
+        public bool TryGetNext(out U current)
+        {
+            if (_enumerator.MoveNext())
+            {
+                current = _map(_enumerator.Current);
                 return true;
             }
             current = default;
@@ -46,20 +91,7 @@ namespace Cistern.ValueLinq.Containers
         public EnumerableNode(IEnumerable<T> source) => _enumerable = source;
 
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) =>
-            _enumerable switch
-            {
-                T[] array when array.Length == 0 => EmptyNode.Create<T, Head, Tail, CreationType>(ref nodes),
-                T[] array => ArrayNode.Create<T, Head, Tail, CreationType>(array, ref nodes),
-                List<T> list when list.Count == 0 => EmptyNode.Create<T, Head, Tail, CreationType>(ref nodes),
-                List <T> list =>
-#if USE_LIST_BY_INDEX
-                    ListByIndexNode.Create<T, Head, Tail, CreationType>(list, ref nodes),
-#else
-                    GenericEnumeratorNode.Create<T, Head, Tail, CreationType, List<T>.Enumerator>(list.GetEnumerator(), list.Count, ref nodes),
-#endif
-                INode node => node.CreateObjectDescent<CreationType, Head, Tail>(ref nodes),
-                _ => EnumerableNode.Create<T, Head, Tail, CreationType>(_enumerable, ref nodes),
-            };
+            EnumerableNode.CreateObjectDescent<T, CreationType, Head, Tail>(ref nodes, _enumerable);
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) =>
             throw new InvalidOperationException();
@@ -107,13 +139,100 @@ namespace Cistern.ValueLinq.Containers
             }
         }
 
-
         public static CreationType Create<T, Head, Tail, CreationType>(IEnumerable<T> enumerable, ref Nodes<Head, Tail> nodes)
             where Head : INode
             where Tail : INodes
         {
             var e = new EnumerableFastEnumerator<T>(enumerable);
             return nodes.CreateObject<CreationType, T, EnumerableFastEnumerator<T>>(ref e);
+        }
+
+        public static CreationType Create<T, Head, Tail, CreationType>(IEnumerable<T> enumerable, Func<T, bool> predicate, ref Nodes<Head, Tail> nodes)
+            where Head : INode
+            where Tail : INodes
+        {
+            var e = new EnumerableFastWhereEnumerator<T>(enumerable, predicate);
+            return nodes.CreateObject<CreationType, T, EnumerableFastWhereEnumerator<T>>(ref e);
+        }
+
+        private static CreationType Create<T, U, Head, Tail, CreationType>(IEnumerable<T> enumerable, Func<T, U> map, ref Nodes<Head, Tail> nodes)
+            where Head : INode
+            where Tail : INodes
+        {
+            var e = new EnumerableFastSelectEnumerator<T, U>(enumerable, map);
+            return nodes.CreateObject<CreationType, U, EnumerableFastSelectEnumerator<T, U>>(ref e);
+        }
+
+        public static CreationType CreateObjectDescent<T, CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes, IEnumerable<T> enumerable)
+            where Head : INode
+            where Tail : INodes
+            => enumerable switch
+            {
+                T[] array when array.Length == 0 => EmptyNode.Create<T, Head, Tail, CreationType>(ref nodes),
+                T[] array => ArrayNode.Create<T, Head, Tail, CreationType>(array, ref nodes),
+                List<T> list when list.Count == 0 => EmptyNode.Create<T, Head, Tail, CreationType>(ref nodes),
+                List<T> list =>
+#if USE_LIST_BY_INDEX
+                    ListByIndexNode.Create<T, Head, Tail, CreationType>(list, ref nodes),
+#else
+                    ListNode.Create<T, Head, Tail, CreationType>(list.GetEnumerator(), ref nodes),
+#endif
+                INode node => node.CreateObjectDescent<CreationType, Head, Tail>(ref nodes),
+                _ => EnumerableNode.Create<T, Head, Tail, CreationType>(enumerable, ref nodes),
+            };
+
+        public static CreationType CreateObjectDescent<T, CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes, IEnumerable<T> enumerable, Func<T, bool> predicate)
+            where Head : INode
+            where Tail : INodes
+            => enumerable switch
+            {
+                T[] array when array.Length == 0 => EmptyNode.Create<T, Head, Tail, CreationType>(ref nodes),
+                T[] array => ArrayNode.Create<T, Head, Tail, CreationType>(array, predicate, ref nodes),
+                List<T> list when list.Count == 0 => EmptyNode.Create<T, Head, Tail, CreationType>(ref nodes),
+                List<T> list =>
+#if USE_LIST_BY_INDEX
+                    **TODO**
+#else
+                    ListNode.Create<T, Head, Tail, CreationType>(list.GetEnumerator(), predicate, ref nodes),
+#endif
+                INode node => CreateObjectDescent<T, CreationType, Head, Tail>(ref nodes, node, predicate),
+                _ => EnumerableNode.Create<T, Head, Tail, CreationType>(enumerable, predicate, ref nodes),
+            };
+
+        public static CreationType CreateObjectDescent<T, U, CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes, IEnumerable<T> enumerable, Func<T, U> map)
+            where Head : INode
+            where Tail : INodes
+            => enumerable switch
+            {
+                T[] array when array.Length == 0 => EmptyNode.Create<U, Head, Tail, CreationType>(ref nodes),
+                T[] array => ArrayNode.Create<T, U, Head, Tail, CreationType>(array, map, ref nodes),
+                List<T> list when list.Count == 0 => EmptyNode.Create<U, Head, Tail, CreationType>(ref nodes),
+                List<T> list =>
+#if USE_LIST_BY_INDEX
+                    **TODO**
+#else
+                    ListNode.Create<T, U, Head, Tail, CreationType>(list.GetEnumerator(), map, ref nodes),
+#endif
+                INode node => CreateObjectDescent<T, U, CreationType, Head, Tail>(ref nodes, node, map),
+                _ => EnumerableNode.Create<T, U, Head, Tail, CreationType>(enumerable, map, ref nodes),
+            };
+
+        public static CreationType CreateObjectDescent<T, CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes, INode node, Func<T, bool> predicate)
+            where Head : INode
+            where Tail : INodes
+        {
+            var newHead = new WhereNode<T, EmptyNode<T>>(new EmptyNode<T>(), predicate); // EmptyNode, as we will only be ascending
+            var newNodes = new Nodes<WhereNode<T, EmptyNode<T>>, Nodes<Head, Tail>>(newHead, nodes);
+            return node.CreateObjectDescent<CreationType, WhereNode<T, EmptyNode<T>>, Nodes<Head, Tail>>(ref newNodes);
+        }
+
+        public static CreationType CreateObjectDescent<T, U, CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes, INode node, Func<T, U> map)
+            where Head : INode
+            where Tail : INodes
+        {
+            var newHead = new SelectNode<T, U, EmptyNode<T>>(new EmptyNode<T>(), map); // EmptyNode, as we will only be ascending
+            var newNodes = new Nodes<SelectNode<T, U, EmptyNode<T>>, Nodes<Head, Tail>>(newHead, nodes);
+            return node.CreateObjectDescent<CreationType, SelectNode<T, U, EmptyNode<T>>, Nodes<Head, Tail>>(ref newNodes);
         }
 
         internal static TResult FastEnumerateSwitch<T, TResult, FEnumerator>(IEnumerable<T> _enumerable, in FEnumerator fenum)

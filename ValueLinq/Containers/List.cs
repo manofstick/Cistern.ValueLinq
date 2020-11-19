@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace Cistern.ValueLinq.Containers
 {
@@ -12,6 +13,7 @@ namespace Cistern.ValueLinq.Containers
 
         public void Dispose() =>_enumerator.Dispose();
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetNext(out T current)
         {
             if (!_enumerator.MoveNext())
@@ -21,6 +23,52 @@ namespace Cistern.ValueLinq.Containers
             }
             current = _enumerator.Current;
             return true;
+        }
+    }
+
+    struct ListFastWhereEnumerator<T>
+        : IFastEnumerator<T>
+    {
+        private List<T>.Enumerator _enumerator;
+        private Func<T, bool> _predicate;
+
+        public ListFastWhereEnumerator(List<T>.Enumerator e, Func<T, bool> predicate) => (_enumerator, _predicate) = (e, predicate);
+
+        public void Dispose() => _enumerator.Dispose();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetNext(out T current)
+        {
+            while (_enumerator.MoveNext())
+            {
+                if (_predicate(current = _enumerator.Current)) ;
+                return true;
+            }
+            current = default;
+            return false;
+        }
+    }
+
+    struct ListFastSelectEnumerator<T, U>
+        : IFastEnumerator<U>
+    {
+        private List<T>.Enumerator _enumerator;
+        private Func<T, U> _map;
+
+        public ListFastSelectEnumerator(List<T>.Enumerator e, Func<T, U> map) => (_enumerator, _map) = (e, map);
+
+        public void Dispose() => _enumerator.Dispose();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetNext(out U current)
+        {
+            if (_enumerator.MoveNext())
+            {
+                current = _map(_enumerator.Current);
+                return true;
+            }
+            current = default;
+            return false;
         }
     }
 
@@ -64,6 +112,22 @@ namespace Cistern.ValueLinq.Containers
         {
             var enumerator = new ListFastEnumerator<T>(list);
             return nodes.CreateObject<CreationType, T, ListFastEnumerator<T>>(ref enumerator);
+        }
+
+        public static CreationType Create<T, Head, Tail, CreationType>(List<T>.Enumerator list, Func<T, bool> predicate, ref Nodes<Head, Tail> nodes)
+            where Head : INode
+            where Tail : INodes
+        {
+            var enumerator = new ListFastWhereEnumerator<T>(list, predicate);
+            return nodes.CreateObject<CreationType, T, ListFastWhereEnumerator<T>>(ref enumerator);
+        }
+
+        public static CreationType Create<T, U, Head, Tail, CreationType>(List<T>.Enumerator list, Func<T, U> map, ref Nodes<Head, Tail> nodes)
+            where Head : INode
+            where Tail : INodes
+        {
+            var enumerator = new ListFastSelectEnumerator<T, U>(list, map);
+            return nodes.CreateObject<CreationType, U, ListFastSelectEnumerator<T, U>>(ref enumerator);
         }
     }
 }

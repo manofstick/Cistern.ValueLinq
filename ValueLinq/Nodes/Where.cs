@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Cistern.ValueLinq.Containers;
+using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 namespace Cistern.ValueLinq.Nodes
@@ -58,6 +60,32 @@ namespace Cistern.ValueLinq.Nodes
 
         TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) =>
             _nodeT.CreateObjectViaFastEnumerator<TResult, WhereFoward<T, FEnumerator>>(new WhereFoward<T, FEnumerator>(fenum, _filter));
+    }
+
+    public struct WhereLegacyNode<T>
+        : INode<T>
+    {
+        private IEnumerable<T> _enumerable;
+        private Func<T, bool> _filter;
+
+        public void GetCountInformation(out CountInformation info)
+        {
+            new EnumerableNode<T>(_enumerable).GetCountInformation(out info);
+            info.ActualLengthIsMaximumLength &= info.MaximumLength == 0;
+        }
+
+        public WhereLegacyNode(IEnumerable<T> nodeT, Func<T, bool> predicate) => (_enumerable, _filter) = (nodeT, predicate);
+
+        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+            => EnumerableNode.CreateObjectDescent<T, CreationType, Head, Tail>(ref nodes, _enumerable, _filter);
+
+        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
+            => throw new InvalidOperationException("Shouldn't ascend through legacy node");
+
+        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
+
+        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) =>
+            EnumerableNode.FastEnumerateSwitch<T, TResult, WhereFoward<T, FEnumerator>>(_enumerable, new WhereFoward<T, FEnumerator>(fenum, _filter));
     }
 
     struct WhereFoward<T, Next>

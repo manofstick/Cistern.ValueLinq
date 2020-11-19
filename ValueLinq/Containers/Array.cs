@@ -26,6 +26,55 @@ namespace Cistern.ValueLinq.Containers
         }
     }
 
+    struct ArrayFastWhereEnumerator<T>
+        : IFastEnumerator<T>
+    {
+        private readonly T[] _array;
+        private readonly Func<T, bool> _predicate;
+        private int _idx;
+
+        public ArrayFastWhereEnumerator(T[] array, Func<T, bool> predicate) => (_array, _predicate, _idx) = (array, predicate, -1);
+
+        public void Dispose() { }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetNext(out T current)
+        {
+            while (++_idx < _array.Length)
+            {
+                current = _array[_idx];
+                if (_predicate(current))
+                    return true;
+            }
+            current = default;
+            return false;
+        }
+    }
+
+    struct ArrayFastSelectEnumerator<T, U>
+        : IFastEnumerator<U>
+    {
+        private readonly T[] _array;
+        private readonly Func<T, U> _map;
+        private int _idx;
+
+        public ArrayFastSelectEnumerator(T[] array, Func<T, U> map) => (_array, _map, _idx) = (array, map, -1);
+
+        public void Dispose() { }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetNext(out U current)
+        {
+            if (++_idx < _array.Length)
+            {
+                current = _map(_array[_idx]);
+                return true;
+            }
+            current = default;
+            return false;
+        }
+    }
+
     public struct ArrayNode<T>
         : INode<T>
     {
@@ -66,6 +115,22 @@ namespace Cistern.ValueLinq.Containers
             return nodes.CreateObject<CreationType, T, ArrayFastEnumerator<T>>(ref enumerator);
         }
 
+        public static CreationType Create<T, Head, Tail, CreationType>(T[] array, Func<T, bool> predicate, ref Nodes<Head, Tail> nodes)
+            where Head : INode
+            where Tail : INodes
+        {
+            var enumerator = new ArrayFastWhereEnumerator<T>(array, predicate);
+            return nodes.CreateObject<CreationType, T, ArrayFastWhereEnumerator<T>>(ref enumerator);
+        }
+
+        internal static CreationType Create<T, U, Head, Tail, CreationType>(T[] array, Func<T, U> map, ref Nodes<Head, Tail> nodes)
+            where Head : INode
+            where Tail : INodes
+        {
+            var enumerator = new ArrayFastSelectEnumerator<T, U>(array, map);
+            return nodes.CreateObject<CreationType, U, ArrayFastSelectEnumerator<T, U>>(ref enumerator);
+        }
+
         internal static TResult FastEnumerate<TIn, TResult, FEnumerator>(TIn[] array, FEnumerator fenum)
             where FEnumerator : IForwardEnumerator<TIn>
         {
@@ -93,9 +158,10 @@ namespace Cistern.ValueLinq.Containers
             if (array == null)
                 throw new ArgumentNullException("source"); // name used to match System.Linq's exceptions
 
-            if (array.Length < 20
+            if (array.Length < 20 // magic number! skip small, as cost of trying for batch outweighs benefit (and no "perfect" value)
              || BatchProcessResult.Unavailable == fenum.TryProcessBatch<TIn[], GetSpan<TIn[], TIn>>(array, in Optimizations.UseSpan<TIn>.FromArray))
             {
+                // Used to share Span version, but getting span isn't free (albeit cheap), and Loop logic is trivial anyway
                 Loop<TIn, FEnumerator>(array, ref fenum);
             }
         }
@@ -109,6 +175,5 @@ namespace Cistern.ValueLinq.Containers
                     break;
             }
         }
-
     }
 }
