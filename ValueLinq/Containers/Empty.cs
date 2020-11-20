@@ -20,7 +20,7 @@ namespace Cistern.ValueLinq.Containers
         public void GetCountInformation(out CountInformation info) => 
             info = new CountInformation(0, true);
 
-        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => EmptyNode.Create<T, Head, Tail, CreationType>(ref nodes);
+        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => EmptyNode.Create<T, Nodes<Head, Tail>, CreationType>(ref nodes);
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
 
@@ -36,12 +36,11 @@ namespace Cistern.ValueLinq.Containers
 
     static class EmptyNode
     {
-        public static CreationType Create<T, Head, Tail, CreationType>(ref Nodes<Head, Tail> nodes)
-            where Head : INode
-            where Tail : INodes
+        public static CreationType Create<T, Nodes, CreationType>(ref Nodes nodes)
+            where Nodes : INodes
         {
             var enumerator = new EmptyFastEnumerator<T>();
-            return nodes.CreateObject<CreationType, T, EmptyFastEnumerator<T>>(ref enumerator);
+            return nodes.CreateObject<CreationType, T, EmptyFastEnumerator<T>>(0, ref enumerator);
         }
 
         internal static TResult FastEnumerate<TIn, TResult, FEnumerator>(FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>

@@ -67,7 +67,7 @@ namespace Cistern.ValueLinq.Containers
             where List : IReadOnlyList<T>
         {
             var enumerator = new IReadOnlyListFastEnumerator<T, List>(list);
-            return nodes.CreateObject<CreationType, T, IReadOnlyListFastEnumerator<T, List>>(ref enumerator);
+            return nodes.CreateObject<CreationType, T, IReadOnlyListFastEnumerator<T, List>>(0, ref enumerator);
         }
 
         internal static TResult FastEnumerate<T, TResult, FEnumerator, List>(List list, FEnumerator fenum)

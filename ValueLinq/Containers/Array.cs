@@ -75,6 +75,34 @@ namespace Cistern.ValueLinq.Containers
         }
     }
 
+    struct ArrayFastWhereSelectEnumerator<T, U>
+        : IFastEnumerator<U>
+    {
+        private readonly T[] _array;
+        private readonly Func<T, bool> _predicate;
+        private readonly Func<T, U> _map;
+        private int _idx;
+
+        public ArrayFastWhereSelectEnumerator(T[] array, Func<T, bool> predicate, Func<T, U> map) => (_array, _predicate, _map, _idx) = (array, predicate, map, -1);
+
+        public void Dispose() { }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetNext(out U current)
+        {
+            while (++_idx < _array.Length)
+            {
+                if (_predicate(_array[_idx]))
+                {
+                    current = _map(_array[_idx]);
+                    return true;
+                }
+            }
+            current = default;
+            return false;
+        }
+    }
+
     public struct ArrayNode<T>
         : INode<T>
     {
@@ -88,18 +116,12 @@ namespace Cistern.ValueLinq.Containers
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
         {
             if (_array.Length == 0)
-                return EmptyNode.Create<T, Head, Tail, CreationType>(ref nodes);
+                return EmptyNode.Create<T, Nodes<Head, Tail>, CreationType>(ref nodes);
 
-            return ArrayNode.Create<T, Head, Tail, CreationType>(_array, ref nodes);
+            return ArrayNode.Create<T, Nodes<Head, Tail>, CreationType>(_array, ref nodes);
         }
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
-
-        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
-        {
-            result = default;
-            return false;
-        }
 
         TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
             => ArrayNode.FastEnumerate<T, TResult, FEnumerator>(_array, fenum);
@@ -107,28 +129,28 @@ namespace Cistern.ValueLinq.Containers
 
     static class ArrayNode
     {
-        public static CreationType Create<T, Head, Tail, CreationType>(T[] array, ref Nodes<Head, Tail> nodes)
-            where Head : INode
-            where Tail : INodes
+        public static CreationType Create<T, Nodes, CreationType>(T[] array, ref Nodes nodes)
+            where Nodes : INodes
         {
+            if (nodes.TryObjectAscentOptimization<Optimizations.SourceArray<T>, CreationType>(0, new Optimizations.SourceArray<T> { Array = array }, out var creation))
+                return creation;
+
             var enumerator = new ArrayFastEnumerator<T>(array);
-            return nodes.CreateObject<CreationType, T, ArrayFastEnumerator<T>>(ref enumerator);
+            return nodes.CreateObject<CreationType, T, ArrayFastEnumerator<T>>(0, ref enumerator);
         }
 
-        public static CreationType Create<T, Head, Tail, CreationType>(T[] array, Func<T, bool> predicate, ref Nodes<Head, Tail> nodes)
-            where Head : INode
-            where Tail : INodes
+        public static CreationType Create<T, Nodes, CreationType>(T[] array, Func<T, bool> predicate, ref Nodes nodes)
+            where Nodes : INodes
         {
             var enumerator = new ArrayFastWhereEnumerator<T>(array, predicate);
-            return nodes.CreateObject<CreationType, T, ArrayFastWhereEnumerator<T>>(ref enumerator);
+            return nodes.CreateObject<CreationType, T, ArrayFastWhereEnumerator<T>>(0, ref enumerator);
         }
 
-        internal static CreationType Create<T, U, Head, Tail, CreationType>(T[] array, Func<T, U> map, ref Nodes<Head, Tail> nodes)
-            where Head : INode
-            where Tail : INodes
+        internal static CreationType Create<T, U, Nodes, CreationType>(T[] array, Func<T, U> map, ref Nodes nodes)
+            where Nodes : INodes
         {
             var enumerator = new ArrayFastSelectEnumerator<T, U>(array, map);
-            return nodes.CreateObject<CreationType, U, ArrayFastSelectEnumerator<T, U>>(ref enumerator);
+            return nodes.CreateObject<CreationType, U, ArrayFastSelectEnumerator<T, U>>(0, ref enumerator);
         }
 
         internal static TResult FastEnumerate<TIn, TResult, FEnumerator>(TIn[] array, FEnumerator fenum)

@@ -57,7 +57,7 @@ namespace Cistern.ValueLinq.Containers
             where Tail : INodes
         {
             var enumerator = new MemoryFastEnumerator<T>(memory);
-            return nodes.CreateObject<CreationType, T, MemoryFastEnumerator<T>>(ref enumerator);
+            return nodes.CreateObject<CreationType, T, MemoryFastEnumerator<T>>(0, ref enumerator);
         }
 
         internal static void ProcessMemory<TIn, FEnumerator>(ReadOnlyMemory<TIn> memory, ref FEnumerator fenum)

@@ -62,7 +62,7 @@ namespace Cistern.ValueLinq.Containers
             where Tail : INodes
         {
             var enumerator = new SpanFastEnumerator<TObject, T>(obj, getSpan);
-            return nodes.CreateObject<CreationType, T, SpanFastEnumerator<TObject, T>>(ref enumerator);
+            return nodes.CreateObject<CreationType, T, SpanFastEnumerator<TObject, T>>(0, ref enumerator);
         }
 
         internal static TResult FastEnumerate<TIn, TResult, FEnumerator, TObject>(TObject obj, GetSpan<TObject, TIn> getSpan, FEnumerator fenum)

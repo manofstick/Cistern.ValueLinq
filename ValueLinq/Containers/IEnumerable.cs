@@ -70,6 +70,32 @@ namespace Cistern.ValueLinq.Containers
         }
     }
 
+    struct EnumerableFastWhereSelectEnumerator<T, U>
+        : IFastEnumerator<U>
+    {
+        private readonly IEnumerator<T> _enumerator;
+        private readonly Func<T, bool> _predicate;
+        private readonly Func<T, U> _map;
+
+        public EnumerableFastWhereSelectEnumerator(IEnumerable<T> enumerable, Func<T, bool> predicate, Func<T, U> map) => (_enumerator, _predicate, _map) = (enumerable.GetEnumerator(), predicate, map);
+        public void Dispose() { _enumerator.Dispose(); }
+
+        public bool TryGetNext(out U currentU)
+        {
+            while (_enumerator.MoveNext())
+            {
+                var currentT = _enumerator.Current;
+                if (_predicate(currentT))
+                {
+                    currentU = _map(currentT);
+                    return true;
+                }
+            }
+            currentU = default;
+            return false;
+        }
+    }
+
     public struct EnumerableNode<T>
         : INode<T>
     {
@@ -143,8 +169,11 @@ namespace Cistern.ValueLinq.Containers
             where Head : INode
             where Tail : INodes
         {
+            if (nodes.TryObjectAscentOptimization<Optimizations.SourceEnumerable<T>, CreationType>(0, new Optimizations.SourceEnumerable<T> { Enumerable = enumerable }, out var creation))
+                return creation;
+
             var e = new EnumerableFastEnumerator<T>(enumerable);
-            return nodes.CreateObject<CreationType, T, EnumerableFastEnumerator<T>>(ref e);
+            return nodes.CreateObject<CreationType, T, EnumerableFastEnumerator<T>>(0, ref e);
         }
 
         public static CreationType Create<T, Head, Tail, CreationType>(IEnumerable<T> enumerable, Func<T, bool> predicate, ref Nodes<Head, Tail> nodes)
@@ -152,7 +181,7 @@ namespace Cistern.ValueLinq.Containers
             where Tail : INodes
         {
             var e = new EnumerableFastWhereEnumerator<T>(enumerable, predicate);
-            return nodes.CreateObject<CreationType, T, EnumerableFastWhereEnumerator<T>>(ref e);
+            return nodes.CreateObject<CreationType, T, EnumerableFastWhereEnumerator<T>>(0, ref e);
         }
 
         private static CreationType Create<T, U, Head, Tail, CreationType>(IEnumerable<T> enumerable, Func<T, U> map, ref Nodes<Head, Tail> nodes)
@@ -160,7 +189,7 @@ namespace Cistern.ValueLinq.Containers
             where Tail : INodes
         {
             var e = new EnumerableFastSelectEnumerator<T, U>(enumerable, map);
-            return nodes.CreateObject<CreationType, U, EnumerableFastSelectEnumerator<T, U>>(ref e);
+            return nodes.CreateObject<CreationType, U, EnumerableFastSelectEnumerator<T, U>>(0, ref e);
         }
 
         public static CreationType CreateObjectDescent<T, CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes, IEnumerable<T> enumerable)
@@ -168,14 +197,14 @@ namespace Cistern.ValueLinq.Containers
             where Tail : INodes
             => enumerable switch
             {
-                T[] array when array.Length == 0 => EmptyNode.Create<T, Head, Tail, CreationType>(ref nodes),
-                T[] array => ArrayNode.Create<T, Head, Tail, CreationType>(array, ref nodes),
-                List<T> list when list.Count == 0 => EmptyNode.Create<T, Head, Tail, CreationType>(ref nodes),
+                T[] array when array.Length == 0 => EmptyNode.Create<T, Nodes<Head, Tail>, CreationType>(ref nodes),
+                T[] array => ArrayNode.Create<T, Nodes<Head, Tail>, CreationType>(array, ref nodes),
+                List<T> list when list.Count == 0 => EmptyNode.Create<T, Nodes<Head, Tail>, CreationType>(ref nodes),
                 List<T> list =>
 #if USE_LIST_BY_INDEX
                     ListByIndexNode.Create<T, Head, Tail, CreationType>(list, ref nodes),
 #else
-                    ListNode.Create<T, Head, Tail, CreationType>(list.GetEnumerator(), ref nodes),
+                    ListNode.Create<T, Head, Tail, CreationType>(list, ref nodes),
 #endif
                 INode node => node.CreateObjectDescent<CreationType, Head, Tail>(ref nodes),
                 _ => EnumerableNode.Create<T, Head, Tail, CreationType>(enumerable, ref nodes),
@@ -186,9 +215,9 @@ namespace Cistern.ValueLinq.Containers
             where Tail : INodes
             => enumerable switch
             {
-                T[] array when array.Length == 0 => EmptyNode.Create<T, Head, Tail, CreationType>(ref nodes),
-                T[] array => ArrayNode.Create<T, Head, Tail, CreationType>(array, predicate, ref nodes),
-                List<T> list when list.Count == 0 => EmptyNode.Create<T, Head, Tail, CreationType>(ref nodes),
+                T[] array when array.Length == 0 => EmptyNode.Create<T, Nodes<Head, Tail>, CreationType>(ref nodes),
+                T[] array => ArrayNode.Create<T, Nodes<Head, Tail>, CreationType>(array, predicate, ref nodes),
+                List<T> list when list.Count == 0 => EmptyNode.Create<T, Nodes<Head, Tail>, CreationType>(ref nodes),
                 List<T> list =>
 #if USE_LIST_BY_INDEX
                     **TODO**
@@ -204,9 +233,9 @@ namespace Cistern.ValueLinq.Containers
             where Tail : INodes
             => enumerable switch
             {
-                T[] array when array.Length == 0 => EmptyNode.Create<U, Head, Tail, CreationType>(ref nodes),
-                T[] array => ArrayNode.Create<T, U, Head, Tail, CreationType>(array, map, ref nodes),
-                List<T> list when list.Count == 0 => EmptyNode.Create<U, Head, Tail, CreationType>(ref nodes),
+                T[] array when array.Length == 0 => EmptyNode.Create<U, Nodes<Head, Tail>, CreationType>(ref nodes),
+                T[] array => ArrayNode.Create<T, U, Nodes<Head, Tail>, CreationType>(array, map, ref nodes),
+                List<T> list when list.Count == 0 => EmptyNode.Create<U, Nodes<Head, Tail>, CreationType>(ref nodes),
                 List<T> list =>
 #if USE_LIST_BY_INDEX
                     **TODO**

@@ -53,7 +53,7 @@ namespace Cistern.ValueLinq.Nodes
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
         {
             var nextEnumerator = new ValueSelectNodeEnumerator<EnumeratorElement, U, Enumerator, T, Func>(in enumerator, _map);
-            return tail.CreateObject<CreationType, U, ValueSelectNodeEnumerator<EnumeratorElement, U, Enumerator, T, Func>>(ref nextEnumerator);
+            return tail.CreateObject<CreationType, U, ValueSelectNodeEnumerator<EnumeratorElement, U, Enumerator, T, Func>>(0, ref nextEnumerator);
         }
 
         bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)

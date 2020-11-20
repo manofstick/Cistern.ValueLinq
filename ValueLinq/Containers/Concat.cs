@@ -190,7 +190,7 @@ namespace Cistern.ValueLinq.Containers
             {
                 return components.Count switch
                 {
-                    0 => EmptyNode.Create<T, Head, Tail, CreationType>(ref nodes),
+                    0 => EmptyNode.Create<T, Nodes<Head, Tail>, CreationType>(ref nodes),
                     1 => Helper.CreateObjectDescent<EnumerableNode<T>, CreationType, Head, Tail>(components[0], ref nodes),
                     2 => ConcatNode.Create<T, EnumerableNode<T>, EnumerableNode<T>, Head, Tail, CreationType>(components[0], components[1], ref nodes),
                     _ => ConcatNode.Create<T, Head, Tail, CreationType>(components, ref nodes)
@@ -270,7 +270,7 @@ namespace Cistern.ValueLinq.Containers
             var startEnumerator = Nodes<T>.CreateValueEnumerator(start);
 
             var e = new ConcatFastEnumerator<T, Finish>(startEnumerator.FastEnumerator, finish);
-            return nodes.CreateObject<CreationType, T, ConcatFastEnumerator<T, Finish>>(ref e);
+            return nodes.CreateObject<CreationType, T, ConcatFastEnumerator<T, Finish>>(0, ref e);
         }
 
         internal static CreationType Create<T, Head, Tail, CreationType>(List<EnumerableNode<T>> components, ref Nodes<Head, Tail> nodes)
@@ -278,7 +278,7 @@ namespace Cistern.ValueLinq.Containers
             where Tail : INodes
         {
             var e = new ConcatFastListEnumerator<T>(components);
-            return nodes.CreateObject<CreationType, T, ConcatFastListEnumerator<T>>(ref e);
+            return nodes.CreateObject<CreationType, T, ConcatFastListEnumerator<T>>(0, ref e);
         }
     }
 

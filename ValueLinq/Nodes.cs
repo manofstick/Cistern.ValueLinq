@@ -1,7 +1,6 @@
 ﻿using Cistern.ValueLinq.ValueEnumerable;
 using System;
 using System.Collections.Generic;
-using System.Security.Cryptography;
 
 namespace Cistern.ValueLinq
 {
@@ -117,11 +116,16 @@ namespace Cistern.ValueLinq
             where Head : INode
             where Tail : INodes;
 
-        CreationType CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
+        CreationType CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Nodes>(ref Nodes nodes, ref Enumerator enumerator)
             where Enumerator : IFastEnumerator<EnumeratorElement>
-            where Tail : INodes;
+            where Nodes : INodes;
 
-        bool CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result);
+        bool TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation)
+            where Nodes : INodes
+        { creation = default; return false; }
+
+        bool CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+        { result = default; return false; }
     }
 
     public interface INode<T> : INode
@@ -131,14 +135,16 @@ namespace Cistern.ValueLinq
 
     public interface INodes
     {
-        CreationType CreateObject<CreationType, EnumeratorElement, Enumerator>(ref Enumerator enumerator)
+        CreationType CreateObject<CreationType, EnumeratorElement, Enumerator>(int depth, ref Enumerator enumerator)
             where Enumerator : IFastEnumerator<EnumeratorElement>;
+
+        bool TryObjectAscentOptimization<TRequest, CreationType>(int depth, in TRequest request, out CreationType creation) { creation = default; return false; }
     }
 
     struct NodesEnd
         : INodes
     {
-        CreationType INodes.CreateObject<CreationType, EnumeratorElement, Enumerator>(ref Enumerator _) => throw new InvalidOperationException();
+        CreationType INodes.CreateObject<CreationType, EnumeratorElement, Enumerator>(int depth, ref Enumerator _) => throw new InvalidOperationException();
     }
 
     public struct Nodes<Head, Tail>
@@ -151,9 +157,22 @@ namespace Cistern.ValueLinq
 
         public Nodes(in Head head, in Tail tail) => (_head, _tail) = (head, tail);
 
-        public CreationType CreateObject<CreationType, EnumeratorElement, Enumerator>(ref Enumerator enumerator)
+        public CreationType CreateObject<CreationType, EnumeratorElement, Enumerator>(int depth, ref Enumerator enumerator)
             where Enumerator : IFastEnumerator<EnumeratorElement>
-                => _head.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref _tail, ref enumerator);
+        {
+            if (depth == 0)
+                return _head.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref _tail, ref enumerator);
+
+            return _tail.CreateObject<CreationType, EnumeratorElement, Enumerator>(depth - 1, ref enumerator);
+        }
+
+        public bool TryObjectAscentOptimization<TRequest, CreationType>(int depth, in TRequest request, out CreationType creation)
+        {
+            if (depth == 0)
+                return _head.TryObjectAscentOptimization<TRequest, CreationType, Tail>(in request, ref _tail, out creation);
+
+            return _tail.TryObjectAscentOptimization<TRequest, CreationType>(depth - 1, in request, out creation);
+        }
     }
 
     internal static class Helper
@@ -172,7 +191,6 @@ namespace Cistern.ValueLinq
             where FEnumerator : IForwardEnumerator<T>
             where Node : INode<T>
             => node.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum);
-
     }
 
     static class Nodes<T>
