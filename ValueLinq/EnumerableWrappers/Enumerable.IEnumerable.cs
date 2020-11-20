@@ -33,15 +33,8 @@ namespace Cistern.ValueLinq
 
         // --
 
-        public static ValueEnumerable<U, SelectLegacyNode<T, U>> Select<T, U>(this IEnumerable<T> source, Func<T, U> selector)
-        {
-            if (source == null)
-                throw new ArgumentNullException(nameof(source));
-            if (selector == null)
-                throw new ArgumentNullException(nameof(selector));
-
-            return new ValueEnumerable<U, SelectLegacyNode<T,U>>(new SelectLegacyNode<T, U>(source, selector));
-        }
+        public static ValueEnumerable<U, SelectNode<T, U, EnumerableNode<T>>> Select<T, U>(this IEnumerable<T> source, Func<T, U> selector)
+            => source.OfEnumerable().Select(selector);
 
         public static ValueEnumerable<U, Select_InNode<T, U, EnumerableNode<T>>> Select<T, U>(this IEnumerable<T> inner, InFunc<T, U> f) =>
             inner.OfEnumerable().Select(f);
@@ -49,15 +42,8 @@ namespace Cistern.ValueLinq
         public static ValueEnumerable<U, SelectIdxNode<T, U, EnumerableNode<T>>> Select<T, U>(this IEnumerable<T> inner, Func<T, int, U> f) =>
             inner.OfEnumerable().Select(f);
 
-        public static ValueEnumerable<T, WhereLegacyNode<T>> Where<T>(this IEnumerable<T> source, Func<T, bool> predicate)
-        {
-            if(source == null)
-                throw new ArgumentNullException(nameof(source));
-            if (predicate == null)
-                throw new ArgumentNullException(nameof(predicate));
-
-            return new ValueEnumerable<T, WhereLegacyNode<T>>(new WhereLegacyNode<T>(source, predicate));
-        }
+        public static ValueEnumerable<T, WhereNode<T, EnumerableNode<T>>> Where<T>(this IEnumerable<T> source, Func<T, bool> predicate)
+            => source.OfEnumerable().Where(predicate);
 
         public static ValueEnumerable<T, Where_InNode<T, EnumerableNode<T>>> Where<T>(this IEnumerable<T> inner, InFunc<T, bool> f) =>
             inner.OfEnumerable().Where(f);

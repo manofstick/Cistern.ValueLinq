@@ -61,13 +61,22 @@ namespace Cistern.ValueLinq.Nodes
             }
 
             if (typeof(TRequest) == typeof(Optimizations.SourceArray<T>))
-                return WhereNode.CreateArray<T, CreationType, Tail>(((Optimizations.SourceArray<T>)(object)request).Array, _filter, ref tail, out creation);
+            {
+                var src = (Optimizations.SourceArray<T>)(object)request;
+                return WhereNode.CreateArray<T, CreationType, Tail>(src.Array, _filter, ref tail, out creation);
+            }
 
             if (typeof(TRequest) == typeof(Optimizations.SourceList<T>))
-                return WhereNode.CreateList<T, CreationType, Tail>(((Optimizations.SourceList<T>)(object)request).List, _filter, ref tail, out creation);
+            {
+                var src = (Optimizations.SourceList<T>)(object)request;
+                return WhereNode.CreateList<T, CreationType, Tail>(src.List, _filter, ref tail, out creation);
+            }
 
             if (typeof(TRequest) == typeof(Optimizations.SourceEnumerable<T>))
-                return WhereNode.CreateEnumerable<T, CreationType, Tail>(((Optimizations.SourceEnumerable<T>)(object)request).Enumerable, _filter, ref tail, out creation);
+            {
+                var src = (Optimizations.SourceEnumerable<T>)(object)request;
+                return WhereNode.CreateEnumerable<T, CreationType, Tail>(src.Enumerable, _filter, ref tail, out creation);
+            }
 
             creation = default;
             return false;
@@ -108,34 +117,6 @@ namespace Cistern.ValueLinq.Nodes
             creation = tail.CreateObject<CreationType, T, ArrayFastWhereEnumerator<T>>(0, ref enumerator);
             return true;
         }
-
-
-    }
-
-    public struct WhereLegacyNode<T>
-        : INode<T>
-    {
-        private IEnumerable<T> _enumerable;
-        private Func<T, bool> _filter;
-
-        public void GetCountInformation(out CountInformation info)
-        {
-            new EnumerableNode<T>(_enumerable).GetCountInformation(out info);
-            info.ActualLengthIsMaximumLength &= info.MaximumLength == 0;
-        }
-
-        public WhereLegacyNode(IEnumerable<T> nodeT, Func<T, bool> predicate) => (_enumerable, _filter) = (nodeT, predicate);
-
-        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
-            => EnumerableNode.CreateObjectDescent<T, CreationType, Head, Tail>(ref nodes, _enumerable, _filter);
-
-        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
-            => throw new InvalidOperationException("Shouldn't ascend through legacy node");
-
-        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
-
-        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) =>
-            EnumerableNode.FastEnumerateSwitch<T, TResult, WhereFoward<T, FEnumerator>>(_enumerable, new WhereFoward<T, FEnumerator>(fenum, _filter));
     }
 
     struct WhereFoward<T, Next>

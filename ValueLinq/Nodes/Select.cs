@@ -55,35 +55,38 @@ namespace Cistern.ValueLinq.Nodes
         {
             if (typeof(TRequest) == typeof(Optimizations.SourceArray<T>))
             {
-                return SelectNode.CreateArray<T, U, CreationType, Tail>(((Optimizations.SourceArray<T>)(object)request).Array, _map, ref tail, out creation);
+                var src = (Optimizations.SourceArray<T>)(object)request;
+                return SelectNode.CreateArray<T, U, CreationType, Tail>(src.Array, _map, ref tail, out creation);
             }
 
             if (typeof(TRequest) == typeof(Optimizations.SourceArrayWhere<T>))
             {
-                var arrayWhere = (Optimizations.SourceArrayWhere<T>)(object)request;
-                return SelectNode.CreateArray<T, U, CreationType, Tail>(arrayWhere.Array, arrayWhere.Predicate, _map, ref tail, out creation);
+                var src = (Optimizations.SourceArrayWhere<T>)(object)request;
+                return SelectNode.CreateArray<T, U, CreationType, Tail>(src.Array, src.Predicate, _map, ref tail, out creation);
             }
 
             if (typeof(TRequest) == typeof(Optimizations.SourceList<T>))
             {
-                return SelectNode.CreateList<T, U, CreationType, Tail>(((Optimizations.SourceList<T>)(object)request).List, _map, ref tail, out creation);
+                var src = (Optimizations.SourceList<T>)(object)request;
+                return SelectNode.CreateList<T, U, CreationType, Tail>(src.List, _map, ref tail, out creation);
             }
 
             if (typeof(TRequest) == typeof(Optimizations.SourceListWhere<T>))
             {
-                var listWhere = (Optimizations.SourceListWhere<T>)(object)request;
-                return SelectNode.CreateList<T, U, CreationType, Tail>(listWhere.List, listWhere.Predicate, _map, ref tail, out creation);
+                var src = (Optimizations.SourceListWhere<T>)(object)request;
+                return SelectNode.CreateList<T, U, CreationType, Tail>(src.List, src.Predicate, _map, ref tail, out creation);
             }
 
             if (typeof(TRequest) == typeof(Optimizations.SourceEnumerable<T>))
             {
-                return SelectNode.CreateEnumerable<T, U, CreationType, Tail>(((Optimizations.SourceEnumerable<T>)(object)request).Enumerable, _map, ref tail, out creation);
+                var src = ((Optimizations.SourceEnumerable<T>)(object)request);
+                return SelectNode.CreateEnumerable<T, U, CreationType, Tail>(src.Enumerable, _map, ref tail, out creation);
             }
 
             if (typeof(TRequest) == typeof(Optimizations.SourceEnumerableWhere<T>))
             {
-                var listWhere = (Optimizations.SourceEnumerableWhere<T>)(object)request;
-                return SelectNode.CreateEnumerable<T, U, CreationType, Tail>(listWhere.Enumerable, listWhere.Predicate, _map, ref tail, out creation);
+                var src = (Optimizations.SourceEnumerableWhere<T>)(object)request;
+                return SelectNode.CreateEnumerable<T, U, CreationType, Tail>(src.Enumerable, src.Predicate, _map, ref tail, out creation);
             }
 
             creation = default;
@@ -143,32 +146,6 @@ namespace Cistern.ValueLinq.Nodes
             creation = tail.CreateObject<CreationType, U, ArrayFastWhereSelectEnumerator<T, U>>(0, ref enumerator);
             return true;
         }
-    }
-
-    public struct SelectLegacyNode<T, U>
-        : INode<U>
-    {
-        private IEnumerable<T> _enumerable;
-        private Func<T, U> _map;
-
-        public void GetCountInformation(out CountInformation info)
-        {
-            new EnumerableNode<T>(_enumerable).GetCountInformation(out info);
-            info.PotentialSideEffects = true;
-        }
-
-        public SelectLegacyNode(IEnumerable<T> enumerable, Func<T, U> selector) => (_enumerable, _map) = (enumerable, selector);
-
-        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) =>
-            EnumerableNode.CreateObjectDescent<T, U, CreationType, Head, Tail>(ref nodes, _enumerable, _map);
-
-        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
-            => throw new InvalidOperationException("Shouldn't ascend through legacy node");
-
-        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
-
-        TResult INode<U>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) =>
-            EnumerableNode.FastEnumerateSwitch<T, TResult, SelectFoward<T, U, FEnumerator>>(_enumerable, new SelectFoward<T, U, FEnumerator>(fenum, _map));
     }
 
     struct SelectFoward<T, U, Next>

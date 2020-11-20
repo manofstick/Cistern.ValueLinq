@@ -144,21 +144,5 @@ namespace Cistern.ValueLinq.Containers
             var enumerator = new ListFastEnumerator<T>(list.GetEnumerator());
             return nodes.CreateObject<CreationType, T, ListFastEnumerator<T>>(0, ref enumerator);
         }
-
-        public static CreationType Create<T, Head, Tail, CreationType>(List<T>.Enumerator list, Func<T, bool> predicate, ref Nodes<Head, Tail> nodes)
-            where Head : INode
-            where Tail : INodes
-        {
-            var enumerator = new ListFastWhereEnumerator<T>(list, predicate);
-            return nodes.CreateObject<CreationType, T, ListFastWhereEnumerator<T>>(0, ref enumerator);
-        }
-
-        public static CreationType Create<T, U, Head, Tail, CreationType>(List<T>.Enumerator list, Func<T, U> map, ref Nodes<Head, Tail> nodes)
-            where Head : INode
-            where Tail : INodes
-        {
-            var enumerator = new ListFastSelectEnumerator<T, U>(list, map);
-            return nodes.CreateObject<CreationType, U, ListFastSelectEnumerator<T, U>>(0, ref enumerator);
-        }
     }
 }

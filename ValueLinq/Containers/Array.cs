@@ -139,20 +139,6 @@ namespace Cistern.ValueLinq.Containers
             return nodes.CreateObject<CreationType, T, ArrayFastEnumerator<T>>(0, ref enumerator);
         }
 
-        public static CreationType Create<T, Nodes, CreationType>(T[] array, Func<T, bool> predicate, ref Nodes nodes)
-            where Nodes : INodes
-        {
-            var enumerator = new ArrayFastWhereEnumerator<T>(array, predicate);
-            return nodes.CreateObject<CreationType, T, ArrayFastWhereEnumerator<T>>(0, ref enumerator);
-        }
-
-        internal static CreationType Create<T, U, Nodes, CreationType>(T[] array, Func<T, U> map, ref Nodes nodes)
-            where Nodes : INodes
-        {
-            var enumerator = new ArrayFastSelectEnumerator<T, U>(array, map);
-            return nodes.CreateObject<CreationType, U, ArrayFastSelectEnumerator<T, U>>(0, ref enumerator);
-        }
-
         internal static TResult FastEnumerate<TIn, TResult, FEnumerator>(TIn[] array, FEnumerator fenum)
             where FEnumerator : IForwardEnumerator<TIn>
         {
