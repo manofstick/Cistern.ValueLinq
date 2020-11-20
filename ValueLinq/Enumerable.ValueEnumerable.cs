@@ -452,6 +452,14 @@ namespace Cistern.ValueLinq
         public static int Count<T, Inner>(in this ValueEnumerable<T, Inner> inner, bool ignorePotentialSideEffects = false)
             where Inner : INode<T> =>
             Enumerable.Count<T, Inner>(in inner.Node, ignorePotentialSideEffects);
+        public static bool Count<T, Inner>(in this ValueEnumerable<T, Inner> source, Func<T, bool> predicate)
+            where Inner : INode<T>
+        {
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
+
+            return source.Node.CreateObjectViaFastEnumerator<bool, CountIf<T>>(new CountIf<T>(predicate));
+        }
 
         public static ValueEnumerable<TResult, SelectManyNode<TSource, TResult, NodeT, NodeU>> SelectMany<TSource, TResult, NodeT, NodeU>(in this ValueEnumerable<TSource, NodeT> prior, Func<TSource, ValueEnumerable<TResult, NodeU>> selector)
             where NodeT : INode<TSource>

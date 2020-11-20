@@ -40,6 +40,22 @@
             FunctionReturns: "bool",
             WrapReturn: new Func<string, string>(s => s)
         ),
+        (
+            Signature: new Func<string, string>(collection => $"Any<TSource>(this {collection} source, Func<TSource, bool> predicate)"),
+            Class: "Any<TSource>",
+            Args: "new Func<TSource, bool>(predicate)",
+            AggregateReturns: "bool",
+            FunctionReturns: "bool",
+            WrapReturn: new Func<string, string>(s => s)
+        ),
+        (
+            Signature: new Func<string, string>(collection => $"Count<TSource>(this {collection} source, Func<TSource, bool> predicate)"),
+            Class: "CountIf<TSource>",
+            Args: "new Func<TSource, bool>(predicate)",
+            AggregateReturns: "int",
+            FunctionReturns: "int",
+            WrapReturn: new Func<string, string>(s => s)
+        ),
 
     };
 #>

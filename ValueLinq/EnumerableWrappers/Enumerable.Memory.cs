@@ -11,13 +11,6 @@ namespace Cistern.ValueLinq
     {
         public static bool Any<TSource>(this ReadOnlyMemory<TSource> source) => source.Length > 0;
 
-        public static bool Any<TSource>(this ReadOnlyMemory<TSource> source, Func<TSource, bool> predicate)
-        {
-            if (predicate == null)
-                throw new ArgumentNullException(nameof(predicate));
-
-            return source.Length == 0 ? false : source.OfMemory().Any(predicate);
-        }
 
         // --
 

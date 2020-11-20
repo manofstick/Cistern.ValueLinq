@@ -18,20 +18,6 @@ namespace Cistern.ValueLinq
                 _ => source.OfEnumerable().Any()
             };
 
-        public static bool Any<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate)
-        {
-            if (predicate == null)
-                throw new ArgumentNullException(nameof(predicate));
-
-            return source switch
-            {
-                ICollection<TSource> { Count: 0 } => false,
-                IReadOnlyCollection<TSource> { Count: 0 } => false,
-                _ => source.OfEnumerable().Any(predicate),
-            };
-        }
-
-        // --
 
         public static ValueEnumerable<U, SelectNode<T, U, EnumerableNode<T>>> Select<T, U>(this IEnumerable<T> source, Func<T, U> selector)
             => source.OfEnumerable().Select(selector);

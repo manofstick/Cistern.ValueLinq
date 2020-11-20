@@ -10,14 +10,6 @@ namespace Cistern.ValueLinq
     {
         public static bool Any<TSource>(this TSource[] source) => source.Length > 0;
 
-        public static bool Any<TSource>(this TSource[] source, Func<TSource, bool> predicate)
-        {
-            if (predicate == null)
-                throw new ArgumentNullException(nameof(predicate));
-
-            return source.Length == 0 ? false : source.OfArray().Any(predicate);
-        }
-
         // --
 
         public static ValueEnumerable<U, SelectNode<T, U, ArrayNode<T>>> Select<T, U>(this T[] inner, Func<T, U> f) => inner.OfArray().Select(f);

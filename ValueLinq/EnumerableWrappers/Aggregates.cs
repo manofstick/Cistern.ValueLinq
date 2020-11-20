@@ -22,6 +22,12 @@ namespace Cistern.ValueLinq
         public static bool All<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) =>
             EnumerableNode.FastEnumerateSwitch<TSource, bool, All<TSource, FuncToIFunc<TSource, bool>>>(source, new All<TSource, FuncToIFunc<TSource, bool>>(new FuncToIFunc<TSource, bool>(predicate))); 
 
+        public static bool Any<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) =>
+            EnumerableNode.FastEnumerateSwitch<TSource, bool, Any<TSource>>(source, new Any<TSource>(new Func<TSource, bool>(predicate))); 
+
+        public static int Count<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) =>
+            EnumerableNode.FastEnumerateSwitch<TSource, int, CountIf<TSource>>(source, new CountIf<TSource>(new Func<TSource, bool>(predicate))); 
+
     }
     public static partial class ValueLinqArray
     {
@@ -49,6 +55,20 @@ namespace Cistern.ValueLinq
         public static bool All<TSource>(this TSource[] source, Func<TSource, bool> predicate)
         {
             var aggregate = new All<TSource, FuncToIFunc<TSource, bool>>(new FuncToIFunc<TSource, bool>(predicate));
+            ArrayNode.ProcessArray(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        public static bool Any<TSource>(this TSource[] source, Func<TSource, bool> predicate)
+        {
+            var aggregate = new Any<TSource>(new Func<TSource, bool>(predicate));
+            ArrayNode.ProcessArray(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        public static int Count<TSource>(this TSource[] source, Func<TSource, bool> predicate)
+        {
+            var aggregate = new CountIf<TSource>(new Func<TSource, bool>(predicate));
             ArrayNode.ProcessArray(source, ref aggregate);
             return aggregate.GetResult();
         }
@@ -84,6 +104,20 @@ namespace Cistern.ValueLinq
             return aggregate.GetResult();
         }
 
+        public static bool Any<TSource>(this List<TSource> source, Func<TSource, bool> predicate)
+        {
+            var aggregate = new Any<TSource>(new Func<TSource, bool>(predicate));
+            ListByIndexNode.ProcessList(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        public static int Count<TSource>(this List<TSource> source, Func<TSource, bool> predicate)
+        {
+            var aggregate = new CountIf<TSource>(new Func<TSource, bool>(predicate));
+            ListByIndexNode.ProcessList(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
     }
     public static partial class ValueLinqMemory
     {
@@ -111,6 +145,20 @@ namespace Cistern.ValueLinq
         public static bool All<TSource>(this ReadOnlyMemory<TSource> source, Func<TSource, bool> predicate)
         {
             var aggregate = new All<TSource, FuncToIFunc<TSource, bool>>(new FuncToIFunc<TSource, bool>(predicate));
+            MemoryNode.ProcessMemory(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        public static bool Any<TSource>(this ReadOnlyMemory<TSource> source, Func<TSource, bool> predicate)
+        {
+            var aggregate = new Any<TSource>(new Func<TSource, bool>(predicate));
+            MemoryNode.ProcessMemory(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        public static int Count<TSource>(this ReadOnlyMemory<TSource> source, Func<TSource, bool> predicate)
+        {
+            var aggregate = new CountIf<TSource>(new Func<TSource, bool>(predicate));
             MemoryNode.ProcessMemory(source, ref aggregate);
             return aggregate.GetResult();
         }

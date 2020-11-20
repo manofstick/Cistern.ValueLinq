@@ -10,13 +10,6 @@ namespace Cistern.ValueLinq
     {
         public static bool Any<TSource>(this List<TSource> source) => source.Count() > 0;
 
-        public static bool Any<TSource>(this List<TSource> source, Func<TSource, bool> predicate)
-        {
-            if (predicate == null)
-                throw new ArgumentNullException(nameof(predicate));
-
-            return source.Count == 0 ? false : source.OfList().Any(predicate);
-        }
 
         // --
 
