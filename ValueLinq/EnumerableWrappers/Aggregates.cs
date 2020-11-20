@@ -2,7 +2,6 @@
 
 using Cistern.ValueLinq.Aggregation;
 using Cistern.ValueLinq.Containers;
-using Cistern.ValueLinq.Nodes;
 using System;
 using System.Collections.Generic;
 
@@ -23,10 +22,13 @@ namespace Cistern.ValueLinq
             EnumerableNode.FastEnumerateSwitch<TSource, bool, All<TSource, FuncToIFunc<TSource, bool>>>(source, new All<TSource, FuncToIFunc<TSource, bool>>(new FuncToIFunc<TSource, bool>(predicate))); 
 
         public static bool Any<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, bool, Any<TSource>>(source, new Any<TSource>(new Func<TSource, bool>(predicate))); 
+            EnumerableNode.FastEnumerateSwitch<TSource, bool, Any<TSource>>(source, new Any<TSource>(predicate)); 
 
         public static int Count<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, int, CountIf<TSource>>(source, new CountIf<TSource>(new Func<TSource, bool>(predicate))); 
+            EnumerableNode.FastEnumerateSwitch<TSource, int, CountIf<TSource>>(source, new CountIf<TSource>(predicate)); 
+
+        public static bool Contains<TSource>(this IEnumerable<TSource> source, TSource value, IEqualityComparer<TSource> comparer) =>
+            EnumerableNode.FastEnumerateSwitch<TSource, bool, ContainsByComparer<TSource>>(source, new ContainsByComparer<TSource>(comparer, value)); 
 
     }
     public static partial class ValueLinqArray
@@ -61,14 +63,21 @@ namespace Cistern.ValueLinq
 
         public static bool Any<TSource>(this TSource[] source, Func<TSource, bool> predicate)
         {
-            var aggregate = new Any<TSource>(new Func<TSource, bool>(predicate));
+            var aggregate = new Any<TSource>(predicate);
             ArrayNode.ProcessArray(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static int Count<TSource>(this TSource[] source, Func<TSource, bool> predicate)
         {
-            var aggregate = new CountIf<TSource>(new Func<TSource, bool>(predicate));
+            var aggregate = new CountIf<TSource>(predicate);
+            ArrayNode.ProcessArray(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        public static bool Contains<TSource>(this TSource[] source, TSource value, IEqualityComparer<TSource> comparer)
+        {
+            var aggregate = new ContainsByComparer<TSource>(comparer, value);
             ArrayNode.ProcessArray(source, ref aggregate);
             return aggregate.GetResult();
         }
@@ -106,14 +115,21 @@ namespace Cistern.ValueLinq
 
         public static bool Any<TSource>(this List<TSource> source, Func<TSource, bool> predicate)
         {
-            var aggregate = new Any<TSource>(new Func<TSource, bool>(predicate));
+            var aggregate = new Any<TSource>(predicate);
             ListByIndexNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static int Count<TSource>(this List<TSource> source, Func<TSource, bool> predicate)
         {
-            var aggregate = new CountIf<TSource>(new Func<TSource, bool>(predicate));
+            var aggregate = new CountIf<TSource>(predicate);
+            ListByIndexNode.ProcessList(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        public static bool Contains<TSource>(this List<TSource> source, TSource value, IEqualityComparer<TSource> comparer)
+        {
+            var aggregate = new ContainsByComparer<TSource>(comparer, value);
             ListByIndexNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
@@ -151,14 +167,21 @@ namespace Cistern.ValueLinq
 
         public static bool Any<TSource>(this ReadOnlyMemory<TSource> source, Func<TSource, bool> predicate)
         {
-            var aggregate = new Any<TSource>(new Func<TSource, bool>(predicate));
+            var aggregate = new Any<TSource>(predicate);
             MemoryNode.ProcessMemory(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static int Count<TSource>(this ReadOnlyMemory<TSource> source, Func<TSource, bool> predicate)
         {
-            var aggregate = new CountIf<TSource>(new Func<TSource, bool>(predicate));
+            var aggregate = new CountIf<TSource>(predicate);
+            MemoryNode.ProcessMemory(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        public static bool Contains<TSource>(this ReadOnlyMemory<TSource> source, TSource value, IEqualityComparer<TSource> comparer)
+        {
+            var aggregate = new ContainsByComparer<TSource>(comparer, value);
             MemoryNode.ProcessMemory(source, ref aggregate);
             return aggregate.GetResult();
         }

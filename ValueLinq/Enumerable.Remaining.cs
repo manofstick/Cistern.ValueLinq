@@ -35,8 +35,8 @@ namespace Cistern.ValueLinq
         //        public static float Average(this IEnumerable<float> source) => System.Linq.Enumerable.Average(source);
         [Obsolete("Not converted to ValueLinq yet")] public static IEnumerable<TResult> Cast<TResult>(this System.Collections.IEnumerable source) => System.Linq.Enumerable.Cast<TResult>(source);
         //        public static IEnumerable<TSource> Concat<TSource>(this IEnumerable<TSource> first, IEnumerable<TSource> second) => System.Linq.Enumerable.Concat<TSource>(first, second);
-        [Obsolete("Not converted to ValueLinq yet")] public static bool Contains<TSource>(this IEnumerable<TSource> source, TSource value) => System.Linq.Enumerable.Contains<TSource>(source, value);
-        [Obsolete("Not converted to ValueLinq yet")] public static bool Contains<TSource>(this IEnumerable<TSource> source, TSource value, IEqualityComparer<TSource> comparer) => System.Linq.Enumerable.Contains<TSource>(source, value, comparer);
+        //        public static bool Contains<TSource>(this IEnumerable<TSource> source, TSource value) => System.Linq.Enumerable.Contains<TSource>(source, value);
+        //        public static bool Contains<TSource>(this IEnumerable<TSource> source, TSource value, IEqualityComparer<TSource> comparer) => System.Linq.Enumerable.Contains<TSource>(source, value, comparer);
         //        public static int Count<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) => System.Linq.Enumerable.Count<TSource>(source, predicate);
         //        public static int Count<TSource>(this IEnumerable<TSource> source) => System.Linq.Enumerable.Count<TSource>(source);
         [Obsolete("Not converted to ValueLinq yet")] public static IEnumerable<TSource> DefaultIfEmpty<TSource>(this IEnumerable<TSource> source, TSource defaultValue) => System.Linq.Enumerable.DefaultIfEmpty<TSource>(source, defaultValue);

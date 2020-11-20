@@ -1,4 +1,5 @@
-﻿using Cistern.ValueLinq.Containers;
+﻿using Cistern.ValueLinq.Aggregation;
+using Cistern.ValueLinq.Containers;
 using Cistern.ValueLinq.Nodes;
 using Cistern.ValueLinq.ValueEnumerable;
 using System;
@@ -9,6 +10,19 @@ namespace Cistern.ValueLinq
 {
     public static partial class Enumerable
     {
+        public static bool Contains<TSource>(this ReadOnlyMemory<TSource> source, TSource value)
+        {
+            var aggregate = new Contains<TSource>(value);
+            MemoryNode.ProcessMemory(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        // ---------------
+
+
+
+
+
         public static bool Any<TSource>(this ReadOnlyMemory<TSource> source) => source.Length > 0;
 
 

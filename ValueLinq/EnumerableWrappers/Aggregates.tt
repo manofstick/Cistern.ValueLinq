@@ -43,7 +43,7 @@
         (
             Signature: new Func<string, string>(collection => $"Any<TSource>(this {collection} source, Func<TSource, bool> predicate)"),
             Class: "Any<TSource>",
-            Args: "new Func<TSource, bool>(predicate)",
+            Args: "predicate",
             AggregateReturns: "bool",
             FunctionReturns: "bool",
             WrapReturn: new Func<string, string>(s => s)
@@ -51,9 +51,17 @@
         (
             Signature: new Func<string, string>(collection => $"Count<TSource>(this {collection} source, Func<TSource, bool> predicate)"),
             Class: "CountIf<TSource>",
-            Args: "new Func<TSource, bool>(predicate)",
+            Args: "predicate",
             AggregateReturns: "int",
             FunctionReturns: "int",
+            WrapReturn: new Func<string, string>(s => s)
+        ),
+        (
+            Signature: new Func<string, string>(collection => $"Contains<TSource>(this {collection} source, TSource value, IEqualityComparer<TSource> comparer)"),
+            Class: "ContainsByComparer<TSource>",
+            Args: "comparer, value",
+            AggregateReturns: "bool",
+            FunctionReturns: "bool",
             WrapReturn: new Func<string, string>(s => s)
         ),
 
@@ -62,7 +70,6 @@
 
 using Cistern.ValueLinq.Aggregation;
 using Cistern.ValueLinq.Containers;
-using Cistern.ValueLinq.Nodes;
 using System;
 using System.Collections.Generic;
 

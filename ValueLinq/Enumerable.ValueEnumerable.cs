@@ -461,6 +461,12 @@ namespace Cistern.ValueLinq
             return source.Node.CreateObjectViaFastEnumerator<bool, CountIf<T>>(new CountIf<T>(predicate));
         }
 
+        public static bool Contains<T, Inner>(in this ValueEnumerable<T, Inner> inner, T value) where Inner : INode<T> =>
+            inner.Node.CreateObjectViaFastEnumerator<bool, Contains<T>>(new Contains<T>(value));
+        public static bool Contains<T, Inner>(in this ValueEnumerable<T, Inner> inner, T value, IEqualityComparer<T> comparer) where Inner : INode<T> =>
+            inner.Node.CreateObjectViaFastEnumerator<bool, ContainsByComparer<T>>(new ContainsByComparer<T>(comparer, value));
+
+
         public static ValueEnumerable<TResult, SelectManyNode<TSource, TResult, NodeT, NodeU>> SelectMany<TSource, TResult, NodeT, NodeU>(in this ValueEnumerable<TSource, NodeT> prior, Func<TSource, ValueEnumerable<TResult, NodeU>> selector)
             where NodeT : INode<TSource>
             where NodeU : INode<TResult>

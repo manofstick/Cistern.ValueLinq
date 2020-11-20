@@ -1,4 +1,5 @@
-﻿using Cistern.ValueLinq.Containers;
+﻿using Cistern.ValueLinq.Aggregation;
+using Cistern.ValueLinq.Containers;
 using Cistern.ValueLinq.Nodes;
 using Cistern.ValueLinq.ValueEnumerable;
 using System;
@@ -9,6 +10,14 @@ namespace Cistern.ValueLinq
 {
     public static partial class Enumerable
     {
+        public static bool Contains<TSource>(this IEnumerable<TSource> source, TSource value) =>
+            source switch
+            {
+                ICollection<TSource> c => c.Contains(value),
+                _ => EnumerableNode.FastEnumerateSwitch<TSource, bool, Contains<TSource>>(source, new Contains<TSource>(value))
+            };
+
+
         public static bool Any<TSource>(this IEnumerable<TSource> source)
             => source switch
             {
