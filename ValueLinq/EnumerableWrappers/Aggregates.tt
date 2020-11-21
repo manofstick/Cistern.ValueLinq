@@ -64,6 +64,22 @@
             FunctionReturns: "bool",
             WrapReturn: new Func<string, string>(s => s)
         ),
+        (
+            Signature: new Func<string, string>(collection => $"Last<TSource>(this {collection} source, Func<TSource, bool> predicate)"),
+            Class: "LastPredicate<TSource>",
+            Args: "predicate",
+            AggregateReturns: "TSource",
+            FunctionReturns: "TSource",
+            WrapReturn: new Func<string, string>(s => s)
+        ),
+        (
+            Signature: new Func<string, string>(collection => $"LastOrDefault<TSource>(this {collection} source, Func<TSource, bool> predicate)"),
+            Class: "LastOrDefaultPredicate<TSource>",
+            Args: "predicate",
+            AggregateReturns: "TSource",
+            FunctionReturns: "TSource",
+            WrapReturn: new Func<string, string>(s => s)
+        ),
 
     };
 #>

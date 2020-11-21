@@ -284,6 +284,15 @@ namespace Cistern.ValueLinq
                 _ => inner.Node.CreateObjectViaFastEnumerator<T, Last<T>>(new Last<T>())
             };
 
+        public static T Last<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, bool> predicate)
+            where Inner : INode<T>
+        {
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
+
+            return inner.Node.CreateObjectViaFastEnumerator<T, LastPredicate<T>>(new LastPredicate<T>(predicate));
+        }
+
         public static T LastOrDefault<T, Inner>(in this ValueEnumerable<T, Inner> inner)
             where Inner : INode<T> =>
             (inner.Node.CheckForOptimization<Optimizations.TryLast, (bool, T)>(new Optimizations.TryLast(), out var maybeLast), maybeLast) switch
@@ -292,6 +301,15 @@ namespace Cistern.ValueLinq
                 (true, (false, _)) => default,
                 _ => inner.Node.CreateObjectViaFastEnumerator<T, LastOrDefault<T>>(new LastOrDefault<T>())
             };
+
+        public static T LastOrDefault<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, bool> predicate)
+            where Inner : INode<T>
+        {
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
+
+            return inner.Node.CreateObjectViaFastEnumerator<T, LastOrDefaultPredicate<T>>(new LastOrDefaultPredicate<T>());
+        }
 
         public static T ElementAt<T, Inner>(in this ValueEnumerable<T, Inner> inner, int index)
             where Inner : INode<T>

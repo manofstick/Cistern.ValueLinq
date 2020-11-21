@@ -30,6 +30,12 @@ namespace Cistern.ValueLinq
         public static bool Contains<TSource>(this IEnumerable<TSource> source, TSource value, IEqualityComparer<TSource> comparer) =>
             EnumerableNode.FastEnumerateSwitch<TSource, bool, ContainsByComparer<TSource>>(source, new ContainsByComparer<TSource>(comparer, value)); 
 
+        public static TSource Last<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) =>
+            EnumerableNode.FastEnumerateSwitch<TSource, TSource, LastPredicate<TSource>>(source, new LastPredicate<TSource>(predicate)); 
+
+        public static TSource LastOrDefault<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) =>
+            EnumerableNode.FastEnumerateSwitch<TSource, TSource, LastOrDefaultPredicate<TSource>>(source, new LastOrDefaultPredicate<TSource>(predicate)); 
+
     }
     public static partial class ValueLinqArray
     {
@@ -78,6 +84,20 @@ namespace Cistern.ValueLinq
         public static bool Contains<TSource>(this TSource[] source, TSource value, IEqualityComparer<TSource> comparer)
         {
             var aggregate = new ContainsByComparer<TSource>(comparer, value);
+            ArrayNode.ProcessArray(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        public static TSource Last<TSource>(this TSource[] source, Func<TSource, bool> predicate)
+        {
+            var aggregate = new LastPredicate<TSource>(predicate);
+            ArrayNode.ProcessArray(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        public static TSource LastOrDefault<TSource>(this TSource[] source, Func<TSource, bool> predicate)
+        {
+            var aggregate = new LastOrDefaultPredicate<TSource>(predicate);
             ArrayNode.ProcessArray(source, ref aggregate);
             return aggregate.GetResult();
         }
@@ -134,6 +154,20 @@ namespace Cistern.ValueLinq
             return aggregate.GetResult();
         }
 
+        public static TSource Last<TSource>(this List<TSource> source, Func<TSource, bool> predicate)
+        {
+            var aggregate = new LastPredicate<TSource>(predicate);
+            ListByIndexNode.ProcessList(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        public static TSource LastOrDefault<TSource>(this List<TSource> source, Func<TSource, bool> predicate)
+        {
+            var aggregate = new LastOrDefaultPredicate<TSource>(predicate);
+            ListByIndexNode.ProcessList(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
     }
     public static partial class ValueLinqMemory
     {
@@ -182,6 +216,20 @@ namespace Cistern.ValueLinq
         public static bool Contains<TSource>(this ReadOnlyMemory<TSource> source, TSource value, IEqualityComparer<TSource> comparer)
         {
             var aggregate = new ContainsByComparer<TSource>(comparer, value);
+            MemoryNode.ProcessMemory(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        public static TSource Last<TSource>(this ReadOnlyMemory<TSource> source, Func<TSource, bool> predicate)
+        {
+            var aggregate = new LastPredicate<TSource>(predicate);
+            MemoryNode.ProcessMemory(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        public static TSource LastOrDefault<TSource>(this ReadOnlyMemory<TSource> source, Func<TSource, bool> predicate)
+        {
+            var aggregate = new LastOrDefaultPredicate<TSource>(predicate);
             MemoryNode.ProcessMemory(source, ref aggregate);
             return aggregate.GetResult();
         }
