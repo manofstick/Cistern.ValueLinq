@@ -5,11 +5,15 @@ using Cistern.ValueLinq.ValueEnumerable;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Cistern.ValueLinq
 {
     public static partial class Enumerable
     {
+        public static ValueEnumerable<TSource, ReverseNode<TSource, EnumerableNode<TSource>>> Reverse<TSource>(this IEnumerable<TSource> source)
+            => source.OfEnumerable().Reverse();
+
         public static bool Contains<TSource>(this IEnumerable<TSource> source, TSource value) =>
             source switch
             {

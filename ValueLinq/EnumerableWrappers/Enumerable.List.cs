@@ -8,6 +8,8 @@ namespace Cistern.ValueLinq
 {
     public static partial class Enumerable
     {
+        public static ValueEnumerable<TSource, ReverseNode<TSource, ListNode<TSource>>> Reverse<TSource>(this List<TSource> source)
+            => source.OfList().Reverse();
 
 
         public static bool Any<TSource>(this List<TSource> source) => source.Count() > 0;

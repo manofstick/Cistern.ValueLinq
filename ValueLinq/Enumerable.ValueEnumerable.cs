@@ -191,27 +191,7 @@ namespace Cistern.ValueLinq
 
         public static T[] ToArray<T, Inner>(in this ValueEnumerable<T, Inner> inner, int? maybeMaxCountForStackBasedPath = 64, (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo = null)
             where Inner : INode<T>
-        {
-            inner.GetCountInformation(out var info);
-
-            if (info.ActualLengthIsMaximumLength)
-            {
-                if (info.MaximumLength == 0)
-                    return Array.Empty<T>();
-
-                return inner.Node.CreateObjectViaFastEnumerator<T[], ToArrayForward<T>>(new ToArrayForward<T>(info.ActualSize.Value));
-            }
-
-            if (!arrayPoolInfo.HasValue)
-            {
-                if (info.MaximumLength <= maybeMaxCountForStackBasedPath.GetValueOrDefault())
-                    return Nodes<T[]>.Aggregation<Inner, ToArrayViaStackAndGarbage<T>>(in inner.Node, new ToArrayViaStackAndGarbage<T>(maybeMaxCountForStackBasedPath.Value));
-
-                return inner.Node.CreateObjectViaFastEnumerator<T[], ToArrayViaAllocatorForward<T, GarbageCollectedAllocator<T>>>(new ToArrayViaAllocatorForward<T, GarbageCollectedAllocator<T>>(default, 0, null));
-            }
-
-            return inner.Node.CreateObjectViaFastEnumerator<T[], ToArrayViaAllocatorForward<T, ArrayPoolAllocator<T>>>(new ToArrayViaAllocatorForward<T, ArrayPoolAllocator<T>>(new ArrayPoolAllocator<T>(arrayPoolInfo.Value.arrayPool, arrayPoolInfo.Value.cleanBuffers), 0, info.ActualSize));
-        }
+            => NodeImpl.ToArray(in inner.Node, maybeMaxCountForStackBasedPath, in arrayPoolInfo);
 
         public static T[] ToArrayUsePool<T, Inner>(in this ValueEnumerable<T, Inner> inner, ArrayPool<T> maybeArrayPool = null, bool? maybeCleanBuffers = null, bool viaPull = false)
             where Inner : INode<T>
@@ -467,9 +447,9 @@ namespace Cistern.ValueLinq
         public static long? Sum<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, long?> selector) where Inner : INode<T> =>
             inner.Node.CreateObjectViaFastEnumerator<long?, SelectFoward<T, long?, SumLongNullable>>(new SelectFoward<T, long?, SumLongNullable>(new SumLongNullable(default), selector));
 
-        public static int Count<T, Inner>(in this ValueEnumerable<T, Inner> inner, bool ignorePotentialSideEffects = false)
-            where Inner : INode<T> =>
-            Enumerable.Count<T, Inner>(in inner.Node, ignorePotentialSideEffects);
+        public static int Count<T, Inner>(in this ValueEnumerable<T, Inner> inner, bool ignorePotentialSideEffects = false) where Inner : INode<T> =>
+            NodeImpl.Count<T, Inner>(in inner.Node, ignorePotentialSideEffects);
+
         public static bool Count<T, Inner>(in this ValueEnumerable<T, Inner> source, Func<T, bool> predicate)
             where Inner : INode<T>
         {
@@ -499,6 +479,10 @@ namespace Cistern.ValueLinq
             where First : INode<T>
             where Second : INode<T>
             => new ValueEnumerable<T, ConcatNode<T, First, Second>>(new ConcatNode<T, First, Second>(first.Node, second.Node));
+
+        public static ValueEnumerable<TSource, ReverseNode<TSource, Inner>> Reverse<TSource, Inner>(in this ValueEnumerable<TSource, Inner> source, int? maybeMaxCountForStackBasedPath = 64, (ArrayPool<TSource> arrayPool, bool cleanBuffers)? arrayPoolInfo = null)
+            where Inner : INode<TSource>
+            => new ValueEnumerable<TSource, ReverseNode<TSource, Inner>>(new ReverseNode<TSource, Inner>(in source.Node, maybeMaxCountForStackBasedPath, arrayPoolInfo));
 
         // -- Value based operators
 

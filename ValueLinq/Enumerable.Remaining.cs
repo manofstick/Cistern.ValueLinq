@@ -124,7 +124,7 @@ namespace Cistern.ValueLinq
         [Obsolete("Not converted to ValueLinq yet")] public static IEnumerable<TSource> Prepend<TSource>(this IEnumerable<TSource> source, TSource element) => System.Linq.Enumerable.Prepend<TSource>(source, element);
         //        public static IEnumerable<int> Range(int start, int count) => System.Linq.Enumerable.Range(start, count);
         //        public static IEnumerable<TResult> Repeat<TResult>(TResult element, int count) => System.Linq.Enumerable.Repeat(element, count);
-        [Obsolete("Not converted to ValueLinq yet")] public static IEnumerable<TSource> Reverse<TSource>(this IEnumerable<TSource> source) => System.Linq.Enumerable.Reverse<TSource>(source);
+        //        public static IEnumerable<TSource> Reverse<TSource>(this IEnumerable<TSource> source) => System.Linq.Enumerable.Reverse<TSource>(source);
         //        public static IEnumerable<TResult> Select<TSource, TResult>(this IEnumerable<TSource> source, Func<TSource, TResult> selector) => System.Linq.Enumerable.Select<TSource, TResult>(source, selector);
         //        public static IEnumerable<TResult> Select<TSource, TResult>(this IEnumerable<TSource> source, Func<TSource, int, TResult> selector) => System.Linq.Enumerable.Select<TSource, TResult>(source, selector);
         [Obsolete("Not converted to ValueLinq yet")] public static IEnumerable<TResult> SelectMany<TSource, TCollection, TResult>(this IEnumerable<TSource> source, Func<TSource, int, IEnumerable<TCollection>> collectionSelector, Func<TSource, TCollection, TResult> resultSelector) => System.Linq.Enumerable.SelectMany<TSource, TCollection, TResult>(source, collectionSelector, resultSelector);

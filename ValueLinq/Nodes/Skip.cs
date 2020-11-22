@@ -46,7 +46,7 @@ namespace Cistern.ValueLinq.Nodes
             }
         }
 
-        public SkipNode(in NodeT nodeT, int count) => (_nodeT, _count) = (nodeT, count);
+        public SkipNode(in NodeT nodeT, int count) => (_nodeT, _count) = (nodeT, Math.Max(0, count));
 
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) =>
             _count <= 0

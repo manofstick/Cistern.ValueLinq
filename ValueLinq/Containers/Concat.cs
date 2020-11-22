@@ -231,11 +231,11 @@ namespace Cistern.ValueLinq.Containers
             {
                 var components = TryCollectNodes();
                 if (components == null)
-                    return Enumerable.Count<T, Start>(_start, ignorePotentialSideEffects) + Enumerable.Count<T, Finish>(_finish, ignorePotentialSideEffects);
+                    return NodeImpl.Count<T, Start>(_start, ignorePotentialSideEffects) + NodeImpl.Count<T, Finish>(_finish, ignorePotentialSideEffects);
 
                 var count = 0;
                 foreach (var item in components)
-                    count += Enumerable.Count<T, EnumerableNode<T>>(item, ignorePotentialSideEffects);
+                    count += NodeImpl.Count<T, EnumerableNode<T>>(item, ignorePotentialSideEffects);
 
                 return count;
             }

@@ -10,6 +10,9 @@ namespace Cistern.ValueLinq
 {
     public static partial class Enumerable
     {
+        public static ValueEnumerable<TSource, ReverseNode<TSource, MemoryNode<TSource>>> Reverse<TSource>(this ReadOnlyMemory<TSource> source)
+            => source.OfMemory().Reverse();
+
         public static bool Contains<TSource>(this ReadOnlyMemory<TSource> source, TSource value)
         {
             var aggregate = new Contains<TSource>(value);

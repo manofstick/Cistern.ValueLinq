@@ -121,7 +121,8 @@ namespace Cistern.ValueLinq.Containers
             return ArrayNode.Create<T, Nodes<Head, Tail>, CreationType>(_array, ref nodes);
         }
 
-        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
+        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __)
+            => throw new InvalidOperationException();
 
         TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
             => ArrayNode.FastEnumerate<T, TResult, FEnumerator>(_array, fenum);

@@ -8,6 +8,10 @@ namespace Cistern.ValueLinq
 {
     public static partial class CisternArrayExtensions
     {
+
+        public static ValueEnumerable<TSource, ReverseNode<TSource, ArrayNode<TSource>>> Reverse<TSource>(this TSource[] source)
+            => source.OfArray().Reverse();
+
         public static bool Any<TSource>(this TSource[] source) => source.Length > 0;
 
         // --
