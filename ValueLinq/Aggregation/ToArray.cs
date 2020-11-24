@@ -35,7 +35,20 @@ namespace Cistern.ValueLinq.Aggregation
 
         public ToArrayForward(int size) => (_array, _idx) = (new T[size], 0);
 
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
+        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request)
+        {
+            if (typeof(TRequest) == typeof(Containers.GetSpan<TObject, T>))
+            {
+                var getSpan = (Containers.GetSpan<TObject, T>)(object)request;
+                var input = getSpan(obj);
+                var output = new Span<T>(_array, _idx, input.Length);
+                input.CopyTo(output);
+                _idx += input.Length;
+                return BatchProcessResult.SuccessAndContinue;
+            }
+            
+            return BatchProcessResult.Unavailable;
+        }
         public void Dispose() { }
         TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_array;
 

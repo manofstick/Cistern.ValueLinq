@@ -122,10 +122,16 @@ namespace Cistern.ValueLinq.Containers
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) =>
             throw new InvalidOperationException();
 
-        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+        readonly bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
             if (_enumerable is INode node)
                 return node.CheckForOptimization<TRequest, TResult>(in request, out result);
+
+            if (typeof(TRequest) == typeof(Optimizations.ToArray) && EnumerableNode.TryToArray(_enumerable, out var array))
+            {
+                result = (TResult)(object)array;
+                return true;
+            }
 
             if (typeof(TRequest) == typeof(Optimizations.Count))
             {
@@ -227,6 +233,40 @@ namespace Cistern.ValueLinq.Containers
                 if (!fenum.ProcessNext(item))
                     break;
             }
+        }
+
+        internal static bool TryToArray<T>(IEnumerable<T> enumerable, out T[] dstArray)
+        {
+            if (enumerable is T[] srcArray)
+            {
+                if (srcArray.Length == 0)
+                {
+                    dstArray = Array.Empty<T>();
+                }
+                else
+                {
+                    dstArray = new T[srcArray.Length];
+                    srcArray.CopyTo(dstArray, 0);
+                }
+                return true;
+            }
+
+            if (enumerable is List<T> srcList)
+            {
+                if (srcList.Count == 0)
+                {
+                    dstArray = Array.Empty<T>();
+                }
+                else
+                {
+                    dstArray = new T[srcList.Count];
+                    srcList.CopyTo(dstArray);
+                }
+                return true;
+            }
+
+            dstArray = default;
+            return false;
         }
     }
 }

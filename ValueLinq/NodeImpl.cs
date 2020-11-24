@@ -20,7 +20,7 @@ namespace Cistern.ValueLinq
             };
         }
 
-        public static T[] ToArray<T, Inner>(in Inner inner, int? maybeMaxCountForStackBasedPath, in (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo)
+        private static T[] ToArrayWithoutOptimizationCheck<T, Inner>(in Inner inner, int? maybeMaxCountForStackBasedPath, in (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo)
                 where Inner : INode<T>
         {
             inner.GetCountInformation(out var info);
@@ -35,13 +35,22 @@ namespace Cistern.ValueLinq
 
             if (!arrayPoolInfo.HasValue)
             {
-                if (info.MaximumLength <= maybeMaxCountForStackBasedPath.GetValueOrDefault())
+//                if (info.MaximumLength <= maybeMaxCountForStackBasedPath.GetValueOrDefault())
                     return Nodes<T[]>.Aggregation<Inner, ToArrayViaStackAndGarbage<T>>(in inner, new ToArrayViaStackAndGarbage<T>(maybeMaxCountForStackBasedPath.Value));
 
-                return inner.CreateObjectViaFastEnumerator<T[], ToArrayViaAllocatorForward<T, GarbageCollectedAllocator<T>>>(new ToArrayViaAllocatorForward<T, GarbageCollectedAllocator<T>>(default, 0, null));
+//                return inner.CreateObjectViaFastEnumerator<T[], ToArrayViaAllocatorForward<T, GarbageCollectedAllocator<T>>>(new ToArrayViaAllocatorForward<T, GarbageCollectedAllocator<T>>(default, 0, null));
             }
 
             return inner.CreateObjectViaFastEnumerator<T[], ToArrayViaAllocatorForward<T, ArrayPoolAllocator<T>>>(new ToArrayViaAllocatorForward<T, ArrayPoolAllocator<T>>(new ArrayPoolAllocator<T>(arrayPoolInfo.Value.arrayPool, arrayPoolInfo.Value.cleanBuffers), 0, info.ActualSize));
+        }
+
+        public static T[] ToArray<T, Inner>(in Inner inner, int? maybeMaxCountForStackBasedPath, in (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo)
+                where Inner : INode<T>
+        {
+            if (inner.CheckForOptimization<Optimizations.ToArray, T[]>(default, out var array))
+                return array;
+
+            return ToArrayWithoutOptimizationCheck(in inner, maybeMaxCountForStackBasedPath, in arrayPoolInfo);
         }
     }
 }

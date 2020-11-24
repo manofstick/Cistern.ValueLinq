@@ -23,7 +23,7 @@ namespace Cistern.ValueLinq.Nodes
 
         private readonly T[] GetReversedArray()
         {
-            var array = NodeImpl.ToArray(_nodeT, _maybeMaxCountForStackBasedPath, _arrayPoolInfo);
+            var array = NodeImpl.ToArray(in _nodeT, _maybeMaxCountForStackBasedPath, _arrayPoolInfo);
             Array.Reverse(array);
             return array;
         }
@@ -37,8 +37,14 @@ namespace Cistern.ValueLinq.Nodes
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
             => throw new InvalidOperationException();
 
-        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+        readonly bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
+            if (typeof(TRequest) == typeof(Optimizations.ToArray))
+            {
+                result = (TResult)(object) GetReversedArray();
+                return true;
+            }
+
             if (typeof(TRequest) == typeof(Optimizations.Reverse))
             {
                 result = (TResult)(object)(INode<T>)_nodeT;

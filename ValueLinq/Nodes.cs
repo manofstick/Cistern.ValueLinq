@@ -8,12 +8,13 @@ namespace Cistern.ValueLinq
     {
         enum Flags : byte
         {
-            HasMaximumLength                = 0b_000001,
-            ActualLengthIsMaximumLength     = 0b_000010,
-            IsImmutable                     = 0b_000100,
-            IsStale                         = 0b_001000,
-            PotentialSideEffects            = 0b_010000,
-            CountingDepth                   = 0b_100000,
+            HasMaximumLength                = 0b_0000001,
+            ActualLengthIsMaximumLength     = 0b_0000010,
+            LengthIsImmutable               = 0b_0000100,
+            IsStale                         = 0b_0001000,
+            PotentialSideEffects            = 0b_0010000,
+            CountingDepth                   = 0b_0100000,
+            O1Reversal                      = 0b_1000000,
         }
 
         public CountInformation(long? size, bool isImmutable)
@@ -25,7 +26,7 @@ namespace Cistern.ValueLinq
                 _flags |= Flags.HasMaximumLength | Flags.ActualLengthIsMaximumLength;
             
             if (isImmutable)
-                _flags |= Flags.IsImmutable;
+                _flags |= Flags.LengthIsImmutable;
 
             _depth = 0;
         }
@@ -80,10 +81,10 @@ namespace Cistern.ValueLinq
         /// If the length of the underlying containers length is immutable, such as an array, or rather than an 
         /// enumerable that could change size such as a List
         /// </summary>
-        public bool IsImmutable
+        public bool LengthIsImmutable
         {
-            readonly get => _flags.HasFlag(Flags.IsImmutable);
-            set { if (value) _flags |= Flags.IsImmutable; else _flags &= ~Flags.IsImmutable; }
+            readonly get => _flags.HasFlag(Flags.LengthIsImmutable);
+            set { if (value) _flags |= Flags.LengthIsImmutable; else _flags &= ~Flags.LengthIsImmutable; }
         }
 
         /// <summary>

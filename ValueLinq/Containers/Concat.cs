@@ -117,8 +117,8 @@ namespace Cistern.ValueLinq.Containers
 
             _countInfo.MaximumLength += rhs.MaximumLength;
             _countInfo.ActualLengthIsMaximumLength &= rhs.ActualLengthIsMaximumLength;
-            _countInfo.IsImmutable &= rhs.IsImmutable;
-            _countInfo.IsStale = !_countInfo.IsImmutable || !rhs.IsImmutable;
+            _countInfo.LengthIsImmutable &= rhs.LengthIsImmutable;
+            _countInfo.IsStale = !_countInfo.LengthIsImmutable || !rhs.LengthIsImmutable;
             _countInfo.Depth = max(_countInfo.Depth, rhs.Depth) + 1;
 
 #if PROPERLY_RIPPLE_POTENTIAL_SIDE_EFFECTS
