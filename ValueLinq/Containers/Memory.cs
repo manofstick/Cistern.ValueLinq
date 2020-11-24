@@ -26,6 +26,24 @@ namespace Cistern.ValueLinq.Containers
         }
     }
 
+    public struct ReversedMemoryNode<T>
+        : INode<T>
+    {
+        private readonly ReadOnlyMemory<T> _memory; // array is still in forward order
+
+        public ReversedMemoryNode(ReadOnlyMemory<T> memory) => _memory = memory;
+
+        #region "This node is only used in forward context, so most of interface is not supported"
+        public void GetCountInformation(out CountInformation info) => throw new NotSupportedException();
+        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => throw new NotSupportedException();
+        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result) => throw new NotSupportedException();
+        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
+        #endregion
+
+        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
+            => MemoryNode.FastReverseEnumerate<T, TResult, FEnumerator>(_memory, fenum);
+    }
+
     public struct MemoryNode<T>
         : INode<T>
     {
@@ -42,6 +60,25 @@ namespace Cistern.ValueLinq.Containers
 
         bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
+            if (typeof(TRequest) == typeof(Optimizations.ToArray))
+            {
+                result = (TResult)(object)MemoryNode.ToArray(_memory);
+                return true;
+            }
+
+            if (typeof(TRequest) == typeof(Optimizations.Reverse))
+            {
+                result = (TResult)(object)new ReversedMemoryNode<T>(_memory);
+                return true;
+            }
+
+            if (typeof(TRequest) == typeof(Optimizations.Skip))
+            {
+                var skip = (Optimizations.Skip)(object)request;
+                result = (TResult)(object)MemoryNode.Skip(_memory, skip.Count);
+                return true;
+            }
+
             result = default;
             return false;
         }
@@ -52,6 +89,21 @@ namespace Cistern.ValueLinq.Containers
 
     static class MemoryNode
     {
+        internal static T[] ToArray<T>(ReadOnlyMemory<T> memory)
+        {
+            if (memory.Length == 0)
+                return Array.Empty<T>();
+
+            return memory.Span.ToArray();
+        }
+
+        internal static INode<T> Skip<T>(ReadOnlyMemory<T> srcArray, int count)
+        {
+            if (count >= srcArray.Length)
+                return new EmptyNode<T>();
+            return new MemoryNode<T>(srcArray.Slice(count, srcArray.Length - count));
+        }
+
         public static CreationType Create<T, Head, Tail, CreationType>(ReadOnlyMemory<T> memory, ref Nodes<Head, Tail> nodes)
             where Head : INode
             where Tail : INodes
@@ -82,7 +134,30 @@ namespace Cistern.ValueLinq.Containers
             {
                 fenum.Dispose();
             }
+        }
 
+        internal static TResult FastReverseEnumerate<TIn, TResult, FEnumerator>(ReadOnlyMemory<TIn> array, FEnumerator fenum)
+            where FEnumerator : IForwardEnumerator<TIn>
+        {
+            try
+            {
+                ReverseLoop<TIn, FEnumerator>(array.Span, ref fenum);
+                return fenum.GetResult<TResult>();
+            }
+            finally
+            {
+                fenum.Dispose();
+            }
+        }
+
+        internal static void ReverseLoop<TIn, FEnumerator>(ReadOnlySpan<TIn> array, ref FEnumerator fenum)
+            where FEnumerator : IForwardEnumerator<TIn>
+        {
+            for (var i = array.Length - 1; i >= 0; --i)
+            {
+                if (!fenum.ProcessNext(array[i]))
+                    break;
+            }
         }
     }
 }

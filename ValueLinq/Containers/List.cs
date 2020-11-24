@@ -138,7 +138,7 @@ namespace Cistern.ValueLinq.Containers
         {
             if (typeof(TRequest) == typeof(Optimizations.ToArray))
             {
-                result = (TResult)(object)ListNode.CopyToArray(_list);
+                result = (TResult)(object)ListNode.ToArray(_list);
                 return true;
             }
 
@@ -165,7 +165,7 @@ namespace Cistern.ValueLinq.Containers
 
     static class ListNode
     {
-        public static T[] CopyToArray<T>(List<T> srcList) =>
+        public static T[] ToArray<T>(List<T> srcList) =>
             srcList.Count switch
             {
                 0 => Array.Empty<T>(),

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Cistern.ValueLinq.Containers;
+using System;
 
 namespace Cistern.ValueLinq.Nodes
 {
@@ -59,12 +60,54 @@ namespace Cistern.ValueLinq.Nodes
             return tail.CreateObject<CreationType, EnumeratorElement, SkipNodeEnumerator<EnumeratorElement, Enumerator>>(0, ref nextEnumerator);
         }
 
-        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
+        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+        {
+            if (typeof(TRequest) == typeof(Optimizations.Skip))
+            {
+                var skip = (Optimizations.Skip)(object)request;
+                var maybeSkip = HandleSkipOptimization(skip.Count);
+                if (maybeSkip != null)
+                {
+                    result = (TResult)(object)maybeSkip;
+                    return true;
+                }
+            }
 
-        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) =>
-            _count <= 0
-                ? _nodeT.CreateObjectViaFastEnumerator<TResult, FEnumerator>(fenum)
-                : _nodeT.CreateObjectViaFastEnumerator<TResult, SkipFoward<T, FEnumerator>>(new SkipFoward<T, FEnumerator>(fenum, _count));
+            result = default;
+            return false;
+        }
+
+        INode<T> HandleSkipOptimization(int count)
+        {
+            INode<T> node;
+
+            var total = (long)_count + count;
+            if (total <= int.MaxValue)
+            {
+                if (_nodeT.CheckForOptimization<Optimizations.Skip, INode<T>>(new Optimizations.Skip { Count = (int)total }, out node))
+                    return node;
+            }
+
+            _nodeT.GetCountInformation(out var info);
+            if (total > info.MaximumLength)
+                return new EmptyNode<T>();
+
+            if (total > int.MaxValue)
+                return null;
+
+            return new SkipNode<T, NodeT>(_nodeT, (int)total);
+        }
+
+        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
+        {
+            if (_count <= 0)
+                return _nodeT.CreateObjectViaFastEnumerator<TResult, FEnumerator>(fenum);
+
+            if (_nodeT.CheckForOptimization<Optimizations.Skip, INode<T>>(new Optimizations.Skip { Count = _count}, out var node))
+                return node.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum);
+
+            return _nodeT.CreateObjectViaFastEnumerator<TResult, SkipFoward<T, FEnumerator>>(new SkipFoward<T, FEnumerator>(fenum, _count));
+        }
     }
 
     struct SkipFoward<T, Next>

@@ -47,7 +47,7 @@ namespace Cistern.ValueLinq.Containers
         {
             if (typeof(TRequest) == typeof(Optimizations.ToArray))
             {
-                result = (TResult)(object)ListNode.CopyToArray(_list);
+                result = (TResult)(object)ListNode.ToArray(_list);
                 return true;
             }
 
@@ -74,6 +74,16 @@ namespace Cistern.ValueLinq.Containers
 
     static class ListByIndexNode
     {
+        internal static INode<T> Skip<T>(List<T> list, int count)
+        {
+            if (count >= list.Count)
+                return new EmptyNode<T>();
+
+            // TODO: Skip for List
+
+            return null;
+        }
+
         public static CreationType Create<T, Head, Tail, CreationType>(List<T> list, ref Nodes<Head, Tail> nodes)
             where Head : INode
             where Tail : INodes

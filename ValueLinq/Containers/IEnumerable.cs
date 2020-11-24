@@ -139,7 +139,18 @@ namespace Cistern.ValueLinq.Containers
                 var maybeReversalNode = EnumerableNode.TryReverse(_enumerable);
                 if (maybeReversalNode != null)
                 {
-                    result = (TResult)maybeReversalNode;
+                    result = (TResult)(object)maybeReversalNode;
+                    return true;
+                }
+            }
+
+            if (typeof(TRequest) == typeof(Optimizations.Skip))
+            {
+                var skip = (Optimizations.Skip)(object)request;
+                var maybeSkipNode = EnumerableNode.TrySkip(_enumerable, skip.Count);
+                if (maybeSkipNode != null)
+                {
+                    result = (TResult)(object)maybeSkipNode;
                     return true;
                 }
             }
@@ -252,16 +263,24 @@ namespace Cistern.ValueLinq.Containers
         internal static T[] TryToArray<T>(IEnumerable<T> enumerable) =>
             enumerable switch
             {
-                T[] srcArray => ArrayNode.Copy(srcArray),
-                List<T> srcList => ListNode.CopyToArray(srcList),
+                T[] srcArray => ArrayNode.ToArray(srcArray),
+                List<T> srcList => ListNode.ToArray(srcList),
                 _ => null
             };
 
         internal static INode<T> TryReverse<T>(IEnumerable<T> enumerable) =>
             enumerable switch
             {
-                T[] srcArray => new ReversedArrayNode<T>(srcArray),
+                T[] srcArray => new ReversedMemoryNode<T>(srcArray),
                 List<T> srcList => new ReversedListNode<T>(srcList),
+                _ => null,
+            };
+
+        internal static INode<T> TrySkip<T>(IEnumerable<T> enumerable, int count) =>
+            enumerable switch
+            {
+                T[] srcArray => MemoryNode.Skip(new ReadOnlyMemory<T>(srcArray), count),
+                List<T> list => ListByIndexNode.Skip(list, count),
                 _ => null,
             };
     }

@@ -125,13 +125,20 @@ namespace Cistern.ValueLinq.Containers
         {
             if (typeof(TRequest) == typeof(Optimizations.ToArray))
             {
-                result = (TResult)(object)ArrayNode.Copy(_array);
+                result = (TResult)(object)ArrayNode.ToArray(_array);
                 return true;
             }
 
             if (typeof(TRequest) == typeof(Optimizations.Reverse))
             {
-                result = (TResult)(object)new ReversedArrayNode<T>(_array);
+                result = (TResult)(object)new ReversedMemoryNode<T>(_array);
+                return true;
+            }
+
+            if (typeof(TRequest) == typeof(Optimizations.Skip))
+            {
+                var skip = (Optimizations.Skip)(object)request;
+                result = (TResult)(object)MemoryNode.Skip(new ReadOnlyMemory<T>(_array), skip.Count);
                 return true;
             }
 
@@ -146,28 +153,9 @@ namespace Cistern.ValueLinq.Containers
             => ArrayNode.FastEnumerate<T, TResult, FEnumerator>(_array, fenum);
     }
 
-    public struct ReversedArrayNode<T>
-        : INode<T>
-    {
-        private readonly T[] _array; // array is still in forward order
-
-        public ReversedArrayNode(T[] array) => _array = array;
-
-#region "This node is only used in forward context, so most of interface is not supported"
-        public void GetCountInformation(out CountInformation info) => throw new NotSupportedException();
-        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => throw new NotSupportedException();
-        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result) => throw new NotSupportedException();
-        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
-#endregion
-
-        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
-            => ArrayNode.FastReverseEnumerate<T, TResult, FEnumerator>(_array, fenum);
-    }
-
-
     static class ArrayNode
     {
-        internal static T[] Copy<T>(T[] array)
+        internal static T[] ToArray<T>(T[] array)
         {
             // https://marcelltoth.net/article/41/fastest-way-to-copy-a-net-array
             if (array.Length == 0)
@@ -221,30 +209,6 @@ namespace Cistern.ValueLinq.Containers
             where FEnumerator : IForwardEnumerator<TIn>
         {
             for (var i = 0; i < array.Length; ++i)
-            {
-                if (!fenum.ProcessNext(array[i]))
-                    break;
-            }
-        }
-
-        internal static TResult FastReverseEnumerate<TIn, TResult, FEnumerator>(TIn[] array, FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<TIn>
-        {
-            try
-            {
-                ReverseLoop<TIn, FEnumerator>(array, ref fenum);
-                return fenum.GetResult<TResult>();
-            }
-            finally
-            {
-                fenum.Dispose();
-            }
-        }
-
-        internal static void ReverseLoop<TIn, FEnumerator>(TIn[] array, ref FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<TIn>
-        {
-            for (var i = array.Length-1; i >= 0; --i)
             {
                 if (!fenum.ProcessNext(array[i]))
                     break;
