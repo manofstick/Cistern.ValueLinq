@@ -142,6 +142,12 @@ namespace Cistern.ValueLinq.Containers
                 return true;
             }
 
+            if (typeof(TRequest) == typeof(Optimizations.Count))
+            {
+                result = (TResult)(object)_array.Length;
+                return true;
+            }
+
             result = default;
             return false;
         }

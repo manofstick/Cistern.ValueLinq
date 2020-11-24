@@ -142,16 +142,21 @@ namespace Cistern.ValueLinq.Containers
                 return true;
             }
 
-            if (typeof(TRequest) == typeof(Optimizations.Count))
-            {
-                result = (TResult)(object)_list.Count;
-                return true;
-            }
-
             if (typeof(TRequest) == typeof(Optimizations.Reverse))
             {
                 INode<T> node = new ReversedListNode<T>(_list);
                 result = (TResult)(object)node;
+                return true;
+            }
+
+            if (typeof(TRequest) == typeof(Optimizations.Skip))
+            {
+                // TODO:
+            }
+
+            if (typeof(TRequest) == typeof(Optimizations.Count))
+            {
+                result = (TResult)(object)_list.Count;
                 return true;
             }
 

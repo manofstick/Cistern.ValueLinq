@@ -30,6 +30,27 @@ namespace Cistern.ValueLinq.Containers
         }
     }
 
+    public struct ReversedSpanNode<TObject, T>
+        : INode<T>
+    {
+        private TObject _obj;
+        private readonly GetSpan<TObject, T> _getSpan;
+
+
+        public ReversedSpanNode(TObject obj, GetSpan<TObject, T> getSpan) => (_obj, _getSpan) = (obj, getSpan);
+
+#region "This node is only used in forward context, so most of interface is not supported"
+        public void GetCountInformation(out CountInformation info) => throw new NotSupportedException();
+        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => throw new NotSupportedException();
+        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result) => throw new NotSupportedException();
+        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
+#endregion
+
+        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
+            => SpanNode.FastReverseEnumerate<T, TResult, FEnumerator>(_getSpan(_obj), fenum);
+    }
+
+
     public struct SpanNode<TObject, TElement>
         : INode<TElement>
     {
@@ -47,6 +68,29 @@ namespace Cistern.ValueLinq.Containers
 
         bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
+            if (typeof(TRequest) == typeof(Optimizations.ToArray))
+            {
+                result = (TResult)(object)SpanNode.ToArray(_getSpan(_obj));
+                return true;
+            }
+
+            if (typeof(TRequest) == typeof(Optimizations.Reverse))
+            {
+                result = (TResult)(object)new ReversedSpanNode<TObject, TElement>(_obj, _getSpan);
+                return true;
+            }
+
+            if (typeof(TRequest) == typeof(Optimizations.Skip))
+            {
+                // TODO:
+            }
+
+            if (typeof(TRequest) == typeof(Optimizations.Count))
+            {
+                result = (TResult)(object)_getSpan(_obj).Length;
+                return true;
+            }
+
             result = default;
             return false;
         }
@@ -57,6 +101,14 @@ namespace Cistern.ValueLinq.Containers
 
     static class SpanNode
     {
+        internal static T[] ToArray<T>(ReadOnlySpan<T> span)
+        {
+            if (span.Length == 0)
+                return Array.Empty<T>();
+
+            return span.ToArray();
+        }
+
         public static CreationType Create<T, Head, Tail, CreationType, TObject>(TObject obj, GetSpan<TObject, T> getSpan, ref Nodes<Head, Tail> nodes)
             where Head : INode
             where Tail : INodes
@@ -85,6 +137,30 @@ namespace Cistern.ValueLinq.Containers
             where FEnumerator : IForwardEnumerator<TIn>
         {
             for (var i = 0; i < span.Length; ++i)
+            {
+                if (!fenum.ProcessNext(span[i]))
+                    break;
+            }
+        }
+
+        internal static TResult FastReverseEnumerate<TIn, TResult, FEnumerator>(ReadOnlySpan<TIn> span, FEnumerator fenum)
+            where FEnumerator : IForwardEnumerator<TIn>
+        {
+            try
+            {
+                ReverseLoop<TIn, FEnumerator>(span, ref fenum);
+                return fenum.GetResult<TResult>();
+            }
+            finally
+            {
+                fenum.Dispose();
+            }
+        }
+
+        internal static void ReverseLoop<TIn, FEnumerator>(ReadOnlySpan<TIn> span, ref FEnumerator fenum)
+            where FEnumerator : IForwardEnumerator<TIn>
+        {
+            for (var i = span.Length - 1; i >= 0; --i)
             {
                 if (!fenum.ProcessNext(span[i]))
                     break;

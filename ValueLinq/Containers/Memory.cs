@@ -33,15 +33,15 @@ namespace Cistern.ValueLinq.Containers
 
         public ReversedMemoryNode(ReadOnlyMemory<T> memory) => _memory = memory;
 
-        #region "This node is only used in forward context, so most of interface is not supported"
+#region "This node is only used in forward context, so most of interface is not supported"
         public void GetCountInformation(out CountInformation info) => throw new NotSupportedException();
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => throw new NotSupportedException();
         bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result) => throw new NotSupportedException();
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
-        #endregion
+#endregion
 
         TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
-            => MemoryNode.FastReverseEnumerate<T, TResult, FEnumerator>(_memory, fenum);
+            => SpanNode.FastReverseEnumerate<T, TResult, FEnumerator>(_memory.Span, fenum);
     }
 
     public struct MemoryNode<T>
@@ -76,6 +76,12 @@ namespace Cistern.ValueLinq.Containers
             {
                 var skip = (Optimizations.Skip)(object)request;
                 result = (TResult)(object)MemoryNode.Skip(_memory, skip.Count);
+                return true;
+            }
+
+            if (typeof(TRequest) == typeof(Optimizations.Count))
+            {
+                result = (TResult)(object)_memory.Length;
                 return true;
             }
 
@@ -133,30 +139,6 @@ namespace Cistern.ValueLinq.Containers
             finally
             {
                 fenum.Dispose();
-            }
-        }
-
-        internal static TResult FastReverseEnumerate<TIn, TResult, FEnumerator>(ReadOnlyMemory<TIn> array, FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<TIn>
-        {
-            try
-            {
-                ReverseLoop<TIn, FEnumerator>(array.Span, ref fenum);
-                return fenum.GetResult<TResult>();
-            }
-            finally
-            {
-                fenum.Dispose();
-            }
-        }
-
-        internal static void ReverseLoop<TIn, FEnumerator>(ReadOnlySpan<TIn> array, ref FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<TIn>
-        {
-            for (var i = array.Length - 1; i >= 0; --i)
-            {
-                if (!fenum.ProcessNext(array[i]))
-                    break;
             }
         }
     }

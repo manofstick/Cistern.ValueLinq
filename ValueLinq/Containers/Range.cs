@@ -52,11 +52,32 @@ namespace Cistern.ValueLinq.Containers
 
         bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
+            if (typeof(TRequest) == typeof(Optimizations.ToArray))
+            {
+                // TODO:
+            }
+
+            if (typeof(TRequest) == typeof(Optimizations.Reverse))
+            {
+                // TODO:
+            }
+
+            if (typeof(TRequest) == typeof(Optimizations.Skip))
+            {
+                // TODO:
+            }
+
+            if (typeof(TRequest) == typeof(Optimizations.Count))
+            {
+                // TODO:
+            }
+
             if (typeof(TRequest) == typeof(Optimizations.TryLast))
             {
                 result = (TResult)(object)(_max > _start, _max);
                 return true;
             }
+
             result = default;
             return false;
         }
