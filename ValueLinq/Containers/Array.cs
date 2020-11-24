@@ -123,6 +123,12 @@ namespace Cistern.ValueLinq.Containers
 
         bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
+            if (typeof(TRequest) == typeof(Optimizations.ToArray))
+            {
+                result = (TResult)(object)ArrayNode.Copy(_array);
+                return true;
+            }
+
             if (typeof(TRequest) == typeof(Optimizations.Reverse))
             {
                 result = (TResult)(object)new ReversedArrayNode<T>(_array);
@@ -132,7 +138,6 @@ namespace Cistern.ValueLinq.Containers
             result = default;
             return false;
         }
-
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __)
             => throw new InvalidOperationException();
@@ -144,7 +149,7 @@ namespace Cistern.ValueLinq.Containers
     public struct ReversedArrayNode<T>
         : INode<T>
     {
-        private readonly T[] _array;
+        private readonly T[] _array; // array is still in forward order
 
         public ReversedArrayNode(T[] array) => _array = array;
 
@@ -162,7 +167,19 @@ namespace Cistern.ValueLinq.Containers
 
     static class ArrayNode
     {
-        public static CreationType Create<T, Nodes, CreationType>(T[] array, ref Nodes nodes)
+        internal static T[] Copy<T>(T[] array)
+        {
+            // https://marcelltoth.net/article/41/fastest-way-to-copy-a-net-array
+            if (array.Length == 0)
+                return Array.Empty<T>();
+
+            if (array.Length <= 500) // for word sized Value types; this seems to be above the crossover point
+                return array.AsSpan().ToArray();
+
+            return (T[])array.Clone();
+        }
+
+        internal static CreationType Create<T, Nodes, CreationType>(T[] array, ref Nodes nodes)
             where Nodes : INodes
         {
             if (nodes.TryObjectAscentOptimization<Optimizations.SourceArray<T>, CreationType>(0, new Optimizations.SourceArray<T> { Array = array }, out var creation))
