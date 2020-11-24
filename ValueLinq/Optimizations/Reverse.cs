@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Cistern.ValueLinq.Optimizations
+﻿namespace Cistern.ValueLinq.Optimizations
 {
+    /// <summary>
+    /// Returns an INode&lt;T&gt; which from which CreateObjectViaFastEnumerator can be called
+    /// on an aggregating object.
+    /// </summary>
     struct Reverse
     {
     }
