@@ -115,7 +115,12 @@ namespace Cistern.ValueLinq.Aggregation
                 enumerator.Dispose();
             }
 
-            static EnumeratorElement[] Create(int size) => new EnumeratorElement[size];
+            static EnumeratorElement[] Create(int size)
+            {
+                if (size == 0)
+                    return Array.Empty<EnumeratorElement>();
+                return new EnumeratorElement[size];
+            }
 
             static EnumeratorElement[] StackBasedPopulate(ref Allocator allocator, ref Enumerator enumerator, int remaining, int idx)
             {
