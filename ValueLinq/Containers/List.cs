@@ -144,7 +144,7 @@ namespace Cistern.ValueLinq.Containers
 
             if (typeof(TRequest) == typeof(Optimizations.Count))
             {
-                result = (TResult)(object)EnumerableNode.Count(_list);
+                result = (TResult)(object)_list.Count;
                 return true;
             }
 
@@ -164,19 +164,12 @@ namespace Cistern.ValueLinq.Containers
 
     static class ListNode
     {
-        public static T[] CopyToArray<T>(List<T> srcList)
-        {
-            if (srcList.Count == 0)
+        public static T[] CopyToArray<T>(List<T> srcList) =>
+            srcList.Count switch
             {
-                return Array.Empty<T>();
-            }
-            else
-            {
-                var dstArray = new T[srcList.Count];
-                srcList.CopyTo(dstArray);
-                return dstArray;
-            }
-        }
+                0 => Array.Empty<T>(),
+                _ => System.Runtime.InteropServices.CollectionsMarshal.AsSpan(srcList).ToArray()
+            };
 
         public static CreationType Create<T, Head, Tail, CreationType>(List<T> list, ref Nodes<Head, Tail> nodes)
             where Head : INode

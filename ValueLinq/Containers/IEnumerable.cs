@@ -124,19 +124,24 @@ namespace Cistern.ValueLinq.Containers
 
         readonly bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
-            if (_enumerable is INode node)
-                return node.CheckForOptimization<TRequest, TResult>(in request, out result);
-
-            if (typeof(TRequest) == typeof(Optimizations.ToArray) && EnumerableNode.TryToArray(_enumerable, out var array))
+            if (typeof(TRequest) == typeof(Optimizations.ToArray))
             {
-                result = (TResult)(object)array;
-                return true;
+                var maybeArray = EnumerableNode.TryToArray(_enumerable);
+                if (maybeArray != null)
+                {
+                    result = (TResult)(object)maybeArray;
+                    return true;
+                }
             }
 
-            if (typeof(TRequest) == typeof(Optimizations.Reverse) && EnumerableNode.TryReverse(_enumerable, out INode<T> n))
+            if (typeof(TRequest) == typeof(Optimizations.Reverse))
             {
-                result = (TResult)(object)n;
-                return true;
+                var maybeReversalNode = EnumerableNode.TryReverse(_enumerable);
+                if (maybeReversalNode != null)
+                {
+                    result = (TResult)maybeReversalNode;
+                    return true;
+                }
             }
 
             if (typeof(TRequest) == typeof(Optimizations.Count))
@@ -144,6 +149,9 @@ namespace Cistern.ValueLinq.Containers
                 result = (TResult)(object)EnumerableNode.Count(_enumerable);
                 return true;
             }
+
+            if (_enumerable is INode node)
+                return node.CheckForOptimization<TRequest, TResult>(in request, out result);
 
             result = default;
             return false;
@@ -241,40 +249,20 @@ namespace Cistern.ValueLinq.Containers
             }
         }
 
-        internal static bool TryToArray<T>(IEnumerable<T> enumerable, out T[] dstArray)
-        {
-            if (enumerable is T[] srcArray)
+        internal static T[] TryToArray<T>(IEnumerable<T> enumerable) =>
+            enumerable switch
             {
-                dstArray = ArrayNode.Copy(srcArray);
-                return true;
-            }
+                T[] srcArray => ArrayNode.Copy(srcArray),
+                List<T> srcList => ListNode.CopyToArray(srcList),
+                _ => null
+            };
 
-            if (enumerable is List<T> srcList)
+        internal static INode<T> TryReverse<T>(IEnumerable<T> enumerable) =>
+            enumerable switch
             {
-                dstArray = ListNode.CopyToArray(srcList);
-                return true;
-            }
-
-            dstArray = default;
-            return false;
-        }
-
-        internal static bool TryReverse<T>(IEnumerable<T> enumerable, out INode<T> n)
-        {
-            if (enumerable is T[] srcArray)
-            {
-                n = new ReversedArrayNode<T>(srcArray);
-                return true;
-            }
-
-            if (enumerable is List<T> srcList)
-            {
-                n = new ReversedListNode<T>(srcList);
-                return true;
-            }
-
-            n = default;
-            return false;
-        }
+                T[] srcArray => new ReversedArrayNode<T>(srcArray),
+                List<T> srcList => new ReversedListNode<T>(srcList),
+                _ => null,
+            };
     }
 }
