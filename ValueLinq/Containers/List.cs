@@ -100,6 +100,24 @@ namespace Cistern.ValueLinq.Containers
         }
     }
 
+    public struct ReversedListNode<T>
+        : INode<T>
+    {
+        private readonly List<T> _list; // list is still in forward order
+
+        public ReversedListNode(List<T> list) => _list = list;
+
+        #region "This node is only used in forward context, so most of interface is not supported"
+        public void GetCountInformation(out CountInformation info) => throw new NotSupportedException();
+        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => throw new NotSupportedException();
+        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result) => throw new NotSupportedException();
+        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
+        #endregion
+
+        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
+            => ListByIndexNode.FastReverseEnumerate<T, TResult, FEnumerator>(_list, fenum);
+    }
+
     public struct ListNode<T>
         : INode<T>
     {
@@ -118,9 +136,21 @@ namespace Cistern.ValueLinq.Containers
 
         bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
+            if (typeof(TRequest) == typeof(Optimizations.ToArray))
+            {
+                result = (TResult)(object)ListNode.CopyToArray(_list);
+                return true;
+            }
+
             if (typeof(TRequest) == typeof(Optimizations.Count))
             {
                 result = (TResult)(object)EnumerableNode.Count(_list);
+                return true;
+            }
+
+            if (typeof(TRequest) == typeof(Optimizations.Reverse))
+            {
+                result = (TResult)(object)new ReversedListNode<T>(_list);
                 return true;
             }
 
@@ -134,6 +164,20 @@ namespace Cistern.ValueLinq.Containers
 
     static class ListNode
     {
+        public static T[] CopyToArray<T>(List<T> srcList)
+        {
+            if (srcList.Count == 0)
+            {
+                return Array.Empty<T>();
+            }
+            else
+            {
+                var dstArray = new T[srcList.Count];
+                srcList.CopyTo(dstArray);
+                return dstArray;
+            }
+        }
+
         public static CreationType Create<T, Head, Tail, CreationType>(List<T> list, ref Nodes<Head, Tail> nodes)
             where Head : INode
             where Tail : INodes

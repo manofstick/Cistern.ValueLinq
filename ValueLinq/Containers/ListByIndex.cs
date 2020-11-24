@@ -45,9 +45,21 @@ namespace Cistern.ValueLinq.Containers
 
         bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
+            if (typeof(TRequest) == typeof(Optimizations.ToArray))
+            {
+                result = (TResult)(object)ListNode.CopyToArray(_list);
+                return true;
+            }
+
             if (typeof(TRequest) == typeof(Optimizations.Count))
             {
                 result = (TResult)(object)_list.Count;
+                return true;
+            }
+
+            if (typeof(TRequest) == typeof(Optimizations.Reverse))
+            {
+                result = (TResult)(object)new ReversedListNode<T>(_list);
                 return true;
             }
 
@@ -108,5 +120,30 @@ namespace Cistern.ValueLinq.Containers
                     break;
             }
         }
+
+        internal static TResult FastReverseEnumerate<TIn, TResult, FEnumerator>(List<TIn> list, FEnumerator fenum)
+        where FEnumerator : IForwardEnumerator<TIn>
+        {
+            try
+            {
+                ReverseLoop<TIn, FEnumerator>(list, ref fenum);
+                return fenum.GetResult<TResult>();
+            }
+            finally
+            {
+                fenum.Dispose();
+            }
+        }
+
+        internal static void ReverseLoop<TIn, FEnumerator>(List<TIn> list, ref FEnumerator fenum)
+            where FEnumerator : IForwardEnumerator<TIn>
+        {
+            for (var i = list.Count - 1; i >= 0; --i)
+            {
+                if (!fenum.ProcessNext(list[i]))
+                    break;
+            }
+        }
     }
 }
+
