@@ -133,6 +133,12 @@ namespace Cistern.ValueLinq.Containers
                 return true;
             }
 
+            if (typeof(TRequest) == typeof(Optimizations.Reverse) && EnumerableNode.TryReverse(_enumerable, out INode<T> n))
+            {
+                result = (TResult)(object)n;
+                return true;
+            }
+
             if (typeof(TRequest) == typeof(Optimizations.Count))
             {
                 result = (TResult)(object)EnumerableNode.Count(_enumerable);
@@ -239,33 +245,35 @@ namespace Cistern.ValueLinq.Containers
         {
             if (enumerable is T[] srcArray)
             {
-                if (srcArray.Length == 0)
-                {
-                    dstArray = Array.Empty<T>();
-                }
-                else
-                {
-                    dstArray = new T[srcArray.Length];
-                    srcArray.CopyTo(dstArray, 0);
-                }
+                dstArray = ArrayNode.Copy(srcArray);
                 return true;
             }
 
             if (enumerable is List<T> srcList)
             {
-                if (srcList.Count == 0)
-                {
-                    dstArray = Array.Empty<T>();
-                }
-                else
-                {
-                    dstArray = new T[srcList.Count];
-                    srcList.CopyTo(dstArray);
-                }
+                dstArray = ListNode.CopyToArray(srcList);
                 return true;
             }
 
             dstArray = default;
+            return false;
+        }
+
+        internal static bool TryReverse<T>(IEnumerable<T> enumerable, out INode<T> n)
+        {
+            if (enumerable is T[] srcArray)
+            {
+                n = new ReversedArrayNode<T>(srcArray);
+                return true;
+            }
+
+            if (enumerable is List<T> srcList)
+            {
+                n = new ReversedListNode<T>(srcList);
+                return true;
+            }
+
+            n = default;
             return false;
         }
     }
