@@ -59,7 +59,8 @@ namespace Cistern.ValueLinq.Containers
 
             if (typeof(TRequest) == typeof(Optimizations.Reverse))
             {
-                result = (TResult)(object)new ReversedListNode<T>(_list);
+                INode<T> node = new ReversedListNode<T>(_list);
+                result = (TResult)(object)node;
                 return true;
             }
 
