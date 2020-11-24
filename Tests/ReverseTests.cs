@@ -18,10 +18,10 @@ namespace Linqs.Tests
 {
     public class ReverseTests : EnumerableTests
     {
-        [Fact]
         public void InvalidArguments()
         {
-            AssertExtensions.Throws<ArgumentNullException>("source", () => Enumerable.Reverse<string>(null));
+            IEnumerable<string> x = null;
+            AssertExtensions.Throws<ArgumentNullException>("source", () => Enumerable.Reverse<string>(x));
         }
 
         [Theory]
@@ -86,13 +86,25 @@ namespace Linqs.Tests
                 );
         }
 
+        //[Fact(Skip ="CISTERN.VALUELINQ Invalid")]
+        //public void ForcedToEnumeratorDoesntEnumerate()
+        //{
+        //    var iterator = NumberRangeGuaranteedNotCollectionType(0, 3).Reverse();
+        //    // Don't insist on this behaviour, but check it's correct if it happens
+        //    var en = iterator as IEnumerator<int>;
+        //    Assert.False(en != null && en.MoveNext());
+        //}
+
         [Fact]
-        public void ForcedToEnumeratorDoesntEnumerate()
+        public void FastArrayReverse()
         {
-            var iterator = NumberRangeGuaranteedNotCollectionType(0, 3).Reverse();
-            // Don't insist on this behaviour, but check it's correct if it happens
-            var en = iterator as IEnumerator<int>;
-            Assert.False(en != null && en.MoveNext());
+            var abc = new[] { 'a', 'b', 'c' };
+            var cba = abc.Reverse().ToArray();
+            Assert.Equal(3, cba.Length);
+            Assert.Equal('c', cba[0]);
+            Assert.Equal('b', cba[1]);
+            Assert.Equal('a', cba[2]);
         }
+
     }
 }
