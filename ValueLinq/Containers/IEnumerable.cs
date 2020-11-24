@@ -144,14 +144,14 @@ namespace Cistern.ValueLinq.Containers
                 }
             }
 
+            if (_enumerable is INode node)
+                return node.CheckForOptimization<TRequest, TResult>(in request, out result);
+
             if (typeof(TRequest) == typeof(Optimizations.Count))
             {
                 result = (TResult)(object)EnumerableNode.Count(_enumerable);
                 return true;
             }
-
-            if (_enumerable is INode node)
-                return node.CheckForOptimization<TRequest, TResult>(in request, out result);
 
             result = default;
             return false;
