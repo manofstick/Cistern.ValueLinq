@@ -62,7 +62,7 @@ namespace Cistern.ValueLinq
             static T[] ICollectionToArray(ICollection<T> c)
             {
                 var count = c.Count;
-                if (count == 0)
+                if (count <= 0)
                     return Array.Empty<T>();
 
                 var result = new T[count];

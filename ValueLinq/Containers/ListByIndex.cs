@@ -63,6 +63,11 @@ namespace Cistern.ValueLinq.Containers
                 // TODO:
             }
 
+            if (typeof(TRequest) == typeof(Optimizations.Take))
+            {
+                // TODO:
+            }
+
             if (typeof(TRequest) == typeof(Optimizations.Count))
             {
                 result = (TResult)(object)_list.Count;
@@ -85,6 +90,19 @@ namespace Cistern.ValueLinq.Containers
                 return EmptyNode<T>.Empty;
 
             // TODO: Skip for List
+
+            return null;
+        }
+
+        internal static INode<T> Take<T>(List<T> list, int count)
+        {
+            if (count <= 0)
+                return EmptyNode<T>.Empty;
+
+            if (count >= list.Count)
+                return new ListByIndexNode<T>(list);
+
+            // TODO: Take for List
 
             return null;
         }

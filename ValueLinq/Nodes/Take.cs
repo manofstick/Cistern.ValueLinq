@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Cistern.ValueLinq.Containers;
+using System;
 using static System.Math;
 
 namespace Cistern.ValueLinq.Nodes
@@ -71,12 +72,48 @@ namespace Cistern.ValueLinq.Nodes
 
         bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
+            if (typeof(TRequest) == typeof(Optimizations.Take))
+            {
+                var take = (Optimizations.Take)(object)request;
+                var maybeTake = HandleTakeOptimization(take.Count);
+                if (maybeTake != null)
+                {
+                    result = (TResult)(object)maybeTake;
+                    return true;
+                }
+            }
+
+            if (_nodeT.CheckForOptimization<Optimizations.Take, INode<T>>(new Optimizations.Take { Count = _count }, out var node))
+                return node.CheckForOptimization<TRequest, TResult>(in request, out result);
+
             result = default;
             return false;
         }
 
-        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) =>
-            _nodeT.CreateObjectViaFastEnumerator<TResult, TakeFoward<T, FEnumerator>>(new TakeFoward<T, FEnumerator>(fenum, _count));
+        INode<T> HandleTakeOptimization(int count)
+        {
+            INode<T> node;
+
+            var total = Math.Min(_count, count);
+            if (total <= 0)
+                return EmptyNode<T>.Empty;
+
+            if (_nodeT.CheckForOptimization<Optimizations.Take, INode<T>>(new Optimizations.Take { Count = total }, out node))
+                return node;
+
+            return new TakeNode<T, NodeT>(_nodeT, total);
+        }
+
+        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
+        {
+            if (_count <= 0)
+                return EmptyNode<T>.Empty.CreateObjectViaFastEnumerator<TResult, FEnumerator>(fenum);
+
+            if (_nodeT.CheckForOptimization<Optimizations.Take, INode<T>>(new Optimizations.Take { Count = _count }, out var node))
+                return node.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum);
+
+            return _nodeT.CreateObjectViaFastEnumerator<TResult, TakeFoward<T, FEnumerator>>(new TakeFoward<T, FEnumerator>(fenum, _count));
+        }
     }
 
     struct TakeFoward<T, Next>

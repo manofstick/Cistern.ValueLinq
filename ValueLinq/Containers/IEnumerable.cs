@@ -155,6 +155,17 @@ namespace Cistern.ValueLinq.Containers
                 }
             }
 
+            if (typeof(TRequest) == typeof(Optimizations.Take))
+            {
+                var take = (Optimizations.Take)(object)request;
+                var maybeTakeNode = EnumerableNode.TryTake(_enumerable, take.Count);
+                if (maybeTakeNode != null)
+                {
+                    result = (TResult)(object)maybeTakeNode;
+                    return true;
+                }
+            }
+
             if (_enumerable is INode node)
                 return node.CheckForOptimization<TRequest, TResult>(in request, out result);
 
@@ -281,6 +292,14 @@ namespace Cistern.ValueLinq.Containers
             {
                 T[] srcArray => MemoryNode.Skip(new ReadOnlyMemory<T>(srcArray), count),
                 List<T> list => ListByIndexNode.Skip(list, count),
+                _ => null,
+            };
+        internal static INode<T> TryTake<T>(IEnumerable<T> enumerable, int count) =>
+            enumerable switch
+            {
+                T[] srcArray when count > srcArray.Length => new ArrayNode<T>(srcArray),
+                T[] srcArray => MemoryNode.Take(new ReadOnlyMemory<T>(srcArray), count),
+                List<T> list => ListByIndexNode.Take(list, count),
                 _ => null,
             };
     }

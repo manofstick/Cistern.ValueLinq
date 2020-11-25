@@ -67,6 +67,11 @@ namespace Cistern.ValueLinq.Containers
                 // TODO:
             }
 
+            if (typeof(TRequest) == typeof(Optimizations.Take))
+            {
+                // TODO:
+            }
+
             if (typeof(TRequest) == typeof(Optimizations.Count))
             {
                 // TODO:

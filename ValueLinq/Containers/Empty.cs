@@ -53,6 +53,12 @@ namespace Cistern.ValueLinq.Containers
                 return true;
             }
 
+            if (typeof(TRequest) == typeof(Optimizations.Take))
+            {
+                result = (TResult)(object)EmptyNode<T>.Empty;
+                return true;
+            }
+
             result = default;
             return false;
         }

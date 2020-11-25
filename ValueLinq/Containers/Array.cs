@@ -142,6 +142,13 @@ namespace Cistern.ValueLinq.Containers
                 return true;
             }
 
+            if (typeof(TRequest) == typeof(Optimizations.Take))
+            {
+                var skip = (Optimizations.Take)(object)request;
+                result = (TResult)(object)ArrayNode.Take(_array, skip.Count);
+                return true;
+            }
+
             if (typeof(TRequest) == typeof(Optimizations.Count))
             {
                 result = (TResult)(object)_array.Length;
@@ -161,6 +168,17 @@ namespace Cistern.ValueLinq.Containers
 
     static class ArrayNode
     {
+        internal static INode<T> Take<T>(T[] array, int count)
+        {
+            if (count <= 0)
+                return EmptyNode<T>.Empty;
+
+            if (count >= array.Length)
+                return new ArrayNode<T>(array);
+
+            return MemoryNode.Take(new ReadOnlyMemory<T>(array), count);
+        }
+
         internal static T[] ToArray<T>(T[] array)
         {
             // https://marcelltoth.net/article/41/fastest-way-to-copy-a-net-array

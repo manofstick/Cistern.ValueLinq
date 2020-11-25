@@ -48,6 +48,13 @@ namespace Cistern.ValueLinq.Containers
                 return true;
             }
 
+            if (typeof(TRequest) == typeof(Optimizations.Take))
+            {
+                var take = (Optimizations.Take)(object)request;
+                result = (TResult)(object)MemoryNode.ReverseTake(_memory, take.Count);
+                return true;
+            }
+
             result = default;
             return false;
         }
@@ -91,6 +98,13 @@ namespace Cistern.ValueLinq.Containers
                 return true;
             }
 
+            if (typeof(TRequest) == typeof(Optimizations.Take))
+            {
+                var take = (Optimizations.Take)(object)request;
+                result = (TResult)(object)MemoryNode.Take(_memory, take.Count);
+                return true;
+            }
+
             if (typeof(TRequest) == typeof(Optimizations.Count))
             {
                 result = (TResult)(object)_memory.Length;
@@ -122,12 +136,32 @@ namespace Cistern.ValueLinq.Containers
 
             return new MemoryNode<T>(memory.Slice(count, memory.Length - count));
         }
+        internal static INode<T> Take<T>(ReadOnlyMemory<T> memory, int count)
+        {
+            if (count <= 0)
+                return EmptyNode<T>.Empty;
+
+            if (count >= memory.Length)
+                return new MemoryNode<T>(memory);
+
+            return new MemoryNode<T>(memory.Slice(0, count));
+
+        }
         internal static INode<T> ReverseSkip<T>(ReadOnlyMemory<T> memory, int count)
         {
             if (count >= memory.Length)
                 return EmptyNode<T>.Empty;
 
-            return new MemoryNode<T>(memory.Slice(0, memory.Length - count));
+            return new ReversedMemoryNode<T>(memory.Slice(0, memory.Length - count));
+        }
+
+        internal static object ReverseTake<T>(ReadOnlyMemory<T> memory, int count)
+        {
+            if (count <= 0)
+                return EmptyNode<T>.Empty;
+
+            var length = Math.Min(memory.Length, count);
+            return new ReversedMemoryNode<T>(memory.Slice(memory.Length - length, length));
         }
 
         public static CreationType Create<T, Head, Tail, CreationType>(ReadOnlyMemory<T> memory, ref Nodes<Head, Tail> nodes)

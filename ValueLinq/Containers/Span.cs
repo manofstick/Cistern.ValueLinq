@@ -93,6 +93,14 @@ namespace Cistern.ValueLinq.Containers
                 return node != null;
             }
 
+            if (typeof(TRequest) == typeof(Optimizations.Take))
+            {
+                var takeRequest = (Optimizations.Take)(object)request;
+                var node = SpanNode.MaybeTake(_obj, _getSpan, takeRequest.Count);
+                result = (TResult)(object)node;
+                return node != null;
+            }
+
             if (typeof(TRequest) == typeof(Optimizations.Count))
             {
                 result = (TResult)(object)_getSpan(_obj).Length;
@@ -185,6 +193,21 @@ namespace Cistern.ValueLinq.Containers
                 return null;
 
             return new SpanNode<TObject, TElement>(obj, o => getSpan(o).Slice(count));
+        }
+
+        internal static object MaybeTake<TObject, TElement>(TObject obj, GetSpan<TObject, TElement> getSpan, int count)
+        {
+            if (count <= 0)
+                return EmptyNode<TElement>.Empty;
+
+            var span = getSpan(obj);
+            if (count >= span.Length)
+                return new SpanNode<TObject, TElement>(obj, getSpan);
+
+            if (span.Length < 100) // magic number; weighing up between skipping the skip and creating some garbage. What's good??
+                return null;
+
+            return new SpanNode<TObject, TElement>(obj, o => getSpan(o).Slice(0, count));
         }
     }
 }

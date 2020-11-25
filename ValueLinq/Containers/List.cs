@@ -110,9 +110,24 @@ namespace Cistern.ValueLinq.Containers
         #region "This node is only used in forward context, so most of interface is not supported"
         public void GetCountInformation(out CountInformation info) => throw new NotSupportedException();
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => throw new NotSupportedException();
-        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result) => throw new NotSupportedException();
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
         #endregion
+
+        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+        {
+            if (typeof(TRequest) == typeof(Optimizations.Skip))
+            {
+                // TODO:
+            }
+
+            if (typeof(TRequest) == typeof(Optimizations.Take))
+            {
+                // TODO:
+            }
+
+            result = default;
+            return false;
+        }
 
         TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
             => ListByIndexNode.FastReverseEnumerate<T, TResult, FEnumerator>(_list, fenum);
@@ -150,6 +165,11 @@ namespace Cistern.ValueLinq.Containers
             }
 
             if (typeof(TRequest) == typeof(Optimizations.Skip))
+            {
+                // TODO:
+            }
+
+            if (typeof(TRequest) == typeof(Optimizations.Take))
             {
                 // TODO:
             }
