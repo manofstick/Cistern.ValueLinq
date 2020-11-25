@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 
 namespace Cistern.ValueLinq.Containers
 {
@@ -17,6 +18,8 @@ namespace Cistern.ValueLinq.Containers
     public struct EmptyNode<T>
         : INode<T>
     {
+        public static INode<T> Empty { get; } = new EmptyNode<T>();
+
         public void GetCountInformation(out CountInformation info) => 
             info = new CountInformation(0, true);
 
@@ -35,6 +38,18 @@ namespace Cistern.ValueLinq.Containers
             if (typeof(TRequest) == typeof(Optimizations.Count))
             {
                 result = (TResult)(object)0;
+                return true;
+            }
+
+            if (typeof(TRequest) == typeof(Optimizations.Reverse))
+            {
+                result = (TResult)(object)EmptyNode<T>.Empty;
+                return true;
+            }
+
+            if (typeof(TRequest) == typeof(Optimizations.Skip))
+            {
+                result = (TResult)(object)EmptyNode<T>.Empty;
                 return true;
             }
 

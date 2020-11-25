@@ -36,9 +36,21 @@ namespace Cistern.ValueLinq.Containers
 #region "This node is only used in forward context, so most of interface is not supported"
         public void GetCountInformation(out CountInformation info) => throw new NotSupportedException();
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => throw new NotSupportedException();
-        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result) => throw new NotSupportedException();
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
 #endregion
+
+        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+        {
+            if (typeof(TRequest) == typeof(Optimizations.Skip))
+            {
+                var skip = (Optimizations.Skip)(object)request;
+                result = (TResult)(object)MemoryNode.ReverseSkip(_memory, skip.Count);
+                return true;
+            }
+
+            result = default;
+            return false;
+        }
 
         TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
             => SpanNode.FastReverseEnumerate<T, TResult, FEnumerator>(_memory.Span, fenum);
@@ -103,11 +115,19 @@ namespace Cistern.ValueLinq.Containers
             return memory.Span.ToArray();
         }
 
-        internal static INode<T> Skip<T>(ReadOnlyMemory<T> srcArray, int count)
+        internal static INode<T> Skip<T>(ReadOnlyMemory<T> memory, int count)
         {
-            if (count >= srcArray.Length)
-                return new EmptyNode<T>();
-            return new MemoryNode<T>(srcArray.Slice(count, srcArray.Length - count));
+            if (count >= memory.Length)
+                return EmptyNode<T>.Empty;
+
+            return new MemoryNode<T>(memory.Slice(count, memory.Length - count));
+        }
+        internal static INode<T> ReverseSkip<T>(ReadOnlyMemory<T> memory, int count)
+        {
+            if (count >= memory.Length)
+                return EmptyNode<T>.Empty;
+
+            return new MemoryNode<T>(memory.Slice(0, memory.Length - count));
         }
 
         public static CreationType Create<T, Head, Tail, CreationType>(ReadOnlyMemory<T> memory, ref Nodes<Head, Tail> nodes)

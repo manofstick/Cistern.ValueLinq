@@ -51,6 +51,9 @@ namespace Cistern.ValueLinq.Nodes
                 return true;
             }
 
+            if (_nodeT.CheckForOptimization<Optimizations.Reverse, INode<T>>(default, out var node))
+                return node.CheckForOptimization<TRequest, TResult>(in request, out result);
+
             result = default;
             return false;
         }
@@ -62,8 +65,8 @@ namespace Cistern.ValueLinq.Nodes
                 return node.CreateObjectViaFastEnumerator<TResult, FEnumerator>(fenum);
             }
 
-            var reversed = GetReversedArray();
-            return ((INode<T>)new ArrayNode<T>(reversed)).CreateObjectViaFastEnumerator<TResult, FEnumerator>(fenum);
+            var reversed = new ArrayNode<T>(GetReversedArray());
+            return ((INode<T>)reversed).CreateObjectViaFastEnumerator<TResult, FEnumerator>(fenum);
         }
     }
 }

@@ -82,7 +82,7 @@ namespace Cistern.ValueLinq.Containers
         internal static INode<T> Skip<T>(List<T> list, int count)
         {
             if (count >= list.Count)
-                return new EmptyNode<T>();
+                return EmptyNode<T>.Empty;
 
             // TODO: Skip for List
 

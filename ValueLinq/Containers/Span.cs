@@ -42,9 +42,14 @@ namespace Cistern.ValueLinq.Containers
 #region "This node is only used in forward context, so most of interface is not supported"
         public void GetCountInformation(out CountInformation info) => throw new NotSupportedException();
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => throw new NotSupportedException();
-        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result) => throw new NotSupportedException();
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
-#endregion
+        #endregion
+
+        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+        {
+            result = default;
+            return false;
+        }
 
         TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
             => SpanNode.FastReverseEnumerate<T, TResult, FEnumerator>(_getSpan(_obj), fenum);
@@ -82,7 +87,10 @@ namespace Cistern.ValueLinq.Containers
 
             if (typeof(TRequest) == typeof(Optimizations.Skip))
             {
-                // TODO:
+                var skipRequest = (Optimizations.Skip)(object)request;
+                var node = SpanNode.MaybeSkip(_obj, _getSpan, skipRequest.Count);
+                result = (TResult)(object)node;
+                return node != null;
             }
 
             if (typeof(TRequest) == typeof(Optimizations.Count))
@@ -165,6 +173,18 @@ namespace Cistern.ValueLinq.Containers
                 if (!fenum.ProcessNext(span[i]))
                     break;
             }
+        }
+
+        internal static INode<TElement> MaybeSkip<TObject, TElement>(TObject obj, GetSpan<TObject, TElement> getSpan, int count)
+        {
+            var span = getSpan(obj);
+            if (count > span.Length)
+                return EmptyNode<TElement>.Empty;
+
+            if (span.Length < 100) // magic number; weighing up between skipping the skip and creating some garbage. What's good??
+                return null;
+
+            return new SpanNode<TObject, TElement>(obj, o => getSpan(o).Slice(count));
         }
     }
 }

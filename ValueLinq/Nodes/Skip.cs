@@ -73,6 +73,9 @@ namespace Cistern.ValueLinq.Nodes
                 }
             }
 
+            if (_nodeT.CheckForOptimization<Optimizations.Skip, INode<T>>(new Optimizations.Skip { Count = _count }, out var node))
+                return node.CheckForOptimization<TRequest, TResult>(in request, out result);
+
             result = default;
             return false;
         }
@@ -90,7 +93,7 @@ namespace Cistern.ValueLinq.Nodes
 
             _nodeT.GetCountInformation(out var info);
             if (total > info.MaximumLength)
-                return new EmptyNode<T>();
+                return EmptyNode<T>.Empty;
 
             if (total > int.MaxValue)
                 return null;
