@@ -121,7 +121,7 @@ namespace Cistern.ValueLinq.Containers
             return ArrayNode.Create<T, Nodes<Head, Tail>, CreationType>(_array, ref nodes);
         }
 
-        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+        public bool CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
             if (typeof(TRequest) == typeof(Optimizations.ToArray))
             {
@@ -131,21 +131,27 @@ namespace Cistern.ValueLinq.Containers
 
             if (typeof(TRequest) == typeof(Optimizations.Reverse))
             {
-                result = (TResult)(object)new ReversedMemoryNode<T>(_array);
+                NodeContainer<T> container = default;
+                container.SetNode(new ReversedMemoryNode<T>(_array));
+                result = (TResult)(object)container;
                 return true;
             }
 
             if (typeof(TRequest) == typeof(Optimizations.Skip))
             {
                 var skip = (Optimizations.Skip)(object)request;
-                result = (TResult)(object)MemoryNode.Skip(new ReadOnlyMemory<T>(_array), skip.Count);
+                NodeContainer<T> container = default;
+                MemoryNode.Skip(new ReadOnlyMemory<T>(_array), skip.Count, ref container);
+                result = (TResult)(object)container;
                 return true;
             }
 
             if (typeof(TRequest) == typeof(Optimizations.Take))
             {
                 var skip = (Optimizations.Take)(object)request;
-                result = (TResult)(object)ArrayNode.Take(_array, skip.Count);
+                NodeContainer<T> container = default;
+                ArrayNode.Take(_array, skip.Count, ref container);
+                result = (TResult)(object)container;
                 return true;
             }
 
@@ -162,21 +168,26 @@ namespace Cistern.ValueLinq.Containers
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __)
             => throw new InvalidOperationException();
 
-        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
+        public TResult CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<T>
             => ArrayNode.FastEnumerate<T, TResult, FEnumerator>(_array, fenum);
     }
 
     static class ArrayNode
     {
-        internal static INode<T> Take<T>(T[] array, int count)
+        internal static void Take<T>(T[] array, int count, ref NodeContainer<T> container)
         {
             if (count <= 0)
-                return EmptyNode<T>.Empty;
-
-            if (count >= array.Length)
-                return new ArrayNode<T>(array);
-
-            return MemoryNode.Take(new ReadOnlyMemory<T>(array), count);
+            {
+                container.SetEmpty();
+            }
+            else if (count >= array.Length)
+            {
+                container.SetNode(new ArrayNode<T>(array));
+            }
+            else
+            {
+                MemoryNode.Take(new ReadOnlyMemory<T>(array), count, ref container);
+            }
         }
 
         internal static T[] ToArray<T>(T[] array)

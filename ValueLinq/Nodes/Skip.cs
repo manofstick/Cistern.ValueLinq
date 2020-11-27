@@ -65,40 +65,44 @@ namespace Cistern.ValueLinq.Nodes
             if (typeof(TRequest) == typeof(Optimizations.Skip))
             {
                 var skip = (Optimizations.Skip)(object)request;
-                var maybeSkip = HandleSkipOptimization(skip.Count);
-                if (maybeSkip != null)
+                NodeContainer<T> container = default;
+                if (HandleSkipOptimization(skip.Count, ref container))
                 {
-                    result = (TResult)(object)maybeSkip;
+                    result = (TResult)(object)container;
                     return true;
                 }
             }
 
-            if (_nodeT.CheckForOptimization<Optimizations.Skip, INode<T>>(new Optimizations.Skip { Count = _count }, out var node))
+            if (_nodeT.CheckForOptimization<Optimizations.Skip, NodeContainer<T>>(new Optimizations.Skip { Count = _count }, out var node))
                 return node.CheckForOptimization<TRequest, TResult>(in request, out result);
 
             result = default;
             return false;
         }
 
-        INode<T> HandleSkipOptimization(int count)
+        bool HandleSkipOptimization(int count, ref NodeContainer<T> container)
         {
-            INode<T> node;
-
             var total = (long)_count + count;
             if (total <= int.MaxValue)
             {
-                if (_nodeT.CheckForOptimization<Optimizations.Skip, INode<T>>(new Optimizations.Skip { Count = (int)total }, out node))
-                    return node;
+                if (_nodeT.CheckForOptimization(new Optimizations.Skip { Count = (int)total }, out container))
+                {
+                    return true;
+                }
             }
 
             _nodeT.GetCountInformation(out var info);
             if (total > info.MaximumLength)
-                return EmptyNode<T>.Empty;
+            {
+                container.SetEmpty();
+                return true;
+            }
 
             if (total > int.MaxValue)
-                return null;
+                return false;
 
-            return new SkipNode<T, NodeT>(_nodeT, (int)total);
+            container.SetNode(new SkipNode<T, NodeT>(_nodeT, (int)total));
+            return true;
         }
 
         TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
@@ -106,7 +110,7 @@ namespace Cistern.ValueLinq.Nodes
             if (_count <= 0)
                 return _nodeT.CreateObjectViaFastEnumerator<TResult, FEnumerator>(fenum);
 
-            if (_nodeT.CheckForOptimization<Optimizations.Skip, INode<T>>(new Optimizations.Skip { Count = _count}, out var node))
+            if (_nodeT.CheckForOptimization<Optimizations.Skip, NodeContainer<T>>(new Optimizations.Skip { Count = _count}, out var node))
                 return node.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum);
 
             return _nodeT.CreateObjectViaFastEnumerator<TResult, SkipFoward<T, FEnumerator>>(new SkipFoward<T, FEnumerator>(fenum, _count));

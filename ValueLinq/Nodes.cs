@@ -1,6 +1,8 @@
-﻿using Cistern.ValueLinq.ValueEnumerable;
+﻿using Cistern.ValueLinq.Containers;
+using Cistern.ValueLinq.ValueEnumerable;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace Cistern.ValueLinq
 {
@@ -192,6 +194,59 @@ namespace Cistern.ValueLinq
             where FEnumerator : IForwardEnumerator<T>
             where Node : INode<T>
             => node.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum);
+    }
+
+    enum NodeType : byte
+    {
+        Empty = 0,
+        Reference,
+        Array,
+        Memory,
+        ReversedMemory,
+        ReversedList,
+    }
+
+    struct NodeContainer<T>
+    {
+        public NodeType Type;
+
+        private INode<T> Node;
+        private ArrayNode<T> ArrayNode;
+        private MemoryNode<T> MemoryNode;
+        private ReversedMemoryNode<T> ReversedMemoryNode;
+        private ReversedListNode<T> ReversedListNode;
+
+        public void SetEmpty()                          => Type                       = NodeType.Empty;
+        public void SetNode(INode<T> node)              => (Type, Node)               = (NodeType.Reference, node);
+        public void SetNode(ArrayNode<T> node)          => (Type, ArrayNode)          = (NodeType.Array, node);
+        public void SetNode(MemoryNode<T> node)         => (Type, MemoryNode)         = (NodeType.Memory, node);
+        public void SetNode(ReversedMemoryNode<T> node) => (Type, ReversedMemoryNode) = (NodeType.ReversedMemory, node);
+        public void SetNode(ReversedListNode<T> node)   => (Type, ReversedListNode)   = (NodeType.ReversedList, node);
+
+        public bool CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result) =>
+            Type switch
+            {
+                NodeType.Empty          => EmptyNode<T>.Empty.CheckForOptimization<TRequest, TResult>(in request, out result),
+                NodeType.Reference      => Node.CheckForOptimization<TRequest, TResult>(in request, out result),
+                NodeType.Array          => ArrayNode.CheckForOptimization<TRequest, TResult>(in request, out result),
+                NodeType.Memory         => MemoryNode.CheckForOptimization<TRequest, TResult>(in request, out result),
+                NodeType.ReversedMemory => ReversedMemoryNode.CheckForOptimization<TRequest, TResult>(in request, out result),
+                NodeType.ReversedList   => ReversedListNode.CheckForOptimization<TRequest, TResult>(in request, out result),
+                _ => throw new InvalidOperationException(),
+            };
+
+        public TResult CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
+            where FEnumerator : IForwardEnumerator<T> =>
+            Type switch
+            {
+                NodeType.Empty          => EmptyNode<T>.Empty.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum),
+                NodeType.Reference      => Node.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum),
+                NodeType.Array          => ArrayNode.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum),
+                NodeType.Memory         => MemoryNode.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum),
+                NodeType.ReversedMemory => ReversedMemoryNode.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum),
+                NodeType.ReversedList   => ReversedListNode.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum),
+                _ => throw new InvalidOperationException(),
+            };
     }
 
     static class Nodes<T>

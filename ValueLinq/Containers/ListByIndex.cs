@@ -53,8 +53,9 @@ namespace Cistern.ValueLinq.Containers
 
             if (typeof(TRequest) == typeof(Optimizations.Reverse))
             {
-                INode<T> node = new ReversedListNode<T>(_list);
-                result = (TResult)(object)node;
+                NodeContainer<T> container = default;
+                container.SetNode(new ReversedListNode<T>(_list));
+                result = (TResult)(object)container;
                 return true;
             }
 
@@ -84,27 +85,36 @@ namespace Cistern.ValueLinq.Containers
 
     static class ListByIndexNode
     {
-        internal static INode<T> Skip<T>(List<T> list, int count)
+        internal static bool Skip<T>(List<T> list, int count, ref NodeContainer<T> container)
         {
             if (count >= list.Count)
-                return EmptyNode<T>.Empty;
+            {
+                container.SetEmpty();
+                return true;
+            }
 
             // TODO: Skip for List
 
-            return null;
+            return false;
         }
 
-        internal static INode<T> Take<T>(List<T> list, int count)
+        internal static bool Take<T>(List<T> list, int count, ref NodeContainer<T> container)
         {
             if (count <= 0)
-                return EmptyNode<T>.Empty;
+            {
+                container.SetEmpty();
+                return true;
+            }
 
             if (count >= list.Count)
-                return new ListByIndexNode<T>(list);
+            {
+                container.SetNode(new ListByIndexNode<T>(list));
+                return true;
+            }
 
             // TODO: Take for List
 
-            return null;
+            return false;
         }
 
         public static CreationType Create<T, Head, Tail, CreationType>(List<T> list, ref Nodes<Head, Tail> nodes)

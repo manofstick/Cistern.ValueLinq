@@ -81,24 +81,32 @@ namespace Cistern.ValueLinq.Containers
 
             if (typeof(TRequest) == typeof(Optimizations.Reverse))
             {
-                result = (TResult)(object)new ReversedSpanNode<TObject, TElement>(_obj, _getSpan);
+                NodeContainer<TElement> container = default;
+                container.SetNode(new ReversedSpanNode<TObject, TElement>(_obj, _getSpan));
+                result = (TResult)(object)container;
                 return true;
             }
 
             if (typeof(TRequest) == typeof(Optimizations.Skip))
             {
                 var skipRequest = (Optimizations.Skip)(object)request;
-                var node = SpanNode.MaybeSkip(_obj, _getSpan, skipRequest.Count);
-                result = (TResult)(object)node;
-                return node != null;
+                NodeContainer<TElement> container = default;
+                if (SpanNode.MaybeSkip(_obj, _getSpan, skipRequest.Count, ref container))
+                {
+                    result = (TResult)(object)container;
+                    return true;
+                }
             }
 
             if (typeof(TRequest) == typeof(Optimizations.Take))
             {
                 var takeRequest = (Optimizations.Take)(object)request;
-                var node = SpanNode.MaybeTake(_obj, _getSpan, takeRequest.Count);
-                result = (TResult)(object)node;
-                return node != null;
+                NodeContainer<TElement> container = default;
+                if (SpanNode.MaybeTake(_obj, _getSpan, takeRequest.Count, ref container))
+                {
+                    result = (TResult)(object)container;
+                    return true;
+                }
             }
 
             if (typeof(TRequest) == typeof(Optimizations.Count))
@@ -183,31 +191,50 @@ namespace Cistern.ValueLinq.Containers
             }
         }
 
-        internal static INode<TElement> MaybeSkip<TObject, TElement>(TObject obj, GetSpan<TObject, TElement> getSpan, int count)
+        internal static bool MaybeSkip<TObject, TElement>(TObject obj, GetSpan<TObject, TElement> getSpan, int count, ref NodeContainer<TElement> container)
         {
             var span = getSpan(obj);
             if (count > span.Length)
-                return EmptyNode<TElement>.Empty;
-
-            if (span.Length < 100) // magic number; weighing up between skipping the skip and creating some garbage. What's good??
-                return null;
-
-            return new SpanNode<TObject, TElement>(obj, o => getSpan(o).Slice(count));
+            {
+                container.SetEmpty();
+                return true;
+            }
+            else if (span.Length < 100) // magic number; weighing up between skipping the skip and creating some garbage. What's good??
+            {
+                return false;
+            }
+            else
+            {
+                container.SetNode(new SpanNode<TObject, TElement>(obj, o => getSpan(o).Slice(count)));
+                return true;
+            }
         }
 
-        internal static object MaybeTake<TObject, TElement>(TObject obj, GetSpan<TObject, TElement> getSpan, int count)
+        internal static bool MaybeTake<TObject, TElement>(TObject obj, GetSpan<TObject, TElement> getSpan, int count, ref NodeContainer<TElement> container)
         {
             if (count <= 0)
-                return EmptyNode<TElement>.Empty;
-
-            var span = getSpan(obj);
-            if (count >= span.Length)
-                return new SpanNode<TObject, TElement>(obj, getSpan);
-
-            if (span.Length < 100) // magic number; weighing up between skipping the skip and creating some garbage. What's good??
-                return null;
-
-            return new SpanNode<TObject, TElement>(obj, o => getSpan(o).Slice(0, count));
+            {
+                container.SetEmpty();
+                return true;
+            }
+            else
+            {
+                var span = getSpan(obj);
+                if (count >= span.Length)
+                {
+                    container.SetNode(new SpanNode<TObject, TElement>(obj, getSpan));
+                    return true;
+                }
+                else if (span.Length < 100) // magic number; weighing up between skipping the skip and creating some garbage. What's good??
+                {
+                    return false;
+                }
+                else
+                {
+                    container.SetNode(new SpanNode<TObject, TElement>(obj, o => getSpan(o).Slice(0, count)));
+                    return true;
+                }
+            }
         }
     }
 }

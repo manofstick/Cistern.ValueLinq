@@ -47,11 +47,13 @@ namespace Cistern.ValueLinq.Nodes
 
             if (typeof(TRequest) == typeof(Optimizations.Reverse))
             {
-                result = (TResult)(object)(INode<T>)_nodeT;
+                NodeContainer<T> container = default;
+                container.SetNode(_nodeT);
+                result = (TResult)(object)container;
                 return true;
             }
 
-            if (_nodeT.CheckForOptimization<Optimizations.Reverse, INode<T>>(default, out var node))
+            if (_nodeT.CheckForOptimization<Optimizations.Reverse, NodeContainer<T>>(default, out var node))
                 return node.CheckForOptimization<TRequest, TResult>(in request, out result);
 
             result = default;
@@ -60,7 +62,7 @@ namespace Cistern.ValueLinq.Nodes
 
         TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
         {
-            if (_nodeT.CheckForOptimization<Optimizations.Reverse, INode<T>>(new Optimizations.Reverse(), out var node))
+            if (_nodeT.CheckForOptimization<Optimizations.Reverse, NodeContainer<T>>(new Optimizations.Reverse(), out var node))
             {
                 return node.CreateObjectViaFastEnumerator<TResult, FEnumerator>(fenum);
             }

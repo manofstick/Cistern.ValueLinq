@@ -113,7 +113,7 @@ namespace Cistern.ValueLinq.Containers
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
         #endregion
 
-        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+        public bool CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
             if (typeof(TRequest) == typeof(Optimizations.Skip))
             {
@@ -129,7 +129,7 @@ namespace Cistern.ValueLinq.Containers
             return false;
         }
 
-        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
+        public TResult CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<T>
             => ListByIndexNode.FastReverseEnumerate<T, TResult, FEnumerator>(_list, fenum);
     }
 
@@ -159,8 +159,9 @@ namespace Cistern.ValueLinq.Containers
 
             if (typeof(TRequest) == typeof(Optimizations.Reverse))
             {
-                INode<T> node = new ReversedListNode<T>(_list);
-                result = (TResult)(object)node;
+                NodeContainer<T> container = default;
+                container.SetNode(new ReversedListNode<T>(_list));
+                result = (TResult)(object)container;
                 return true;
             }
 

@@ -136,10 +136,10 @@ namespace Cistern.ValueLinq.Containers
 
             if (typeof(TRequest) == typeof(Optimizations.Reverse))
             {
-                var maybeReversalNode = EnumerableNode.TryReverse(_enumerable);
-                if (maybeReversalNode != null)
+                NodeContainer<T> container = default;
+                if (EnumerableNode.TryReverse(_enumerable, ref container))
                 {
-                    result = (TResult)(object)maybeReversalNode;
+                    result = (TResult)(object)container;
                     return true;
                 }
             }
@@ -147,10 +147,10 @@ namespace Cistern.ValueLinq.Containers
             if (typeof(TRequest) == typeof(Optimizations.Skip))
             {
                 var skip = (Optimizations.Skip)(object)request;
-                var maybeSkipNode = EnumerableNode.TrySkip(_enumerable, skip.Count);
-                if (maybeSkipNode != null)
+                NodeContainer<T> container = default;
+                if (EnumerableNode.TrySkip(_enumerable, skip.Count, ref container))
                 {
-                    result = (TResult)(object)maybeSkipNode;
+                    result = (TResult)(object)container;
                     return true;
                 }
             }
@@ -158,10 +158,10 @@ namespace Cistern.ValueLinq.Containers
             if (typeof(TRequest) == typeof(Optimizations.Take))
             {
                 var take = (Optimizations.Take)(object)request;
-                var maybeTakeNode = EnumerableNode.TryTake(_enumerable, take.Count);
-                if (maybeTakeNode != null)
+                NodeContainer<T> container = default;
+                if (EnumerableNode.TryTake(_enumerable, take.Count, ref container))
                 {
-                    result = (TResult)(object)maybeTakeNode;
+                    result = (TResult)(object)container;
                     return true;
                 }
             }
@@ -279,28 +279,55 @@ namespace Cistern.ValueLinq.Containers
                 _ => null
             };
 
-        internal static INode<T> TryReverse<T>(IEnumerable<T> enumerable) =>
-            enumerable switch
+        internal static bool TryReverse<T>(IEnumerable<T> enumerable, ref NodeContainer<T> container)
+        {
+            if (enumerable is T[] srcArray)
             {
-                T[] srcArray => new ReversedMemoryNode<T>(srcArray),
-                List<T> srcList => new ReversedListNode<T>(srcList),
-                _ => null,
-            };
+                container.SetNode(new ReversedMemoryNode<T>(srcArray));
+                return true;
+            }
+            if (enumerable is List<T> srcList)
+            {
+                container.SetNode(new ReversedListNode<T>(srcList));
+                return true;
+            }
+            return false;
+        }
 
-        internal static INode<T> TrySkip<T>(IEnumerable<T> enumerable, int count) =>
-            enumerable switch
+        internal static bool TrySkip<T>(IEnumerable<T> enumerable, int count, ref NodeContainer<T> container)
+        {
+            if (enumerable is T[] srcArray)
             {
-                T[] srcArray => MemoryNode.Skip(new ReadOnlyMemory<T>(srcArray), count),
-                List<T> list => ListByIndexNode.Skip(list, count),
-                _ => null,
-            };
-        internal static INode<T> TryTake<T>(IEnumerable<T> enumerable, int count) =>
-            enumerable switch
+                MemoryNode.Skip(new ReadOnlyMemory<T>(srcArray), count, ref container);
+                return true;
+            }
+            else if (enumerable is List<T> list)
             {
-                T[] srcArray when count > srcArray.Length => new ArrayNode<T>(srcArray),
-                T[] srcArray => MemoryNode.Take(new ReadOnlyMemory<T>(srcArray), count),
-                List<T> list => ListByIndexNode.Take(list, count),
-                _ => null,
+                return ListByIndexNode.Skip(list, count, ref container);
+            }
+            else
+            {
+                return false;
             };
+        }
+        internal static bool TryTake<T>(IEnumerable<T> enumerable, int count, ref NodeContainer<T> container)
+        {
+            if (enumerable is T[] srcArray)
+            {
+                if (count > srcArray.Length)
+                    container.SetNode(new ArrayNode<T>(srcArray));
+                else
+                    MemoryNode.Take(new ReadOnlyMemory<T>(srcArray), count, ref container);
+                return true;
+            }
+            else if (enumerable is List<T> list)
+            {
+                return ListByIndexNode.Take(list, count, ref container);
+            }
+            else
+            {
+                return false;
+            }
+        }
     }
 }

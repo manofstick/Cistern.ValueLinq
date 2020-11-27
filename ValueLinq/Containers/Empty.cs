@@ -43,19 +43,19 @@ namespace Cistern.ValueLinq.Containers
 
             if (typeof(TRequest) == typeof(Optimizations.Reverse))
             {
-                result = (TResult)(object)EmptyNode<T>.Empty;
+                result = (TResult)(object)default(NodeContainer<T>);
                 return true;
             }
 
             if (typeof(TRequest) == typeof(Optimizations.Skip))
             {
-                result = (TResult)(object)EmptyNode<T>.Empty;
+                result = (TResult)(object)default(NodeContainer<T>);
                 return true;
             }
 
             if (typeof(TRequest) == typeof(Optimizations.Take))
             {
-                result = (TResult)(object)EmptyNode<T>.Empty;
+                result = (TResult)(object)default(NodeContainer<T>);
                 return true;
             }
 
