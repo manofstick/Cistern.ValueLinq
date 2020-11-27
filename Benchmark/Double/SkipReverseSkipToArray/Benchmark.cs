@@ -1,0 +1,72 @@
+﻿using BenchmarkDotNet.Attributes;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace Cistern.Benchmarks.Double
+{
+    [MemoryDiagnoser]
+    public partial class SkipReverseSkipToArray
+    {
+        IEnumerable<double> _double;
+
+        [Params(2, 8, 32)]
+        public int Skip1 { get; set; } = 8;
+
+        [Params(2, 8, 32)]
+        public int Skip2 { get; set; } = 2;
+
+        [Params(0, 10, 100)]
+        public int Length { get; set; } = 10;
+
+#if truex
+        [Params(ContainerTypes.Array, ContainerTypes.Enumerable, ContainerTypes.List)]
+#else
+        [Params(ContainerTypes.Enumerable)]
+#endif
+        public ContainerTypes ContainerType { get; set; } = ContainerTypes.Enumerable;
+
+        [GlobalSetup]
+        public void SetupData()
+        {
+            var data = Create(Length);
+
+            _double = ContainerType switch
+            {
+                ContainerTypes.Enumerable => data,
+                ContainerTypes.Array => data.ToArray(),
+                ContainerTypes.List => data.ToList(),
+
+                _ => throw new Exception("Unknown ContainerType")
+            };
+        }
+
+        private static IEnumerable<double> Create(int size)
+        {
+            for (var i = 0; i < size; ++i)
+                yield return (double)i;
+        }
+
+        internal static void SanityCheck()
+        {
+            var check = new SkipReverseSkipToArray();
+
+            check.ContainerType = ContainerTypes.Array;
+            check.SetupData();
+
+            var baseline = check.Linq();
+#if LINQAFx
+            var linqaf = check.LinqAF();
+            if (!System.Linq.Enumerable.SequenceEqual(baseline, linqaf)) throw new Exception();
+#endif
+
+            var cisternvaluelinq = check.CisternValueLinq();
+            if (!System.Linq.Enumerable.SequenceEqual(baseline, cisternvaluelinq)) throw new Exception();
+
+#if CISTERNLINQx
+            var cisternlinq = check.CisternLinq();
+            if (!System.Linq.Enumerable.SequenceEqual(baseline, cisternlinq)) throw new Exception();
+#endif
+        }
+    }
+}
