@@ -63,7 +63,7 @@ namespace Cistern.ValueLinq.Nodes
             if (typeof(TRequest) == typeof(Optimizations.SourceArray<T>))
             {
                 var src = (Optimizations.SourceArray<T>)(object)request;
-                return WhereNode.CreateArray<T, CreationType, Tail>(src.Array, _filter, ref tail, out creation);
+                return WhereNode.CreateArray<T, CreationType, Tail>(in src, _filter, ref tail, out creation);
             }
 
             if (typeof(TRequest) == typeof(Optimizations.SourceList<T>))
@@ -108,12 +108,12 @@ namespace Cistern.ValueLinq.Nodes
             return true;
         }
 
-        internal static bool CreateArray<T, CreationType, Tail>(T[] a, Func<T, bool> _filter, ref Tail tail, out CreationType creation) where Tail : INodes
+        internal static bool CreateArray<T, CreationType, Tail>(in Optimizations.SourceArray<T> src, Func<T, bool> _filter, ref Tail tail, out CreationType creation) where Tail : INodes
         {
-            if (tail.TryObjectAscentOptimization<Optimizations.SourceArrayWhere<T>, CreationType>(0, new Optimizations.SourceArrayWhere<T> { Array = a, Predicate = _filter }, out creation))
+            if (tail.TryObjectAscentOptimization<Optimizations.SourceArrayWhere<T>, CreationType>(0, new Optimizations.SourceArrayWhere<T> { Array = src.Array, Start = src.Start, Count = src.Count, Predicate = _filter }, out creation))
                 return true;
 
-            var enumerator = new ArrayFastWhereEnumerator<T>(a, _filter);
+            var enumerator = new ArrayFastWhereEnumerator<T>(src.Array, src.Start, src.Count, _filter);
             creation = tail.CreateObject<CreationType, T, ArrayFastWhereEnumerator<T>>(0, ref enumerator);
             return true;
         }

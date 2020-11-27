@@ -8,15 +8,16 @@ namespace Cistern.ValueLinq.Containers
     {
         private readonly T[] _array;
         private int _idx;
+        private int _end;
 
-        public ArrayFastEnumerator(T[] array) => (_array, _idx) = (array, -1);
+        public ArrayFastEnumerator(T[] array, int start, int count) => (_array, _idx, _end) = (array, start-1, start+count);
 
         public void Dispose() { }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetNext(out T current)
         {
-            if (++_idx < _array.Length)
+            if (++_idx < _end)
             {
                 current = _array[_idx];
                 return true;
@@ -32,15 +33,16 @@ namespace Cistern.ValueLinq.Containers
         private readonly T[] _array;
         private readonly Func<T, bool> _predicate;
         private int _idx;
+        private int _end;
 
-        public ArrayFastWhereEnumerator(T[] array, Func<T, bool> predicate) => (_array, _predicate, _idx) = (array, predicate, -1);
+        public ArrayFastWhereEnumerator(T[] array, int start, int count, Func<T, bool> predicate) => (_array, _predicate, _idx, _end) = (array, predicate, start-1, Math.Min(array.Length, start+count));
 
         public void Dispose() { }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetNext(out T current)
         {
-            while (++_idx < _array.Length)
+            while (++_idx < _end)
             {
                 current = _array[_idx];
                 if (_predicate(current))
@@ -57,15 +59,16 @@ namespace Cistern.ValueLinq.Containers
         private readonly T[] _array;
         private readonly Func<T, U> _map;
         private int _idx;
+        private int _end;
 
-        public ArrayFastSelectEnumerator(T[] array, Func<T, U> map) => (_array, _map, _idx) = (array, map, -1);
+        public ArrayFastSelectEnumerator(T[] array, int start, int count, Func<T, U> map) => (_array, _map, _idx, _end) = (array, map, start - 1, Math.Min(array.Length, start + count));
 
         public void Dispose() { }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetNext(out U current)
         {
-            if (++_idx < _array.Length)
+            if (++_idx < _end)
             {
                 current = _map(_array[_idx]);
                 return true;
@@ -82,15 +85,16 @@ namespace Cistern.ValueLinq.Containers
         private readonly Func<T, bool> _predicate;
         private readonly Func<T, U> _map;
         private int _idx;
+        private int _end;
 
-        public ArrayFastWhereSelectEnumerator(T[] array, Func<T, bool> predicate, Func<T, U> map) => (_array, _predicate, _map, _idx) = (array, predicate, map, -1);
+        public ArrayFastWhereSelectEnumerator(T[] array, int start, int count, Func<T, bool> predicate, Func<T, U> map) => (_array, _predicate, _map, _idx, _end) = (array, predicate, map, start - 1, Math.Min(array.Length, start + count));
 
         public void Dispose() { }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetNext(out U current)
         {
-            while (++_idx < _array.Length)
+            while (++_idx < _end)
             {
                 if (_predicate(_array[_idx]))
                 {
@@ -205,10 +209,10 @@ namespace Cistern.ValueLinq.Containers
         internal static CreationType Create<T, Nodes, CreationType>(T[] array, ref Nodes nodes)
             where Nodes : INodes
         {
-            if (nodes.TryObjectAscentOptimization<Optimizations.SourceArray<T>, CreationType>(0, new Optimizations.SourceArray<T> { Array = array }, out var creation))
+            if (nodes.TryObjectAscentOptimization<Optimizations.SourceArray<T>, CreationType>(0, new Optimizations.SourceArray<T> { Array = array, Start = 0, Count = array.Length }, out var creation))
                 return creation;
 
-            var enumerator = new ArrayFastEnumerator<T>(array);
+            var enumerator = new ArrayFastEnumerator<T>(array, 0, array.Length);
             return nodes.CreateObject<CreationType, T, ArrayFastEnumerator<T>>(0, ref enumerator);
         }
 

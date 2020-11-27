@@ -6,10 +6,15 @@ namespace Cistern.ValueLinq.Optimizations
     struct SourceArray<T>
     {
         public T[] Array;
+        public int Start;
+        public int Count;
     }
+
     struct SourceArrayWhere<T>
     {
         public T[] Array;
+        public int Start;
+        public int Count;
         public Func<T, bool> Predicate;
     }
 

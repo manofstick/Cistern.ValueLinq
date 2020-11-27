@@ -56,13 +56,13 @@ namespace Cistern.ValueLinq.Nodes
             if (typeof(TRequest) == typeof(Optimizations.SourceArray<T>))
             {
                 var src = (Optimizations.SourceArray<T>)(object)request;
-                return SelectNode.CreateArray<T, U, CreationType, Tail>(src.Array, _map, ref tail, out creation);
+                return SelectNode.CreateArray<T, U, CreationType, Tail>(in src, _map, ref tail, out creation);
             }
 
             if (typeof(TRequest) == typeof(Optimizations.SourceArrayWhere<T>))
             {
                 var src = (Optimizations.SourceArrayWhere<T>)(object)request;
-                return SelectNode.CreateArray<T, U, CreationType, Tail>(src.Array, src.Predicate, _map, ref tail, out creation);
+                return SelectNode.CreateArray<T, U, CreationType, Tail>(in src, _map, ref tail, out creation);
             }
 
             if (typeof(TRequest) == typeof(Optimizations.SourceList<T>))
@@ -131,18 +131,18 @@ namespace Cistern.ValueLinq.Nodes
             return true;
         }
 
-        internal static bool CreateArray<T, U, CreationType, Nodes>(T[] a, Func<T, U> _map, ref Nodes tail, out CreationType creation)
+        internal static bool CreateArray<T, U, CreationType, Nodes>(in Optimizations.SourceArray<T> src, Func<T, U> _map, ref Nodes tail, out CreationType creation)
             where Nodes : INodes
         {
-            var enumerator = new ArrayFastSelectEnumerator<T, U>(a, _map);
+            var enumerator = new ArrayFastSelectEnumerator<T, U>(src.Array, src.Start, src.Count, _map);
             creation = tail.CreateObject<CreationType, U, ArrayFastSelectEnumerator<T, U>>(0, ref enumerator);
             return true;
         }
 
-        internal static bool CreateArray<T, U, CreationType, Nodes>(T[] a, Func<T, bool> predicate, Func<T, U> _map, ref Nodes tail, out CreationType creation)
+        internal static bool CreateArray<T, U, CreationType, Nodes>(in Optimizations.SourceArrayWhere<T> src, Func<T, U> _map, ref Nodes tail, out CreationType creation)
             where Nodes : INodes
         {
-            var enumerator = new ArrayFastWhereSelectEnumerator<T, U>(a, predicate, _map);
+            var enumerator = new ArrayFastWhereSelectEnumerator<T, U>(src.Array, src.Start, src.Count, src.Predicate, _map);
             creation = tail.CreateObject<CreationType, U, ArrayFastWhereSelectEnumerator<T, U>>(0, ref enumerator);
             return true;
         }

@@ -70,6 +70,19 @@ namespace Cistern.ValueLinq.Nodes
             return tail.CreateObject<CreationType, EnumeratorElement, TakeNodeEnumerator<EnumeratorElement, Enumerator>>(0, ref nextEnumerator);
         }
 
+        bool INode.TryObjectAscentOptimization<TRequest, CreationType, Tail>(in TRequest request, ref Tail nodes, out CreationType creation)
+        {
+            if (typeof(TRequest) == typeof(Optimizations.SourceArray<T>))
+            {
+                var src = (Optimizations.SourceArray<T>)(object)request;
+                return TakeNode.CreateArray(in src, _count, ref nodes, out creation);
+            }
+
+            creation = default;
+            return false;
+        }
+
+
         bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
             if (typeof(TRequest) == typeof(Optimizations.Take))
@@ -112,6 +125,17 @@ namespace Cistern.ValueLinq.Nodes
                 return node.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum);
 
             return _nodeT.CreateObjectViaFastEnumerator<TResult, TakeFoward<T, FEnumerator>>(new TakeFoward<T, FEnumerator>(fenum, _count));
+        }
+    }
+
+    static class TakeNode
+    {
+        public static bool CreateArray<T, CreationType, Tail>(in Optimizations.SourceArray<T> src, int _count, ref Tail nodes, out CreationType creation)
+            where Tail : INodes
+        {
+            var start = src.Start;
+            var count = Math.Min(src.Count, _count);
+            return SkipTake.CreateArray<T, CreationType, Tail>(src, ref nodes, out creation, start, count);
         }
     }
 

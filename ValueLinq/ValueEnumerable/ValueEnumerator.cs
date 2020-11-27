@@ -29,7 +29,10 @@ namespace Cistern.ValueLinq.ValueEnumerable
             => Impl.CreateObjectDescent<CreationType>();
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
-                => (CreationType)(object)(new ValueEnumerator<EnumeratorElement>(new FastEnumerator<Enumerator, EnumeratorElement>(enumerator)));
+        {
+            var valueEnumerator = new ValueEnumerator<EnumeratorElement>(new FastEnumerator<Enumerator, EnumeratorElement>(enumerator));
+            return (CreationType)(object)valueEnumerator;
+        }
 
         bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
     }
