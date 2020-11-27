@@ -38,10 +38,12 @@ namespace Cistern.ValueLinq.Containers
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
         {
             var enumerator = new ReturnFastEnumerator<T>(_element);
-            return nodes.CreateObject<CreationType, T, ReturnFastEnumerator<T>>(0, ref enumerator);
+            return nodes.CreateObject<CreationType, T, ReturnFastEnumerator<T>>(ref enumerator);
         }
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
+
+        bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
 
         bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
 

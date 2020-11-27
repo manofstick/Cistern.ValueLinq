@@ -45,6 +45,8 @@ namespace Cistern.ValueLinq.Containers
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
         #endregion
 
+        bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
+
         bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
             result = default;
@@ -70,6 +72,8 @@ namespace Cistern.ValueLinq.Containers
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => SpanNode.Create<TElement, Head, Tail, CreationType, TObject>(_obj, _getSpan, ref nodes);
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
+
+        bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
 
         bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
@@ -138,7 +142,7 @@ namespace Cistern.ValueLinq.Containers
             where Tail : INodes
         {
             var enumerator = new SpanFastEnumerator<TObject, T>(obj, getSpan);
-            return nodes.CreateObject<CreationType, T, SpanFastEnumerator<TObject, T>>(0, ref enumerator);
+            return nodes.CreateObject<CreationType, T, SpanFastEnumerator<TObject, T>>(ref enumerator);
         }
 
         internal static TResult FastEnumerate<TIn, TResult, FEnumerator, TObject>(TObject obj, GetSpan<TObject, TIn> getSpan, FEnumerator fenum)

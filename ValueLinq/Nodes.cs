@@ -2,7 +2,6 @@
 using Cistern.ValueLinq.ValueEnumerable;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 
 namespace Cistern.ValueLinq
 {
@@ -124,11 +123,9 @@ namespace Cistern.ValueLinq
             where Nodes : INodes;
 
         bool TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation)
-            where Nodes : INodes
-        { creation = default; return false; }
+            where Nodes : INodes;
 
-        bool CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
-        { result = default; return false; }
+        bool CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result);
     }
 
     public interface INode<T> : INode
@@ -138,16 +135,16 @@ namespace Cistern.ValueLinq
 
     public interface INodes
     {
-        CreationType CreateObject<CreationType, EnumeratorElement, Enumerator>(int depth, ref Enumerator enumerator)
+        CreationType CreateObject<CreationType, EnumeratorElement, Enumerator>(ref Enumerator enumerator)
             where Enumerator : IFastEnumerator<EnumeratorElement>;
 
-        bool TryObjectAscentOptimization<TRequest, CreationType>(int depth, in TRequest request, out CreationType creation) { creation = default; return false; }
+        bool TryObjectAscentOptimization<TRequest, CreationType>(in TRequest request, out CreationType creation) { creation = default; return false; }
     }
 
     struct NodesEnd
         : INodes
     {
-        CreationType INodes.CreateObject<CreationType, EnumeratorElement, Enumerator>(int depth, ref Enumerator _) => throw new InvalidOperationException();
+        CreationType INodes.CreateObject<CreationType, EnumeratorElement, Enumerator>(ref Enumerator _) => throw new InvalidOperationException();
     }
 
     public struct Nodes<Head, Tail>
@@ -160,22 +157,12 @@ namespace Cistern.ValueLinq
 
         public Nodes(in Head head, in Tail tail) => (_head, _tail) = (head, tail);
 
-        public CreationType CreateObject<CreationType, EnumeratorElement, Enumerator>(int depth, ref Enumerator enumerator)
-            where Enumerator : IFastEnumerator<EnumeratorElement>
-        {
-            if (depth == 0)
-                return _head.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref _tail, ref enumerator);
+        public CreationType CreateObject<CreationType, EnumeratorElement, Enumerator>(ref Enumerator enumerator)
+            where Enumerator : IFastEnumerator<EnumeratorElement> =>
+            _head.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref _tail, ref enumerator);
 
-            return _tail.CreateObject<CreationType, EnumeratorElement, Enumerator>(depth - 1, ref enumerator);
-        }
-
-        public bool TryObjectAscentOptimization<TRequest, CreationType>(int depth, in TRequest request, out CreationType creation)
-        {
-            if (depth == 0)
-                return _head.TryObjectAscentOptimization<TRequest, CreationType, Tail>(in request, ref _tail, out creation);
-
-            return _tail.TryObjectAscentOptimization<TRequest, CreationType>(depth - 1, in request, out creation);
-        }
+        public bool TryObjectAscentOptimization<TRequest, CreationType>(in TRequest request, out CreationType creation) =>
+            _head.TryObjectAscentOptimization<TRequest, CreationType, Tail>(in request, ref _tail, out creation);
     }
 
     internal static class Helper
@@ -286,8 +273,5 @@ namespace Cistern.ValueLinq
             var nodes = new Nodes<Aggregator, NodesEnd>(aggregator, new NodesEnd());
             return inner.CreateObjectDescent<T, Aggregator, NodesEnd>(ref nodes);
         }
-
-
-
     }
 }

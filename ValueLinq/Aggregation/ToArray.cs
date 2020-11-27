@@ -77,6 +77,8 @@ namespace Cistern.ValueLinq.Aggregation
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator enumerator)
             => (CreationType)(object)Impl.ToArrayViaStack<EnumeratorElement, Enumerator, ArrayPoolAllocator<EnumeratorElement>>(_maxStackItemCount, new ArrayPoolAllocator<EnumeratorElement>((ArrayPool<EnumeratorElement>)(object)_arrayPool, _cleanBuffers), ref enumerator);
 
+        bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
+
         bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
             => Impl.CheckForOptimization(out result);
     }
@@ -95,6 +97,8 @@ namespace Cistern.ValueLinq.Aggregation
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator enumerator)
             => (CreationType)(object)Impl.ToArrayViaStack<EnumeratorElement, Enumerator, GarbageCollectedAllocator<EnumeratorElement>>(_maxStackItemCount, default, ref enumerator);
+
+        bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
 
         bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
             => Impl.CheckForOptimization(out result);
@@ -210,6 +214,8 @@ namespace Cistern.ValueLinq.Aggregation
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator enumerator)
             => (CreationType)(object)Impl.ToArrayViaArrayPool<EnumeratorElement, Enumerator>((ArrayPool<EnumeratorElement>)(object)_arrayPool, _cleanBuffers, _size, ref enumerator);
+
+        bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
 
         bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
             => Impl.CheckForOptimization(out result);

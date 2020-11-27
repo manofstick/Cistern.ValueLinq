@@ -37,7 +37,9 @@ namespace Cistern.ValueLinq.Containers
         public void GetCountInformation(out CountInformation info) => throw new NotSupportedException();
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => throw new NotSupportedException();
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
-#endregion
+        #endregion
+
+        bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
 
         public bool CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
@@ -80,6 +82,8 @@ namespace Cistern.ValueLinq.Containers
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => MemoryNode.Create<T, Head, Tail, CreationType>(_memory, ref nodes);
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
+
+        bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
 
         public bool CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
@@ -196,7 +200,7 @@ namespace Cistern.ValueLinq.Containers
             where Tail : INodes
         {
             var enumerator = new MemoryFastEnumerator<T>(memory);
-            return nodes.CreateObject<CreationType, T, MemoryFastEnumerator<T>>(0, ref enumerator);
+            return nodes.CreateObject<CreationType, T, MemoryFastEnumerator<T>>(ref enumerator);
         }
 
         internal static void ProcessMemory<TIn, FEnumerator>(ReadOnlyMemory<TIn> memory, ref FEnumerator fenum)

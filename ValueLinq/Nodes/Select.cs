@@ -49,7 +49,7 @@ namespace Cistern.ValueLinq.Nodes
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
         {
             var nextEnumerator = new SelectNodeEnumerator<EnumeratorElement, U, Enumerator>(in enumerator, (Func<EnumeratorElement, U>)(object)_map);
-            return tail.CreateObject<CreationType, U, SelectNodeEnumerator<EnumeratorElement, U, Enumerator>>(0, ref nextEnumerator);
+            return tail.CreateObject<CreationType, U, SelectNodeEnumerator<EnumeratorElement, U, Enumerator>>(ref nextEnumerator);
         }
         bool INode.TryObjectAscentOptimization<TRequest, CreationType, Tail>(in TRequest request, ref Tail tail, out CreationType creation)
         {
@@ -93,6 +93,8 @@ namespace Cistern.ValueLinq.Nodes
             return false;
         }
 
+        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
+
         TResult INode<U>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) =>
             _nodeT.CreateObjectViaFastEnumerator<TResult, SelectFoward<T, U, FEnumerator>>(new SelectFoward<T, U, FEnumerator>(fenum, _map));
     }
@@ -103,7 +105,7 @@ namespace Cistern.ValueLinq.Nodes
             where Nodes : INodes
         {
             var enumerator = new EnumerableFastSelectEnumerator<T, U>(e, _map);
-            creation = tail.CreateObject<CreationType, U, EnumerableFastSelectEnumerator<T, U>>(0, ref enumerator);
+            creation = tail.CreateObject<CreationType, U, EnumerableFastSelectEnumerator<T, U>>(ref enumerator);
             return true;
         }
 
@@ -111,7 +113,7 @@ namespace Cistern.ValueLinq.Nodes
             where Nodes : INodes
         {
             var enumerator = new EnumerableFastWhereSelectEnumerator<T, U>(e, predicate, _map);
-            creation = tail.CreateObject<CreationType, U, EnumerableFastWhereSelectEnumerator<T, U>>(0, ref enumerator);
+            creation = tail.CreateObject<CreationType, U, EnumerableFastWhereSelectEnumerator<T, U>>(ref enumerator);
             return true;
         }
 
@@ -119,7 +121,7 @@ namespace Cistern.ValueLinq.Nodes
             where Nodes : INodes
         {
             var enumerator = new ListFastSelectEnumerator<T, U>(l.GetEnumerator(), _map); ;
-            creation = tail.CreateObject<CreationType, U, ListFastSelectEnumerator<T, U>>(0, ref enumerator);
+            creation = tail.CreateObject<CreationType, U, ListFastSelectEnumerator<T, U>>(ref enumerator);
             return true;
         }
 
@@ -127,7 +129,7 @@ namespace Cistern.ValueLinq.Nodes
             where Nodes : INodes
         {
             var enumerator = new ListFastWhereSelectEnumerator<T, U>(l.GetEnumerator(), predicate, _map); ;
-            creation = tail.CreateObject<CreationType, U, ListFastWhereSelectEnumerator<T, U>>(0, ref enumerator);
+            creation = tail.CreateObject<CreationType, U, ListFastWhereSelectEnumerator<T, U>>(ref enumerator);
             return true;
         }
 
@@ -135,7 +137,7 @@ namespace Cistern.ValueLinq.Nodes
             where Nodes : INodes
         {
             var enumerator = new ArrayFastSelectEnumerator<T, U>(src.Array, src.Start, src.Count, _map);
-            creation = tail.CreateObject<CreationType, U, ArrayFastSelectEnumerator<T, U>>(0, ref enumerator);
+            creation = tail.CreateObject<CreationType, U, ArrayFastSelectEnumerator<T, U>>(ref enumerator);
             return true;
         }
 
@@ -143,7 +145,7 @@ namespace Cistern.ValueLinq.Nodes
             where Nodes : INodes
         {
             var enumerator = new ArrayFastWhereSelectEnumerator<T, U>(src.Array, src.Start, src.Count, src.Predicate, _map);
-            creation = tail.CreateObject<CreationType, U, ArrayFastWhereSelectEnumerator<T, U>>(0, ref enumerator);
+            creation = tail.CreateObject<CreationType, U, ArrayFastWhereSelectEnumerator<T, U>>(ref enumerator);
             return true;
         }
     }

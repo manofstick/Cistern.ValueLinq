@@ -125,6 +125,8 @@ namespace Cistern.ValueLinq.Containers
             return ArrayNode.Create<T, Nodes<Head, Tail>, CreationType>(_array, ref nodes);
         }
 
+        bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
+
         public bool CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
             if (typeof(TRequest) == typeof(Optimizations.ToArray))
@@ -209,11 +211,12 @@ namespace Cistern.ValueLinq.Containers
         internal static CreationType Create<T, Nodes, CreationType>(T[] array, ref Nodes nodes)
             where Nodes : INodes
         {
-            if (nodes.TryObjectAscentOptimization<Optimizations.SourceArray<T>, CreationType>(0, new Optimizations.SourceArray<T> { Array = array, Start = 0, Count = array.Length }, out var creation))
+            var sa = new Optimizations.SourceArray<T> { Array = array, Start = 0, Count = array.Length };
+            if (nodes.TryObjectAscentOptimization<Optimizations.SourceArray<T>, CreationType>(in sa, out var creation))
                 return creation;
 
             var enumerator = new ArrayFastEnumerator<T>(array, 0, array.Length);
-            return nodes.CreateObject<CreationType, T, ArrayFastEnumerator<T>>(0, ref enumerator);
+            return nodes.CreateObject<CreationType, T, ArrayFastEnumerator<T>>(ref enumerator);
         }
 
         internal static TResult FastEnumerate<TIn, TResult, FEnumerator>(TIn[] array, FEnumerator fenum)

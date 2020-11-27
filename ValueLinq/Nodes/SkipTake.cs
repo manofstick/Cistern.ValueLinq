@@ -9,15 +9,15 @@ namespace Cistern.ValueLinq.Nodes
             if (count <= 0)
             {
                 var empty = new EmptyFastEnumerator<T>();
-                creation = nodes.CreateObject<CreationType, T, EmptyFastEnumerator<T>>(0, ref empty);
+                creation = nodes.CreateObject<CreationType, T, EmptyFastEnumerator<T>>(ref empty);
                 return true;
             }
 
-            if (nodes.TryObjectAscentOptimization<Optimizations.SourceArray<T>, CreationType>(0, new Optimizations.SourceArray<T> { Array = src.Array, Start = start, Count = count }, out creation))
+            if (nodes.TryObjectAscentOptimization<Optimizations.SourceArray<T>, CreationType>(new Optimizations.SourceArray<T> { Array = src.Array, Start = start, Count = count }, out creation))
                 return true;
 
             var enumerator = new ArrayFastEnumerator<T>(src.Array, start, count);
-            creation = nodes.CreateObject<CreationType, T, ArrayFastEnumerator<T>>(0, ref enumerator);
+            creation = nodes.CreateObject<CreationType, T, ArrayFastEnumerator<T>>(ref enumerator);
             return true;
         }
 

@@ -33,7 +33,7 @@ namespace Cistern.ValueLinq.ValueEnumerable
             var valueEnumerator = new ValueEnumerator<EnumeratorElement>(new FastEnumerator<Enumerator, EnumeratorElement>(enumerator));
             return (CreationType)(object)valueEnumerator;
         }
-
+        bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
         bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
     }
 }

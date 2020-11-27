@@ -27,6 +27,8 @@ namespace Cistern.ValueLinq.Containers
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
 
+        bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
+
         bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
             if (typeof(TRequest) == typeof(Optimizations.ToArray))
@@ -73,7 +75,7 @@ namespace Cistern.ValueLinq.Containers
             where Nodes : INodes
         {
             var enumerator = new EmptyFastEnumerator<T>();
-            return nodes.CreateObject<CreationType, T, EmptyFastEnumerator<T>>(0, ref enumerator);
+            return nodes.CreateObject<CreationType, T, EmptyFastEnumerator<T>>(ref enumerator);
         }
 
         internal static TResult FastEnumerate<TIn, TResult, FEnumerator>(FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>

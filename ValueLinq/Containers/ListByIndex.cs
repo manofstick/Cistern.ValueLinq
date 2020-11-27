@@ -43,6 +43,8 @@ namespace Cistern.ValueLinq.Containers
 
         public List<T>.Enumerator GetEnumerator() => _list.GetEnumerator();
 
+        bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
+
         bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
             if (typeof(TRequest) == typeof(Optimizations.ToArray))
@@ -122,7 +124,7 @@ namespace Cistern.ValueLinq.Containers
             where Tail : INodes
         {
             var enumerator = new ListByIndexFastEnumerator<T>(list);
-            return nodes.CreateObject<CreationType, T, ListByIndexFastEnumerator<T>>(0, ref enumerator);
+            return nodes.CreateObject<CreationType, T, ListByIndexFastEnumerator<T>>(ref enumerator);
         }
 
         internal static TResult FastEnumerate<TIn, TResult, FEnumerator>(List<TIn> list, FEnumerator fenum)

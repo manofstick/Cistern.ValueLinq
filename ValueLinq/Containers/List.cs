@@ -113,6 +113,8 @@ namespace Cistern.ValueLinq.Containers
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
         #endregion
 
+        bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
+
         public bool CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
             if (typeof(TRequest) == typeof(Optimizations.Skip))
@@ -148,6 +150,8 @@ namespace Cistern.ValueLinq.Containers
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator_, Tail>(ref Tail _, ref Enumerator_ __)
             => throw new InvalidOperationException();
+
+        bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
 
         bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
@@ -202,11 +206,11 @@ namespace Cistern.ValueLinq.Containers
             where Head : INode
             where Tail : INodes
         {
-            if (nodes.TryObjectAscentOptimization<Optimizations.SourceList<T>, CreationType>(0, new Optimizations.SourceList<T> { List = list }, out var creation))
+            if (nodes.TryObjectAscentOptimization<Optimizations.SourceList<T>, CreationType>(new Optimizations.SourceList<T> { List = list }, out var creation))
                 return creation;
 
             var enumerator = new ListFastEnumerator<T>(list.GetEnumerator());
-            return nodes.CreateObject<CreationType, T, ListFastEnumerator<T>>(0, ref enumerator);
+            return nodes.CreateObject<CreationType, T, ListFastEnumerator<T>>(ref enumerator);
         }
     }
 }

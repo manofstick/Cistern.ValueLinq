@@ -199,6 +199,8 @@ namespace Cistern.ValueLinq.Containers
             return ConcatNode.Create<T, Start, Finish, Head, Tail, CreationType>(in _start, in _finish, ref nodes);
         }
 
+        bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
+
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __)
             => throw new InvalidOperationException();
 
@@ -270,7 +272,7 @@ namespace Cistern.ValueLinq.Containers
             var startEnumerator = Nodes<T>.CreateValueEnumerator(start);
 
             var e = new ConcatFastEnumerator<T, Finish>(startEnumerator.FastEnumerator, finish);
-            return nodes.CreateObject<CreationType, T, ConcatFastEnumerator<T, Finish>>(0, ref e);
+            return nodes.CreateObject<CreationType, T, ConcatFastEnumerator<T, Finish>>(ref e);
         }
 
         internal static CreationType Create<T, Head, Tail, CreationType>(List<EnumerableNode<T>> components, ref Nodes<Head, Tail> nodes)
@@ -278,7 +280,7 @@ namespace Cistern.ValueLinq.Containers
             where Tail : INodes
         {
             var e = new ConcatFastListEnumerator<T>(components);
-            return nodes.CreateObject<CreationType, T, ConcatFastListEnumerator<T>>(0, ref e);
+            return nodes.CreateObject<CreationType, T, ConcatFastListEnumerator<T>>(ref e);
         }
     }
 

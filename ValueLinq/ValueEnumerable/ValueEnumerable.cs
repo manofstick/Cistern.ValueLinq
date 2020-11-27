@@ -23,6 +23,8 @@ namespace Cistern.ValueLinq.ValueEnumerable
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => ((IEnumerable<T>)this).GetEnumerator();
 
         void INode.GetCountInformation(out CountInformation info) => Node.GetCountInformation(out info);
+        bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
+
         bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result) => Node.CheckForOptimization<TRequest, TResult>(in request, out result);
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator) => Node.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref tail, ref enumerator);
         CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => Node.CreateObjectDescent<CreationType, Head, Tail>(ref nodes);

@@ -49,7 +49,7 @@ namespace Cistern.ValueLinq.Nodes
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
         {
             var nextEnumerator = new WhereNodeEnumerator<EnumeratorElement, Enumerator>(in enumerator, (Func<EnumeratorElement, bool>)(object)_filter);
-            return tail.CreateObject<CreationType, EnumeratorElement, WhereNodeEnumerator<EnumeratorElement, Enumerator>>(0, ref nextEnumerator);
+            return tail.CreateObject<CreationType, EnumeratorElement, WhereNodeEnumerator<EnumeratorElement, Enumerator>>(ref nextEnumerator);
         }
 
         bool INode.TryObjectAscentOptimization<TRequest, CreationType, Tail>(in TRequest request, ref Tail tail, out CreationType creation)
@@ -82,6 +82,7 @@ namespace Cistern.ValueLinq.Nodes
             return false;
         }
 
+        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
         TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) =>
             _nodeT.CreateObjectViaFastEnumerator<TResult, WhereFoward<T, FEnumerator>>(new WhereFoward<T, FEnumerator>(fenum, _filter));
     }
@@ -90,31 +91,31 @@ namespace Cistern.ValueLinq.Nodes
     {
         internal static bool CreateEnumerable<T, CreationType, Tail>(IEnumerable<T> e, Func<T, bool> _filter, ref Tail tail, out CreationType creation) where Tail : INodes
         {
-            if (tail.TryObjectAscentOptimization<Optimizations.SourceEnumerableWhere<T>, CreationType>(0, new Optimizations.SourceEnumerableWhere<T> { Enumerable = e, Predicate = _filter }, out creation))
+            if (tail.TryObjectAscentOptimization<Optimizations.SourceEnumerableWhere<T>, CreationType>(new Optimizations.SourceEnumerableWhere<T> { Enumerable = e, Predicate = _filter }, out creation))
                 return true;
 
             var enumerator = new EnumerableFastWhereEnumerator<T>(e, _filter);
-            creation = tail.CreateObject<CreationType, T, EnumerableFastWhereEnumerator<T>>(0, ref enumerator);
+            creation = tail.CreateObject<CreationType, T, EnumerableFastWhereEnumerator<T>>(ref enumerator);
             return true;
         }
 
         internal static bool CreateList<T, CreationType, Tail>(List<T> l, Func<T, bool> _filter, ref Tail tail, out CreationType creation) where Tail : INodes
         {
-            if (tail.TryObjectAscentOptimization<Optimizations.SourceListWhere<T>, CreationType>(0, new Optimizations.SourceListWhere<T> { List = l, Predicate = _filter }, out creation))
+            if (tail.TryObjectAscentOptimization<Optimizations.SourceListWhere<T>, CreationType>(new Optimizations.SourceListWhere<T> { List = l, Predicate = _filter }, out creation))
                 return true;
 
             var enumerator = new ListFastWhereEnumerator<T>(l.GetEnumerator(), _filter); ;
-            creation = tail.CreateObject<CreationType, T, ListFastWhereEnumerator<T>>(0, ref enumerator);
+            creation = tail.CreateObject<CreationType, T, ListFastWhereEnumerator<T>>(ref enumerator);
             return true;
         }
 
         internal static bool CreateArray<T, CreationType, Tail>(in Optimizations.SourceArray<T> src, Func<T, bool> _filter, ref Tail tail, out CreationType creation) where Tail : INodes
         {
-            if (tail.TryObjectAscentOptimization<Optimizations.SourceArrayWhere<T>, CreationType>(0, new Optimizations.SourceArrayWhere<T> { Array = src.Array, Start = src.Start, Count = src.Count, Predicate = _filter }, out creation))
+            if (tail.TryObjectAscentOptimization<Optimizations.SourceArrayWhere<T>, CreationType>(new Optimizations.SourceArrayWhere<T> { Array = src.Array, Start = src.Start, Count = src.Count, Predicate = _filter }, out creation))
                 return true;
 
             var enumerator = new ArrayFastWhereEnumerator<T>(src.Array, src.Start, src.Count, _filter);
-            creation = tail.CreateObject<CreationType, T, ArrayFastWhereEnumerator<T>>(0, ref enumerator);
+            creation = tail.CreateObject<CreationType, T, ArrayFastWhereEnumerator<T>>(ref enumerator);
             return true;
         }
     }

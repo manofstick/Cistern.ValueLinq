@@ -58,7 +58,7 @@ namespace Cistern.ValueLinq.Nodes
             if (_count <= 0)
             {
                 var empty = new Containers.EmptyFastEnumerator<T>();
-                return nodes.CreateObject<CreationType, T, Containers.EmptyFastEnumerator<T>>(0, ref empty);
+                return nodes.CreateObject<CreationType, T, Containers.EmptyFastEnumerator<T>>(ref empty);
             }
 
             return Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
@@ -67,7 +67,7 @@ namespace Cistern.ValueLinq.Nodes
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
         {
             var nextEnumerator = new TakeNodeEnumerator<EnumeratorElement, Enumerator>(in enumerator, _count);
-            return tail.CreateObject<CreationType, EnumeratorElement, TakeNodeEnumerator<EnumeratorElement, Enumerator>>(0, ref nextEnumerator);
+            return tail.CreateObject<CreationType, EnumeratorElement, TakeNodeEnumerator<EnumeratorElement, Enumerator>>(ref nextEnumerator);
         }
 
         bool INode.TryObjectAscentOptimization<TRequest, CreationType, Tail>(in TRequest request, ref Tail nodes, out CreationType creation)
