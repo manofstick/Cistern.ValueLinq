@@ -98,12 +98,26 @@ namespace Linqs.Tests
         [Fact]
         public void FastArrayReverse()
         {
-            var abc = new[] { 'a', 'b', 'c' };
+            var abc = new[] { 'a', 'b', 'c', 'd' };
             var cba = abc.Reverse().ToArray();
-            Assert.Equal(3, cba.Length);
-            Assert.Equal('c', cba[0]);
-            Assert.Equal('b', cba[1]);
-            Assert.Equal('a', cba[2]);
+            Assert.Equal(4, cba.Length);
+            Assert.Equal('d', cba[0]);
+            Assert.Equal('c', cba[1]);
+            Assert.Equal('b', cba[2]);
+            Assert.Equal('a', cba[3]);
+
+            var current = abc.Skip(1).Reverse().Skip(2).ToArray();
+            var baseline = 
+                System.Linq.Enumerable.ToArray(
+                    System.Linq.Enumerable.Skip(
+                        System.Linq.Enumerable.Reverse(
+                            System.Linq.Enumerable.Skip(
+                                abc, 1
+                            )
+                        ), 2
+                    )
+                );
+            Assert.Equal(baseline, current);
         }
 
     }
