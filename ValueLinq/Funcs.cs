@@ -16,6 +16,12 @@ namespace Cistern.ValueLinq
         U Invoke(in T t);
     }
 
+    public interface IRefAction<T, U> : IFuncBase<T, U>
+    {
+        void Invoke(ref T t, U u);
+    }
+
+
     public struct FuncToIFunc<T, U>
         : IFunc<T, U>
     {
