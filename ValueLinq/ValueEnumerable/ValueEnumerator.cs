@@ -20,7 +20,7 @@ namespace Cistern.ValueLinq.ValueEnumerable
         internal FastEnumerator<T> FastEnumerator { get => _enumerator; } 
     }
 
-    struct FastEnumeratorToValueEnumeratorNode
+    struct CreateFastEnumeratorNode
         : INode
     {
         public void GetCountInformation(out CountInformation info) => Impl.CountInfo(out info);
@@ -30,7 +30,7 @@ namespace Cistern.ValueLinq.ValueEnumerable
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
         {
-            var valueEnumerator = new ValueEnumerator<EnumeratorElement>(new FastEnumerator<Enumerator, EnumeratorElement>(enumerator));
+            var valueEnumerator = new FastEnumerator<Enumerator, EnumeratorElement>(enumerator);
             return (CreationType)(object)valueEnumerator;
         }
         bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }

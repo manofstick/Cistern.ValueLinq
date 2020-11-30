@@ -39,7 +39,7 @@ namespace Cistern.ValueLinq.Containers
             {
                 case 0:
                     _current.Dispose();
-                    _current = Nodes<T>.CreateValueEnumerator(_finish).FastEnumerator;
+                    _current = Nodes<T>.CreateFastEnumerator(_finish);
                     _state = 1;
                     return true;
 
@@ -92,7 +92,7 @@ namespace Cistern.ValueLinq.Containers
             }
             else
             {
-                _current = Nodes<T>.CreateValueEnumerator(_remaining[_idx++]).FastEnumerator;
+                _current = Nodes<T>.CreateFastEnumerator(_remaining[_idx++]);
                 return true;
             }
         }
@@ -269,9 +269,9 @@ namespace Cistern.ValueLinq.Containers
             where Start : INode
             where Finish : INode
         {
-            var startEnumerator = Nodes<T>.CreateValueEnumerator(start);
+            var startEnumerator = Nodes<T>.CreateFastEnumerator(start);
 
-            var e = new ConcatFastEnumerator<T, Finish>(startEnumerator.FastEnumerator, finish);
+            var e = new ConcatFastEnumerator<T, Finish>(startEnumerator, finish);
             return nodes.CreateObject<CreationType, T, ConcatFastEnumerator<T, Finish>>(ref e);
         }
 

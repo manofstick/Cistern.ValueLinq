@@ -245,12 +245,16 @@ namespace Cistern.ValueLinq
             return node.CreateObjectDescent<IEnumerator<T>, FastEnumeratorToEnumeratorNode, NodesEnd>(ref nodes);
         }
 
-        public static ValueEnumerator<T> CreateValueEnumerator<Node>(in Node node)
+        public static FastEnumerator<T> CreateFastEnumerator<Node>(in Node node)
             where Node : INode
         {
-            var nodes = new Nodes<FastEnumeratorToValueEnumeratorNode, NodesEnd>();
-            return node.CreateObjectDescent<ValueEnumerator<T>, FastEnumeratorToValueEnumeratorNode, NodesEnd>(ref nodes);
+            var nodes = new Nodes<CreateFastEnumeratorNode, NodesEnd>();
+            return node.CreateObjectDescent<FastEnumerator<T>, CreateFastEnumeratorNode, NodesEnd>(ref nodes);
         }
+
+        public static ValueEnumerator<T> CreateValueEnumerator<Node>(in Node node)
+            where Node : INode
+            => new ValueEnumerator<T>(CreateFastEnumerator(node));
 
         public static T Descend<Head, Tail, Next>(ref Next next, in Head head, in Tail tail)
             where Next : INode

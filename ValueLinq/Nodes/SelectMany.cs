@@ -88,8 +88,8 @@ namespace Cistern.ValueLinq.Nodes
         private readonly int Count()
         {
             // TODO: change to forwards
-            using var e = Nodes<T>.CreateValueEnumerator(_nodeT);
-            return SelectManyImpl.Count(e.FastEnumerator, _map);
+            using var e = Nodes<T>.CreateFastEnumerator(_nodeT);
+            return SelectManyImpl.Count(e, _map);
         }
 
         TResult INode<U>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)

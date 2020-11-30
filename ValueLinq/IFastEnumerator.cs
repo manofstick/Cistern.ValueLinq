@@ -1,4 +1,5 @@
 ﻿using Cistern.ValueLinq.Containers;
+using System;
 
 namespace Cistern.ValueLinq
 {
@@ -28,6 +29,7 @@ namespace Cistern.ValueLinq
     }
 
     abstract class FastEnumerator<EnumeratorElement>
+        : IDisposable
     {
         public abstract void Dispose();
         public abstract bool TryGetNext(out EnumeratorElement current);
