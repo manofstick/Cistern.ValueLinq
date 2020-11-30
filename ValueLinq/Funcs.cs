@@ -3,6 +3,7 @@
 namespace Cistern.ValueLinq
 {
     public delegate U InFunc<T, U>(in T t);
+    public delegate void RefAction<T, U>(ref T t, U u);
 
     public interface IFuncBase<T, U> { }
 

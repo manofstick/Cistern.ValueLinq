@@ -79,6 +79,15 @@ namespace Cistern.ValueLinq
             source.Node.CreateObjectViaFastEnumerator<T, ForeachForward<T>>(new ForeachForward<T>(func));
         }
 
+        public static T Foreach<T, U, Inner>(in this ValueEnumerable<U, Inner> source, T seed, RefAction<T, U> func)
+            where Inner : INode<U>
+        {
+            if (func == null)
+                throw new ArgumentNullException(nameof(func));
+
+            return source.Node.CreateObjectViaFastEnumerator<T, ForeachForwardRef<T, U>>(new ForeachForwardRef<T, U>(seed, func));
+        }
+
         public static TAccumulate Aggregate<T, TAccumulate, Inner>(in this ValueEnumerable<T, Inner> source, TAccumulate seed, Func<TAccumulate, T, TAccumulate> func)
             where Inner : INode<T>
         {
