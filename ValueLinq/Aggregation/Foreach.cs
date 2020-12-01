@@ -2,12 +2,12 @@
 
 namespace Cistern.ValueLinq.Aggregation
 {
-    struct ForeachForward<T>
+    struct ForEachForward<T>
         : IForwardEnumerator<T>
     {
         private Action<T> _func;
 
-        public ForeachForward(Action<T> func) => (_func) = (func);
+        public ForEachForward(Action<T> func) => (_func) = (func);
 
         public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() { }
@@ -20,13 +20,13 @@ namespace Cistern.ValueLinq.Aggregation
         }
     }
 
-    struct ForeachForwardRef<T, U>
+    struct ForEachForwardRef<T, U>
         : IForwardEnumerator<U>
     {
         private T _state;
         private RefAction<T, U> _func;
 
-        public ForeachForwardRef(T seed, RefAction<T, U> func) => (_state, _func) = (seed, func);
+        public ForEachForwardRef(T seed, RefAction<T, U> func) => (_state, _func) = (seed, func);
 
         public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() { }

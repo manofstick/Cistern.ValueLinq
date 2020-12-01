@@ -24,7 +24,7 @@ namespace Linqs.Tests
 
             (int count, int sum) =
                 numbers
-                .Foreach((0, 0),
+                .ForEach((0, 0),
                     (ref (int count, int sum) state, int item) =>
                     {
                         state.count++;

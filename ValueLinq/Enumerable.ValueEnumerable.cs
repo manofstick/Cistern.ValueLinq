@@ -70,22 +70,22 @@ namespace Cistern.ValueLinq
             return source.Node.CreateObjectViaFastEnumerator<T, ReduceForward<T>>(new ReduceForward<T>(func));
         }
 
-        public static void Foreach<T, Inner>(in this ValueEnumerable<T, Inner> source, Action<T> func)
+        public static void ForEach<T, Inner>(in this ValueEnumerable<T, Inner> source, Action<T> func)
             where Inner : INode<T>
         {
             if (func == null)
                 throw new ArgumentNullException(nameof(func));
 
-            source.Node.CreateObjectViaFastEnumerator<T, ForeachForward<T>>(new ForeachForward<T>(func));
+            source.Node.CreateObjectViaFastEnumerator<T, ForEachForward<T>>(new ForEachForward<T>(func));
         }
 
-        public static T Foreach<T, U, Inner>(in this ValueEnumerable<U, Inner> source, T seed, RefAction<T, U> func)
+        public static T ForEach<T, U, Inner>(in this ValueEnumerable<U, Inner> source, T seed, RefAction<T, U> func)
             where Inner : INode<U>
         {
             if (func == null)
                 throw new ArgumentNullException(nameof(func));
 
-            return source.Node.CreateObjectViaFastEnumerator<T, ForeachForwardRef<T, U>>(new ForeachForwardRef<T, U>(seed, func));
+            return source.Node.CreateObjectViaFastEnumerator<T, ForEachForwardRef<T, U>>(new ForEachForwardRef<T, U>(seed, func));
         }
 
         public static T Foreach<T, U, Inner, RefAction>(in this ValueEnumerable<U, Inner> source, T seed, RefAction func)
