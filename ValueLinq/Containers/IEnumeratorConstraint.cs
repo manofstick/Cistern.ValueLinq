@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace Cistern.ValueLinq.Containers
 {
@@ -14,6 +15,7 @@ namespace Cistern.ValueLinq.Containers
 
         public void Dispose() =>_enumerator.Dispose();
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetNext(out T current)
         {
             if (!_enumerator.MoveNext())
