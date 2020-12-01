@@ -72,7 +72,7 @@ namespace Cistern.Benchmarks.ValueLambdas
                 .Where(new FilterEvenInts()) // ug, sugar please
                 .Select(new HalveAnInt(), default(int)); // ug, sugar please + better type inference...
                 
-            pipeline.Foreach(x => sum += x);
+            pipeline.ForEach(x => sum += x);
 
             return sum;
         }
