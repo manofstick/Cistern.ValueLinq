@@ -139,18 +139,6 @@ namespace Cistern.ValueLinq.Containers
 
     static class ArrayNode
     {
-        internal static T[] ToArray<T>(T[] array)
-        {
-            // https://marcelltoth.net/article/41/fastest-way-to-copy-a-net-array
-            if (array.Length == 0)
-                return Array.Empty<T>();
-
-            if (array.Length <= 500) // for word sized Value types; this seems to be above the crossover point
-                return array.AsSpan().ToArray();
-
-            return (T[])array.Clone();
-        }
-
         internal static CreationType Create<T, Nodes, CreationType>(T[] array, ref Nodes nodes)
             where Nodes : INodes
         {
