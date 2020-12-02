@@ -55,7 +55,7 @@ namespace Cistern.Benchmarks.Double
             check.SetupData();
 
             var baseline = check.Linq();
-#if LINQAFx
+#if LINQAF
             var linqaf = check.LinqAF();
             if (!System.Linq.Enumerable.SequenceEqual(baseline, linqaf)) throw new Exception();
 #endif
@@ -63,7 +63,7 @@ namespace Cistern.Benchmarks.Double
             var cisternvaluelinq = check.CisternValueLinq();
             if (!System.Linq.Enumerable.SequenceEqual(baseline, cisternvaluelinq)) throw new Exception();
 
-#if CISTERNLINQx
+#if CISTERNLINQ
             var cisternlinq = check.CisternLinq();
             if (!System.Linq.Enumerable.SequenceEqual(baseline, cisternlinq)) throw new Exception();
 #endif

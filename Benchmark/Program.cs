@@ -47,30 +47,31 @@ namespace Cistern.Benchmarks
     {
         public static void Main(string[] args)
         {
-            // For some sanity checking
-            //DoubleDoubleDouble.SelectWhereAggregate.SanityCheck();
-            //DoubleDoubleDouble.WhereSelectAggregate.SanityCheck();
+            //For some sanity checking
+            DoubleDoubleDouble.SelectWhereAggregate.SanityCheck();
+            DoubleDoubleDouble.WhereSelectAggregate.SanityCheck();
 
-            //Double.ToList.SanityCheck();
-            //Double.SelectToList.SanityCheck();
-            //Double.SelectSelectToList.SanityCheck();
-            //Double.WhereToList.SanityCheck();
-            //Double.SelectWhereToList.SanityCheck();
-            //Double.WhereSelectToList.SanityCheck();
-            //Double.WhereSelectIToList.SanityCheck();
-            //Double.WhereWhereToList.SanityCheck();
-            //Double.Sum.SanityCheck();
-            //Double.Any.SanityCheck();
-            //Double.SelectSum.SanityCheck();
-            //Double.SelectManySum.SanityCheck();
+            Double.ToList.SanityCheck();
+            Double.SelectToList.SanityCheck();
+            Double.SelectSelectToList.SanityCheck();
+            Double.WhereToList.SanityCheck();
+            Double.SelectWhereToList.SanityCheck();
+            Double.WhereSelectToList.SanityCheck();
+            Double.WhereSelectIToList.SanityCheck();
+            Double.WhereWhereToList.SanityCheck();
+            Double.Sum.SanityCheck();
+            Double.Any.SanityCheck();
+            Double.SelectSum.SanityCheck();
+            Double.SelectManySum.SanityCheck();
+            Double.SkipReverseSkipToArray.SanityCheck();
 
-            //ValueLambdas.WhereSelectSum.SanityCheck();
-            //ValueLambdas.SelectWhereMax.SanityCheck();
-            //ValueLambdas.WhereSelect.SanityCheck();
+            ValueLambdas.WhereSelectSum.SanityCheck();
+            ValueLambdas.SelectWhereMax.SanityCheck();
+            ValueLambdas.WhereSelect.SanityCheck();
 
-            //Span.StringToList.SanityCheck();
+            Span.StringToList.SanityCheck();
 
-            //ImmutableArray.WhereSelectToList.SanityCheck();
+            ImmutableArray.WhereSelectToList.SanityCheck();
 
 
             //var t = new Thing();
@@ -81,7 +82,7 @@ namespace Cistern.Benchmarks
             //    Console.Write('.');
             //}
 
-            var summary = BenchmarkRunner.Run<Thing>();
+            var summary = BenchmarkRunner.Run<Double.SkipReverseSkipToArray>();
         }
     }
 }

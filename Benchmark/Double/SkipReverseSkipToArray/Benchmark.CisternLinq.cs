@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Cistern.Benchmarks.Double
 {
-#if CISTERNLINQx
+#if CISTERNLINQ
     partial class SkipReverseSkipToArray
     {
         [Benchmark]

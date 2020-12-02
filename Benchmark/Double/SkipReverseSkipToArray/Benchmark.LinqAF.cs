@@ -3,7 +3,7 @@ using LinqAF;
 
 namespace Cistern.Benchmarks.Double
 {
-#if LINQAFx
+#if LINQAF
     partial class SkipReverseSkipToArray
     {
         [Benchmark]
