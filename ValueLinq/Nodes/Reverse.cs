@@ -41,12 +41,6 @@ namespace Cistern.ValueLinq.Nodes
 
         readonly bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
-            if (typeof(TRequest) == typeof(Optimizations.ToArray))
-            {
-                result = (TResult)(object) GetReversedArray();
-                return true;
-            }
-
             if (typeof(TRequest) == typeof(Optimizations.Reverse))
             {
                 NodeContainer<T> container = default;
@@ -56,7 +50,16 @@ namespace Cistern.ValueLinq.Nodes
             }
 
             if (_nodeT.CheckForOptimization<Optimizations.Reverse, NodeContainer<T>>(default, out var node))
-                return node.CheckForOptimization<TRequest, TResult>(in request, out result);
+            {
+                if (node.CheckForOptimization<TRequest, TResult>(in request, out result))
+                    return true; // we carry on with false, because can still do some other optimizations
+            }
+
+            if (typeof(TRequest) == typeof(Optimizations.ToArray))
+            {
+                result = (TResult)(object)GetReversedArray();
+                return true;
+            }
 
             result = default;
             return false;

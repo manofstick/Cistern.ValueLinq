@@ -100,41 +100,6 @@ namespace Cistern.ValueLinq.Containers
         }
     }
 
-    public struct ReversedListNode<T>
-        : INode<T>
-    {
-        private readonly List<T> _list; // list is still in forward order
-
-        public ReversedListNode(List<T> list) => _list = list;
-
-        #region "This node is only used in forward context, so most of interface is not supported"
-        public void GetCountInformation(out CountInformation info) => throw new NotSupportedException();
-        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => throw new NotSupportedException();
-        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
-        #endregion
-
-        bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
-
-        public bool CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
-        {
-            if (typeof(TRequest) == typeof(Optimizations.Skip))
-            {
-                // TODO:
-            }
-
-            if (typeof(TRequest) == typeof(Optimizations.Take))
-            {
-                // TODO:
-            }
-
-            result = default;
-            return false;
-        }
-
-        public TResult CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<T>
-            => ListByIndexNode.FastReverseEnumerate<T, TResult, FEnumerator>(_list, fenum);
-    }
-
     public struct ListNode<T>
         : INode<T>
     {
@@ -157,26 +122,34 @@ namespace Cistern.ValueLinq.Containers
         {
             if (typeof(TRequest) == typeof(Optimizations.ToArray))
             {
-                result = (TResult)(object)ListNode.ToArray(_list);
+                result = (TResult)(object)ListSegmentNode.ToArray(_list, 0, _list.Count);
                 return true;
             }
 
             if (typeof(TRequest) == typeof(Optimizations.Reverse))
             {
                 NodeContainer<T> container = default;
-                container.SetNode(new ReversedListNode<T>(_list));
+                container.SetNode(new ReversedListSegmentNode<T>(_list, 0, _list.Count));
                 result = (TResult)(object)container;
                 return true;
             }
 
             if (typeof(TRequest) == typeof(Optimizations.Skip))
             {
-                // TODO:
+                var skip = (Optimizations.Skip)(object)request;
+                NodeContainer<T> container = default;
+                ListSegmentNode.Skip(new ListSegment<T>(_list, 0, _list.Count), skip.Count, ref container);
+                result = (TResult)(object)container;
+                return true;
             }
 
             if (typeof(TRequest) == typeof(Optimizations.Take))
             {
-                // TODO:
+                var take = (Optimizations.Take)(object)request;
+                NodeContainer<T> container = default;
+                ListSegmentNode.Take(new ListSegment<T>(_list, 0, _list.Count), take.Count, ref container);
+                result = (TResult)(object)container;
+                return true;
             }
 
             if (typeof(TRequest) == typeof(Optimizations.Count))
@@ -190,18 +163,11 @@ namespace Cistern.ValueLinq.Containers
         }
 
         TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
-            => ListByIndexNode.FastEnumerate<T, TResult, FEnumerator>(_list, fenum);
+            => ListSegmentNode.FastEnumerate<T, TResult, FEnumerator>(new ListSegment<T>(_list, 0, _list.Count), fenum);
     }
 
     static class ListNode
     {
-        public static T[] ToArray<T>(List<T> srcList) =>
-            srcList.Count switch
-            {
-                0 => Array.Empty<T>(),
-                _ => System.Runtime.InteropServices.CollectionsMarshal.AsSpan(srcList).ToArray()
-            };
-
         public static CreationType Create<T, Head, Tail, CreationType>(List<T> list, ref Nodes<Head, Tail> nodes)
             where Head : INode
             where Tail : INodes

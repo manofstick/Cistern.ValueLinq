@@ -898,586 +898,586 @@ namespace Cistern.ValueLinq
         public static decimal Average(this List<decimal> source)
         {
             var aggregate = new AverageDecimal(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static decimal Average<TSource>(this List<TSource> source, Func<TSource, decimal> selector)
         {
             var select = new SelectFoward<TSource, decimal, AverageDecimal>(new AverageDecimal(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static decimal? Average(this List<decimal?> source)
         {
             var aggregate = new AverageDecimalNullable(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static decimal? Average<TSource>(this List<TSource> source, Func<TSource, decimal?> selector)
         {
             var select = new SelectFoward<TSource, decimal?, AverageDecimalNullable>(new AverageDecimalNullable(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static double Average(this List<double> source)
         {
             var aggregate = new AverageDouble(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static double Average<TSource>(this List<TSource> source, Func<TSource, double> selector)
         {
             var select = new SelectFoward<TSource, double, AverageDouble>(new AverageDouble(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static double? Average(this List<double?> source)
         {
             var aggregate = new AverageDoubleNullable(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static double? Average<TSource>(this List<TSource> source, Func<TSource, double?> selector)
         {
             var select = new SelectFoward<TSource, double?, AverageDoubleNullable>(new AverageDoubleNullable(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static float Average(this List<float> source)
         {
             var aggregate = new AverageFloat(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static float Average<TSource>(this List<TSource> source, Func<TSource, float> selector)
         {
             var select = new SelectFoward<TSource, float, AverageFloat>(new AverageFloat(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static float? Average(this List<float?> source)
         {
             var aggregate = new AverageFloatNullable(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static float? Average<TSource>(this List<TSource> source, Func<TSource, float?> selector)
         {
             var select = new SelectFoward<TSource, float?, AverageFloatNullable>(new AverageFloatNullable(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static double Average(this List<int> source)
         {
             var aggregate = new AverageInt(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static double Average<TSource>(this List<TSource> source, Func<TSource, int> selector)
         {
             var select = new SelectFoward<TSource, int, AverageInt>(new AverageInt(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static double? Average(this List<int?> source)
         {
             var aggregate = new AverageIntNullable(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static double? Average<TSource>(this List<TSource> source, Func<TSource, int?> selector)
         {
             var select = new SelectFoward<TSource, int?, AverageIntNullable>(new AverageIntNullable(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static double Average(this List<long> source)
         {
             var aggregate = new AverageLong(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static double Average<TSource>(this List<TSource> source, Func<TSource, long> selector)
         {
             var select = new SelectFoward<TSource, long, AverageLong>(new AverageLong(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static double? Average(this List<long?> source)
         {
             var aggregate = new AverageLongNullable(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static double? Average<TSource>(this List<TSource> source, Func<TSource, long?> selector)
         {
             var select = new SelectFoward<TSource, long?, AverageLongNullable>(new AverageLongNullable(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static decimal Min(this List<decimal> source)
         {
             var aggregate = new MinDecimal(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static decimal Min<TSource>(this List<TSource> source, Func<TSource, decimal> selector)
         {
             var select = new SelectFoward<TSource, decimal, MinDecimal>(new MinDecimal(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static decimal? Min(this List<decimal?> source)
         {
             var aggregate = new MinDecimalNullable(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static decimal? Min<TSource>(this List<TSource> source, Func<TSource, decimal?> selector)
         {
             var select = new SelectFoward<TSource, decimal?, MinDecimalNullable>(new MinDecimalNullable(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static double Min(this List<double> source)
         {
             var aggregate = new MinDouble(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static double Min<TSource>(this List<TSource> source, Func<TSource, double> selector)
         {
             var select = new SelectFoward<TSource, double, MinDouble>(new MinDouble(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static double? Min(this List<double?> source)
         {
             var aggregate = new MinDoubleNullable(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static double? Min<TSource>(this List<TSource> source, Func<TSource, double?> selector)
         {
             var select = new SelectFoward<TSource, double?, MinDoubleNullable>(new MinDoubleNullable(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static float Min(this List<float> source)
         {
             var aggregate = new MinFloat(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static float Min<TSource>(this List<TSource> source, Func<TSource, float> selector)
         {
             var select = new SelectFoward<TSource, float, MinFloat>(new MinFloat(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static float? Min(this List<float?> source)
         {
             var aggregate = new MinFloatNullable(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static float? Min<TSource>(this List<TSource> source, Func<TSource, float?> selector)
         {
             var select = new SelectFoward<TSource, float?, MinFloatNullable>(new MinFloatNullable(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static int Min(this List<int> source)
         {
             var aggregate = new MinInt(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static int Min<TSource>(this List<TSource> source, Func<TSource, int> selector)
         {
             var select = new SelectFoward<TSource, int, MinInt>(new MinInt(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static int? Min(this List<int?> source)
         {
             var aggregate = new MinIntNullable(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static int? Min<TSource>(this List<TSource> source, Func<TSource, int?> selector)
         {
             var select = new SelectFoward<TSource, int?, MinIntNullable>(new MinIntNullable(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static long Min(this List<long> source)
         {
             var aggregate = new MinLong(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static long Min<TSource>(this List<TSource> source, Func<TSource, long> selector)
         {
             var select = new SelectFoward<TSource, long, MinLong>(new MinLong(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static long? Min(this List<long?> source)
         {
             var aggregate = new MinLongNullable(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static long? Min<TSource>(this List<TSource> source, Func<TSource, long?> selector)
         {
             var select = new SelectFoward<TSource, long?, MinLongNullable>(new MinLongNullable(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static TSource Min<TSource>(this List<TSource> source)
         {
             var aggregate = new Min<TSource>(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static T Min<TSource, T>(this List<TSource> source, Func<TSource, T> selector)
         {
             var select = new SelectFoward<TSource, T, Min<T>>(new Min<T>(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
         public static decimal Max(this List<decimal> source)
         {
             var aggregate = new MaxDecimal(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static decimal Max<TSource>(this List<TSource> source, Func<TSource, decimal> selector)
         {
             var select = new SelectFoward<TSource, decimal, MaxDecimal>(new MaxDecimal(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static decimal? Max(this List<decimal?> source)
         {
             var aggregate = new MaxDecimalNullable(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static decimal? Max<TSource>(this List<TSource> source, Func<TSource, decimal?> selector)
         {
             var select = new SelectFoward<TSource, decimal?, MaxDecimalNullable>(new MaxDecimalNullable(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static double Max(this List<double> source)
         {
             var aggregate = new MaxDouble(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static double Max<TSource>(this List<TSource> source, Func<TSource, double> selector)
         {
             var select = new SelectFoward<TSource, double, MaxDouble>(new MaxDouble(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static double? Max(this List<double?> source)
         {
             var aggregate = new MaxDoubleNullable(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static double? Max<TSource>(this List<TSource> source, Func<TSource, double?> selector)
         {
             var select = new SelectFoward<TSource, double?, MaxDoubleNullable>(new MaxDoubleNullable(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static float Max(this List<float> source)
         {
             var aggregate = new MaxFloat(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static float Max<TSource>(this List<TSource> source, Func<TSource, float> selector)
         {
             var select = new SelectFoward<TSource, float, MaxFloat>(new MaxFloat(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static float? Max(this List<float?> source)
         {
             var aggregate = new MaxFloatNullable(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static float? Max<TSource>(this List<TSource> source, Func<TSource, float?> selector)
         {
             var select = new SelectFoward<TSource, float?, MaxFloatNullable>(new MaxFloatNullable(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static int Max(this List<int> source)
         {
             var aggregate = new MaxInt(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static int Max<TSource>(this List<TSource> source, Func<TSource, int> selector)
         {
             var select = new SelectFoward<TSource, int, MaxInt>(new MaxInt(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static int? Max(this List<int?> source)
         {
             var aggregate = new MaxIntNullable(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static int? Max<TSource>(this List<TSource> source, Func<TSource, int?> selector)
         {
             var select = new SelectFoward<TSource, int?, MaxIntNullable>(new MaxIntNullable(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static long Max(this List<long> source)
         {
             var aggregate = new MaxLong(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static long Max<TSource>(this List<TSource> source, Func<TSource, long> selector)
         {
             var select = new SelectFoward<TSource, long, MaxLong>(new MaxLong(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static long? Max(this List<long?> source)
         {
             var aggregate = new MaxLongNullable(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static long? Max<TSource>(this List<TSource> source, Func<TSource, long?> selector)
         {
             var select = new SelectFoward<TSource, long?, MaxLongNullable>(new MaxLongNullable(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static TSource Max<TSource>(this List<TSource> source)
         {
             var aggregate = new Max<TSource>(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static T Max<TSource, T>(this List<TSource> source, Func<TSource, T> selector)
         {
             var select = new SelectFoward<TSource, T, Max<T>>(new Max<T>(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
         public static decimal Sum(this List<decimal> source)
         {
             var aggregate = new SumDecimal(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static decimal Sum<TSource>(this List<TSource> source, Func<TSource, decimal> selector)
         {
             var select = new SelectFoward<TSource, decimal, SumDecimal>(new SumDecimal(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static decimal? Sum(this List<decimal?> source)
         {
             var aggregate = new SumDecimalNullable(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static decimal? Sum<TSource>(this List<TSource> source, Func<TSource, decimal?> selector)
         {
             var select = new SelectFoward<TSource, decimal?, SumDecimalNullable>(new SumDecimalNullable(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static double Sum(this List<double> source)
         {
             var aggregate = new SumDouble(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static double Sum<TSource>(this List<TSource> source, Func<TSource, double> selector)
         {
             var select = new SelectFoward<TSource, double, SumDouble>(new SumDouble(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static double? Sum(this List<double?> source)
         {
             var aggregate = new SumDoubleNullable(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static double? Sum<TSource>(this List<TSource> source, Func<TSource, double?> selector)
         {
             var select = new SelectFoward<TSource, double?, SumDoubleNullable>(new SumDoubleNullable(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static float Sum(this List<float> source)
         {
             var aggregate = new SumFloat(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static float Sum<TSource>(this List<TSource> source, Func<TSource, float> selector)
         {
             var select = new SelectFoward<TSource, float, SumFloat>(new SumFloat(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static float? Sum(this List<float?> source)
         {
             var aggregate = new SumFloatNullable(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static float? Sum<TSource>(this List<TSource> source, Func<TSource, float?> selector)
         {
             var select = new SelectFoward<TSource, float?, SumFloatNullable>(new SumFloatNullable(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static int Sum(this List<int> source)
         {
             var aggregate = new SumInt(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static int Sum<TSource>(this List<TSource> source, Func<TSource, int> selector)
         {
             var select = new SelectFoward<TSource, int, SumInt>(new SumInt(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static int? Sum(this List<int?> source)
         {
             var aggregate = new SumIntNullable(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static int? Sum<TSource>(this List<TSource> source, Func<TSource, int?> selector)
         {
             var select = new SelectFoward<TSource, int?, SumIntNullable>(new SumIntNullable(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static long Sum(this List<long> source)
         {
             var aggregate = new SumLong(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static long Sum<TSource>(this List<TSource> source, Func<TSource, long> selector)
         {
             var select = new SelectFoward<TSource, long, SumLong>(new SumLong(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 
         public static long? Sum(this List<long?> source)
         {
             var aggregate = new SumLongNullable(true);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static long? Sum<TSource>(this List<TSource> source, Func<TSource, long?> selector)
         {
             var select = new SelectFoward<TSource, long?, SumLongNullable>(new SumLongNullable(true), selector);
-            ListByIndexNode.ProcessList(source, ref select);
+            ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
 

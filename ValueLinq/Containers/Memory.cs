@@ -61,6 +61,11 @@ namespace Cistern.ValueLinq.Containers
                 return true;
             }
 
+            if (typeof(TRequest) == typeof(Optimizations.Reverse))
+            {
+                // TODO
+            }
+
             result = default;
             return false;
         }
@@ -170,6 +175,7 @@ namespace Cistern.ValueLinq.Containers
             }
 
         }
+
         internal static void ReverseSkip<T>(ReadOnlyMemory<T> memory, int count, ref NodeContainer<T> container)
         {
             if (count >= memory.Length)

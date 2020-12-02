@@ -189,8 +189,9 @@ namespace Cistern.ValueLinq
         Reference,
         Array,
         Memory,
+        ListSegment,
         ReversedMemory,
-        ReversedList,
+        ReversedListSegment,
     }
 
     struct NodeContainer<T>
@@ -200,15 +201,17 @@ namespace Cistern.ValueLinq
         private INode<T> Node;
         private ArrayNode<T> ArrayNode;
         private MemoryNode<T> MemoryNode;
+        private ListSegmentNode<T> ListSegmentNode;
         private ReversedMemoryNode<T> ReversedMemoryNode;
-        private ReversedListNode<T> ReversedListNode;
+        private ReversedListSegmentNode<T> ReversedListNode;
 
         public void SetEmpty()                          => Type                       = NodeType.Empty;
         public void SetNode(INode<T> node)              => (Type, Node)               = (NodeType.Reference, node);
         public void SetNode(ArrayNode<T> node)          => (Type, ArrayNode)          = (NodeType.Array, node);
         public void SetNode(MemoryNode<T> node)         => (Type, MemoryNode)         = (NodeType.Memory, node);
+        public void SetNode(ListSegmentNode<T> node)    => (Type, ListSegmentNode)    = (NodeType.ListSegment, node);
         public void SetNode(ReversedMemoryNode<T> node) => (Type, ReversedMemoryNode) = (NodeType.ReversedMemory, node);
-        public void SetNode(ReversedListNode<T> node)   => (Type, ReversedListNode)   = (NodeType.ReversedList, node);
+        public void SetNode(ReversedListSegmentNode<T> node)   => (Type, ReversedListNode)   = (NodeType.ReversedListSegment, node);
 
         public bool CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result) =>
             Type switch
@@ -217,8 +220,9 @@ namespace Cistern.ValueLinq
                 NodeType.Reference      => Node.CheckForOptimization<TRequest, TResult>(in request, out result),
                 NodeType.Array          => ArrayNode.CheckForOptimization<TRequest, TResult>(in request, out result),
                 NodeType.Memory         => MemoryNode.CheckForOptimization<TRequest, TResult>(in request, out result),
+                NodeType.ListSegment    => ListSegmentNode.CheckForOptimization<TRequest, TResult>(in request, out result),
                 NodeType.ReversedMemory => ReversedMemoryNode.CheckForOptimization<TRequest, TResult>(in request, out result),
-                NodeType.ReversedList   => ReversedListNode.CheckForOptimization<TRequest, TResult>(in request, out result),
+                NodeType.ReversedListSegment => ReversedListNode.CheckForOptimization<TRequest, TResult>(in request, out result),
                 _ => throw new InvalidOperationException(),
             };
 
@@ -230,8 +234,9 @@ namespace Cistern.ValueLinq
                 NodeType.Reference      => Node.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum),
                 NodeType.Array          => ArrayNode.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum),
                 NodeType.Memory         => MemoryNode.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum),
+                NodeType.ListSegment    => ListSegmentNode.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum),
                 NodeType.ReversedMemory => ReversedMemoryNode.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum),
-                NodeType.ReversedList   => ReversedListNode.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum),
+                NodeType.ReversedListSegment => ReversedListNode.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum),
                 _ => throw new InvalidOperationException(),
             };
     }

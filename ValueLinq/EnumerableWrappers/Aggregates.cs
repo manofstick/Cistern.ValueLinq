@@ -108,63 +108,63 @@ namespace Cistern.ValueLinq
         public static TSource Aggregate<TSource>(this List<TSource> source, Func<TSource, TSource, TSource> func)
         {
             var aggregate = new ReduceForward<TSource>(func);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static TAccumulate Aggregate<TSource, TAccumulate>(this List<TSource> source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func)
         {
             var aggregate = new FoldForward<TSource, TAccumulate>(func, seed);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static TResult Aggregate<TSource, TAccumulate, TResult>(this List<TSource> source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func, Func<TAccumulate, TResult> resultSelector)
         {
             var aggregate = new FoldForward<TSource, TAccumulate>(func, seed);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return resultSelector(aggregate.GetResult());
         }
 
         public static bool All<TSource>(this List<TSource> source, Func<TSource, bool> predicate)
         {
             var aggregate = new All<TSource, FuncToIFunc<TSource, bool>>(new FuncToIFunc<TSource, bool>(predicate));
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static bool Any<TSource>(this List<TSource> source, Func<TSource, bool> predicate)
         {
             var aggregate = new Any<TSource>(predicate);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static int Count<TSource>(this List<TSource> source, Func<TSource, bool> predicate)
         {
             var aggregate = new CountIf<TSource>(predicate);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static bool Contains<TSource>(this List<TSource> source, TSource value, IEqualityComparer<TSource> comparer)
         {
             var aggregate = new ContainsByComparer<TSource>(comparer, value);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static TSource Last<TSource>(this List<TSource> source, Func<TSource, bool> predicate)
         {
             var aggregate = new LastPredicate<TSource>(predicate);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static TSource LastOrDefault<TSource>(this List<TSource> source, Func<TSource, bool> predicate)
         {
             var aggregate = new LastOrDefaultPredicate<TSource>(predicate);
-            ListByIndexNode.ProcessList(source, ref aggregate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 

@@ -243,7 +243,7 @@ namespace Cistern.ValueLinq.Containers
             => _enumerable switch
             {
                 T[] array => ArrayNode.FastEnumerate<T, TResult, FEnumerator>(array, fenum),
-                List<T> list => ListByIndexNode.FastEnumerate<T, TResult, FEnumerator>(list, fenum),
+                List<T> list => ListSegmentNode.FastEnumerate<T, TResult, FEnumerator>(new ListSegment<T>(list, 0, list.Count), fenum),
                 INode<T> n => n.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum),
                 var e => EnumerableNode.FastEnumerate<T, TResult, FEnumerator>(e, fenum),
             };
@@ -277,7 +277,7 @@ namespace Cistern.ValueLinq.Containers
             enumerable switch
             {
                 T[] srcArray => ArrayNode.ToArray(srcArray),
-                List<T> srcList => ListNode.ToArray(srcList),
+                List<T> srcList => ListSegmentNode.ToArray(srcList, 0, srcList.Count),
                 _ => null
             };
 
@@ -290,7 +290,7 @@ namespace Cistern.ValueLinq.Containers
             }
             if (enumerable is List<T> srcList)
             {
-                container.SetNode(new ReversedListNode<T>(srcList));
+                container.SetNode(new ReversedListSegmentNode<T>(srcList, 0, srcList.Count));
                 return true;
             }
             return false;
@@ -305,7 +305,8 @@ namespace Cistern.ValueLinq.Containers
             }
             else if (enumerable is List<T> list)
             {
-                return ListByIndexNode.Skip(list, count, ref container);
+                ListSegmentNode.Skip(new ListSegment<T>(list, 0, list.Count), count, ref container);
+                return true;
             }
             else
             {
@@ -324,7 +325,8 @@ namespace Cistern.ValueLinq.Containers
             }
             else if (enumerable is List<T> list)
             {
-                return ListByIndexNode.Take(list, count, ref container);
+                ListSegmentNode.Take(new ListSegment<T>(list, 0, list.Count), count, ref container);
+                return true;
             }
             else
             {
