@@ -61,9 +61,24 @@ namespace Cistern.ValueLinq.Containers
                 return true;
             }
 
+            if (typeof(TRequest) == typeof(Optimizations.ToArray))
+            {
+                result = (TResult)(object)MemoryNode.ToArrayReverse(_memory);
+                return true;
+            }
+
             if (typeof(TRequest) == typeof(Optimizations.Reverse))
             {
-                // TODO
+                NodeContainer<T> container = default;
+                container.SetNode(new MemoryNode<T>(_memory));
+                result = (TResult)(object)container;
+                return true;
+            }
+
+            if (typeof(TRequest) == typeof(Optimizations.TryLast))
+            {
+                result = (TResult)(object)(_memory.Length > 0, _memory.Length == 0 ? default : _memory.Span[0]);
+                return true;
             }
 
             result = default;
@@ -91,17 +106,26 @@ namespace Cistern.ValueLinq.Containers
         bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
 
         public bool CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+            => MemoryNode.CheckForOptimization<T, TRequest, TResult>(_memory, in request, out result);
+
+        public TResult CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<T>
+            => MemoryNode.FastEnumerate<T, TResult, FEnumerator>(_memory, fenum);
+    }
+
+    static class MemoryNode
+    {
+        internal static bool CheckForOptimization<T, TRequest, TResult>(ReadOnlyMemory<T> memory, in TRequest request, out TResult result)
         {
             if (typeof(TRequest) == typeof(Optimizations.ToArray))
             {
-                result = (TResult)(object)MemoryNode.ToArray(_memory);
+                result = (TResult)(object)MemoryNode.ToArray(memory);
                 return true;
             }
 
             if (typeof(TRequest) == typeof(Optimizations.Reverse))
             {
                 NodeContainer<T> container = default;
-                container.SetNode(new ReversedMemoryNode<T>(_memory));
+                container.SetNode(new ReversedMemoryNode<T>(memory));
                 result = (TResult)(object)container;
                 return true;
             }
@@ -110,7 +134,7 @@ namespace Cistern.ValueLinq.Containers
             {
                 var skip = (Optimizations.Skip)(object)request;
                 NodeContainer<T> container = default;
-                MemoryNode.Skip(_memory, skip.Count, ref container);
+                MemoryNode.Skip(memory, skip.Count, ref container);
                 result = (TResult)(object)container;
                 return true;
             }
@@ -119,14 +143,20 @@ namespace Cistern.ValueLinq.Containers
             {
                 var take = (Optimizations.Take)(object)request;
                 NodeContainer<T> container = default;
-                MemoryNode.Take(_memory, take.Count, ref container);
+                MemoryNode.Take(memory, take.Count, ref container);
                 result = (TResult)(object)container;
                 return true;
             }
 
             if (typeof(TRequest) == typeof(Optimizations.Count))
             {
-                result = (TResult)(object)_memory.Length;
+                result = (TResult)(object)memory.Length;
+                return true;
+            }
+
+            if (typeof(TRequest) == typeof(Optimizations.TryLast))
+            {
+                result = (TResult)(object)(memory.Length > 0, memory.Length == 0 ? default : memory.Span[memory.Length-1]);
                 return true;
             }
 
@@ -134,18 +164,19 @@ namespace Cistern.ValueLinq.Containers
             return false;
         }
 
-        public TResult CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<T>
-            => MemoryNode.FastEnumerate<T, TResult, FEnumerator>(_memory, fenum);
-    }
-
-    static class MemoryNode
-    {
         internal static T[] ToArray<T>(ReadOnlyMemory<T> memory)
         {
             if (memory.Length == 0)
                 return Array.Empty<T>();
 
             return memory.Span.ToArray();
+        }
+
+        public static T[] ToArrayReverse<T>(ReadOnlyMemory<T> memory)
+        {
+            var array = ToArray(memory);
+            Array.Reverse(array);
+            return array;
         }
 
         internal static void Skip<T>(ReadOnlyMemory<T> memory, int count, ref NodeContainer<T> container)

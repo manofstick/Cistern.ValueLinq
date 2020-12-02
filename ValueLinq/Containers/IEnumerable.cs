@@ -1,5 +1,4 @@
-﻿using Cistern.ValueLinq.Nodes;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace Cistern.ValueLinq.Containers
@@ -101,7 +100,30 @@ namespace Cistern.ValueLinq.Containers
     {
         private readonly IEnumerable<T> _enumerable;
 
-        public void GetCountInformation(out CountInformation info)
+        public void GetCountInformation(out CountInformation info) =>
+            EnumerableNode.GetCountInformation(_enumerable, out info);
+
+        public EnumerableNode(IEnumerable<T> source) => _enumerable = source;
+
+        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) =>
+            EnumerableNode.CreateObjectDescent<T, CreationType, Head, Tail>(ref nodes, _enumerable);
+
+        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) =>
+            throw new InvalidOperationException();
+
+        bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation)
+        { creation = default; return false; }
+
+        readonly bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result) =>
+            EnumerableNode.CheckForOptimization<T, TRequest, TResult>(_enumerable, in request, out result);
+
+        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) =>
+            EnumerableNode.FastEnumerateSwitch<T, TResult, FEnumerator>(_enumerable, in fenum);
+    }
+
+    static class EnumerableNode
+    {
+        internal static void GetCountInformation<T>(IEnumerable<T> _enumerable, out CountInformation info)
         {
             if (_enumerable is System.Collections.ICollection c)
             {
@@ -114,94 +136,44 @@ namespace Cistern.ValueLinq.Containers
                 info = new CountInformation(null, false);
         }
 
-        public EnumerableNode(IEnumerable<T> source) => _enumerable = source;
-
-        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) =>
-            EnumerableNode.CreateObjectDescent<T, CreationType, Head, Tail>(ref nodes, _enumerable);
-
-        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) =>
-            throw new InvalidOperationException();
-
-        bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
-
-        readonly bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+        internal static bool CheckForOptimization<T, TRequest, TResult>(IEnumerable<T> enumerable, in TRequest request, out TResult result)
         {
-            if (typeof(TRequest) == typeof(Optimizations.ToArray))
+            return enumerable switch
             {
-                var maybeArray = EnumerableNode.TryToArray(_enumerable);
-                if (maybeArray != null)
+                T[] array    => MemoryNode.CheckForOptimization<T, TRequest, TResult>(array, in request, out result),
+                List<T> list => ListSegmentNode.CheckForOptimization<T, TRequest, TResult>(new ListSegment<T>(list, 0, list.Count), in request, out result),
+                INode node   => node.CheckForOptimization<TRequest, TResult>(in request, out result),
+                _            => Vanilla(enumerable, in request, out result),
+            };
+
+            static bool Vanilla(IEnumerable<T> e, in TRequest request, out TResult result)
+            {
+                if (typeof(TRequest) == typeof(Optimizations.Count))
                 {
-                    result = (TResult)(object)maybeArray;
+                    result = (TResult)(object)EnumerableNode.Count(e);
                     return true;
                 }
+
+                result = default;
+                return false;
             }
-
-            if (typeof(TRequest) == typeof(Optimizations.Reverse))
-            {
-                NodeContainer<T> container = default;
-                if (EnumerableNode.TryReverse(_enumerable, ref container))
-                {
-                    result = (TResult)(object)container;
-                    return true;
-                }
-            }
-
-            if (typeof(TRequest) == typeof(Optimizations.Skip))
-            {
-                var skip = (Optimizations.Skip)(object)request;
-                NodeContainer<T> container = default;
-                if (EnumerableNode.TrySkip(_enumerable, skip.Count, ref container))
-                {
-                    result = (TResult)(object)container;
-                    return true;
-                }
-            }
-
-            if (typeof(TRequest) == typeof(Optimizations.Take))
-            {
-                var take = (Optimizations.Take)(object)request;
-                NodeContainer<T> container = default;
-                if (EnumerableNode.TryTake(_enumerable, take.Count, ref container))
-                {
-                    result = (TResult)(object)container;
-                    return true;
-                }
-            }
-
-            if (_enumerable is INode node)
-                return node.CheckForOptimization<TRequest, TResult>(in request, out result);
-
-            if (typeof(TRequest) == typeof(Optimizations.Count))
-            {
-                result = (TResult)(object)EnumerableNode.Count(_enumerable);
-                return true;
-            }
-
-            result = default;
-            return false;
         }
 
-        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) =>
-            EnumerableNode.FastEnumerateSwitch<T, TResult, FEnumerator>(_enumerable, in fenum);
-    }
-
-    static class EnumerableNode
-    {
-        public static int Count<T>(IEnumerable<T> _enumerable) =>
-            _enumerable switch
+        public static int Count<T>(IEnumerable<T> _enumerable)
+        {
+            return _enumerable switch
             {
                 ICollection<T> c => c.Count,
                 IReadOnlyCollection<T> c => c.Count,
-                var other => IterateCount(other)
+                var other => Iterate(other)
             };
 
-        private static int IterateCount<T>(IEnumerable<T> ts)
-        {
-            checked
+            static int Iterate(IEnumerable<T> ts)
             {
-                int count = 0;
-                using (var e = ts.GetEnumerator())
+                checked
                 {
+                    int count = 0;
+                    using var e = ts.GetEnumerator();
                     while (e.MoveNext())
                         ++count;
                     return count;
@@ -209,58 +181,58 @@ namespace Cistern.ValueLinq.Containers
             }
         }
 
-        public static CreationType Create<T, Head, Tail, CreationType>(IEnumerable<T> enumerable, ref Nodes<Head, Tail> nodes)
-            where Head : INode
-            where Tail : INodes
-        {
-            if (nodes.TryObjectAscentOptimization<Optimizations.SourceEnumerable<T>, CreationType>(new Optimizations.SourceEnumerable<T> { Enumerable = enumerable }, out var creation))
-                return creation;
-
-            var e = new EnumerableFastEnumerator<T>(enumerable);
-            return nodes.CreateObject<CreationType, T, EnumerableFastEnumerator<T>>(ref e);
-        }
-
         public static CreationType CreateObjectDescent<T, CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes, IEnumerable<T> enumerable)
             where Head : INode
             where Tail : INodes
-            => enumerable switch
+        {
+            return enumerable switch
             {
-                T[] array when array.Length == 0 => EmptyNode.Create<T, Nodes<Head, Tail>, CreationType>(ref nodes),
-                T[] array => ArrayNode.Create<T, Nodes<Head, Tail>, CreationType>(array, ref nodes),
+                T[] array when array.Length == 0  => EmptyNode.Create<T, Nodes<Head, Tail>, CreationType>(ref nodes),
+                T[] array                         => ArrayNode.Create<T, Nodes<Head, Tail>, CreationType>(array, ref nodes),
                 List<T> list when list.Count == 0 => EmptyNode.Create<T, Nodes<Head, Tail>, CreationType>(ref nodes),
                 List<T> list =>
-#if USE_LIST_BY_INDEX
-                    ListByIndexNode.Create<T, Head, Tail, CreationType>(list, ref nodes),
-#else
-                    ListNode.Create<T, Head, Tail, CreationType>(list, ref nodes),
-#endif
-                INode node => node.CreateObjectDescent<CreationType, Head, Tail>(ref nodes),
-                _ => EnumerableNode.Create<T, Head, Tail, CreationType>(enumerable, ref nodes),
+#if USE_LIST_BY_INDEX                             
+                                                     ListSegmentNode.Create<T, Head, Tail, CreationType>(new ListSegment<T>(list, 0, list.Count), ref nodes),
+#else                                             
+                                                     ListNode.Create<T, Head, Tail, CreationType>(list, ref nodes),
+#endif                                            
+                INode node                        => node.CreateObjectDescent<CreationType, Head, Tail>(ref nodes),
+                _                                 => Vanilla(enumerable, ref nodes),
             };
+
+            static CreationType Vanilla(IEnumerable<T> enumerable, ref Nodes<Head, Tail> nodes)
+            {
+                if (nodes.TryObjectAscentOptimization<Optimizations.SourceEnumerable<T>, CreationType>(new Optimizations.SourceEnumerable<T> { Enumerable = enumerable }, out var creation))
+                    return creation;
+
+                var e = new EnumerableFastEnumerator<T>(enumerable);
+                return nodes.CreateObject<CreationType, T, EnumerableFastEnumerator<T>>(ref e);
+            }
+        }
 
         internal static TResult FastEnumerateSwitch<T, TResult, FEnumerator>(IEnumerable<T> _enumerable, in FEnumerator fenum)
              where FEnumerator : IForwardEnumerator<T>
-            => _enumerable switch
+        {
+            return _enumerable switch
             {
-                T[] array => ArrayNode.FastEnumerate<T, TResult, FEnumerator>(array, fenum),
-                List<T> list => ListSegmentNode.FastEnumerate<T, TResult, FEnumerator>(new ListSegment<T>(list, 0, list.Count), fenum),
-                INode<T> n => n.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum),
-                var e => EnumerableNode.FastEnumerate<T, TResult, FEnumerator>(e, fenum),
+                null          => throw new ArgumentNullException("source"), // name used to match System.Linq's exceptions
+                T[] array     => ArrayNode.FastEnumerate<T, TResult, FEnumerator>(array, fenum),
+                List<T> list  => ListSegmentNode.FastEnumerate<T, TResult, FEnumerator>(new ListSegment<T>(list, 0, list.Count), fenum),
+                INode<T> node => node.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum),
+                _             => Vanilla(_enumerable, fenum),
             };
 
-        internal static TResult FastEnumerate<TIn, TResult, FEnumerator>(IEnumerable<TIn> e, FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
-        {
-            try
+            static TResult Vanilla(IEnumerable<T> e, FEnumerator fenum)
             {
-                if (e == null)
-                    throw new ArgumentNullException("source"); // name used to match System.Linq's exceptions
-
-                Loop(e, ref fenum);
-                return fenum.GetResult<TResult>();
-            }
-            finally
-            {
-                fenum.Dispose();
+                try
+                {
+                    Loop(e, ref fenum);
+                    return fenum.GetResult<TResult>();
+                }
+                finally
+                {
+                    fenum.Dispose();
+                }
             }
         }
 
@@ -270,67 +242,6 @@ namespace Cistern.ValueLinq.Containers
             {
                 if (!fenum.ProcessNext(item))
                     break;
-            }
-        }
-
-        internal static T[] TryToArray<T>(IEnumerable<T> enumerable) =>
-            enumerable switch
-            {
-                T[] srcArray => ArrayNode.ToArray(srcArray),
-                List<T> srcList => ListSegmentNode.ToArray(srcList, 0, srcList.Count),
-                _ => null
-            };
-
-        internal static bool TryReverse<T>(IEnumerable<T> enumerable, ref NodeContainer<T> container)
-        {
-            if (enumerable is T[] srcArray)
-            {
-                container.SetNode(new ReversedMemoryNode<T>(srcArray));
-                return true;
-            }
-            if (enumerable is List<T> srcList)
-            {
-                container.SetNode(new ReversedListSegmentNode<T>(srcList, 0, srcList.Count));
-                return true;
-            }
-            return false;
-        }
-
-        internal static bool TrySkip<T>(IEnumerable<T> enumerable, int count, ref NodeContainer<T> container)
-        {
-            if (enumerable is T[] srcArray)
-            {
-                MemoryNode.Skip(new ReadOnlyMemory<T>(srcArray), count, ref container);
-                return true;
-            }
-            else if (enumerable is List<T> list)
-            {
-                ListSegmentNode.Skip(new ListSegment<T>(list, 0, list.Count), count, ref container);
-                return true;
-            }
-            else
-            {
-                return false;
-            };
-        }
-        internal static bool TryTake<T>(IEnumerable<T> enumerable, int count, ref NodeContainer<T> container)
-        {
-            if (enumerable is T[] srcArray)
-            {
-                if (count > srcArray.Length)
-                    container.SetNode(new ArrayNode<T>(srcArray));
-                else
-                    MemoryNode.Take(new ReadOnlyMemory<T>(srcArray), count, ref container);
-                return true;
-            }
-            else if (enumerable is List<T> list)
-            {
-                ListSegmentNode.Take(new ListSegment<T>(list, 0, list.Count), count, ref container);
-                return true;
-            }
-            else
-            {
-                return false;
             }
         }
     }

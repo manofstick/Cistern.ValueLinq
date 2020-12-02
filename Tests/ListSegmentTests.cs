@@ -210,5 +210,138 @@ namespace Linqs.Tests
 
             Assert.Equal(expected, actual);
         }
+
+        [Fact]
+        public void SkipTakeReverseSkipTakeReverseSkipTakeToArray()
+        {
+            var asEnumerable = Numbers0to99();
+            var asList = new List<int>(Numbers0to99());
+
+            var expected =
+                asEnumerable
+                .Skip(10)
+                .Take(50)
+                .Reverse()
+                .Skip(10)
+                .Take(25)
+                .Reverse()
+                .Skip(3)
+                .Take(10)
+                .ToArray();
+
+            var actual =
+                asList
+                .Skip(10)
+                .Take(50)
+                .Reverse()
+                .Skip(10)
+                .Take(25)
+                .Reverse()
+                .Skip(3)
+                .Take(10)
+                .ToArray();
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public void SkipTakeReverseSkipTakeReverseSkipTakeToList()
+        {
+            var asEnumerable = Numbers0to99();
+            var asList = new List<int>(Numbers0to99());
+
+            var expected =
+                asEnumerable
+                .Skip(10)
+                .Take(50)
+                .Reverse()
+                .Skip(10)
+                .Take(25)
+                .Reverse()
+                .Skip(3)
+                .Take(10)
+                .ToList();
+
+            var actual =
+                asList
+                .Skip(10)
+                .Take(50)
+                .Reverse()
+                .Skip(10)
+                .Take(25)
+                .Reverse()
+                .Skip(3)
+                .Take(10)
+                .ToList();
+
+            Assert.Equal(expected, actual);
+        }
+
+
+        [Fact]
+        public void SkipTakeReverseSkipTakeReverseSkipTakeSumSingle()
+        {
+            var asEnumerable = Numbers0to99();
+            var asList = new List<int>(Numbers0to99());
+
+            var expected =
+                asEnumerable
+                .Skip(10)
+                .Take(50)
+                .Reverse()
+                .Skip(10)
+                .Take(25)
+                .Reverse()
+                .Skip(3)
+                .Take(10)
+                .Sum();
+
+            var actual =
+                asList
+                .Skip(10)
+                .Take(50)
+                .Reverse()
+                .Skip(10)
+                .Take(25)
+                .Reverse()
+                .Skip(3)
+                .Take(10)
+                .Sum();
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public void SkipTakeReverseSkipTakeReverseSkipTakeSumBatch()
+        {
+            var asEnumerable = Numbers0to99();
+            var asList = new List<int>(Numbers0to99());
+
+            var expected =
+                asEnumerable
+                .Skip(10)
+                .Take(50)
+                .Reverse()
+                .Skip(10)
+                .Take(25)
+                .Reverse()
+                .Skip(3)
+                .Take(21)
+                .Sum();
+
+            var actual =
+                asList
+                .Skip(10)
+                .Take(50)
+                .Reverse()
+                .Skip(10)
+                .Take(25)
+                .Reverse()
+                .Skip(3)
+                .Take(21)
+                .Sum();
+
+            Assert.Equal(expected, actual);
+        }
     }
 }

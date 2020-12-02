@@ -101,8 +101,6 @@ namespace Cistern.ValueLinq.Containers
             => ListSegmentNode.FastReverseEnumerate<T, TResult, FEnumerator>(in _list, fenum);
     }
 
-
-
     public struct ListSegmentNode<T>
         : INode<T>
     {
@@ -122,21 +120,17 @@ namespace Cistern.ValueLinq.Containers
         { creation = default; return false; }
 
         public bool CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+            => ListSegmentNode.CheckForOptimization<T, TRequest, TResult>(in _list, in request, out result);
+
+        public TResult CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
+            where FEnumerator : IForwardEnumerator<T>
+            => ListSegmentNode.FastEnumerate<T, TResult, FEnumerator>(in _list, fenum);
+    }
+
+    static class ListSegmentNode
+    {
+        public static bool CheckForOptimization<T, TRequest, TResult>(in ListSegment<T> _list, in TRequest request, out TResult result)
         {
-            if (typeof(TRequest) == typeof(Optimizations.ToArray))
-            {
-                result = (TResult)(object)ListSegmentNode.ToArray(_list.List, _list.Start, _list.Count);
-                return true;
-            }
-
-            if (typeof(TRequest) == typeof(Optimizations.Reverse))
-            {
-                NodeContainer<T> container = default;
-                container.SetNode(new ReversedListSegmentNode<T>(_list.List, _list.Start, _list.Count));
-                result = (TResult)(object)container;
-                return true;
-            }
-
             if (typeof(TRequest) == typeof(Optimizations.Skip))
             {
                 var skip = (Optimizations.Skip)(object)request;
@@ -148,30 +142,38 @@ namespace Cistern.ValueLinq.Containers
 
             if (typeof(TRequest) == typeof(Optimizations.Take))
             {
-                var skip = (Optimizations.Take)(object)request;
+                var take = (Optimizations.Take)(object)request;
                 NodeContainer<T> container = default;
-                ListSegmentNode.Take(in _list, skip.Count, ref container);
+                ListSegmentNode.Take(in _list, take.Count, ref container);
                 result = (TResult)(object)container;
                 return true;
             }
 
-            if (typeof(TRequest) == typeof(Optimizations.Count))
+            if (typeof(TRequest) == typeof(Optimizations.Reverse))
             {
-                result = (TResult)(object)_list.Count;
+                NodeContainer<T> container = default;
+                container.SetNode(new ReversedListSegmentNode<T>(_list.List, _list.Start, _list.Count));
+                result = (TResult)(object)container;
                 return true;
+            }
+
+            if (typeof(TRequest) == typeof(Optimizations.ToArray))
+            {
+                result = (TResult)(object)ListSegmentNode.ToArray(_list.List, _list.Start, _list.Count);
+                return true;
+            }
+
+            if (typeof(TRequest) == typeof(Optimizations.ToList))
+            {
+                result = default;
+                return false;
+                // TODO
             }
 
             result = default;
             return false;
         }
 
-        public TResult CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<T>
-            => ListSegmentNode.FastEnumerate<T, TResult, FEnumerator>(in _list, fenum);
-    }
-
-    static class ListSegmentNode
-    {
         public static T[] ToArray<T>(List<T> srcList, int start, int count) =>
             srcList.Count switch
             {

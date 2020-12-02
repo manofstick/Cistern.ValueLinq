@@ -107,7 +107,7 @@ namespace Linqs.Tests
             Assert.Equal('a', cba[3]);
 
             var current = abc.Skip(1).Reverse().Skip(2).ToArray();
-            var baseline = 
+            var baseline =
                 System.Linq.Enumerable.ToArray(
                     System.Linq.Enumerable.Skip(
                         System.Linq.Enumerable.Reverse(
@@ -120,5 +120,157 @@ namespace Linqs.Tests
             Assert.Equal(baseline, current);
         }
 
+        private static IEnumerable<int> Numbers0to99()
+        {
+            for (var i = 0; i < 100; ++i)
+                yield return i;
+        }
+
+        public static IEnumerable<object[]> MultipleTypesOfNumbers0to99()
+        {
+            var data = new object[]
+            {
+                Numbers0to99(),
+                Numbers0to99().ToList(),
+                Numbers0to99().ToArray(),
+                Enumerable.Range(0, 100),
+            };
+
+            return data.Select(item => new[] { item });
+        }
+
+
+        [Theory]
+        [MemberData(nameof(MultipleTypesOfNumbers0to99))]
+        public void SelectReverseSum(IEnumerable<int> data)
+        {
+            var asEnumerable = Numbers0to99();
+
+            var expected =
+                asEnumerable.Sum() * 2;
+
+            var actual =
+                data
+                .Select(x => x * 2)
+                .Reverse()
+                .Sum();
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Theory]
+        [MemberData(nameof(MultipleTypesOfNumbers0to99))]
+        public void SelectReverseSkipSum(IEnumerable<int> data)
+        {
+            var asEnumerable = Numbers0to99();
+
+            var toSkip = 10;
+
+            var expected = 2 *
+                asEnumerable
+                .Take(data.Count()-toSkip)
+                .Sum();
+
+            var actual =
+                data
+                .Select(x => x * 2)
+                .Reverse()
+                .Skip(toSkip)
+                .Sum();
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Theory]
+        [MemberData(nameof(MultipleTypesOfNumbers0to99))]
+        public void ReverseSelectSkipSum(IEnumerable<int> data)
+        {
+            var asEnumerable = Numbers0to99();
+
+            var toSkip = 10;
+
+            var expected = 2 *
+                asEnumerable
+                .Take(data.Count() - toSkip)
+                .Sum();
+
+            var actual =
+                data
+                .Reverse()
+                .Select(x => x * 2)
+                .Skip(toSkip)
+                .Sum();
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Theory]
+        [MemberData(nameof(MultipleTypesOfNumbers0to99))]
+        public void ReverseSkipSelectSum(IEnumerable<int> data)
+        {
+            var asEnumerable = Numbers0to99();
+
+            var toSkip = 10;
+
+            var expected = 2 *
+                asEnumerable
+                .Take(data.Count() - toSkip)
+                .Sum();
+
+            var actual =
+                data
+                .Reverse()
+                .Skip(toSkip)
+                .Select(x => x * 2)
+                .Sum();
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Theory]
+        [MemberData(nameof(MultipleTypesOfNumbers0to99))]
+        public void SkipSelectReverseSum(IEnumerable<int> data)
+        {
+            var asEnumerable = Numbers0to99();
+
+            var toSkip = 10;
+
+            var expected = 2 *
+                asEnumerable
+                .Skip(toSkip)
+                .Sum();
+
+            var actual =
+                data
+                .Skip(toSkip)
+                .Select(x => x * 2)
+                .Reverse()
+                .Sum();
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Theory]
+        [MemberData(nameof(MultipleTypesOfNumbers0to99))]
+        public void SelectSkipReverseSum(IEnumerable<int> data)
+        {
+            var asEnumerable = Numbers0to99();
+
+            var toSkip = 10;
+
+            var expected = 2 *
+                asEnumerable
+                .Skip(toSkip)
+                .Sum();
+
+            var actual =
+                data
+                .Select(x => x * 2)
+                .Skip(toSkip)
+                .Reverse()
+                .Sum();
+
+            Assert.Equal(expected, actual);
+        }
     }
 }

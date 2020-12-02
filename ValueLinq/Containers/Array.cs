@@ -127,49 +127,8 @@ namespace Cistern.ValueLinq.Containers
 
         bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
 
-        public bool CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
-        {
-            if (typeof(TRequest) == typeof(Optimizations.ToArray))
-            {
-                result = (TResult)(object)ArrayNode.ToArray(_array);
-                return true;
-            }
-
-            if (typeof(TRequest) == typeof(Optimizations.Reverse))
-            {
-                NodeContainer<T> container = default;
-                container.SetNode(new ReversedMemoryNode<T>(_array));
-                result = (TResult)(object)container;
-                return true;
-            }
-
-            if (typeof(TRequest) == typeof(Optimizations.Skip))
-            {
-                var skip = (Optimizations.Skip)(object)request;
-                NodeContainer<T> container = default;
-                MemoryNode.Skip(new ReadOnlyMemory<T>(_array), skip.Count, ref container);
-                result = (TResult)(object)container;
-                return true;
-            }
-
-            if (typeof(TRequest) == typeof(Optimizations.Take))
-            {
-                var skip = (Optimizations.Take)(object)request;
-                NodeContainer<T> container = default;
-                ArrayNode.Take(_array, skip.Count, ref container);
-                result = (TResult)(object)container;
-                return true;
-            }
-
-            if (typeof(TRequest) == typeof(Optimizations.Count))
-            {
-                result = (TResult)(object)_array.Length;
-                return true;
-            }
-
-            result = default;
-            return false;
-        }
+        public bool CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result) =>
+            MemoryNode.CheckForOptimization<T, TRequest, TResult>(_array, in request, out result);
 
         CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __)
             => throw new InvalidOperationException();
@@ -180,22 +139,6 @@ namespace Cistern.ValueLinq.Containers
 
     static class ArrayNode
     {
-        internal static void Take<T>(T[] array, int count, ref NodeContainer<T> container)
-        {
-            if (count <= 0)
-            {
-                container.SetEmpty();
-            }
-            else if (count >= array.Length)
-            {
-                container.SetNode(new ArrayNode<T>(array));
-            }
-            else
-            {
-                MemoryNode.Take(new ReadOnlyMemory<T>(array), count, ref container);
-            }
-        }
-
         internal static T[] ToArray<T>(T[] array)
         {
             // https://marcelltoth.net/article/41/fastest-way-to-copy-a-net-array

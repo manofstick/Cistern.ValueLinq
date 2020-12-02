@@ -61,6 +61,28 @@ namespace Cistern.ValueLinq.Nodes
                 return true;
             }
 
+            // TODO: Maybe some extra thought here; I *think* this is good because we are ultimately creating a root node
+            // which *should* mean that we don't have to traverse the optimization pipeline again, but I should actually
+            // just ensure this is true. (Why? well here we're spending the time to actually reverse the array which
+            // is an O(N) operation (at least - could be doing a sort, etc.))
+            if (typeof(TRequest) == typeof(Optimizations.Skip))
+            {
+                var skip = (Optimizations.Skip)(object)request;
+                NodeContainer<T> container = default;
+                MemoryNode.Skip(new ReadOnlyMemory<T>(GetReversedArray()), skip.Count, ref container);
+                result = (TResult)(object)container;
+                return true;
+            }
+
+            if (typeof(TRequest) == typeof(Optimizations.Take))
+            {
+                var skip = (Optimizations.Take)(object)request;
+                NodeContainer<T> container = default;
+                MemoryNode.Take(GetReversedArray(), skip.Count, ref container);
+                result = (TResult)(object)container;
+                return true;
+            }
+
             result = default;
             return false;
         }
@@ -68,12 +90,10 @@ namespace Cistern.ValueLinq.Nodes
         TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
         {
             if (_nodeT.CheckForOptimization<Optimizations.Reverse, NodeContainer<T>>(new Optimizations.Reverse(), out var node))
-            {
                 return node.CreateObjectViaFastEnumerator<TResult, FEnumerator>(fenum);
-            }
 
             var reversed = new ArrayNode<T>(GetReversedArray());
-            return ((INode<T>)reversed).CreateObjectViaFastEnumerator<TResult, FEnumerator>(fenum);
+            return reversed.CreateObjectViaFastEnumerator<TResult, FEnumerator>(fenum);
         }
     }
 }

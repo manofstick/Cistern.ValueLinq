@@ -119,48 +119,7 @@ namespace Cistern.ValueLinq.Containers
         bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
 
         bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
-        {
-            if (typeof(TRequest) == typeof(Optimizations.ToArray))
-            {
-                result = (TResult)(object)ListSegmentNode.ToArray(_list, 0, _list.Count);
-                return true;
-            }
-
-            if (typeof(TRequest) == typeof(Optimizations.Reverse))
-            {
-                NodeContainer<T> container = default;
-                container.SetNode(new ReversedListSegmentNode<T>(_list, 0, _list.Count));
-                result = (TResult)(object)container;
-                return true;
-            }
-
-            if (typeof(TRequest) == typeof(Optimizations.Skip))
-            {
-                var skip = (Optimizations.Skip)(object)request;
-                NodeContainer<T> container = default;
-                ListSegmentNode.Skip(new ListSegment<T>(_list, 0, _list.Count), skip.Count, ref container);
-                result = (TResult)(object)container;
-                return true;
-            }
-
-            if (typeof(TRequest) == typeof(Optimizations.Take))
-            {
-                var take = (Optimizations.Take)(object)request;
-                NodeContainer<T> container = default;
-                ListSegmentNode.Take(new ListSegment<T>(_list, 0, _list.Count), take.Count, ref container);
-                result = (TResult)(object)container;
-                return true;
-            }
-
-            if (typeof(TRequest) == typeof(Optimizations.Count))
-            {
-                result = (TResult)(object)_list.Count;
-                return true;
-            }
-
-            result = default;
-            return false;
-        }
+            => ListSegmentNode.CheckForOptimization<T, TRequest, TResult>(new ListSegment<T>(_list, 0, _list.Count), in request, out result);
 
         TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
             => ListSegmentNode.FastEnumerate<T, TResult, FEnumerator>(new ListSegment<T>(_list, 0, _list.Count), fenum);
