@@ -45,7 +45,61 @@ namespace Cistern.ValueLinq.Nodes
                 return false;
             }
 
-            _inner = _getInner(next).GetEnumerator().FastEnumerator;
+            _inner = Nodes<TOut>.CreateFastEnumerator(_getInner(next));
+
+            return true;
+        }
+    }
+
+    struct SelectManyNodeEnumerator<TSource, TCollection, TResult, TSourceEnumerator, NodeCollection>
+        : IFastEnumerator<TResult>
+        where TSourceEnumerator : IFastEnumerator<TSource>
+        where NodeCollection : INode<TCollection>
+    {
+        private TSourceEnumerator _outer;
+        private Func<TSource, ValueEnumerable<TCollection, NodeCollection>> _collectionSelector;
+        private Func<TSource, TCollection, TResult> _resultSelector;
+        private TSource _source;
+        private FastEnumerator<TCollection> _inner;
+
+        public SelectManyNodeEnumerator(in TSourceEnumerator sourceEnumerator, Func<TSource, ValueEnumerable<TCollection, NodeCollection>> collectionSelector, Func<TSource, TCollection, TResult> resultSelector)
+            => (_outer, _collectionSelector, _resultSelector, _source, _inner) = (sourceEnumerator, collectionSelector, resultSelector, default, FastEnumerator<TCollection>.Empty);
+
+        public void Dispose()
+        {
+            _inner.Dispose();
+            _outer.Dispose();
+        }
+
+        public bool TryGetNext(out TResult current)
+        {
+            for (; ; )
+            {
+                if (_inner.TryGetNext(out var collectionItem))
+                {
+                    current = _resultSelector(_source, collectionItem);
+                    return true;
+                }
+
+                if (!Next())
+                {
+                    current = default;
+                    return false;
+                }
+            }
+        }
+
+        public bool Next()
+        {
+            _inner.Dispose();
+            _inner = FastEnumerator<TCollection>.Empty;
+
+            if (!_outer.TryGetNext(out _source))
+            {
+                return false;
+            }
+
+            _inner = Nodes<TCollection>.CreateFastEnumerator(_collectionSelector(_source));
 
             return true;
         }
@@ -96,6 +150,41 @@ namespace Cistern.ValueLinq.Nodes
             => _nodeT.CreateObjectViaFastEnumerator<TResult, SelectManyFoward<T, U, NodeU, FEnumerator>>(new SelectManyFoward<T, U, NodeU, FEnumerator>(new SelectManyCommonNext<U, FEnumerator>(in fenum), _map));
     }
 
+    public struct SelectManyNode<TSource, TCollection, TResult, NodeSource, NodeCollection>
+        : INode<TResult>
+        where NodeSource : INode<TSource>
+        where NodeCollection : INode<TCollection>
+    {
+        private NodeSource _nodeSource;
+        private Func<TSource, ValueEnumerable<TCollection, NodeCollection>> _collectionSelector;
+        private Func<TSource, TCollection, TResult> _resultSelector;
+
+        public void GetCountInformation(out CountInformation info) =>
+            info = new CountInformation();
+
+        public SelectManyNode(in NodeSource nodeSource, Func<TSource, ValueEnumerable<TCollection, NodeCollection>> collectionSelector, Func<TSource, TCollection, TResult> resultSelector)
+            => (_nodeSource, _collectionSelector, _resultSelector) = (nodeSource, collectionSelector, resultSelector);
+
+        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+            => Nodes<CreationType>.Descend(ref _nodeSource, in this, in nodes);
+
+        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
+        {
+            var nextEnumerator = new SelectManyNodeEnumerator<EnumeratorElement, TCollection, TResult, Enumerator, NodeCollection>(in enumerator, (Func<EnumeratorElement, ValueEnumerable<TCollection, NodeCollection>>)(object)_collectionSelector, (Func<EnumeratorElement, TCollection, TResult>)(object)_resultSelector);
+            return tail.CreateObject<CreationType, TResult, SelectManyNodeEnumerator<EnumeratorElement, TCollection, TResult, Enumerator, NodeCollection>>(ref nextEnumerator);
+        }
+
+        bool INode.TryObjectAscentOptimization<TRequest, TObjResult, Nodes>(in TRequest request, ref Nodes nodes, out TObjResult creation) { creation = default; return false; }
+        bool INode.CheckForOptimization<TRequest, TObjResult>(in TRequest request, out TObjResult result)
+        {
+            result = default;
+            return false;
+        }
+
+        TObjResult INode<TResult>.CreateObjectViaFastEnumerator<TObjResult, FEnumerator>(in FEnumerator fenum)
+            => _nodeSource.CreateObjectViaFastEnumerator<TObjResult, SelectManyFoward<TSource, TCollection, TResult, NodeCollection, FEnumerator>>(new SelectManyFoward<TSource, TCollection, TResult, NodeCollection, FEnumerator>(new SelectManyCommonNext<TResult, FEnumerator>(in fenum), _collectionSelector, _resultSelector));
+    }
+
     static class SelectManyImpl
     {
         public static int Count<T, U, NodeU>(FastEnumerator<T> enumerator, Func<T, ValueEnumerable<U, NodeU>> _map)
@@ -141,6 +230,25 @@ namespace Cistern.ValueLinq.Nodes
         bool IForwardEnumerator<T>.ProcessNext(T input) => _processNext = _next.ProcessNext(input);
     }
 
+    struct SelectManyProcessNextForward<TSource, TCollection, TResult, Next>
+        : IForwardEnumerator<TCollection>
+        where Next : IForwardEnumerator<TResult>
+    {
+        private TSource _source;
+        private Func<TSource, TCollection, TResult> _resultSelector;
+        private SelectManyCommonNext<TResult, Next> _next;
+        private bool _processNext;
+
+        public SelectManyProcessNextForward(TSource source, Func<TSource, TCollection, TResult> resultSelector, SelectManyCommonNext<TResult, Next> next)
+            => (_source, _resultSelector, _next, _processNext) = (source, resultSelector, next, true);
+
+        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
+        public void Dispose() { }
+        TObjResult IForwardEnumerator<TCollection>.GetResult<TObjResult>() => (TObjResult)(object)_processNext;
+
+        bool IForwardEnumerator<TCollection>.ProcessNext(TCollection input) => _processNext = _next.ProcessNext(_resultSelector(_source, input));
+    }
+
     struct SelectManyFoward<T, U, NodeU, Next>
         : IForwardEnumerator<T>
         where Next : IForwardEnumerator<U>
@@ -159,4 +267,26 @@ namespace Cistern.ValueLinq.Nodes
         public bool ProcessNext(T input) =>
             _getEnumerable(input).Node.CreateObjectViaFastEnumerator<bool, SelectManyProcessNextForward<U, Next>>(new SelectManyProcessNextForward<U, Next>(_next));
     }
+
+    struct SelectManyFoward<TSource, TCollection, TResult, NodeCollection, Next>
+        : IForwardEnumerator<TSource>
+        where Next : IForwardEnumerator<TResult>
+        where NodeCollection : INode<TCollection>
+    {
+        private SelectManyCommonNext<TResult, Next> _next;
+        private Func<TSource, ValueEnumerable<TCollection, NodeCollection>> _collectionSelector;
+        private Func<TSource, TCollection, TResult> _resultSelector;
+
+        public SelectManyFoward(in SelectManyCommonNext<TResult, Next> next, Func<TSource, ValueEnumerable<TCollection, NodeCollection>> collectionSelector, Func<TSource, TCollection, TResult> resultSelector)
+            => (_next, _collectionSelector, _resultSelector) = (next, collectionSelector, resultSelector);
+
+        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
+        public void Dispose() => _next.Dispose();
+
+        public TObjResult GetResult<TObjResult>() => _next.GetResult<TObjResult>();
+
+        public bool ProcessNext(TSource input) =>
+            _collectionSelector(input).Node.CreateObjectViaFastEnumerator<bool, SelectManyProcessNextForward<TSource, TCollection, TResult, Next>>(new SelectManyProcessNextForward<TSource, TCollection, TResult, Next>(input, _resultSelector, _next));
+    }
+
 }

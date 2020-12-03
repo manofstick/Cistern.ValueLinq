@@ -113,6 +113,16 @@ namespace Cistern.ValueLinq
             return source.OfEnumerable().SelectMany(src => selector(src).OfEnumerable());
         }
 
+        public static ValueEnumerable<TResult, SelectManyNode<TSource, TCollection, TResult, EnumerableNode<TSource>, EnumerableNode<TCollection>>> SelectMany<TSource, TCollection, TResult>(this IEnumerable<TSource> source, Func<TSource, IEnumerable<TCollection>> collectionSelector, Func<TSource, TCollection, TResult> resultSelector)
+        {
+            if (collectionSelector == null)
+                throw new ArgumentNullException(nameof(collectionSelector));
+            if (resultSelector == null)
+                throw new ArgumentNullException(nameof(resultSelector));
+
+            return source.OfEnumerable().SelectMany(src => collectionSelector(src).OfEnumerable(), resultSelector);
+        }
+
         public static ValueEnumerable<TResult, SelectManyNode<TSource, TResult, EnumerableNode<TSource>, NodeU>> SelectMany<TSource, TResult, NodeU>(this IEnumerable<TSource> source, Func<TSource, ValueEnumerable<TResult, NodeU>> selector)
             where NodeU : INode<TResult>
         {

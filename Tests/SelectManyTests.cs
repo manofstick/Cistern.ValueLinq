@@ -367,12 +367,12 @@ namespace Linqs.Tests
             Assert.False(en != null && en.MoveNext());
         }
 
-        [Fact]
+        [Fact(Skip = "CISTERN.VALUELINQ: Irrelevant")]
         public void ForcedToEnumeratorDoesntEnumerateResultSel()
         {
-            var iterator = NumberRangeGuaranteedNotCollectionType(0, 3).SelectMany(i => new int[0], (e, i) => e);
-            var en = iterator as IEnumerator<int>;
-            Assert.False(en != null && en.MoveNext());
+            //var iterator = NumberRangeGuaranteedNotCollectionType(0, 3).SelectMany(i => new int[0], (e, i) => e);
+            //var en = iterator as IEnumerator<int>;
+            //Assert.False(en != null && en.MoveNext());
         }
 
         [Fact]

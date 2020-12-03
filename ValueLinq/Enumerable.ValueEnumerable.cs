@@ -495,6 +495,18 @@ namespace Cistern.ValueLinq
             return new ValueEnumerable<TResult, SelectManyNode<TSource, TResult, NodeT, NodeU>>(new SelectManyNode<TSource, TResult, NodeT, NodeU>(in prior.Node, selector));
         }
 
+        public static ValueEnumerable<TResult, SelectManyNode<TSource, TCollection, TResult, NodeT, NodeU>> SelectMany<TSource, TCollection, TResult, NodeT, NodeU>(in this ValueEnumerable<TSource, NodeT> prior, Func<TSource, ValueEnumerable<TCollection, NodeU>> collectionSelector, Func<TSource, TCollection, TResult> resultSelector)
+            where NodeT : INode<TSource>
+            where NodeU : INode<TCollection>
+        {
+            if (collectionSelector == null)
+                throw new ArgumentNullException(nameof(collectionSelector));
+            if (resultSelector == null)
+                throw new ArgumentNullException(nameof(resultSelector));
+
+            return new ValueEnumerable<TResult, SelectManyNode<TSource, TCollection, TResult, NodeT, NodeU>>(new SelectManyNode<TSource, TCollection, TResult, NodeT, NodeU>(in prior.Node, collectionSelector, resultSelector));
+        }
+
         public static ValueEnumerable<T, ConcatNode<T, First, Second>> Concat<T, First, Second>(in this ValueEnumerable<T, First> first, in ValueEnumerable<T, Second> second)
             where First : INode<T>
             where Second : INode<T>
