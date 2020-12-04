@@ -311,6 +311,30 @@ namespace Cistern.ValueLinq
             return inner.Node.CreateObjectViaFastEnumerator<T, LastOrDefaultPredicate<T>>(new LastOrDefaultPredicate<T>());
         }
 
+        public static T First<T, Inner>(in this ValueEnumerable<T, Inner> inner)
+            where Inner : INode<T> => inner.Node.CreateObjectViaFastEnumerator<T, First<T>>(new First<T>());
+
+        public static T First<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, bool> predicate)
+            where Inner : INode<T>
+        {
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
+
+            return inner.Node.CreateObjectViaFastEnumerator<T, FirstPredicate<T>>(new FirstPredicate<T>(predicate));
+        }
+
+        public static T FirstOrDefault<T, Inner>(in this ValueEnumerable<T, Inner> inner)
+            where Inner : INode<T> => inner.Node.CreateObjectViaFastEnumerator<T, FirstOrDefault<T>>(new FirstOrDefault<T>());
+
+        public static T FirstOrDefault<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, bool> predicate)
+            where Inner : INode<T>
+        {
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
+
+            return inner.Node.CreateObjectViaFastEnumerator<T, FirstOrDefaultPredicate<T>>(new FirstOrDefaultPredicate<T>());
+        }
+
         public static T ElementAt<T, Inner>(in this ValueEnumerable<T, Inner> inner, int index)
             where Inner : INode<T>
         {

@@ -80,6 +80,38 @@
             FunctionReturns: "TSource",
             WrapReturn: new Func<string, string>(s => s)
         ),
+        (
+            Signature: new Func<string, string>(collection => $"First<TSource>(this {collection} source, Func<TSource, bool> predicate)"),
+            Class: "FirstPredicate<TSource>",
+            Args: "predicate",
+            AggregateReturns: "TSource",
+            FunctionReturns: "TSource",
+            WrapReturn: new Func<string, string>(s => s)
+        ),
+        (
+            Signature: new Func<string, string>(collection => $"First<TSource>(this {collection} source)"),
+            Class: "First<TSource>",
+            Args: "",
+            AggregateReturns: "TSource",
+            FunctionReturns: "TSource",
+            WrapReturn: new Func<string, string>(s => s)
+        ),
+        (
+            Signature: new Func<string, string>(collection => $"FirstOrDefault<TSource>(this {collection} source)"),
+            Class: "FirstOrDefault<TSource>",
+            Args: "",
+            AggregateReturns: "TSource",
+            FunctionReturns: "TSource",
+            WrapReturn: new Func<string, string>(s => s)
+        ),
+        (
+            Signature: new Func<string, string>(collection => $"FirstOrDefault<TSource>(this {collection} source, Func<TSource, bool> predicate)"),
+            Class: "FirstOrDefaultPredicate<TSource>",
+            Args: "predicate",
+            AggregateReturns: "TSource",
+            FunctionReturns: "TSource",
+            WrapReturn: new Func<string, string>(s => s)
+        ),
 
     };
 #>

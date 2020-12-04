@@ -21,8 +21,8 @@
             StaticClassName:"ValueLinqList",
             IsNullable:true,
             CollectionType:new Func<string, string>((string type) => $"List<{type}>"),
-            FastEnumerate:"ListByIndexNode.FastEnumerate",
-            OptimizedCall:"ListByIndexNode.ProcessList"
+            FastEnumerate:"ListSegmentNode.FastEnumerate",
+            OptimizedCall:"ListSegmentNode.ProcessList"
         ),
 
         (
