@@ -325,7 +325,7 @@ namespace Cistern.ValueLinq
             if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
 
-            return inner.Node.CreateObjectViaFastEnumerator<T, LastOrDefaultPredicate<T>>(new LastOrDefaultPredicate<T>());
+            return inner.Node.CreateObjectViaFastEnumerator<T, LastOrDefaultPredicate<T>>(new LastOrDefaultPredicate<T>(predicate));
         }
 
         public static T First<T, Inner>(in this ValueEnumerable<T, Inner> inner)
@@ -349,8 +349,33 @@ namespace Cistern.ValueLinq
             if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
 
-            return inner.Node.CreateObjectViaFastEnumerator<T, FirstOrDefaultPredicate<T>>(new FirstOrDefaultPredicate<T>());
+            return inner.Node.CreateObjectViaFastEnumerator<T, FirstOrDefaultPredicate<T>>(new FirstOrDefaultPredicate<T>(predicate));
         }
+
+        public static T Single<T, Inner>(in this ValueEnumerable<T, Inner> inner)
+            where Inner : INode<T> => inner.Node.CreateObjectViaFastEnumerator<T, Single<T>>(new Single<T>());
+
+        public static T Single<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, bool> predicate)
+            where Inner : INode<T>
+        {
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
+
+            return inner.Node.CreateObjectViaFastEnumerator<T, SinglePredicate<T>>(new SinglePredicate<T>(predicate));
+        }
+
+        public static T SingleOrDefault<T, Inner>(in this ValueEnumerable<T, Inner> inner)
+            where Inner : INode<T> => inner.Node.CreateObjectViaFastEnumerator<T, SingleOrDefault<T>>(new SingleOrDefault<T>());
+
+        public static T SingleOrDefault<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, bool> predicate)
+            where Inner : INode<T>
+        {
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
+
+            return inner.Node.CreateObjectViaFastEnumerator<T, SingleOrDefaultPredicate<T>>(new SingleOrDefaultPredicate<T>(predicate));
+        }
+
 
         public static T ElementAt<T, Inner>(in this ValueEnumerable<T, Inner> inner, int index)
             where Inner : INode<T>

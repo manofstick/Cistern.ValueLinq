@@ -48,6 +48,18 @@ namespace Cistern.ValueLinq
         public static TSource FirstOrDefault<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) =>
             EnumerableNode.FastEnumerateSwitch<TSource, TSource, FirstOrDefaultPredicate<TSource>>(source, new FirstOrDefaultPredicate<TSource>(predicate)); 
 
+        public static TSource Single<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) =>
+            EnumerableNode.FastEnumerateSwitch<TSource, TSource, SinglePredicate<TSource>>(source, new SinglePredicate<TSource>(predicate)); 
+
+        public static TSource Single<TSource>(this IEnumerable<TSource> source) =>
+            EnumerableNode.FastEnumerateSwitch<TSource, TSource, Single<TSource>>(source, new Single<TSource>()); 
+
+        public static TSource SingleOrDefault<TSource>(this IEnumerable<TSource> source) =>
+            EnumerableNode.FastEnumerateSwitch<TSource, TSource, SingleOrDefault<TSource>>(source, new SingleOrDefault<TSource>()); 
+
+        public static TSource SingleOrDefault<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) =>
+            EnumerableNode.FastEnumerateSwitch<TSource, TSource, SingleOrDefaultPredicate<TSource>>(source, new SingleOrDefaultPredicate<TSource>(predicate)); 
+
     }
     public static partial class ValueLinqArray
     {
@@ -138,6 +150,34 @@ namespace Cistern.ValueLinq
         public static TSource FirstOrDefault<TSource>(this TSource[] source, Func<TSource, bool> predicate)
         {
             var aggregate = new FirstOrDefaultPredicate<TSource>(predicate);
+            ArrayNode.ProcessArray(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        public static TSource Single<TSource>(this TSource[] source, Func<TSource, bool> predicate)
+        {
+            var aggregate = new SinglePredicate<TSource>(predicate);
+            ArrayNode.ProcessArray(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        public static TSource Single<TSource>(this TSource[] source)
+        {
+            var aggregate = new Single<TSource>();
+            ArrayNode.ProcessArray(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        public static TSource SingleOrDefault<TSource>(this TSource[] source)
+        {
+            var aggregate = new SingleOrDefault<TSource>();
+            ArrayNode.ProcessArray(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        public static TSource SingleOrDefault<TSource>(this TSource[] source, Func<TSource, bool> predicate)
+        {
+            var aggregate = new SingleOrDefaultPredicate<TSource>(predicate);
             ArrayNode.ProcessArray(source, ref aggregate);
             return aggregate.GetResult();
         }
@@ -236,6 +276,34 @@ namespace Cistern.ValueLinq
             return aggregate.GetResult();
         }
 
+        public static TSource Single<TSource>(this List<TSource> source, Func<TSource, bool> predicate)
+        {
+            var aggregate = new SinglePredicate<TSource>(predicate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        public static TSource Single<TSource>(this List<TSource> source)
+        {
+            var aggregate = new Single<TSource>();
+            ListSegmentNode.ProcessList(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        public static TSource SingleOrDefault<TSource>(this List<TSource> source)
+        {
+            var aggregate = new SingleOrDefault<TSource>();
+            ListSegmentNode.ProcessList(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        public static TSource SingleOrDefault<TSource>(this List<TSource> source, Func<TSource, bool> predicate)
+        {
+            var aggregate = new SingleOrDefaultPredicate<TSource>(predicate);
+            ListSegmentNode.ProcessList(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
     }
     public static partial class ValueLinqMemory
     {
@@ -326,6 +394,34 @@ namespace Cistern.ValueLinq
         public static TSource FirstOrDefault<TSource>(this ReadOnlyMemory<TSource> source, Func<TSource, bool> predicate)
         {
             var aggregate = new FirstOrDefaultPredicate<TSource>(predicate);
+            MemoryNode.ProcessMemory(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        public static TSource Single<TSource>(this ReadOnlyMemory<TSource> source, Func<TSource, bool> predicate)
+        {
+            var aggregate = new SinglePredicate<TSource>(predicate);
+            MemoryNode.ProcessMemory(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        public static TSource Single<TSource>(this ReadOnlyMemory<TSource> source)
+        {
+            var aggregate = new Single<TSource>();
+            MemoryNode.ProcessMemory(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        public static TSource SingleOrDefault<TSource>(this ReadOnlyMemory<TSource> source)
+        {
+            var aggregate = new SingleOrDefault<TSource>();
+            MemoryNode.ProcessMemory(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        public static TSource SingleOrDefault<TSource>(this ReadOnlyMemory<TSource> source, Func<TSource, bool> predicate)
+        {
+            var aggregate = new SingleOrDefaultPredicate<TSource>(predicate);
             MemoryNode.ProcessMemory(source, ref aggregate);
             return aggregate.GetResult();
         }

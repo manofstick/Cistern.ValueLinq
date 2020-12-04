@@ -112,6 +112,38 @@
             FunctionReturns: "TSource",
             WrapReturn: new Func<string, string>(s => s)
         ),
+        (
+            Signature: new Func<string, string>(collection => $"Single<TSource>(this {collection} source, Func<TSource, bool> predicate)"),
+            Class: "SinglePredicate<TSource>",
+            Args: "predicate",
+            AggregateReturns: "TSource",
+            FunctionReturns: "TSource",
+            WrapReturn: new Func<string, string>(s => s)
+        ),
+        (
+            Signature: new Func<string, string>(collection => $"Single<TSource>(this {collection} source)"),
+            Class: "Single<TSource>",
+            Args: "",
+            AggregateReturns: "TSource",
+            FunctionReturns: "TSource",
+            WrapReturn: new Func<string, string>(s => s)
+        ),
+        (
+            Signature: new Func<string, string>(collection => $"SingleOrDefault<TSource>(this {collection} source)"),
+            Class: "SingleOrDefault<TSource>",
+            Args: "",
+            AggregateReturns: "TSource",
+            FunctionReturns: "TSource",
+            WrapReturn: new Func<string, string>(s => s)
+        ),
+        (
+            Signature: new Func<string, string>(collection => $"SingleOrDefault<TSource>(this {collection} source, Func<TSource, bool> predicate)"),
+            Class: "SingleOrDefaultPredicate<TSource>",
+            Args: "predicate",
+            AggregateReturns: "TSource",
+            FunctionReturns: "TSource",
+            WrapReturn: new Func<string, string>(s => s)
+        ),
 
     };
 #>
