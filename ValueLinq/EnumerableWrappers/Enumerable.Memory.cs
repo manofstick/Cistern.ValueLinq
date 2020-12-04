@@ -93,6 +93,13 @@ namespace Cistern.ValueLinq
 
             return source.OfMemory().TakeWhile(predicate);
         }
+        public static ValueEnumerable<T, TakeWhileIdxNode<T, MemoryNode<T>>> TakeWhile<T>(this ReadOnlyMemory<T> source, Func<T, int, bool> predicate)
+        {
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
+
+            return source.OfMemory().TakeWhile(predicate);
+        }
 
         // -- Value based select
 

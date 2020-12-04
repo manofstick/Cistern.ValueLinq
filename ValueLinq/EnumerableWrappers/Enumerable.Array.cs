@@ -78,6 +78,13 @@ namespace Cistern.ValueLinq
 
             return source.OfArray().TakeWhile(predicate);
         }
+        public static ValueEnumerable<T, TakeWhileIdxNode<T, ArrayNode<T>>> TakeWhile<T>(this T[] source, Func<T, int, bool> predicate)
+        {
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
+
+            return source.OfArray().TakeWhile(predicate);
+        }
 
         // -- Value based select
 

@@ -181,13 +181,13 @@ namespace Linqs.Tests
             //Assert.False(en != null && en.MoveNext());
         }
 
-        [Fact]
+        [Fact(Skip = "CISTERN.VALUELINQ Invalid")]
         public void ForcedToEnumeratorDoesntEnumerateIndexed()
         {
-            var iterator = NumberRangeGuaranteedNotCollectionType(0, 3).TakeWhile((e, i) => true);
-            // Don't insist on this behaviour, but check it's correct if it happens
-            var en = iterator as IEnumerator<int>;
-            Assert.False(en != null && en.MoveNext());
+            //var iterator = NumberRangeGuaranteedNotCollectionType(0, 3).TakeWhile((e, i) => true);
+            //// Don't insist on this behaviour, but check it's correct if it happens
+            //var en = iterator as IEnumerator<int>;
+            //Assert.False(en != null && en.MoveNext());
         }
     }
 }

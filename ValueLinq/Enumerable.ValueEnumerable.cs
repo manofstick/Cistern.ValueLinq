@@ -206,6 +206,9 @@ namespace Cistern.ValueLinq
             return new ValueEnumerable<T, SkipWhileIdxNode<T, TPrior>>(new SkipWhileIdxNode<T, TPrior>(in prior.Node, predicate));
         }
 
+        public static ValueEnumerable<T, TakeNode<T, TPrior>> Take<T, TPrior>(in this ValueEnumerable<T, TPrior> prior, int count)
+            where TPrior : INode<T>
+                => new ValueEnumerable<T, TakeNode<T, TPrior>>(new TakeNode<T, TPrior>(in prior.Node, count));
         public static ValueEnumerable<T, TakeWhileNode<T, TPrior>> TakeWhile<T, TPrior>(in this ValueEnumerable<T, TPrior> prior, Func<T, bool> predicate)
             where TPrior : INode<T>
         {
@@ -214,11 +217,14 @@ namespace Cistern.ValueLinq
 
             return new ValueEnumerable<T, TakeWhileNode<T, TPrior>>(new TakeWhileNode<T, TPrior>(in prior.Node, predicate));
         }
-
-
-        public static ValueEnumerable<T, TakeNode<T, TPrior>> Take<T, TPrior>(in this ValueEnumerable<T, TPrior> prior, int count)
+        public static ValueEnumerable<T, TakeWhileIdxNode<T, TPrior>> TakeWhile<T, TPrior>(in this ValueEnumerable<T, TPrior> prior, Func<T, int, bool> predicate)
             where TPrior : INode<T>
-                => new ValueEnumerable<T, TakeNode<T, TPrior>>(new TakeNode<T, TPrior>(in prior.Node, count));
+        {
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
+
+            return new ValueEnumerable<T, TakeWhileIdxNode<T, TPrior>>(new TakeWhileIdxNode<T, TPrior>(in prior.Node, predicate));
+        }
 
         public static T[] ToArray<T, Inner>(in this ValueEnumerable<T, Inner> inner, int? maybeMaxCountForStackBasedPath = 64, (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo = null)
             where Inner : INode<T>
