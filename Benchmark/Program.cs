@@ -1,5 +1,6 @@
 ﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
+using Cistern.ValueLinq;
 using System;
 using System.Collections.Generic;
 
@@ -47,6 +48,13 @@ namespace Cistern.Benchmarks
     {
         public static void Main(string[] args)
         {
+            var a = "This is a really long string isn't is, so it should go through the code I want!".AsMemory();
+            var b = "And this is another really long string that should also be added!".AsMemory();
+            var c = a.Concat(b);
+            var z = c.ToList();
+
+
+
             //For some sanity checking
             DoubleDoubleDouble.SelectWhereAggregate.SanityCheck();
             DoubleDoubleDouble.WhereSelectAggregate.SanityCheck();
@@ -81,6 +89,10 @@ namespace Cistern.Benchmarks
             //        t.C();
             //    Console.Write('.');
             //}
+
+
+
+
 
             var summary = BenchmarkRunner.Run<Double.SkipReverseSkipToArray>();
         }

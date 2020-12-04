@@ -60,6 +60,42 @@ namespace Cistern.ValueLinq.Aggregation
             public override void CopyTo(T[] array, int arrayIndex) { /* we don't copy anything, so list will be empty */ }
         }
 
+        class AddRangeOnList<TObject, T>
+            : ListPopulator<T>
+        {
+            private static AddRangeOnList<TObject, T> _maybeInstance; // cache and reuse or discard
+
+            public static void Populate(List<T> list, TObject obj, Containers.GetSpan<TObject, T> getSpan)
+            {
+                var listPopulator = Interlocked.Exchange(ref _maybeInstance, null);
+                if (listPopulator == null)
+                    listPopulator = new AddRangeOnList<TObject, T>();
+
+                listPopulator.obj = obj;
+                listPopulator.getSpan = getSpan;
+
+                list.AddRange(listPopulator);
+
+                listPopulator.obj = default;
+                listPopulator.getSpan = null;
+
+                _maybeInstance = listPopulator; // might splat another, might not get flushed in time, but we don't care
+            }
+
+            TObject obj;
+            Containers.GetSpan<TObject, T> getSpan;
+
+            private AddRangeOnList() { }
+
+            public override int Count => getSpan(obj).Length;
+            public override void CopyTo(T[] array, int arrayIndex)
+            {
+                var from = getSpan(obj);
+                from.CopyTo(new Span<T>(array)[arrayIndex..]);
+            }
+        }
+
+
         class CreateListFromSectionOfArray<T>
             : ListPopulator<T>
         {
@@ -252,7 +288,17 @@ namespace Cistern.ValueLinq.Aggregation
 
         public ToListForward(int? size) => _list = size.HasValue ? new List<T>(size.Value) : new List<T>();
 
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
+        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request)
+        {
+            if (typeof(TRequest) == typeof(Containers.GetSpan<TObject, T>))
+            {
+                var getSpan = (Containers.GetSpan<TObject, T>)(object)request;
+                ToListImpl.AddRangeOnList<TObject, T>.Populate(_list, obj, getSpan);
+                return BatchProcessResult.SuccessAndContinue;
+            }
+
+            return BatchProcessResult.Unavailable;
+        }
         public void Dispose() { }
         TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_list;
 
