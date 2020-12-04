@@ -43,6 +43,8 @@ namespace Cistern.ValueLinq
 
         public static ValueEnumerable<T, WhereNode<T, EnumerableNode<T>>> Where<T>(this IEnumerable<T> source, Func<T, bool> predicate)
             => source.OfEnumerable().Where(predicate);
+        public static ValueEnumerable<T, WhereIdxNode<T, EnumerableNode<T>>> Where<T>(this IEnumerable<T> source, Func<T, int, bool> predicate)
+            => source.OfEnumerable().Where(predicate);
 
         public static ValueEnumerable<T, Where_InNode<T, EnumerableNode<T>>> Where<T>(this IEnumerable<T> inner, InFunc<T, bool> f) =>
             inner.OfEnumerable().Where(f);

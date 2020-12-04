@@ -181,6 +181,14 @@ namespace Cistern.ValueLinq
 
             return new ValueEnumerable<T, WhereNode<T, TPrior>>(new WhereNode<T, TPrior>(in prior.Node, predicate));
         }
+        public static ValueEnumerable<T, WhereIdxNode<T, TPrior>> Where<T, TPrior>(in this ValueEnumerable<T, TPrior> prior, Func<T, int, bool> predicate)
+            where TPrior : INode<T>
+        {
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
+
+            return new ValueEnumerable<T, WhereIdxNode<T, TPrior>>(new WhereIdxNode<T, TPrior>(in prior.Node, predicate));
+        }
         public static ValueEnumerable<T, Where_InNode<T, TPrior>> Where<T, TPrior>(in this ValueEnumerable<T, TPrior> prior, InFunc<T, bool> f)
             where TPrior : INode<T>
             => new ValueEnumerable<T, Where_InNode<T, TPrior>>(new Where_InNode<T, TPrior>(in prior.Node, f));

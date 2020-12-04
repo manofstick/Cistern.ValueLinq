@@ -184,7 +184,7 @@ namespace Cistern.ValueLinq
         [Obsolete("Not converted to ValueLinq yet")] public static IEnumerable<TSource> Union<TSource>(this IEnumerable<TSource> first, IEnumerable<TSource> second) => System.Linq.Enumerable.Union<TSource>(first, second);
         [Obsolete("Not converted to ValueLinq yet")] public static IEnumerable<TSource> Union<TSource>(this IEnumerable<TSource> first, IEnumerable<TSource> second, IEqualityComparer<TSource> comparer) => System.Linq.Enumerable.Union<TSource>(first, second, comparer);
         //        public static IEnumerable<TSource> Where<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) => System.Linq.Enumerable.Where<TSource>(source, predicate);
-        [Obsolete("Not converted to ValueLinq yet")] public static IEnumerable<TSource> Where<TSource>(this IEnumerable<TSource> source, Func<TSource, int, bool> predicate) => System.Linq.Enumerable.Where<TSource>(source, predicate);
+        //        public static IEnumerable<TSource> Where<TSource>(this IEnumerable<TSource> source, Func<TSource, int, bool> predicate) => System.Linq.Enumerable.Where<TSource>(source, predicate);
         [Obsolete("Not converted to ValueLinq yet")] public static IEnumerable<TResult> Zip<TFirst, TSecond, TResult>(this IEnumerable<TFirst> first, IEnumerable<TSecond> second, Func<TFirst, TSecond, TResult> resultSelector) => System.Linq.Enumerable.Zip<TFirst, TSecond, TResult>(first, second, resultSelector);
         [Obsolete("Not converted to ValueLinq yet")] public static IEnumerable<(TFirst First, TSecond Second)> Zip<TFirst, TSecond>(this IEnumerable<TFirst> first, IEnumerable<TSecond> second) => System.Linq.Enumerable.Zip<TFirst, TSecond, (TFirst, TSecond)>(first, second, (f, s) => (f, s));
     }

@@ -38,6 +38,7 @@ namespace Cistern.ValueLinq
         public static ValueEnumerable<U, SelectIdxNode<T, U, MemoryNode<T>>> Select<T, U>(this ReadOnlyMemory<T> inner, Func<T, int, U> f) => inner.OfMemory().Select(f);
 
         public static ValueEnumerable<T, WhereNode<T, MemoryNode<T>>> Where<T>(this ReadOnlyMemory<T> inner, Func<T, bool> f) => inner.OfMemory().Where(f);
+        public static ValueEnumerable<T, WhereIdxNode<T, MemoryNode<T>>> Where<T>(this ReadOnlyMemory<T> inner, Func<T, int, bool> f) => inner.OfMemory().Where(f);
 
         public static ValueEnumerable<T, Where_InNode<T, MemoryNode<T>>> Where<T>(this ReadOnlyMemory<T> inner, InFunc<T, bool> f) => inner.OfMemory().Where(f);
 
