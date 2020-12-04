@@ -167,6 +167,15 @@ namespace Cistern.ValueLinq
             return source.OfEnumerable().SkipWhileIdx(predicate);
         }
         public static ValueEnumerable<T, TakeNode<T, EnumerableNode<T>>> Take<T>(this IEnumerable<T> source, int count) => source.OfEnumerable().Take(count);
+        public static ValueEnumerable<T, TakeWhileNode<T, EnumerableNode<T>>> TakeWhile<T>(this IEnumerable<T> source, Func<T, bool> predicate)
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
+
+            return source.OfEnumerable().TakeWhile(predicate);
+        }
 
         // -- Value based select
 

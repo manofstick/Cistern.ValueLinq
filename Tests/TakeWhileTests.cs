@@ -172,13 +172,13 @@ namespace Linqs.Tests
             AssertExtensions.Throws<ArgumentNullException>("predicate", () => source.TakeWhile(nullPredicate));
         }
 
-        [Fact]
+        [Fact(Skip ="CISTERN.VALUELINQ Invalid")]
         public void ForcedToEnumeratorDoesntEnumerate()
         {
-            var iterator = NumberRangeGuaranteedNotCollectionType(0, 3).TakeWhile(e => true);
-            // Don't insist on this behaviour, but check it's correct if it happens
-            var en = iterator as IEnumerator<int>;
-            Assert.False(en != null && en.MoveNext());
+            //var iterator = NumberRangeGuaranteedNotCollectionType(0, 3).TakeWhile(e => true);
+            //// Don't insist on this behaviour, but check it's correct if it happens
+            //var en = iterator as IEnumerator<int>;
+            //Assert.False(en != null && en.MoveNext());
         }
 
         [Fact]

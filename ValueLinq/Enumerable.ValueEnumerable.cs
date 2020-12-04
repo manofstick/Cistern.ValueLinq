@@ -205,6 +205,17 @@ namespace Cistern.ValueLinq
 
             return new ValueEnumerable<T, SkipWhileIdxNode<T, TPrior>>(new SkipWhileIdxNode<T, TPrior>(in prior.Node, predicate));
         }
+
+        public static ValueEnumerable<T, TakeWhileNode<T, TPrior>> TakeWhile<T, TPrior>(in this ValueEnumerable<T, TPrior> prior, Func<T, bool> predicate)
+            where TPrior : INode<T>
+        {
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
+
+            return new ValueEnumerable<T, TakeWhileNode<T, TPrior>>(new TakeWhileNode<T, TPrior>(in prior.Node, predicate));
+        }
+
+
         public static ValueEnumerable<T, TakeNode<T, TPrior>> Take<T, TPrior>(in this ValueEnumerable<T, TPrior> prior, int count)
             where TPrior : INode<T>
                 => new ValueEnumerable<T, TakeNode<T, TPrior>>(new TakeNode<T, TPrior>(in prior.Node, count));
