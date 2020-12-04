@@ -16,8 +16,6 @@ namespace Cistern.ValueLinq.ValueEnumerable
         public void Dispose() => _enumerator.Dispose();
 
         public bool MoveNext() => _enumerator.TryGetNext(out _current);
-
-        internal FastEnumerator<T> FastEnumerator { get => _enumerator; } 
     }
 
     struct CreateFastEnumeratorNode
