@@ -6,27 +6,13 @@ using System.Collections.Generic;
 
 namespace Cistern.ValueLinq
 {
-    public static partial class Enumerable
+    public static partial class ValueLinqList
     {
-        public static ValueEnumerable<TSource, ReverseNode<TSource, ListNode<TSource>>> Reverse<TSource>(this List<TSource> source)
-            => source.OfList().Reverse();
-
 
         public static bool Any<TSource>(this List<TSource> source) => source.Count() > 0;
 
 
         // --
-
-        public static ValueEnumerable<U, SelectNode<T, U, ListNode<T>>> Select<T, U>(this List<T> inner, Func<T, U> f) => inner.OfList().Select(f);
-
-        public static ValueEnumerable<U, Select_InNode<T, U, ListNode<T>>> Select<T, U>(this List<T> inner, InFunc<T, U> f) => inner.OfList().Select(f);
-
-        public static ValueEnumerable<U, SelectIdxNode<T, U, ListNode<T>>> Select<T, U>(this List<T> inner, Func<T, int, U> f) => inner.OfList().Select(f);
-
-        public static ValueEnumerable<T, WhereNode<T, ListNode<T>>> Where<T>(this List<T> inner, Func<T, bool> f) => inner.OfList().Where(f);
-        public static ValueEnumerable<T, WhereIdxNode<T, ListNode<T>>> Where<T>(this List<T> inner, Func<T, int, bool> f) => inner.OfList().Where(f);
-
-        public static ValueEnumerable<T, Where_InNode<T, ListNode<T>>> Where<T>(this List<T> inner, InFunc<T, bool> f) => inner.OfList().Where(f);
 
         public static TSource Last<TSource>(this List<TSource> source) => source.OfList().Last();
         public static TSource LastOrDefault<TSource>(this List<TSource> source) => source.OfList().LastOrDefault();
@@ -56,45 +42,5 @@ namespace Cistern.ValueLinq
 
         public static TSource ElementAt<TSource>(this List<TSource> source, int index) => source.OfList().ElementAt(index);
         public static TSource ElementAtOrDefault<TSource>(this List<TSource> source, int index) => source.OfList().ElementAtOrDefault(index);
-
-        public static ValueEnumerable<T, SkipNode<T, ListNode<T>>> Skip<T>(this List<T> source, int count) => source.OfList().Skip(count);
-        public static ValueEnumerable<T, SkipWhileNode<T, ListNode<T>>> SkipWhile<T>(this List<T> source, Func<T, bool> predicate)
-        {
-            if (predicate == null)
-                throw new ArgumentNullException(nameof(predicate));
-
-            return source.OfList().SkipWhile(predicate);
-        }
-        public static ValueEnumerable<T, SkipWhileIdxNode<T, ListNode<T>>> SkipWhile<T>(this List<T> source, Func<T, int, bool> predicate)
-        {
-            if (predicate == null)
-                throw new ArgumentNullException(nameof(predicate));
-
-            return source.OfList().SkipWhileIdx(predicate);
-        }
-        public static ValueEnumerable<T, TakeNode<T, ListNode<T>>> Take<T>(this List<T> source, int count) => source.OfList().Take(count);
-        public static ValueEnumerable<T, TakeWhileNode<T, ListNode<T>>> TakeWhile<T>(this List<T> source, Func<T, bool> predicate)
-        {
-            if (predicate == null)
-                throw new ArgumentNullException(nameof(predicate));
-
-            return source.OfList().TakeWhile(predicate);
-        }
-        public static ValueEnumerable<T, TakeWhileIdxNode<T, ListNode<T>>> TakeWhile<T>(this List<T> source, Func<T, int, bool> predicate)
-        {
-            if (predicate == null)
-                throw new ArgumentNullException(nameof(predicate));
-
-            return source.OfList().TakeWhile(predicate);
-        }
-
-        // -- Value based select
-
-        public static ValueEnumerable<U, ValueSelectNode<T, U, ListNode<T>, IFunc>> Select<T, U, IFunc>(this List<T> prior, IFunc selector, U u = default)
-            where IFunc : IFunc<T, U> => prior.OfList().Select(selector, u);
-
-        public static ValueEnumerable<T, ValueWhereNode<T, ListNode<T>, Predicate>> Where<T, Predicate>(this List<T> inner, Predicate predicate)
-            where Predicate : IFunc<T, bool>
-            => inner.OfList().Where(predicate);
     }
 }

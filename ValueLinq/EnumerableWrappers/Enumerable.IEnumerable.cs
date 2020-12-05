@@ -11,9 +11,6 @@ namespace Cistern.ValueLinq
 {
     public static partial class Enumerable
     {
-        public static ValueEnumerable<TSource, ReverseNode<TSource, EnumerableNode<TSource>>> Reverse<TSource>(this IEnumerable<TSource> source)
-            => source.OfEnumerable().Reverse();
-
         public static bool Contains<TSource>(this IEnumerable<TSource> source, TSource value) =>
             source switch
             {
@@ -32,22 +29,6 @@ namespace Cistern.ValueLinq
             };
 
 
-        public static ValueEnumerable<U, SelectNode<T, U, EnumerableNode<T>>> Select<T, U>(this IEnumerable<T> source, Func<T, U> selector)
-            => source.OfEnumerable().Select(selector);
-
-        public static ValueEnumerable<U, Select_InNode<T, U, EnumerableNode<T>>> Select<T, U>(this IEnumerable<T> inner, InFunc<T, U> f) =>
-            inner.OfEnumerable().Select(f);
-
-        public static ValueEnumerable<U, SelectIdxNode<T, U, EnumerableNode<T>>> Select<T, U>(this IEnumerable<T> inner, Func<T, int, U> f) =>
-            inner.OfEnumerable().Select(f);
-
-        public static ValueEnumerable<T, WhereNode<T, EnumerableNode<T>>> Where<T>(this IEnumerable<T> source, Func<T, bool> predicate)
-            => source.OfEnumerable().Where(predicate);
-        public static ValueEnumerable<T, WhereIdxNode<T, EnumerableNode<T>>> Where<T>(this IEnumerable<T> source, Func<T, int, bool> predicate)
-            => source.OfEnumerable().Where(predicate);
-
-        public static ValueEnumerable<T, Where_InNode<T, EnumerableNode<T>>> Where<T>(this IEnumerable<T> inner, InFunc<T, bool> f) =>
-            inner.OfEnumerable().Where(f);
 
         public static TSource Last<TSource>(this IEnumerable<TSource> source) =>
             source.OfEnumerable().Last();
@@ -149,52 +130,5 @@ namespace Cistern.ValueLinq
 
         public static TSource ElementAtOrDefault<TSource>(this IEnumerable<TSource> source, int index) => source.OfEnumerable().ElementAtOrDefault(index);
 
-        public static ValueEnumerable<T, SkipNode<T, EnumerableNode<T>>> Skip<T>(this IEnumerable<T> source, int count) => source.OfEnumerable().Skip(count);
-        public static ValueEnumerable<T, SkipWhileNode<T, EnumerableNode<T>>> SkipWhile<T>(this IEnumerable<T> source, Func<T, bool> predicate)
-        {
-            if (source == null)
-                throw new ArgumentNullException(nameof(source));
-            if (predicate == null)
-                throw new ArgumentNullException(nameof(predicate));
-
-            return source.OfEnumerable().SkipWhile(predicate);
-        }
-        public static ValueEnumerable<T, SkipWhileIdxNode<T, EnumerableNode<T>>> SkipWhile<T>(this IEnumerable<T> source, Func<T, int, bool> predicate)
-        {
-            if (source == null)
-                throw new ArgumentNullException(nameof(source));
-            if (predicate == null)
-                throw new ArgumentNullException(nameof(predicate));
-
-            return source.OfEnumerable().SkipWhileIdx(predicate);
-        }
-        public static ValueEnumerable<T, TakeNode<T, EnumerableNode<T>>> Take<T>(this IEnumerable<T> source, int count) => source.OfEnumerable().Take(count);
-        public static ValueEnumerable<T, TakeWhileNode<T, EnumerableNode<T>>> TakeWhile<T>(this IEnumerable<T> source, Func<T, bool> predicate)
-        {
-            if (source == null)
-                throw new ArgumentNullException(nameof(source));
-            if (predicate == null)
-                throw new ArgumentNullException(nameof(predicate));
-
-            return source.OfEnumerable().TakeWhile(predicate);
-        }
-        public static ValueEnumerable<T, TakeWhileIdxNode<T, EnumerableNode<T>>> TakeWhile<T>(this IEnumerable<T> source, Func<T, int, bool> predicate)
-        {
-            if (source == null)
-                throw new ArgumentNullException(nameof(source));
-            if (predicate == null)
-                throw new ArgumentNullException(nameof(predicate));
-
-            return source.OfEnumerable().TakeWhile(predicate);
-        }
-
-        // -- Value based select
-
-        public static ValueEnumerable<U, ValueSelectNode<T, U, EnumerableNode<T>, IFunc>> Select<T, U, IFunc>(this IEnumerable<T> prior, IFunc selector, U u = default)
-            where IFunc : IFuncBase<T, U> => prior.OfEnumerable().Select(selector, u);
-
-        public static ValueEnumerable<T, ValueWhereNode<T, EnumerableNode<T>, Predicate>> Where<T, Predicate>(this IEnumerable<T> inner, Predicate predicate)
-            where Predicate : IFuncBase<T, bool>
-            => inner.OfEnumerable().Where(predicate);
     }
 }

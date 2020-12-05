@@ -20,6 +20,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Maths.tt</DependentUpon>
     </Compile>
+    <Compile Update="EnumerableWrappers\Transforms.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Transforms.tt</DependentUpon>
+    </Compile>
     <Compile Update="Properties\SR.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -49,6 +54,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Maths.tt</DependentUpon>
     </None>
+    <None Include="EnumerableWrappers\Transforms.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Transforms.tt</DependentUpon>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -66,6 +76,10 @@
     <None Update="EnumerableWrappers\Maths.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Maths.cs</LastGenOutput>
+    </None>
+    <None Update="EnumerableWrappers\Transforms.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Transforms.cs</LastGenOutput>
     </None>
   </ItemGroup>
 

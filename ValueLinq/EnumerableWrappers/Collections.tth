@@ -6,7 +6,9 @@
             IsNullable:true,
             CollectionType:new Func<string, string>((string type) => $"IEnumerable<{type}>"),
             FastEnumerate:"EnumerableNode.FastEnumerateSwitch",
-            OptimizedCall:(string)null // can't guarantee that ref object is the same
+            OptimizedCall:(string)null, // can't guarantee that ref object is the same
+            NodeName:new Func<string, string>((string type) => $"EnumerableNode<{type}>"),
+            Of:"OfEnumerable"
         ),
 
         (
@@ -14,7 +16,9 @@
             IsNullable:true,
             CollectionType:new Func<string, string>((string type) => $"{type}[]"),
             FastEnumerate:"ArrayNode.FastEnumerate",
-            OptimizedCall:"ArrayNode.ProcessArray"
+            OptimizedCall:"ArrayNode.ProcessArray",
+            NodeName:new Func<string, string>((string type) => $"ArrayNode<{type}>"),
+            Of:"OfArray"
         ),
 
         (
@@ -22,7 +26,9 @@
             IsNullable:true,
             CollectionType:new Func<string, string>((string type) => $"List<{type}>"),
             FastEnumerate:"ListSegmentNode.FastEnumerate",
-            OptimizedCall:"ListSegmentNode.ProcessList"
+            OptimizedCall:"ListSegmentNode.ProcessList",
+            NodeName:new Func<string, string>((string type) => $"ListNode<{type}>"),
+            Of:"OfList"
         ),
 
         (
@@ -30,7 +36,9 @@
             IsNullable:false,
             CollectionType:new Func<string, string>(type => $"ReadOnlyMemory<{type}>"),
             FastEnumerate:"MemoryNode.FastEnumerate",
-            OptimizedCall:"MemoryNode.ProcessMemory"
+            OptimizedCall:"MemoryNode.ProcessMemory",
+            NodeName:new Func<string, string>((string type) => $"MemoryNode<{type}>"),
+            Of:"OfMemory"
         ),
     };
 #>

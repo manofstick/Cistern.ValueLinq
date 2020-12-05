@@ -1,0 +1,143 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ include file="Collections.tth" #>
+
+<#
+    var transformTypes = new []
+    {
+        (
+            Signature  : new Func<string, string>(collection => $"Reverse<TSource>(this {collection} source)"),
+            Code       : new Func<string, string>(ofCollection => $"source.{ofCollection}().Reverse()"),
+            OutputType : "TSource",
+            NodeName   : new Func<string, string>(collectionNodeName => $"ReverseNode<TSource, {collectionNodeName}>")
+        ),
+
+        (
+            Signature  : new Func<string, string>(collection => $"Select<TSource, TResult>(this {collection} source, Func<TSource, TResult> selector)"),
+            Code       : new Func<string, string>(ofCollection => $"source.{ofCollection}().Select(selector)"),
+            OutputType : "TResult",
+            NodeName   : new Func<string, string>(collectionNodeName => $"SelectNode<TSource, TResult, {collectionNodeName}>")
+        ),
+        (
+            Signature  : new Func<string, string>(collection => $"Select<TSource, TResult>(this {collection} source, InFunc<TSource, TResult> selector)"),
+            Code       : new Func<string, string>(ofCollection => $"source.{ofCollection}().Select(selector)"),
+            OutputType : "TResult",
+            NodeName   : new Func<string, string>(collectionNodeName => $"Select_InNode<TSource, TResult, {collectionNodeName}>")
+        ),
+        (
+            Signature  : new Func<string, string>(collection => $"Select<TSource, TResult>(this {collection} source, Func<TSource, int, TResult> selector)"),
+            Code       : new Func<string, string>(ofCollection => $"source.{ofCollection}().Select(selector)"),
+            OutputType : "TResult",
+            NodeName   : new Func<string, string>(collectionNodeName => $"SelectIdxNode<TSource, TResult, {collectionNodeName}>")
+        ),
+        (
+            Signature  : new Func<string, string>(collection => $"Select<TSource, TResult, IFunc>(this {collection} source, IFunc selector, TResult forTypeInference) where IFunc : IFunc<TSource, TResult>"),
+            Code       : new Func<string, string>(ofCollection => $"source.{ofCollection}().Select(selector, forTypeInference)"),
+            OutputType : "TResult",
+            NodeName   : new Func<string, string>(collectionNodeName => $"ValueSelectNode<TSource, TResult, {collectionNodeName}, IFunc>")
+        ),
+
+        (
+            Signature  : new Func<string, string>(collection => $"Where<TSource>(this {collection} source, Func<TSource, bool> predicate)"),
+            Code       : new Func<string, string>(ofCollection => $"source.{ofCollection}().Where(predicate)"),
+            OutputType : "TSource",
+            NodeName   : new Func<string, string>(collectionNodeName => $"WhereNode<TSource, {collectionNodeName}>")
+        ),
+        (
+            Signature  : new Func<string, string>(collection => $"Where<TSource>(this {collection} source, Func<TSource, int, bool> predicate)"),
+            Code       : new Func<string, string>(ofCollection => $"source.{ofCollection}().Where(predicate)"),
+            OutputType : "TSource",
+            NodeName   : new Func<string, string>(collectionNodeName => $"WhereIdxNode<TSource, {collectionNodeName}>")
+        ),
+        (
+            Signature  : new Func<string, string>(collection => $"Where<TSource>(this {collection} source, InFunc<TSource, bool> predicate)"),
+            Code       : new Func<string, string>(ofCollection => $"source.{ofCollection}().Where(predicate)"),
+            OutputType : "TSource",
+            NodeName   : new Func<string, string>(collectionNodeName => $"Where_InNode<TSource, {collectionNodeName}>")
+        ),
+        (
+            Signature  : new Func<string, string>(collection => $"Where<TSource, Predicate>(this {collection} source, Predicate predicate) where Predicate : IFunc<TSource, bool>"),
+            Code       : new Func<string, string>(ofCollection => $"source.{ofCollection}().Where(predicate)"),
+            OutputType : "TSource",
+            NodeName   : new Func<string, string>(collectionNodeName => $"ValueWhereNode<TSource, {collectionNodeName}, Predicate>")
+        ),
+
+        (
+            Signature  : new Func<string, string>(collection => $"Take<TSource>(this {collection} source, int count)"),
+            Code       : new Func<string, string>(ofCollection => $"source.{ofCollection}().Take(count)"),
+            OutputType : "TSource",
+            NodeName   : new Func<string, string>(collectionNodeName => $"TakeNode<TSource, {collectionNodeName}>")
+        ),
+        (
+            Signature  : new Func<string, string>(collection => $"TakeWhile<TSource>(this {collection} source, Func<TSource, bool> predicate)"),
+            Code       : new Func<string, string>(ofCollection => $"source.{ofCollection}().TakeWhile(predicate)"),
+            OutputType : "TSource",
+            NodeName   : new Func<string, string>(collectionNodeName => $"TakeWhileNode<TSource, {collectionNodeName}>")
+        ),
+        (
+            Signature  : new Func<string, string>(collection => $"TakeWhile<TSource>(this {collection} source, Func<TSource, int, bool> predicate)"),
+            Code       : new Func<string, string>(ofCollection => $"source.{ofCollection}().TakeWhile(predicate)"),
+            OutputType : "TSource",
+            NodeName   : new Func<string, string>(collectionNodeName => $"TakeWhileIdxNode<TSource, {collectionNodeName}>")
+        ),
+
+        (
+            Signature  : new Func<string, string>(collection => $"Skip<TSource>(this {collection} source, int count)"),
+            Code       : new Func<string, string>(ofCollection => $"source.{ofCollection}().Skip(count)"),
+            OutputType : "TSource",
+            NodeName   : new Func<string, string>(collectionNodeName => $"SkipNode<TSource, {collectionNodeName}>")
+        ),
+        (
+            Signature  : new Func<string, string>(collection => $"SkipWhile<TSource>(this {collection} source, Func<TSource, bool> predicate)"),
+            Code       : new Func<string, string>(ofCollection => $"source.{ofCollection}().SkipWhile(predicate)"),
+            OutputType : "TSource",
+            NodeName   : new Func<string, string>(collectionNodeName => $"SkipWhileNode<TSource, {collectionNodeName}>")
+        ),
+        (
+            Signature  : new Func<string, string>(collection => $"SkipWhile<TSource>(this {collection} source, Func<TSource, int, bool> predicate)"),
+            Code       : new Func<string, string>(ofCollection => $"source.{ofCollection}().SkipWhile(predicate)"),
+            OutputType : "TSource",
+            NodeName   : new Func<string, string>(collectionNodeName => $"SkipWhileIdxNode<TSource, {collectionNodeName}>")
+        ),
+    };
+#>
+
+using Cistern.ValueLinq.Containers;
+using Cistern.ValueLinq.Nodes;
+using Cistern.ValueLinq.ValueEnumerable;
+using System;
+using System.Collections.Generic;
+
+namespace Cistern.ValueLinq
+{
+<#
+    foreach(var collection in collections)
+    {
+        var genericCollectionType = collection.CollectionType("TSource");
+#>
+    public static partial class <#= collection.StaticClassName #>
+    {
+<#
+        foreach(var transform in transformTypes)
+        {
+            var signature = $"public static ValueEnumerable<{transform.OutputType}, {transform.NodeName(collection.NodeName("TSource"))}> {transform.Signature(genericCollectionType)}";
+            var code = transform.Code(collection.Of);
+#>
+        <#= signature #> =>
+            <#= code #>;
+
+<#
+        }
+#>
+    }
+<#
+    }
+#>
+}
+
+
+
+

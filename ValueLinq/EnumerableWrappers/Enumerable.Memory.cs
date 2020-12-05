@@ -8,11 +8,8 @@ using System.Collections.Generic;
 
 namespace Cistern.ValueLinq
 {
-    public static partial class Enumerable
+    public static partial class ValueLinqMemory
     {
-        public static ValueEnumerable<TSource, ReverseNode<TSource, MemoryNode<TSource>>> Reverse<TSource>(this ReadOnlyMemory<TSource> source)
-            => source.OfMemory().Reverse();
-
         public static bool Contains<TSource>(this ReadOnlyMemory<TSource> source, TSource value)
         {
             var aggregate = new Contains<TSource>(value);
@@ -30,17 +27,6 @@ namespace Cistern.ValueLinq
 
 
         // --
-
-        public static ValueEnumerable<U, SelectNode<T, U, MemoryNode<T>>> Select<T, U>(this ReadOnlyMemory<T> inner, Func<T, U> f) => inner.OfMemory().Select(f);
-
-        public static ValueEnumerable<U, Select_InNode<T, U, MemoryNode<T>>> Select<T, U>(this ReadOnlyMemory<T> inner, InFunc<T, U> f) => inner.OfMemory().Select(f);
-
-        public static ValueEnumerable<U, SelectIdxNode<T, U, MemoryNode<T>>> Select<T, U>(this ReadOnlyMemory<T> inner, Func<T, int, U> f) => inner.OfMemory().Select(f);
-
-        public static ValueEnumerable<T, WhereNode<T, MemoryNode<T>>> Where<T>(this ReadOnlyMemory<T> inner, Func<T, bool> f) => inner.OfMemory().Where(f);
-        public static ValueEnumerable<T, WhereIdxNode<T, MemoryNode<T>>> Where<T>(this ReadOnlyMemory<T> inner, Func<T, int, bool> f) => inner.OfMemory().Where(f);
-
-        public static ValueEnumerable<T, Where_InNode<T, MemoryNode<T>>> Where<T>(this ReadOnlyMemory<T> inner, InFunc<T, bool> f) => inner.OfMemory().Where(f);
 
         public static TSource Last<TSource>(this ReadOnlyMemory<TSource> source) => source.OfMemory().Last();
         public static TSource LastOrDefault<TSource>(this ReadOnlyMemory<TSource> source) => source.OfMemory().LastOrDefault();
@@ -71,44 +57,5 @@ namespace Cistern.ValueLinq
         public static TSource ElementAt<TSource>(this ReadOnlyMemory<TSource> source, int index) => source.OfMemory().ElementAt(index);
         public static TSource ElementAtOrDefault<TSource>(this ReadOnlyMemory<TSource> source, int index) => source.OfMemory().ElementAtOrDefault(index);
 
-        public static ValueEnumerable<T, SkipNode<T, MemoryNode<T>>> Skip<T>(this ReadOnlyMemory<T> source, int count) => source.OfMemory().Skip(count);
-        public static ValueEnumerable<T, SkipWhileNode<T, MemoryNode<T>>> SkipWhile<T>(this ReadOnlyMemory<T> source, Func<T, bool> predicate)
-        {
-            if (predicate == null)
-                throw new ArgumentNullException(nameof(predicate));
-
-            return source.OfMemory().SkipWhile(predicate);
-        }
-        public static ValueEnumerable<T, SkipWhileIdxNode<T, MemoryNode<T>>> SkipWhile<T>(this ReadOnlyMemory<T> source, Func<T, int, bool> predicate)
-        {
-            if (predicate == null)
-                throw new ArgumentNullException(nameof(predicate));
-
-            return source.OfMemory().SkipWhileIdx(predicate);
-        }
-        public static ValueEnumerable<T, TakeNode<T, MemoryNode<T>>> Take<T>(this ReadOnlyMemory<T> source, int count) => source.OfMemory().Take(count);
-        public static ValueEnumerable<T, TakeWhileNode<T, MemoryNode<T>>> TakeWhile<T>(this ReadOnlyMemory<T> source, Func<T, bool> predicate)
-        {
-            if (predicate == null)
-                throw new ArgumentNullException(nameof(predicate));
-
-            return source.OfMemory().TakeWhile(predicate);
-        }
-        public static ValueEnumerable<T, TakeWhileIdxNode<T, MemoryNode<T>>> TakeWhile<T>(this ReadOnlyMemory<T> source, Func<T, int, bool> predicate)
-        {
-            if (predicate == null)
-                throw new ArgumentNullException(nameof(predicate));
-
-            return source.OfMemory().TakeWhile(predicate);
-        }
-
-        // -- Value based select
-
-        public static ValueEnumerable<U, ValueSelectNode<T, U, MemoryNode<T>, IFunc>> Select<T, U, IFunc>(this ReadOnlyMemory<T> prior, IFunc selector, U u = default)
-            where IFunc : IFunc<T, U> => prior.OfMemory().Select(selector, u);
-
-        public static ValueEnumerable<T, ValueWhereNode<T, MemoryNode<T>, Predicate>> Where<T, Predicate>(this ReadOnlyMemory<T> inner, Predicate predicate)
-            where Predicate : IFunc<T, bool>
-            => inner.OfMemory().Where(predicate);
     }
 }

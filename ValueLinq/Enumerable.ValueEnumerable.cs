@@ -205,7 +205,7 @@ namespace Cistern.ValueLinq
 
             return new ValueEnumerable<T, SkipWhileNode<T, TPrior>>(new SkipWhileNode<T, TPrior>(in prior.Node, predicate));
         }
-        public static ValueEnumerable<T, SkipWhileIdxNode<T, TPrior>> SkipWhileIdx<T, TPrior>(in this ValueEnumerable<T, TPrior> prior, Func<T, int, bool> predicate)
+        public static ValueEnumerable<T, SkipWhileIdxNode<T, TPrior>> SkipWhile<T, TPrior>(in this ValueEnumerable<T, TPrior> prior, Func<T, int, bool> predicate)
             where TPrior : INode<T>
         {
             if (predicate == null)
