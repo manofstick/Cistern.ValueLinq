@@ -46,13 +46,13 @@ namespace Cistern.ValueLinq.Containers
 
         #region "This node is only used in forward context, so most of interface is not supported"
         public void GetCountInformation(out CountInformation info) => throw new NotSupportedException();
-        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => throw new NotSupportedException();
-        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
+        CreationType INode.CreateViaPushDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => throw new NotSupportedException();
+        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
         #endregion
 
-        bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
+        bool INode.TryPushOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
 
-        public bool CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+        public bool TryPullOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
             if (typeof(TRequest) == typeof(Optimizations.Skip))
             {
@@ -97,7 +97,7 @@ namespace Cistern.ValueLinq.Containers
             return false;
         }
 
-        public TResult CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<T>
+        public TResult CreateViaPull<TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<T>
             => ListSegmentNode.FastReverseEnumerate<T, TResult, FEnumerator>(in _list, fenum);
     }
 
@@ -111,18 +111,18 @@ namespace Cistern.ValueLinq.Containers
 
         public ListSegmentNode(List<T> list, int start, int count) => _list = new ListSegment<T>(list, start, count);
 
-        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) =>
+        CreationType INode.CreateViaPushDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) =>
             ListSegmentNode.Create<T, Head, Tail, CreationType>(in _list, ref nodes);
 
-        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
+        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
 
-        bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation)
+        bool INode.TryPushOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation)
         { creation = default; return false; }
 
-        public bool CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+        public bool TryPullOptimization<TRequest, TResult>(in TRequest request, out TResult result)
             => ListSegmentNode.CheckForOptimization<T, TRequest, TResult>(in _list, in request, out result);
 
-        public TResult CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
+        public TResult CreateViaPull<TResult, FEnumerator>(in FEnumerator fenum)
             where FEnumerator : IForwardEnumerator<T>
             => ListSegmentNode.FastEnumerate<T, TResult, FEnumerator>(in _list, fenum);
     }

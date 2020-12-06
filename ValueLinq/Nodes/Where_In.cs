@@ -40,19 +40,19 @@ namespace Cistern.ValueLinq.Nodes
 
         public Where_InNode(in NodeT nodeT, InFunc<T, bool> filter) => (_nodeT, _filter) = (nodeT, filter);
 
-        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
+        CreationType INode.CreateViaPushDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
 
-        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
+        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
         {
             var nextEnumerator = new Where_InNodeEnumerator<EnumeratorElement, Enumerator>(in enumerator, (InFunc<EnumeratorElement, bool>)(object)_filter);
             return tail.CreateObject<CreationType, EnumeratorElement, Where_InNodeEnumerator<EnumeratorElement, Enumerator>>(ref nextEnumerator);
         }
 
-        bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
-        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
+        bool INode.TryPushOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
+        bool INode.TryPullOptimization<TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
 
-        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) =>
-            _nodeT.CreateObjectViaFastEnumerator<TResult, Where_InFoward<T, FEnumerator>>(new Where_InFoward<T, FEnumerator>(fenum, _filter));
+        TResult INode<T>.CreateViaPull<TResult, FEnumerator>(in FEnumerator fenum) =>
+            _nodeT.CreateViaPull<TResult, Where_InFoward<T, FEnumerator>>(new Where_InFoward<T, FEnumerator>(fenum, _filter));
     }
 
     struct Where_InFoward<T, Next>

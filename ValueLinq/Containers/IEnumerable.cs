@@ -105,19 +105,19 @@ namespace Cistern.ValueLinq.Containers
 
         public EnumerableNode(IEnumerable<T> source) => _enumerable = source;
 
-        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) =>
+        CreationType INode.CreateViaPushDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) =>
             EnumerableNode.CreateObjectDescent<T, CreationType, Head, Tail>(ref nodes, _enumerable);
 
-        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) =>
+        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) =>
             throw new InvalidOperationException();
 
-        bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation)
+        bool INode.TryPushOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation)
         { creation = default; return false; }
 
-        readonly bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result) =>
+        readonly bool INode.TryPullOptimization<TRequest, TResult>(in TRequest request, out TResult result) =>
             EnumerableNode.CheckForOptimization<T, TRequest, TResult>(_enumerable, in request, out result);
 
-        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) =>
+        TResult INode<T>.CreateViaPull<TResult, FEnumerator>(in FEnumerator fenum) =>
             EnumerableNode.FastEnumerateSwitch<T, TResult, FEnumerator>(_enumerable, in fenum);
     }
 
@@ -142,7 +142,7 @@ namespace Cistern.ValueLinq.Containers
             {
                 T[] array    => MemoryNode.CheckForOptimization<T, TRequest, TResult>(array, in request, out result),
                 List<T> list => ListSegmentNode.CheckForOptimization<T, TRequest, TResult>(new ListSegment<T>(list, 0, list.Count), in request, out result),
-                INode node   => node.CheckForOptimization<TRequest, TResult>(in request, out result),
+                INode node   => node.TryPullOptimization<TRequest, TResult>(in request, out result),
                 _            => Vanilla(enumerable, in request, out result),
             };
 
@@ -196,7 +196,7 @@ namespace Cistern.ValueLinq.Containers
 #else                                             
                                                      ListNode.Create<T, Head, Tail, CreationType>(list, ref nodes),
 #endif                                            
-                INode node                        => node.CreateObjectDescent<CreationType, Head, Tail>(ref nodes),
+                INode node                        => node.CreateViaPushDescend<CreationType, Head, Tail>(ref nodes),
                 _                                 => Vanilla(enumerable, ref nodes),
             };
 
@@ -218,7 +218,7 @@ namespace Cistern.ValueLinq.Containers
                 null          => throw new ArgumentNullException("source"), // name used to match System.Linq's exceptions
                 T[] array     => ArrayNode.FastEnumerate<T, TResult, FEnumerator>(array, fenum),
                 List<T> list  => ListSegmentNode.FastEnumerate<T, TResult, FEnumerator>(new ListSegment<T>(list, 0, list.Count), fenum),
-                INode<T> node => node.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum),
+                INode<T> node => node.CreateViaPull<TResult, FEnumerator>(in fenum),
                 _             => Vanilla(_enumerable, fenum),
             };
 

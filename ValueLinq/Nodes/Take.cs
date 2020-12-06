@@ -53,7 +53,7 @@ namespace Cistern.ValueLinq.Nodes
 
         public TakeNode(in NodeT nodeT, int count) => (_nodeT, _count) = (nodeT, count);
 
-        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+        CreationType INode.CreateViaPushDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
         {
             if (_count <= 0)
             {
@@ -64,13 +64,13 @@ namespace Cistern.ValueLinq.Nodes
             return Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
         }
 
-        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
+        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
         {
             var nextEnumerator = new TakeNodeEnumerator<EnumeratorElement, Enumerator>(in enumerator, _count);
             return tail.CreateObject<CreationType, EnumeratorElement, TakeNodeEnumerator<EnumeratorElement, Enumerator>>(ref nextEnumerator);
         }
 
-        bool INode.TryObjectAscentOptimization<TRequest, CreationType, Tail>(in TRequest request, ref Tail nodes, out CreationType creation)
+        bool INode.TryPushOptimization<TRequest, CreationType, Tail>(in TRequest request, ref Tail nodes, out CreationType creation)
         {
             if (typeof(TRequest) == typeof(Optimizations.SourceArray<T>))
             {
@@ -83,7 +83,7 @@ namespace Cistern.ValueLinq.Nodes
         }
 
 
-        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+        bool INode.TryPullOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
             if (typeof(TRequest) == typeof(Optimizations.Take))
             {
@@ -94,7 +94,7 @@ namespace Cistern.ValueLinq.Nodes
                 return true;
             }
 
-            if (_nodeT.CheckForOptimization<Optimizations.Take, NodeContainer<T>>(new Optimizations.Take { Count = _count }, out var node))
+            if (_nodeT.TryPullOptimization<Optimizations.Take, NodeContainer<T>>(new Optimizations.Take { Count = _count }, out var node))
             {
                 return node.CheckForOptimization<TRequest, TResult>(in request, out result);
             }
@@ -110,21 +110,21 @@ namespace Cistern.ValueLinq.Nodes
             {
                 container.SetEmpty();
             }
-            else if (!_nodeT.CheckForOptimization(new Optimizations.Take { Count = total }, out container))
+            else if (!_nodeT.TryPullOptimization(new Optimizations.Take { Count = total }, out container))
             {
                 container.SetNode(new TakeNode<T, NodeT>(_nodeT, total));
             }
         }
 
-        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
+        TResult INode<T>.CreateViaPull<TResult, FEnumerator>(in FEnumerator fenum)
         {
             if (_count <= 0)
-                return EmptyNode<T>.Empty.CreateObjectViaFastEnumerator<TResult, FEnumerator>(fenum);
+                return EmptyNode<T>.Empty.CreateViaPull<TResult, FEnumerator>(fenum);
 
-            if (_nodeT.CheckForOptimization<Optimizations.Take, NodeContainer<T>>(new Optimizations.Take { Count = _count }, out var node))
+            if (_nodeT.TryPullOptimization<Optimizations.Take, NodeContainer<T>>(new Optimizations.Take { Count = _count }, out var node))
                 return node.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum);
 
-            return _nodeT.CreateObjectViaFastEnumerator<TResult, TakeFoward<T, FEnumerator>>(new TakeFoward<T, FEnumerator>(fenum, _count));
+            return _nodeT.CreateViaPull<TResult, TakeFoward<T, FEnumerator>>(new TakeFoward<T, FEnumerator>(fenum, _count));
         }
     }
 

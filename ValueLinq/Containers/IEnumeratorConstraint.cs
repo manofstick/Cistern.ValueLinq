@@ -48,15 +48,15 @@ namespace Cistern.ValueLinq.Containers
             (_e, _f, _count) = (e, f, count);
         }
 
-        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+        CreationType INode.CreateViaPushDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
             => GenericEnumeratorNode.Create<T, Head, Tail, CreationType, Enumerator>(_f(_e), ref nodes);
 
-        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator_, Tail>(ref Tail _, ref Enumerator_ __)
+        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator_, Tail>(ref Tail _, ref Enumerator_ __)
             => throw new InvalidOperationException();
 
-        bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
+        bool INode.TryPushOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
 
-        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+        bool INode.TryPullOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
             if (typeof(TRequest) == typeof(Optimizations.Count))
             {
@@ -68,7 +68,7 @@ namespace Cistern.ValueLinq.Containers
             return false;
         }
 
-        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
+        TResult INode<T>.CreateViaPull<TResult, FEnumerator>(in FEnumerator fenum)
             => GenericEnumeratorNode.FastEnumerate<T, TResult, FEnumerator, Enumerator>(_f(_e), fenum);
     }
 

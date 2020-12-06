@@ -66,9 +66,9 @@ namespace Cistern.ValueLinq
             if (!countInfo.IsStale && (ignorePotentialSideEffects || !countInfo.PotentialSideEffects) && countInfo.ActualLengthIsMaximumLength && countInfo.MaximumLength.HasValue && countInfo.MaximumLength.Value <= int.MaxValue)
                 return (int)countInfo.MaximumLength.Value;
 
-            return inner.CheckForOptimization<Optimizations.Count, int>(new Optimizations.Count { IgnorePotentialSideEffects = ignorePotentialSideEffects }, out var count) switch
+            return inner.TryPullOptimization<Optimizations.Count, int>(new Optimizations.Count { IgnorePotentialSideEffects = ignorePotentialSideEffects }, out var count) switch
             {
-                false => inner.CreateObjectViaFastEnumerator<int, Aggregation.Count<T>>(new Aggregation.Count<T>()),
+                false => inner.CreateViaPull<int, Aggregation.Count<T>>(new Aggregation.Count<T>()),
                 true => count
             };
         }
@@ -83,7 +83,7 @@ namespace Cistern.ValueLinq
                 if (info.MaximumLength == 0)
                     return Array.Empty<T>();
 
-                return inner.CreateObjectViaFastEnumerator<T[], ToArrayForward<T>>(new ToArrayForward<T>(info.ActualSize.Value));
+                return inner.CreateViaPull<T[], ToArrayForward<T>>(new ToArrayForward<T>(info.ActualSize.Value));
             }
 
             if (!arrayPoolInfo.HasValue)
@@ -98,13 +98,13 @@ namespace Cistern.ValueLinq
 #endif
             }
 
-            return inner.CreateObjectViaFastEnumerator<T[], ToArrayViaAllocatorForward<T, ArrayPoolAllocator<T>>>(new ToArrayViaAllocatorForward<T, ArrayPoolAllocator<T>>(new ArrayPoolAllocator<T>(arrayPoolInfo.Value.arrayPool, arrayPoolInfo.Value.cleanBuffers), 0, info.ActualSize));
+            return inner.CreateViaPull<T[], ToArrayViaAllocatorForward<T, ArrayPoolAllocator<T>>>(new ToArrayViaAllocatorForward<T, ArrayPoolAllocator<T>>(new ArrayPoolAllocator<T>(arrayPoolInfo.Value.arrayPool, arrayPoolInfo.Value.cleanBuffers), 0, info.ActualSize));
         }
 
         internal static T[] ToArray<T, Inner>(in Inner inner, int? maybeMaxCountForStackBasedPath, in (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo)
                 where Inner : INode<T>
         {
-            if (inner.CheckForOptimization<Optimizations.ToArray, T[]>(default, out var array))
+            if (inner.TryPullOptimization<Optimizations.ToArray, T[]>(default, out var array))
                 return array;
 
             return ToArrayWithoutOptimizationCheck(in inner, maybeMaxCountForStackBasedPath, in arrayPoolInfo);
@@ -120,7 +120,7 @@ namespace Cistern.ValueLinq
             if (func == null)
                 throw new ArgumentNullException(nameof(func));
 
-            return source.CreateObjectViaFastEnumerator<T, ReduceForward<T>>(new ReduceForward<T>(func));
+            return source.CreateViaPull<T, ReduceForward<T>>(new ReduceForward<T>(func));
         }
 
         internal static void ForEach<T, Inner>(in Inner source, Action<T> func)
@@ -129,7 +129,7 @@ namespace Cistern.ValueLinq
             if (func == null)
                 throw new ArgumentNullException(nameof(func));
 
-            source.CreateObjectViaFastEnumerator<T, ForEachForward<T>>(new ForEachForward<T>(func));
+            source.CreateViaPull<T, ForEachForward<T>>(new ForEachForward<T>(func));
         }
 
         internal static T ForEach<T, U, Inner>(in Inner source, T seed, RefAction<T, U> func)
@@ -138,7 +138,7 @@ namespace Cistern.ValueLinq
             if (func == null)
                 throw new ArgumentNullException(nameof(func));
 
-            return source.CreateObjectViaFastEnumerator<T, ForEachForwardRef<T, U>>(new ForEachForwardRef<T, U>(seed, func));
+            return source.CreateViaPull<T, ForEachForwardRef<T, U>>(new ForEachForwardRef<T, U>(seed, func));
         }
 
         internal static T ForEach<T, U, Inner, RefAction>(in Inner source, T seed, RefAction func)
@@ -148,7 +148,7 @@ namespace Cistern.ValueLinq
             if (func == null)
                 throw new ArgumentNullException(nameof(func));
 
-            return source.CreateObjectViaFastEnumerator<T, ValueForeachForwardRef<T, U, RefAction>>(new ValueForeachForwardRef<T, U, RefAction>(seed, func));
+            return source.CreateViaPull<T, ValueForeachForwardRef<T, U, RefAction>>(new ValueForeachForwardRef<T, U, RefAction>(seed, func));
         }
 
 
@@ -158,7 +158,7 @@ namespace Cistern.ValueLinq
             if (func == null)
                 throw new ArgumentNullException(nameof(func));
 
-            return source.CreateObjectViaFastEnumerator<TAccumulate, FoldForward<T, TAccumulate>>(new FoldForward<T, TAccumulate>(func, seed));
+            return source.CreateViaPull<TAccumulate, FoldForward<T, TAccumulate>>(new FoldForward<T, TAccumulate>(func, seed));
         }
 
         internal static TResult Aggregate<T, TAccumulate, TResult, Inner>(in Inner source, TAccumulate seed, Func<TAccumulate, T, TAccumulate> func, Func<TAccumulate, TResult> resultSelector)
@@ -169,7 +169,7 @@ namespace Cistern.ValueLinq
             if (resultSelector == null)
                 throw new ArgumentNullException(nameof(resultSelector));
 
-            return resultSelector(source.CreateObjectViaFastEnumerator<TAccumulate, FoldForward<T, TAccumulate>>(new FoldForward<T, TAccumulate>(func, seed)));
+            return resultSelector(source.CreateViaPull<TAccumulate, FoldForward<T, TAccumulate>>(new FoldForward<T, TAccumulate>(func, seed)));
         }
 
         internal static bool All<T, Inner>(in Inner source, Func<T, bool> predicate)
@@ -178,7 +178,7 @@ namespace Cistern.ValueLinq
             if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
 
-            return source.CreateObjectViaFastEnumerator<bool, All<T, FuncToIFunc<T, bool>>>(new All<T, FuncToIFunc<T, bool>>(new FuncToIFunc<T, bool>(predicate)));
+            return source.CreateViaPull<bool, All<T, FuncToIFunc<T, bool>>>(new All<T, FuncToIFunc<T, bool>>(new FuncToIFunc<T, bool>(predicate)));
         }
 
         internal static bool All<T, Inner, Predicate>(in Inner source, Predicate predicate)
@@ -188,12 +188,12 @@ namespace Cistern.ValueLinq
             if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
 
-            return source.CreateObjectViaFastEnumerator<bool, All<T, Predicate>>(new All<T, Predicate>(predicate));
+            return source.CreateViaPull<bool, All<T, Predicate>>(new All<T, Predicate>(predicate));
         }
 
         internal static bool Any<T, Inner>(in Inner source)
             where Inner : INode<T>
-            => source.CreateObjectViaFastEnumerator<bool, Anything<T>>(new Anything<T>());
+            => source.CreateViaPull<bool, Anything<T>>(new Anything<T>());
 
         internal static bool Any<T, Inner>(in Inner source, Func<T, bool> predicate)
             where Inner : INode<T>
@@ -201,7 +201,7 @@ namespace Cistern.ValueLinq
             if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
 
-            return source.CreateObjectViaFastEnumerator<bool, Any<T>>(new Any<T>(predicate));
+            return source.CreateViaPull<bool, Any<T>>(new Any<T>(predicate));
         }
 
         // -- 
@@ -302,7 +302,7 @@ namespace Cistern.ValueLinq
 
             return viaPull
                 ? Nodes<T[]>.Aggregation<Inner, ToArrayViaArrayPool<T>>(in inner, new ToArrayViaArrayPool<T>(arrayPool, cleanBuffers, info.ActualSize))
-                : inner.CreateObjectViaFastEnumerator<T[], ToArrayViaAllocatorForward<T, ArrayPoolAllocator<T>>>(new ToArrayViaAllocatorForward<T, ArrayPoolAllocator<T>>(new ArrayPoolAllocator<T>(arrayPool, cleanBuffers), 0, info.ActualSize));
+                : inner.CreateViaPull<T[], ToArrayViaAllocatorForward<T, ArrayPoolAllocator<T>>>(new ToArrayViaAllocatorForward<T, ArrayPoolAllocator<T>>(new ArrayPoolAllocator<T>(arrayPool, cleanBuffers), 0, info.ActualSize));
         }
 
         internal static T[] ToArrayUseStack<T, Inner>(in Inner inner, int maxStackItemCount = 64, (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo = null)
@@ -322,7 +322,7 @@ namespace Cistern.ValueLinq
                 if (info.MaximumLength == 0)
                     return new List<T>();
 
-                return inner.CreateObjectViaFastEnumerator<List<T>, ToListForward<T>>(new ToListForward<T>(info.ActualSize));
+                return inner.CreateViaPull<List<T>, ToListForward<T>>(new ToListForward<T>(info.ActualSize));
             }
 
             if (!arrayPoolInfo.HasValue)
@@ -330,10 +330,10 @@ namespace Cistern.ValueLinq
                 if (info.MaximumLength <= maybeMaxCountForStackBasedPath.GetValueOrDefault())
                     return Nodes<List<T>>.Aggregation<Inner, ToListViaStackAndGarbage<T>>(in inner, new ToListViaStackAndGarbage<T>(maybeMaxCountForStackBasedPath.Value));
 
-                return inner.CreateObjectViaFastEnumerator<List<T>, ToListForward<T>>(new ToListForward<T>(null));
+                return inner.CreateViaPull<List<T>, ToListForward<T>>(new ToListForward<T>(null));
             }
 
-            return inner.CreateObjectViaFastEnumerator<List<T>, ToListViaArrayPoolForward<T, ArrayPoolAllocator<T>>>(new ToListViaArrayPoolForward<T, ArrayPoolAllocator<T>>(new ArrayPoolAllocator<T>(arrayPoolInfo.Value.arrayPool, arrayPoolInfo.Value.cleanBuffers), 0, null));
+            return inner.CreateViaPull<List<T>, ToListViaArrayPoolForward<T, ArrayPoolAllocator<T>>>(new ToListViaArrayPoolForward<T, ArrayPoolAllocator<T>>(new ArrayPoolAllocator<T>(arrayPoolInfo.Value.arrayPool, arrayPoolInfo.Value.cleanBuffers), 0, null));
         }
 
         internal static List<T> ToListUsePool<T, Inner>(in Inner inner, ArrayPool<T> maybeArrayPool = null, bool? maybeCleanBuffers = null, bool viaPull = false)
@@ -346,7 +346,7 @@ namespace Cistern.ValueLinq
 
             return viaPull
                 ? Nodes<List<T>>.Aggregation<Inner, ToListViaArrayPool<T>>(in inner, new ToListViaArrayPool<T>(arrayPool, cleanBuffers, info.ActualSize))
-                : inner.CreateObjectViaFastEnumerator<List<T>, ToListViaArrayPoolForward<T, ArrayPoolAllocator<T>>>(new ToListViaArrayPoolForward<T, ArrayPoolAllocator<T>>(new ArrayPoolAllocator<T>(arrayPool, cleanBuffers), 0, info.ActualSize));
+                : inner.CreateViaPull<List<T>, ToListViaArrayPoolForward<T, ArrayPoolAllocator<T>>>(new ToListViaArrayPoolForward<T, ArrayPoolAllocator<T>>(new ArrayPoolAllocator<T>(arrayPool, cleanBuffers), 0, info.ActualSize));
         }
 
         internal static List<T> ToListUseStack<T, Inner>(in Inner inner, int maxStackItemCount = 64, (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo = null)
@@ -357,10 +357,10 @@ namespace Cistern.ValueLinq
 
         internal static T Last<T, Inner>(in Inner inner)
             where Inner : INode<T> =>
-            (inner.CheckForOptimization<Optimizations.TryLast, (bool, T)>(new Optimizations.TryLast(), out var maybeLast), maybeLast) switch
+            (inner.TryPullOptimization<Optimizations.TryLast, (bool, T)>(new Optimizations.TryLast(), out var maybeLast), maybeLast) switch
             {
                 (true, (true, var last)) => last,
-                _ => inner.CreateObjectViaFastEnumerator<T, Last<T>>(new Last<T>())
+                _ => inner.CreateViaPull<T, Last<T>>(new Last<T>())
             };
 
         internal static T Last<T, Inner>(in Inner inner, Func<T, bool> predicate)
@@ -369,16 +369,16 @@ namespace Cistern.ValueLinq
             if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
 
-            return inner.CreateObjectViaFastEnumerator<T, LastPredicate<T>>(new LastPredicate<T>(predicate));
+            return inner.CreateViaPull<T, LastPredicate<T>>(new LastPredicate<T>(predicate));
         }
 
         internal static T LastOrDefault<T, Inner>(in Inner inner)
             where Inner : INode<T> =>
-            (inner.CheckForOptimization<Optimizations.TryLast, (bool, T)>(new Optimizations.TryLast(), out var maybeLast), maybeLast) switch
+            (inner.TryPullOptimization<Optimizations.TryLast, (bool, T)>(new Optimizations.TryLast(), out var maybeLast), maybeLast) switch
             {
                 (true, (true, var last)) => last,
                 (true, (false, _)) => default,
-                _ => inner.CreateObjectViaFastEnumerator<T, LastOrDefault<T>>(new LastOrDefault<T>())
+                _ => inner.CreateViaPull<T, LastOrDefault<T>>(new LastOrDefault<T>())
             };
 
         internal static T LastOrDefault<T, Inner>(in Inner inner, Func<T, bool> predicate)
@@ -387,11 +387,11 @@ namespace Cistern.ValueLinq
             if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
 
-            return inner.CreateObjectViaFastEnumerator<T, LastOrDefaultPredicate<T>>(new LastOrDefaultPredicate<T>(predicate));
+            return inner.CreateViaPull<T, LastOrDefaultPredicate<T>>(new LastOrDefaultPredicate<T>(predicate));
         }
 
         internal static T First<T, Inner>(in Inner inner)
-            where Inner : INode<T> => inner.CreateObjectViaFastEnumerator<T, First<T>>(new First<T>());
+            where Inner : INode<T> => inner.CreateViaPull<T, First<T>>(new First<T>());
 
         internal static T First<T, Inner>(in Inner inner, Func<T, bool> predicate)
             where Inner : INode<T>
@@ -399,11 +399,11 @@ namespace Cistern.ValueLinq
             if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
 
-            return inner.CreateObjectViaFastEnumerator<T, FirstPredicate<T>>(new FirstPredicate<T>(predicate));
+            return inner.CreateViaPull<T, FirstPredicate<T>>(new FirstPredicate<T>(predicate));
         }
 
         internal static T FirstOrDefault<T, Inner>(in Inner inner)
-            where Inner : INode<T> => inner.CreateObjectViaFastEnumerator<T, FirstOrDefault<T>>(new FirstOrDefault<T>());
+            where Inner : INode<T> => inner.CreateViaPull<T, FirstOrDefault<T>>(new FirstOrDefault<T>());
 
         internal static T FirstOrDefault<T, Inner>(in Inner inner, Func<T, bool> predicate)
             where Inner : INode<T>
@@ -411,11 +411,11 @@ namespace Cistern.ValueLinq
             if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
 
-            return inner.CreateObjectViaFastEnumerator<T, FirstOrDefaultPredicate<T>>(new FirstOrDefaultPredicate<T>(predicate));
+            return inner.CreateViaPull<T, FirstOrDefaultPredicate<T>>(new FirstOrDefaultPredicate<T>(predicate));
         }
 
         internal static T Single<T, Inner>(in Inner inner)
-            where Inner : INode<T> => inner.CreateObjectViaFastEnumerator<T, Single<T>>(new Single<T>());
+            where Inner : INode<T> => inner.CreateViaPull<T, Single<T>>(new Single<T>());
 
         internal static T Single<T, Inner>(in Inner inner, Func<T, bool> predicate)
             where Inner : INode<T>
@@ -423,11 +423,11 @@ namespace Cistern.ValueLinq
             if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
 
-            return inner.CreateObjectViaFastEnumerator<T, SinglePredicate<T>>(new SinglePredicate<T>(predicate));
+            return inner.CreateViaPull<T, SinglePredicate<T>>(new SinglePredicate<T>(predicate));
         }
 
         internal static T SingleOrDefault<T, Inner>(in Inner inner)
-            where Inner : INode<T> => inner.CreateObjectViaFastEnumerator<T, SingleOrDefault<T>>(new SingleOrDefault<T>());
+            where Inner : INode<T> => inner.CreateViaPull<T, SingleOrDefault<T>>(new SingleOrDefault<T>());
 
         internal static T SingleOrDefault<T, Inner>(in Inner inner, Func<T, bool> predicate)
             where Inner : INode<T>
@@ -435,7 +435,7 @@ namespace Cistern.ValueLinq
             if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
 
-            return inner.CreateObjectViaFastEnumerator<T, SingleOrDefaultPredicate<T>>(new SingleOrDefaultPredicate<T>(predicate));
+            return inner.CreateViaPull<T, SingleOrDefaultPredicate<T>>(new SingleOrDefaultPredicate<T>(predicate));
         }
 
 
@@ -443,87 +443,87 @@ namespace Cistern.ValueLinq
             where Inner : INode<T>
         {
             inner.GetCountInformation(out var countInfo);
-            return inner.CreateObjectViaFastEnumerator<T, ElementAt<T>>(new ElementAt<T>(index, countInfo.ActualSize));
+            return inner.CreateViaPull<T, ElementAt<T>>(new ElementAt<T>(index, countInfo.ActualSize));
         }
 
         internal static T ElementAtOrDefault<T, Inner>(in Inner inner, int index)
             where Inner : INode<T>
         {
             inner.GetCountInformation(out var countInfo);
-            return inner.CreateObjectViaFastEnumerator<T, ElementAtOrDefault<T>>(new ElementAtOrDefault<T>(index, countInfo.ActualSize));
+            return inner.CreateViaPull<T, ElementAtOrDefault<T>>(new ElementAtOrDefault<T>(index, countInfo.ActualSize));
         }
 
-        internal static decimal AverageDecimal<Inner>(in Inner inner) where Inner : INode<decimal> => inner.CreateObjectViaFastEnumerator<decimal, AverageDecimal>(new AverageDecimal(true));
-        internal static double  AverageDouble<Inner>(in Inner inner) where Inner : INode<double>  => inner.CreateObjectViaFastEnumerator<double,  AverageDouble >(new AverageDouble(true));
-        internal static float   AverageFloat<Inner>(in Inner inner) where Inner : INode<float>   => inner.CreateObjectViaFastEnumerator<float,   AverageFloat  >(new AverageFloat(true));
-        internal static double  AverageInt<Inner>(in Inner inner) where Inner : INode<int>     => inner.CreateObjectViaFastEnumerator<double,  AverageInt    >(new AverageInt(true));
-        internal static double  AverageLong<Inner>(in Inner inner) where Inner : INode<long>    => inner.CreateObjectViaFastEnumerator<double,  AverageLong   >(new AverageLong(true));
+        internal static decimal AverageDecimal<Inner>(in Inner inner) where Inner : INode<decimal> => inner.CreateViaPull<decimal, AverageDecimal>(new AverageDecimal(true));
+        internal static double  AverageDouble<Inner>(in Inner inner) where Inner : INode<double>  => inner.CreateViaPull<double,  AverageDouble >(new AverageDouble(true));
+        internal static float   AverageFloat<Inner>(in Inner inner) where Inner : INode<float>   => inner.CreateViaPull<float,   AverageFloat  >(new AverageFloat(true));
+        internal static double  AverageInt<Inner>(in Inner inner) where Inner : INode<int>     => inner.CreateViaPull<double,  AverageInt    >(new AverageInt(true));
+        internal static double  AverageLong<Inner>(in Inner inner) where Inner : INode<long>    => inner.CreateViaPull<double,  AverageLong   >(new AverageLong(true));
 
         internal static decimal Average<T, Inner>(in Inner inner, Func<T, decimal> selector) where Inner : INode<T> =>
-            inner.CreateObjectViaFastEnumerator<decimal, SelectFoward<T, decimal, AverageDecimal>>(new SelectFoward<T, decimal, AverageDecimal>(new AverageDecimal(default), selector));
+            inner.CreateViaPull<decimal, SelectFoward<T, decimal, AverageDecimal>>(new SelectFoward<T, decimal, AverageDecimal>(new AverageDecimal(default), selector));
         internal static double Average<T, Inner>(in Inner inner, Func<T, double> selector) where Inner : INode<T> =>
-            inner.CreateObjectViaFastEnumerator<double, SelectFoward<T, double, AverageDouble>>(new SelectFoward<T, double, AverageDouble>(new AverageDouble(default), selector));
+            inner.CreateViaPull<double, SelectFoward<T, double, AverageDouble>>(new SelectFoward<T, double, AverageDouble>(new AverageDouble(default), selector));
         internal static float Average<T, Inner>(in Inner inner, Func<T, float> selector) where Inner : INode<T> =>
-            inner.CreateObjectViaFastEnumerator<float, SelectFoward<T, float, AverageFloat>>(new SelectFoward<T, float, AverageFloat>(new AverageFloat(default), selector));
+            inner.CreateViaPull<float, SelectFoward<T, float, AverageFloat>>(new SelectFoward<T, float, AverageFloat>(new AverageFloat(default), selector));
         internal static double Average<T, Inner>(in Inner inner, Func<T, int> selector) where Inner : INode<T> =>
-            inner.CreateObjectViaFastEnumerator<double, SelectFoward<T, int, AverageInt>>(new SelectFoward<T, int, AverageInt>(new AverageInt(default), selector));
+            inner.CreateViaPull<double, SelectFoward<T, int, AverageInt>>(new SelectFoward<T, int, AverageInt>(new AverageInt(default), selector));
         internal static double Average<T, Inner>(in Inner inner, Func<T, long> selector) where Inner : INode<T> =>
-            inner.CreateObjectViaFastEnumerator<double, SelectFoward<T, long, AverageLong>>(new SelectFoward<T, long, AverageLong>(new AverageLong(default), selector));
+            inner.CreateViaPull<double, SelectFoward<T, long, AverageLong>>(new SelectFoward<T, long, AverageLong>(new AverageLong(default), selector));
 
-        internal static decimal? AverageNullableDecimal<Inner>(in Inner inner) where Inner : INode<decimal?> => inner.CreateObjectViaFastEnumerator<decimal?, AverageDecimalNullable>(new AverageDecimalNullable(true));
-        internal static double?  AverageNullableDouble <Inner>(in Inner inner) where Inner : INode<double?>  => inner.CreateObjectViaFastEnumerator<double?,  AverageDoubleNullable >(new AverageDoubleNullable(true));
-        internal static float?   AverageNullableFloat  <Inner>(in Inner inner) where Inner : INode<float?>   => inner.CreateObjectViaFastEnumerator<float?,   AverageFloatNullable  >(new AverageFloatNullable(true));
-        internal static double?  AverageNullableInt    <Inner>(in Inner inner) where Inner : INode<int?>     => inner.CreateObjectViaFastEnumerator<double?,     AverageIntNullable    >(new AverageIntNullable(true));
-        internal static double?  AverageNullableLong   <Inner>(in Inner inner) where Inner : INode<long?>    => inner.CreateObjectViaFastEnumerator<double?,    AverageLongNullable   >(new AverageLongNullable(true));
+        internal static decimal? AverageNullableDecimal<Inner>(in Inner inner) where Inner : INode<decimal?> => inner.CreateViaPull<decimal?, AverageDecimalNullable>(new AverageDecimalNullable(true));
+        internal static double?  AverageNullableDouble <Inner>(in Inner inner) where Inner : INode<double?>  => inner.CreateViaPull<double?,  AverageDoubleNullable >(new AverageDoubleNullable(true));
+        internal static float?   AverageNullableFloat  <Inner>(in Inner inner) where Inner : INode<float?>   => inner.CreateViaPull<float?,   AverageFloatNullable  >(new AverageFloatNullable(true));
+        internal static double?  AverageNullableInt    <Inner>(in Inner inner) where Inner : INode<int?>     => inner.CreateViaPull<double?,     AverageIntNullable    >(new AverageIntNullable(true));
+        internal static double?  AverageNullableLong   <Inner>(in Inner inner) where Inner : INode<long?>    => inner.CreateViaPull<double?,    AverageLongNullable   >(new AverageLongNullable(true));
 
         internal static decimal? Average<T, Inner>(in Inner inner, Func<T, decimal?> selector) where Inner : INode<T> =>
-            inner.CreateObjectViaFastEnumerator<decimal?, SelectFoward<T, decimal?, AverageDecimalNullable>>(new SelectFoward<T, decimal?, AverageDecimalNullable>(new AverageDecimalNullable(default), selector));
+            inner.CreateViaPull<decimal?, SelectFoward<T, decimal?, AverageDecimalNullable>>(new SelectFoward<T, decimal?, AverageDecimalNullable>(new AverageDecimalNullable(default), selector));
         internal static double? Average<T, Inner>(in Inner inner, Func<T, double?> selector) where Inner : INode<T> =>
-            inner.CreateObjectViaFastEnumerator<double?, SelectFoward<T, double?, AverageDoubleNullable>>(new SelectFoward<T, double?, AverageDoubleNullable>(new AverageDoubleNullable(default), selector));
+            inner.CreateViaPull<double?, SelectFoward<T, double?, AverageDoubleNullable>>(new SelectFoward<T, double?, AverageDoubleNullable>(new AverageDoubleNullable(default), selector));
         internal static float? Average<T, Inner>(in Inner inner, Func<T, float?> selector) where Inner : INode<T> =>
-            inner.CreateObjectViaFastEnumerator<float?, SelectFoward<T, float?, AverageFloatNullable>>(new SelectFoward<T, float?, AverageFloatNullable>(new AverageFloatNullable(default), selector));
+            inner.CreateViaPull<float?, SelectFoward<T, float?, AverageFloatNullable>>(new SelectFoward<T, float?, AverageFloatNullable>(new AverageFloatNullable(default), selector));
         internal static double? Average<T, Inner>(in Inner inner, Func<T, int?> selector) where Inner : INode<T> =>
-            inner.CreateObjectViaFastEnumerator<double?, SelectFoward<T, int?, AverageIntNullable>>(new SelectFoward<T, int?, AverageIntNullable>(new AverageIntNullable(default), selector));
+            inner.CreateViaPull<double?, SelectFoward<T, int?, AverageIntNullable>>(new SelectFoward<T, int?, AverageIntNullable>(new AverageIntNullable(default), selector));
         internal static double? Average<T, Inner>(in Inner inner, Func<T, long?> selector) where Inner : INode<T> =>
-            inner.CreateObjectViaFastEnumerator<double?, SelectFoward<T, long?, AverageLongNullable>>(new SelectFoward<T, long?, AverageLongNullable>(new AverageLongNullable(default), selector));
+            inner.CreateViaPull<double?, SelectFoward<T, long?, AverageLongNullable>>(new SelectFoward<T, long?, AverageLongNullable>(new AverageLongNullable(default), selector));
 
-        internal static decimal MinDecimal<Inner>(in Inner inner) where Inner : INode<decimal>  => inner.CreateObjectViaFastEnumerator<decimal, MinDecimal>(new MinDecimal(true));
-        internal static double  MinDouble<Inner>(in Inner inner) where Inner : INode<double>   => inner.CreateObjectViaFastEnumerator<double,  MinDouble >(new MinDouble(true));
-        internal static float   MinFloat<Inner>(in Inner inner) where Inner : INode<float>    => inner.CreateObjectViaFastEnumerator<float,   MinFloat  >(new MinFloat(true));
-        internal static int     MinInt<Inner>(in Inner inner) where Inner : INode<int>      => inner.CreateObjectViaFastEnumerator<int,     MinInt    >(new MinInt(true));
-        internal static long    MinLong<Inner>(in Inner inner) where Inner : INode<long>     => inner.CreateObjectViaFastEnumerator<long,    MinLong   >(new MinLong(true));
-        internal static T       Min<T, Inner>(in Inner inner) where Inner : INode<T>        => inner.CreateObjectViaFastEnumerator<T,       Min<T>    >(new Min<T>(true));
+        internal static decimal MinDecimal<Inner>(in Inner inner) where Inner : INode<decimal>  => inner.CreateViaPull<decimal, MinDecimal>(new MinDecimal(true));
+        internal static double  MinDouble<Inner>(in Inner inner) where Inner : INode<double>   => inner.CreateViaPull<double,  MinDouble >(new MinDouble(true));
+        internal static float   MinFloat<Inner>(in Inner inner) where Inner : INode<float>    => inner.CreateViaPull<float,   MinFloat  >(new MinFloat(true));
+        internal static int     MinInt<Inner>(in Inner inner) where Inner : INode<int>      => inner.CreateViaPull<int,     MinInt    >(new MinInt(true));
+        internal static long    MinLong<Inner>(in Inner inner) where Inner : INode<long>     => inner.CreateViaPull<long,    MinLong   >(new MinLong(true));
+        internal static T       Min<T, Inner>(in Inner inner) where Inner : INode<T>        => inner.CreateViaPull<T,       Min<T>    >(new Min<T>(true));
 
-        internal static decimal? MinNullableDecimal<Inner>(in Inner inner) where Inner : INode<decimal?>  => inner.CreateObjectViaFastEnumerator<decimal?, MinDecimalNullable>(new MinDecimalNullable(true));
-        internal static double?  MinNullableDouble<Inner>(in Inner inner) where Inner : INode<double?>   => inner.CreateObjectViaFastEnumerator<double?,  MinDoubleNullable >(new MinDoubleNullable(true));
-        internal static float?   MinNullableFloat<Inner>(in Inner inner) where Inner : INode<float?>    => inner.CreateObjectViaFastEnumerator<float?,   MinFloatNullable  >(new MinFloatNullable(true));
-        internal static int?     MinNullableInt<Inner>(in Inner inner) where Inner : INode<int?>      => inner.CreateObjectViaFastEnumerator<int?,     MinIntNullable    >(new MinIntNullable(true));
-        internal static long?    MinNullableLong<Inner>(in Inner inner) where Inner : INode<long?>     => inner.CreateObjectViaFastEnumerator<long?,    MinLongNullable   >(new MinLongNullable(true));
+        internal static decimal? MinNullableDecimal<Inner>(in Inner inner) where Inner : INode<decimal?>  => inner.CreateViaPull<decimal?, MinDecimalNullable>(new MinDecimalNullable(true));
+        internal static double?  MinNullableDouble<Inner>(in Inner inner) where Inner : INode<double?>   => inner.CreateViaPull<double?,  MinDoubleNullable >(new MinDoubleNullable(true));
+        internal static float?   MinNullableFloat<Inner>(in Inner inner) where Inner : INode<float?>    => inner.CreateViaPull<float?,   MinFloatNullable  >(new MinFloatNullable(true));
+        internal static int?     MinNullableInt<Inner>(in Inner inner) where Inner : INode<int?>      => inner.CreateViaPull<int?,     MinIntNullable    >(new MinIntNullable(true));
+        internal static long?    MinNullableLong<Inner>(in Inner inner) where Inner : INode<long?>     => inner.CreateViaPull<long?,    MinLongNullable   >(new MinLongNullable(true));
 
-        internal static decimal MaxDecimal<Inner>(in Inner inner) where Inner : INode<decimal>  => inner.CreateObjectViaFastEnumerator<decimal, MaxDecimal>(new MaxDecimal(true));
-        internal static double  MaxDouble<Inner>(in Inner inner) where Inner : INode<double>   => inner.CreateObjectViaFastEnumerator<double,  MaxDouble >(new MaxDouble(true));
-        internal static float   MaxFloat<Inner>(in Inner inner) where Inner : INode<float>    => inner.CreateObjectViaFastEnumerator<float,   MaxFloat  >(new MaxFloat(true));
-        internal static int     MaxInt<Inner>(in Inner inner) where Inner : INode<int>      => inner.CreateObjectViaFastEnumerator<int,     MaxInt    >(new MaxInt(true));
-        internal static long    MaxLong<Inner>(in Inner inner) where Inner : INode<long>     => inner.CreateObjectViaFastEnumerator<long,    MaxLong   >(new MaxLong(true));
-        internal static T       Max<T, Inner>(in Inner inner) where Inner : INode<T>        => inner.CreateObjectViaFastEnumerator<T,       Max<T>    >(new Max<T>(true));
+        internal static decimal MaxDecimal<Inner>(in Inner inner) where Inner : INode<decimal>  => inner.CreateViaPull<decimal, MaxDecimal>(new MaxDecimal(true));
+        internal static double  MaxDouble<Inner>(in Inner inner) where Inner : INode<double>   => inner.CreateViaPull<double,  MaxDouble >(new MaxDouble(true));
+        internal static float   MaxFloat<Inner>(in Inner inner) where Inner : INode<float>    => inner.CreateViaPull<float,   MaxFloat  >(new MaxFloat(true));
+        internal static int     MaxInt<Inner>(in Inner inner) where Inner : INode<int>      => inner.CreateViaPull<int,     MaxInt    >(new MaxInt(true));
+        internal static long    MaxLong<Inner>(in Inner inner) where Inner : INode<long>     => inner.CreateViaPull<long,    MaxLong   >(new MaxLong(true));
+        internal static T       Max<T, Inner>(in Inner inner) where Inner : INode<T>        => inner.CreateViaPull<T,       Max<T>    >(new Max<T>(true));
 
-        internal static decimal? MaxNullableDecimal<Inner>(in Inner inner) where Inner : INode<decimal?> => inner.CreateObjectViaFastEnumerator<decimal?, MaxDecimalNullable>(new MaxDecimalNullable(true));
-        internal static double?  MaxNullableDouble<Inner>(in Inner inner) where Inner : INode<double?>  => inner.CreateObjectViaFastEnumerator<double?,  MaxDoubleNullable >(new MaxDoubleNullable(true));
-        internal static float?   MaxNullableFloat<Inner>(in Inner inner) where Inner : INode<float?>   => inner.CreateObjectViaFastEnumerator<float?,   MaxFloatNullable  >(new MaxFloatNullable(true));
-        internal static int?     MaxNullableInt<Inner>(in Inner inner) where Inner : INode<int?>     => inner.CreateObjectViaFastEnumerator<int?,     MaxIntNullable    >(new MaxIntNullable(true));
-        internal static long?    MaxNullableLong<Inner>(in Inner inner) where Inner : INode<long?>    => inner.CreateObjectViaFastEnumerator<long?,    MaxLongNullable   >(new MaxLongNullable(true));
+        internal static decimal? MaxNullableDecimal<Inner>(in Inner inner) where Inner : INode<decimal?> => inner.CreateViaPull<decimal?, MaxDecimalNullable>(new MaxDecimalNullable(true));
+        internal static double?  MaxNullableDouble<Inner>(in Inner inner) where Inner : INode<double?>  => inner.CreateViaPull<double?,  MaxDoubleNullable >(new MaxDoubleNullable(true));
+        internal static float?   MaxNullableFloat<Inner>(in Inner inner) where Inner : INode<float?>   => inner.CreateViaPull<float?,   MaxFloatNullable  >(new MaxFloatNullable(true));
+        internal static int?     MaxNullableInt<Inner>(in Inner inner) where Inner : INode<int?>     => inner.CreateViaPull<int?,     MaxIntNullable    >(new MaxIntNullable(true));
+        internal static long?    MaxNullableLong<Inner>(in Inner inner) where Inner : INode<long?>    => inner.CreateViaPull<long?,    MaxLongNullable   >(new MaxLongNullable(true));
 
-        internal static decimal SumDecimal<Inner>(in Inner inner) where Inner : INode<decimal> => inner.CreateObjectViaFastEnumerator<decimal, SumDecimal>(new SumDecimal(true));
-        internal static double  SumDouble<Inner>(in Inner inner) where Inner : INode<double>  => inner.CreateObjectViaFastEnumerator<double,  SumDouble >(new SumDouble(true));
-        internal static float   SumFloat<Inner>(in Inner inner) where Inner : INode<float>   => inner.CreateObjectViaFastEnumerator<float,   SumFloat  >(new SumFloat(true));
-        internal static int     SumInt<Inner>(in Inner inner) where Inner : INode<int>     => inner.CreateObjectViaFastEnumerator<int,     SumInt    >(new SumInt(true));
-        internal static long    SumLong<Inner>(in Inner inner) where Inner : INode<long>    => inner.CreateObjectViaFastEnumerator<long,    SumLong   >(new SumLong(true));
+        internal static decimal SumDecimal<Inner>(in Inner inner) where Inner : INode<decimal> => inner.CreateViaPull<decimal, SumDecimal>(new SumDecimal(true));
+        internal static double  SumDouble<Inner>(in Inner inner) where Inner : INode<double>  => inner.CreateViaPull<double,  SumDouble >(new SumDouble(true));
+        internal static float   SumFloat<Inner>(in Inner inner) where Inner : INode<float>   => inner.CreateViaPull<float,   SumFloat  >(new SumFloat(true));
+        internal static int     SumInt<Inner>(in Inner inner) where Inner : INode<int>     => inner.CreateViaPull<int,     SumInt    >(new SumInt(true));
+        internal static long    SumLong<Inner>(in Inner inner) where Inner : INode<long>    => inner.CreateViaPull<long,    SumLong   >(new SumLong(true));
 
-        internal static decimal? SumNullableDecimal<Inner>(in Inner inner) where Inner : INode<decimal?> => inner.CreateObjectViaFastEnumerator<decimal, SumDecimalNullable>(new SumDecimalNullable(true));
-        internal static double?  SumNullableDouble<Inner>(in Inner inner) where Inner : INode<double?>  => inner.CreateObjectViaFastEnumerator<double,  SumDoubleNullable >(new SumDoubleNullable(true));
-        internal static float?   SumNullableFloat<Inner>(in Inner inner) where Inner : INode<float?>   => inner.CreateObjectViaFastEnumerator<float,   SumFloatNullable  >(new SumFloatNullable(true));
-        internal static int?     SumNullableInt<Inner>(in Inner inner) where Inner : INode<int?>     => inner.CreateObjectViaFastEnumerator<int,     SumIntNullable    >(new SumIntNullable(true));
-        internal static long?    SumNullableLong<Inner>(in Inner inner) where Inner : INode<long?>    => inner.CreateObjectViaFastEnumerator<long,    SumLongNullable   >(new SumLongNullable(true));
+        internal static decimal? SumNullableDecimal<Inner>(in Inner inner) where Inner : INode<decimal?> => inner.CreateViaPull<decimal, SumDecimalNullable>(new SumDecimalNullable(true));
+        internal static double?  SumNullableDouble<Inner>(in Inner inner) where Inner : INode<double?>  => inner.CreateViaPull<double,  SumDoubleNullable >(new SumDoubleNullable(true));
+        internal static float?   SumNullableFloat<Inner>(in Inner inner) where Inner : INode<float?>   => inner.CreateViaPull<float,   SumFloatNullable  >(new SumFloatNullable(true));
+        internal static int?     SumNullableInt<Inner>(in Inner inner) where Inner : INode<int?>     => inner.CreateViaPull<int,     SumIntNullable    >(new SumIntNullable(true));
+        internal static long?    SumNullableLong<Inner>(in Inner inner) where Inner : INode<long?>    => inner.CreateViaPull<long,    SumLongNullable   >(new SumLongNullable(true));
 
         internal static bool Count<T, Inner>(in Inner source, Func<T, bool> predicate)
             where Inner : INode<T>
@@ -531,13 +531,13 @@ namespace Cistern.ValueLinq
             if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
 
-            return source.CreateObjectViaFastEnumerator<bool, CountIf<T>>(new CountIf<T>(predicate));
+            return source.CreateViaPull<bool, CountIf<T>>(new CountIf<T>(predicate));
         }
 
         internal static bool Contains<T, Inner>(in Inner inner, T value) where Inner : INode<T> =>
-            inner.CreateObjectViaFastEnumerator<bool, Contains<T>>(new Contains<T>(value));
+            inner.CreateViaPull<bool, Contains<T>>(new Contains<T>(value));
         internal static bool Contains<T, Inner>(in Inner inner, T value, IEqualityComparer<T> comparer) where Inner : INode<T> =>
-            inner.CreateObjectViaFastEnumerator<bool, ContainsByComparer<T>>(new ContainsByComparer<T>(comparer, value));
+            inner.CreateViaPull<bool, ContainsByComparer<T>>(new ContainsByComparer<T>(comparer, value));
 
 
         internal static SelectManyNode<TSource, TResult, NodeT, NodeU> SelectMany<TSource, TResult, NodeT, NodeU>(in NodeT prior, Func<TSource, ValueEnumerable<TResult, NodeU>> selector)

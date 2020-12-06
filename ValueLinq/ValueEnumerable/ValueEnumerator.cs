@@ -23,17 +23,17 @@ namespace Cistern.ValueLinq.ValueEnumerable
     {
         public void GetCountInformation(out CountInformation info) => Impl.CountInfo(out info);
 
-        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> _)
+        CreationType INode.CreateViaPushDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> _)
             => Impl.CreateObjectDescent<CreationType>();
 
-        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
+        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
         {
             if (typeof(Enumerator) == typeof(Containers.EmptyFastEnumerator<EnumeratorElement>))
                 return (CreationType)(object)Containers.EmptyFastEnumerator<EnumeratorElement>.Instance;
 
             return (CreationType)(object)new FastEnumerator<Enumerator, EnumeratorElement>(enumerator);
         }
-        bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
-        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
+        bool INode.TryPushOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
+        bool INode.TryPullOptimization<TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
     }
 }

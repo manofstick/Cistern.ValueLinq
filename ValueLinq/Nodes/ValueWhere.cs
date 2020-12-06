@@ -49,25 +49,25 @@ namespace Cistern.ValueLinq.Nodes
 
         public ValueWhereNode(in NodeT nodeT, Predicate predicate) => (_nodeT, _filter) = (nodeT, predicate);
 
-        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+        CreationType INode.CreateViaPushDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
             => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
 
-        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
+        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
         {
             var nextEnumerator = new ValueWhereNodeEnumerator<EnumeratorElement, Enumerator, T, Predicate>(in enumerator, _filter);
             return tail.CreateObject<CreationType, EnumeratorElement, ValueWhereNodeEnumerator<EnumeratorElement, Enumerator, T, Predicate>>(ref nextEnumerator);
         }
 
-        bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
+        bool INode.TryPushOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
 
-        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+        bool INode.TryPullOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
             result = default;
             return false;
         }
 
-        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) =>
-            _nodeT.CreateObjectViaFastEnumerator<TResult, ValueWhereFoward<T, FEnumerator, Predicate>>(new ValueWhereFoward<T, FEnumerator, Predicate>(fenum, _filter));
+        TResult INode<T>.CreateViaPull<TResult, FEnumerator>(in FEnumerator fenum) =>
+            _nodeT.CreateViaPull<TResult, ValueWhereFoward<T, FEnumerator, Predicate>>(new ValueWhereFoward<T, FEnumerator, Predicate>(fenum, _filter));
     }
 
     struct ValueWhereFoward<T, Next, Predicate>

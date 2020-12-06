@@ -41,19 +41,19 @@ namespace Cistern.ValueLinq.Containers
 
 #region "This node is only used in forward context, so most of interface is not supported"
         public void GetCountInformation(out CountInformation info) => throw new NotSupportedException();
-        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => throw new NotSupportedException();
-        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
+        CreationType INode.CreateViaPushDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => throw new NotSupportedException();
+        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
         #endregion
 
-        bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
+        bool INode.TryPushOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
 
-        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+        bool INode.TryPullOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
             result = default;
             return false;
         }
 
-        TResult INode<T>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
+        TResult INode<T>.CreateViaPull<TResult, FEnumerator>(in FEnumerator fenum)
             => SpanNode.FastReverseEnumerate<T, TResult, FEnumerator>(_getSpan(_obj), fenum);
     }
 
@@ -69,13 +69,13 @@ namespace Cistern.ValueLinq.Containers
 
         public SpanNode(TObject obj, GetSpan<TObject, TElement> getSpan) => (_obj, _getSpan) = (obj, getSpan);
 
-        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => SpanNode.Create<TElement, Head, Tail, CreationType, TObject>(_obj, _getSpan, ref nodes);
+        CreationType INode.CreateViaPushDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => SpanNode.Create<TElement, Head, Tail, CreationType, TObject>(_obj, _getSpan, ref nodes);
 
-        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
+        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
 
-        bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
+        bool INode.TryPushOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
 
-        bool INode.CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+        bool INode.TryPullOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
             if (typeof(TRequest) == typeof(Optimizations.ToArray))
             {
@@ -123,7 +123,7 @@ namespace Cistern.ValueLinq.Containers
             return false;
         }
 
-        TResult INode<TElement>.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
+        TResult INode<TElement>.CreateViaPull<TResult, FEnumerator>(in FEnumerator fenum)
             => SpanNode.FastEnumerate<TElement, TResult, FEnumerator, TObject>(_obj, _getSpan, fenum);
     }
 

@@ -117,7 +117,7 @@ namespace Cistern.ValueLinq.Containers
 
         public ArrayNode(T[] array) => _array = array;
 
-        CreationType INode.CreateObjectDescent<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+        CreationType INode.CreateViaPushDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
         {
             if (_array.Length == 0)
                 return EmptyNode.Create<T, Nodes<Head, Tail>, CreationType>(ref nodes);
@@ -125,15 +125,15 @@ namespace Cistern.ValueLinq.Containers
             return ArrayNode.Create<T, Nodes<Head, Tail>, CreationType>(_array, ref nodes);
         }
 
-        bool INode.TryObjectAscentOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
+        bool INode.TryPushOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
 
-        public bool CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result) =>
+        public bool TryPullOptimization<TRequest, TResult>(in TRequest request, out TResult result) =>
             MemoryNode.CheckForOptimization<T, TRequest, TResult>(_array, in request, out result);
 
-        CreationType INode.CreateObjectAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __)
+        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __)
             => throw new InvalidOperationException();
 
-        public TResult CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<T>
+        public TResult CreateViaPull<TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<T>
             => ArrayNode.FastEnumerate<T, TResult, FEnumerator>(_array, fenum);
     }
 
