@@ -1,4 +1,5 @@
 ﻿using Cistern.ValueLinq.Aggregation;
+using Cistern.ValueLinq.Containers;
 using System;
 
 namespace Cistern.ValueLinq.ValueEnumerable
@@ -29,7 +30,7 @@ namespace Cistern.ValueLinq.ValueEnumerable
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
         {
             if (typeof(Enumerator) == typeof(Containers.EmptyFastEnumerator<EnumeratorElement>))
-                return (CreationType)(object)Containers.EmptyFastEnumerator<EnumeratorElement>.Instance;
+                return (CreationType)(object)InstanceOfEmptyFastEnumerator<EnumeratorElement>.Instance;
 
             return (CreationType)(object)new FastEnumerator<Enumerator, EnumeratorElement>(enumerator);
         }

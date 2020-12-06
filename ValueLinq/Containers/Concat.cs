@@ -61,7 +61,7 @@ namespace Cistern.ValueLinq.Containers
         private List<EnumerableNode<T>> _remaining;
         int _idx;
 
-        public ConcatFastListEnumerator(List<EnumerableNode<T>> nodes) => (_current, _remaining, _idx) = (EmptyFastEnumerator<T>.Instance, nodes, 0);
+        public ConcatFastListEnumerator(List<EnumerableNode<T>> nodes) => (_current, _remaining, _idx) = (InstanceOfEmptyFastEnumerator<T>.Instance, nodes, 0);
 
         public void Dispose()
         {
@@ -87,7 +87,7 @@ namespace Cistern.ValueLinq.Containers
 
             if (_idx >= _remaining.Count)
             {
-                _current = EmptyFastEnumerator<T>.Instance;
+                _current = InstanceOfEmptyFastEnumerator<T>.Instance;
                 return false;
             }
             else

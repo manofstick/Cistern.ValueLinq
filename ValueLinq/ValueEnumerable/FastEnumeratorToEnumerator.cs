@@ -1,4 +1,5 @@
 ﻿using Cistern.ValueLinq.Aggregation;
+using Cistern.ValueLinq.Containers;
 using System;
 using System.Collections.Generic;
 
@@ -33,7 +34,12 @@ namespace Cistern.ValueLinq.ValueEnumerable
             => Impl.CreateObjectDescent<CreationType>();
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
-                => (CreationType)(object)(new FastEnumeratorToEnumerator<EnumeratorElement, Enumerator>(in enumerator));
+        {
+            if (typeof(Enumerator) == typeof(Containers.EmptyFastEnumerator<EnumeratorElement>))
+                return (CreationType)(object)InstanceOfEmptyEnumerator<EnumeratorElement>.Instance;
+
+            return (CreationType)(object)(new FastEnumeratorToEnumerator<EnumeratorElement, Enumerator>(in enumerator));
+        }
 
         bool INode.TryPushOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
 

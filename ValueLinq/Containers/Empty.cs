@@ -1,19 +1,42 @@
 ﻿using System;
-using System.Threading;
+using System.Collections.Generic;
 
 namespace Cistern.ValueLinq.Containers
 {
+    class InstanceOfEmptyEnumerator<T>
+        : IEnumerator<T>
+    {
+        public static readonly IEnumerator<T> Instance = new InstanceOfEmptyEnumerator<T>();
+        private InstanceOfEmptyEnumerator() { }
+        public T Current => default;
+        object System.Collections.IEnumerator.Current => Current;
+        public void Dispose() { }
+        public bool MoveNext() => false;
+        public void Reset() { }
+    }
+
+    class InstanceOfEmptyFastEnumerator<T>
+        : FastEnumerator<T>
+    {
+        public static readonly FastEnumerator<T> Instance = new InstanceOfEmptyFastEnumerator<T>();
+        private InstanceOfEmptyFastEnumerator() { }
+
+        public override void Dispose() { }
+
+        public override bool TryGetNext(out T current)
+        {
+            current = default;
+            return false;
+        }
+    }
+
     struct EmptyFastEnumerator<T>
         : IFastEnumerator<T>
     {
         public void Dispose() { }
 
         public bool TryGetNext(out T current) { current = default; return false; }
-
-        public static readonly FastEnumerator<T> Instance = new FastEnumerator<EmptyFastEnumerator<T>, T>(new EmptyFastEnumerator<T>());
     }
-
-    
 
     public struct EmptyNode<T>
         : INode<T>
