@@ -24,7 +24,7 @@ namespace Cistern.ValueLinq.ValueEnumerable
         public void Reset() => throw new NotSupportedException();
     }
 
-    struct FastEnumeratorToEnumeratorNode
+    struct FastEnumeratorToIEnumeratorNode
         : INode
     {
         public void GetCountInformation(out CountInformation info) => Impl.CountInfo(out info);

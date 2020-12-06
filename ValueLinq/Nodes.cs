@@ -244,15 +244,15 @@ namespace Cistern.ValueLinq
         public static IEnumerator<T> CreateEnumerator<Node>(in Node node)
             where Node : INode
         {
-            var nodes = new Nodes<FastEnumeratorToEnumeratorNode, NodesEnd>();
-            return node.CreateViaPushDescend<IEnumerator<T>, FastEnumeratorToEnumeratorNode, NodesEnd>(ref nodes);
+            var nodes = new Nodes<FastEnumeratorToIEnumeratorNode, NodesEnd>();
+            return node.CreateViaPushDescend<IEnumerator<T>, FastEnumeratorToIEnumeratorNode, NodesEnd>(ref nodes);
         }
 
         public static FastEnumerator<T> CreateFastEnumerator<Node>(in Node node)
             where Node : INode
         {
-            var nodes = new Nodes<CreateFastEnumeratorNode, NodesEnd>();
-            return node.CreateViaPushDescend<FastEnumerator<T>, CreateFastEnumeratorNode, NodesEnd>(ref nodes);
+            var nodes = new Nodes<FastEnumeratorToValueEnumeratorNode, NodesEnd>();
+            return node.CreateViaPushDescend<FastEnumerator<T>, FastEnumeratorToValueEnumeratorNode, NodesEnd>(ref nodes);
         }
 
         public static ValueEnumerator<T> CreateValueEnumerator<Node>(in Node node)

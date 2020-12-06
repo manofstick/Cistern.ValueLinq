@@ -30,6 +30,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>SR.resx</DependentUpon>
     </Compile>
+    <Compile Update="ValueEnumerable\ExtensionFunctions.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ExtensionFunctions.tt</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
@@ -59,6 +64,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Transforms.tt</DependentUpon>
     </None>
+    <None Include="ValueEnumerable\ExtensionFunctions.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ExtensionFunctions.tt</DependentUpon>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -80,6 +90,10 @@
     <None Update="EnumerableWrappers\Transforms.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Transforms.cs</LastGenOutput>
+    </None>
+    <None Update="ValueEnumerable\ExtensionFunctions.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ExtensionFunctions.cs</LastGenOutput>
     </None>
   </ItemGroup>
 

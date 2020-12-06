@@ -18,7 +18,7 @@ namespace Cistern.ValueLinq.ValueEnumerable
         public bool MoveNext() => _enumerator.TryGetNext(out _current);
     }
 
-    struct CreateFastEnumeratorNode
+    struct FastEnumeratorToValueEnumeratorNode
         : INode
     {
         public void GetCountInformation(out CountInformation info) => Impl.CountInfo(out info);
