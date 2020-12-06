@@ -7,35 +7,42 @@ namespace Cistern.ValueLinq
 {
     public static partial class Enumerable
     {
-        public static ValueEnumerable<T, EnumerableNode<T>> OfEnumerable<T>(this IEnumerable<T> source)
+        internal static EnumerableNode<T> ToNode<T>(IEnumerable<T> source)
         {
             if (source == null)
                 throw new ArgumentNullException(nameof(source));
 
-            return new ValueEnumerable<T, EnumerableNode<T>>(new EnumerableNode<T>(source));
+            return new (source);
         }
 
-        public static ValueEnumerable<T, ArrayNode<T>> OfArray<T>(this T[] source)
+        internal static ArrayNode<T> ToNode<T>(T[] source)
         {
             if (source == null)
                 throw new ArgumentNullException(nameof(source));
 
-            return new ValueEnumerable<T, ArrayNode<T>>(new ArrayNode<T>(source));
+            return new(source);
         }
 
-        public static ValueEnumerable<T, MemoryNode<T>> OfMemory<T>(this ReadOnlyMemory<T> source) =>
-            new ValueEnumerable<T, MemoryNode<T>>(new MemoryNode<T>(source));
+        internal static MemoryNode<T> ToNode<T>(ReadOnlyMemory<T> source)
+            => new(source);
+
+        internal static ListNode<T> ToNode<T>(List<T> source)
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+
+            return new(source);
+        }
+
+
+        public static ValueEnumerable<T, EnumerableNode<T>> OfEnumerable<T>(this IEnumerable<T> source) => new (ToNode(source));
+        public static ValueEnumerable<T, ArrayNode<T>> OfArray<T>(this T[] source) => new(ToNode(source));
+        public static ValueEnumerable<T, MemoryNode<T>> OfMemory<T>(this ReadOnlyMemory<T> source) => new(ToNode(source));
+        public static ValueEnumerable<T, ListNode<T>> OfList<T>(this List<T> source) => new(ToNode(source));
+
 
         public static ValueEnumerable<T, SpanNode<TObject, T>> FromSpan<TObject, T>(TObject obj, GetSpan<TObject,T> getSpan) =>
             new ValueEnumerable<T, SpanNode<TObject, T>>(new SpanNode<TObject, T>(obj, getSpan));
-
-        public static ValueEnumerable<T, ListNode<T>> OfList<T>(this List<T> source)
-        {
-            if (source == null)
-                throw new ArgumentNullException(nameof(source));
-
-            return new ValueEnumerable<T, ListNode<T>>(new ListNode<T>(source));
-        }
 
         public static ValueEnumerable<T, ListSegmentNode<T>> OfListByIndex<T>(this List<T> source)
         {

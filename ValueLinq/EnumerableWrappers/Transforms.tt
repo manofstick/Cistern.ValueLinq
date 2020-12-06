@@ -10,95 +10,95 @@
     {
         (
             Signature  : new Func<string, string>(collection => $"Reverse<TSource>(this {collection} source)"),
-            Code       : new Func<string, string>(ofCollection => $"source.{ofCollection}().Reverse()"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Reverse<TSource, {collectionNodeName}>(Enumerable.ToNode(source)))"),
             OutputType : "TSource",
             NodeName   : new Func<string, string>(collectionNodeName => $"ReverseNode<TSource, {collectionNodeName}>")
         ),
 
         (
             Signature  : new Func<string, string>(collection => $"Select<TSource, TResult>(this {collection} source, Func<TSource, TResult> selector)"),
-            Code       : new Func<string, string>(ofCollection => $"source.{ofCollection}().Select(selector)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Select(Enumerable.ToNode(source), selector))"),
             OutputType : "TResult",
             NodeName   : new Func<string, string>(collectionNodeName => $"SelectNode<TSource, TResult, {collectionNodeName}>")
         ),
         (
             Signature  : new Func<string, string>(collection => $"Select<TSource, TResult>(this {collection} source, InFunc<TSource, TResult> selector)"),
-            Code       : new Func<string, string>(ofCollection => $"source.{ofCollection}().Select(selector)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Select(Enumerable.ToNode(source), selector))"),
             OutputType : "TResult",
             NodeName   : new Func<string, string>(collectionNodeName => $"Select_InNode<TSource, TResult, {collectionNodeName}>")
         ),
         (
             Signature  : new Func<string, string>(collection => $"Select<TSource, TResult>(this {collection} source, Func<TSource, int, TResult> selector)"),
-            Code       : new Func<string, string>(ofCollection => $"source.{ofCollection}().Select(selector)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Select(Enumerable.ToNode(source), selector))"),
             OutputType : "TResult",
             NodeName   : new Func<string, string>(collectionNodeName => $"SelectIdxNode<TSource, TResult, {collectionNodeName}>")
         ),
         (
             Signature  : new Func<string, string>(collection => $"Select<TSource, TResult, IFunc>(this {collection} source, IFunc selector, TResult forTypeInference) where IFunc : IFunc<TSource, TResult>"),
-            Code       : new Func<string, string>(ofCollection => $"source.{ofCollection}().Select(selector, forTypeInference)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Select<TSource, TResult, {collectionNodeName}, IFunc>(Enumerable.ToNode(source), selector, forTypeInference))"),
             OutputType : "TResult",
             NodeName   : new Func<string, string>(collectionNodeName => $"ValueSelectNode<TSource, TResult, {collectionNodeName}, IFunc>")
         ),
 
         (
             Signature  : new Func<string, string>(collection => $"Where<TSource>(this {collection} source, Func<TSource, bool> predicate)"),
-            Code       : new Func<string, string>(ofCollection => $"source.{ofCollection}().Where(predicate)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Where(Enumerable.ToNode(source), predicate))"),
             OutputType : "TSource",
             NodeName   : new Func<string, string>(collectionNodeName => $"WhereNode<TSource, {collectionNodeName}>")
         ),
         (
             Signature  : new Func<string, string>(collection => $"Where<TSource>(this {collection} source, Func<TSource, int, bool> predicate)"),
-            Code       : new Func<string, string>(ofCollection => $"source.{ofCollection}().Where(predicate)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Where(Enumerable.ToNode(source), predicate))"),
             OutputType : "TSource",
             NodeName   : new Func<string, string>(collectionNodeName => $"WhereIdxNode<TSource, {collectionNodeName}>")
         ),
         (
             Signature  : new Func<string, string>(collection => $"Where<TSource>(this {collection} source, InFunc<TSource, bool> predicate)"),
-            Code       : new Func<string, string>(ofCollection => $"source.{ofCollection}().Where(predicate)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Where(Enumerable.ToNode(source), predicate))"),
             OutputType : "TSource",
             NodeName   : new Func<string, string>(collectionNodeName => $"Where_InNode<TSource, {collectionNodeName}>")
         ),
         (
             Signature  : new Func<string, string>(collection => $"Where<TSource, Predicate>(this {collection} source, Predicate predicate) where Predicate : IFunc<TSource, bool>"),
-            Code       : new Func<string, string>(ofCollection => $"source.{ofCollection}().Where(predicate)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Where<TSource, {collectionNodeName}, Predicate>(Enumerable.ToNode(source), predicate))"),
             OutputType : "TSource",
             NodeName   : new Func<string, string>(collectionNodeName => $"ValueWhereNode<TSource, {collectionNodeName}, Predicate>")
         ),
 
         (
             Signature  : new Func<string, string>(collection => $"Take<TSource>(this {collection} source, int count)"),
-            Code       : new Func<string, string>(ofCollection => $"source.{ofCollection}().Take(count)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Take<TSource, {collectionNodeName}>(Enumerable.ToNode(source), count))"),
             OutputType : "TSource",
             NodeName   : new Func<string, string>(collectionNodeName => $"TakeNode<TSource, {collectionNodeName}>")
         ),
         (
             Signature  : new Func<string, string>(collection => $"TakeWhile<TSource>(this {collection} source, Func<TSource, bool> predicate)"),
-            Code       : new Func<string, string>(ofCollection => $"source.{ofCollection}().TakeWhile(predicate)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.TakeWhile(Enumerable.ToNode(source), predicate))"),
             OutputType : "TSource",
             NodeName   : new Func<string, string>(collectionNodeName => $"TakeWhileNode<TSource, {collectionNodeName}>")
         ),
         (
             Signature  : new Func<string, string>(collection => $"TakeWhile<TSource>(this {collection} source, Func<TSource, int, bool> predicate)"),
-            Code       : new Func<string, string>(ofCollection => $"source.{ofCollection}().TakeWhile(predicate)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.TakeWhile(Enumerable.ToNode(source), predicate))"),
             OutputType : "TSource",
             NodeName   : new Func<string, string>(collectionNodeName => $"TakeWhileIdxNode<TSource, {collectionNodeName}>")
         ),
 
         (
             Signature  : new Func<string, string>(collection => $"Skip<TSource>(this {collection} source, int count)"),
-            Code       : new Func<string, string>(ofCollection => $"source.{ofCollection}().Skip(count)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Skip<TSource, {collectionNodeName}>(Enumerable.ToNode(source), count))"),
             OutputType : "TSource",
             NodeName   : new Func<string, string>(collectionNodeName => $"SkipNode<TSource, {collectionNodeName}>")
         ),
         (
             Signature  : new Func<string, string>(collection => $"SkipWhile<TSource>(this {collection} source, Func<TSource, bool> predicate)"),
-            Code       : new Func<string, string>(ofCollection => $"source.{ofCollection}().SkipWhile(predicate)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.SkipWhile(Enumerable.ToNode(source), predicate))"),
             OutputType : "TSource",
             NodeName   : new Func<string, string>(collectionNodeName => $"SkipWhileNode<TSource, {collectionNodeName}>")
         ),
         (
             Signature  : new Func<string, string>(collection => $"SkipWhile<TSource>(this {collection} source, Func<TSource, int, bool> predicate)"),
-            Code       : new Func<string, string>(ofCollection => $"source.{ofCollection}().SkipWhile(predicate)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.SkipWhile(Enumerable.ToNode(source), predicate))"),
             OutputType : "TSource",
             NodeName   : new Func<string, string>(collectionNodeName => $"SkipWhileIdxNode<TSource, {collectionNodeName}>")
         ),
@@ -124,7 +124,7 @@ namespace Cistern.ValueLinq
         foreach(var transform in transformTypes)
         {
             var signature = $"public static ValueEnumerable<{transform.OutputType}, {transform.NodeName(collection.NodeName("TSource"))}> {transform.Signature(genericCollectionType)}";
-            var code = transform.Code(collection.Of);
+            var code = transform.Code(collection.NodeName("TSource"));
 #>
         <#= signature #> =>
             <#= code #>;
