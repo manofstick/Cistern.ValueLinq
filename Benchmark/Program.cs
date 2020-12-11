@@ -3,6 +3,7 @@ using BenchmarkDotNet.Running;
 using Cistern.ValueLinq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Cistern.Benchmarks
 {
@@ -46,18 +47,86 @@ namespace Cistern.Benchmarks
 
     public class Program
     {
+        static string[][] Source = new[] { new[] { "foo", "bar" }, new[] { "fizz", "buzz" }, new[] { "hello", "world" } };
+        static Func<string[], string> CollectionSelector = arr => arr[0];
+        static Func<string[], int, string> CollectionSelectorIndexed = (arr, ix) => arr[0];
+        static Func<string[], char, string> ResultSelector = (a, b) => a[0];
+
+
+        public static IEnumerable<char> Stuff()
+        {
+            for (var i = 0; i < 100; ++i)
+                yield return 'a';
+            //yield return 'a';
+            //yield return 'b';
+            //yield return 'c';
+            //yield return 'd';
+            //yield return 'e';
+            //yield return 'f';
+            //yield return 'g';
+        }
+
         public static void Main(string[] args)
         {
-            var a = "This is a really long string isn't is, so it should go through the code I want!".AsMemory();
-            var b = "And this is another really long string that should also be added!".AsMemory();
-            var c = a.Concat(b);
-            var z = c.ToList();
+            //var Z = new DummyData.OrderByToArray();
+            //Z.Length = 5;
+            //Z.SetupData();
+
+            //for (var j = 0; j < 10; ++j)
+            //{
+            //    for (var i = 0; i < 1000000; ++i)
+            //    {
+            //        Z.CisternValueLinq();
+            //    }
+            //    Console.Write(".");
+            //}
+            //return;
+
+
+
+            //var z =
+            //    Enumerable
+            //    .Range(0, 100)
+            //    .Select(x => x * -1)
+            //    .OrderBy(x => x)
+            //    .ThenBy(x => x)
+            //    .ThenBy(x => x)
+            //    .First();
+
+
+
+
+            //for (var j = 0; j < 10; ++j)
+            //{
+            //    var sw = Stopwatch.StartNew();
+            //    for (var i = 0; i < 1000000; ++i)
+            //    {
+            //        //Source
+            //        //    .OfArray()
+            //        //    .SelectMany(
+            //        //        arr => arr[0].AsMemory().OfMemory(),
+            //        //        ResultSelector)
+            //        //    .ForEach(_ => { });
+
+            //        //foreach (var item in Source.OfArray().SelectMany(arr => arr[0].AsMemory().OfMemory(), ResultSelector))
+            //        //foreach (var item in Source.SelectMany(CollectionSelector, ResultSelector))
+            //        foreach (var item in System.Linq.Enumerable.SelectMany(Source, CollectionSelector, ResultSelector))
+            //        {
+            //        }
+            //    }
+            //    Console.WriteLine(sw.ElapsedMilliseconds);
+            //}
+            //return;
+
 
 
 
             //For some sanity checking
             DoubleDoubleDouble.SelectWhereAggregate.SanityCheck();
             DoubleDoubleDouble.WhereSelectAggregate.SanityCheck();
+            DoubleDoubleDouble.OrderByThenByThenByToArray.SanityCheck();
+
+            DummyData.OrderByToArray.SanityCheck();
 
             Double.ToList.SanityCheck();
             Double.SelectToList.SanityCheck();
@@ -94,7 +163,7 @@ namespace Cistern.Benchmarks
 
 
 
-            var summary = BenchmarkRunner.Run<Double.SkipReverseSkipToArray>();
+            var summary = BenchmarkRunner.Run<Double.SelectManySum>();
         }
     }
 }

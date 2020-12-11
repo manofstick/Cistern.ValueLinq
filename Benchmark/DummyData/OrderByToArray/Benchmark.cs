@@ -3,43 +3,33 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Cistern.Benchmarks.DoubleDoubleDouble
+namespace Cistern.Benchmarks.DummyData
 {
     [MemoryDiagnoser]
-    public partial class OrderByThenByThenByToArray
+    public partial class OrderByToArray
     {
-        List<(double x, double y, double z)> _doubledoubledoubles;
+        List<DataSetA.Data> _data;
 
 #if true
-        [Params(0, 1, 10, 100, 1000, 1000000)]
+        [Params(5, 20, 50, 100)]
 #else
-        [Params(10)]
+        [Params(98, 99, 100)]
 #endif
         public int Length { get; set; } = 0;
 
         [GlobalSetup]
         public void SetupData()
         {
-            _doubledoubledoubles =
-                Enumerable
-                .Range(0, Length)
-                .Select(x => ((double)(x % Math.Max(1, Length/5)), (double)(x % Math.Max(1, Length / 7)), (double)x))
+            _data =
+                DataSetA
+                .Get()
+                .Take(Length)
                 .ToList();
-
-            // shuffle
-            var r = new Random(42);
-            for (var i=0; i < _doubledoubledoubles.Count; ++i)
-            {
-                var z = r.Next(i, _doubledoubledoubles.Count);
-                var t = _doubledoubledoubles[i];
-                _doubledoubledoubles[i] = _doubledoubledoubles[z];
-                _doubledoubledoubles[z] = t;
-            }
         }
 
         internal static void SanityCheck()
         {
-            var check = new OrderByThenByThenByToArray();
+            var check = new OrderByToArray();
 
             check.Length = 100;
             check.SetupData();
