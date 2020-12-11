@@ -372,9 +372,9 @@ namespace Linqs.Tests
         {
             Enum0[] source = { Enum0.First, Enum0.Second, Enum0.Third };
             var cast = source.Cast<Enum1>();
-            Assert.IsType<Enum0[]>(cast);
+//            Assert.IsType<Enum0[]>(cast); // not true under CISTERN.VALUELINQ due to reference type
             var castArray = cast.ToArray();
-            Assert.IsType<Enum1[]>(castArray);
+//            Assert.IsType<Enum1[]>(castArray); // not true under CISTERN.VALUELINQ due to reference type
             Assert.Equal(new[] { Enum1.First, Enum1.Second, Enum1.Third }, castArray);
         }
 

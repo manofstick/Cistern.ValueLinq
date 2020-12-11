@@ -7,9 +7,6 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Version>0.1.8</Version>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 

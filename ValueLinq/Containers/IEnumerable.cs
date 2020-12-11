@@ -123,12 +123,12 @@ namespace Cistern.ValueLinq.Containers
 
     static class EnumerableNode
     {
-        internal static void GetCountInformation<T>(IEnumerable<T> _enumerable, out CountInformation info)
+        internal static void GetCountInformation(System.Collections.IEnumerable _enumerable, out CountInformation info)
         {
             if (_enumerable is System.Collections.ICollection c)
             {
-                var isImmutable = _enumerable is T[];
-                info = new CountInformation(c.Count, isImmutable);
+                var lengthIsImmutable = _enumerable is Array;
+                info = new CountInformation(c.Count, lengthIsImmutable);
             }
             else if (_enumerable is INode n)
                 n.GetCountInformation(out info);

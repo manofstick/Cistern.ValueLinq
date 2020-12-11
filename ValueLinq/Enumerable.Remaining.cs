@@ -33,7 +33,7 @@ namespace Cistern.ValueLinq
         //        public static double? Average(this IEnumerable<long?> source) => System.Linq.Enumerable.Average(source);
         //        public static decimal? Average(this IEnumerable<decimal?> source) => System.Linq.Enumerable.Average(source);
         //        public static float Average(this IEnumerable<float> source) => System.Linq.Enumerable.Average(source);
-        [Obsolete("Not converted to ValueLinq yet")] public static IEnumerable<TResult> Cast<TResult>(this System.Collections.IEnumerable source) => System.Linq.Enumerable.Cast<TResult>(source);
+        //        public static IEnumerable<TResult> Cast<TResult>(this System.Collections.IEnumerable source) => System.Linq.Enumerable.Cast<TResult>(source);
         //        public static IEnumerable<TSource> Concat<TSource>(this IEnumerable<TSource> first, IEnumerable<TSource> second) => System.Linq.Enumerable.Concat<TSource>(first, second);
         //        public static bool Contains<TSource>(this IEnumerable<TSource> source, TSource value) => System.Linq.Enumerable.Contains<TSource>(source, value);
         //        public static bool Contains<TSource>(this IEnumerable<TSource> source, TSource value, IEqualityComparer<TSource> comparer) => System.Linq.Enumerable.Contains<TSource>(source, value, comparer);

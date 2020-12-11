@@ -1,11 +1,9 @@
 ﻿using Cistern.ValueLinq.Aggregation;
 using Cistern.ValueLinq.Containers;
 using Cistern.ValueLinq.Nodes;
-using Cistern.ValueLinq.ValueEnumerable;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace Cistern.ValueLinq
 {
@@ -129,5 +127,13 @@ namespace Cistern.ValueLinq
             source.OfEnumerable().ElementAt(index);
 
         public static TSource ElementAtOrDefault<TSource>(this IEnumerable<TSource> source, int index) => source.OfEnumerable().ElementAtOrDefault(index);
+
+        public static ValueEnumerable<TResult, CastNode<TResult>> Cast<TResult>(this System.Collections.IEnumerable source)
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+
+            return new(new CastNode<TResult>(source));
+        }
     }
 }

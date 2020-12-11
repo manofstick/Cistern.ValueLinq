@@ -236,13 +236,13 @@ namespace Linqs.Tests
             AssertExtensions.Throws<ArgumentNullException>("source", () => ((IEnumerable<object>)null).Cast<string>());
         }
 
-        [Fact]
+        [Fact(Skip ="CISTERN.VALUELINQ Not applicible")]
         public void ForcedToEnumeratorDoesntEnumerate()
         {
-            var iterator = new object[0].Where(i => i != null).Cast<string>();
-            // Don't insist on this behaviour, but check it's correct if it happens
-            var en = iterator as IEnumerator<string>;
-            Assert.False(en != null && en.MoveNext());
+            //var iterator = new object[0].Where(i => i != null).Cast<string>();
+            //// Don't insist on this behaviour, but check it's correct if it happens
+            //var en = iterator as IEnumerator<string>;
+            //Assert.False(en != null && en.MoveNext());
         }
     }
 }
