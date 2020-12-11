@@ -151,11 +151,13 @@ And Immortality.".Split(new[] { ' ', '\n', '\r', '—' }, StringSplitOptions.Rem
             Assert.Equal(expected, source.RunOnce().OrderBy(word => char.IsUpper(word[0])).ThenBy(word => word.Length));
         }
 
-        [Fact]
+        [Fact(Skip = "CISTERN.VALUELINQ Doesn't implemenet IOrderedEnumerable")]
         public void NullSource()
         {
+#if !CISTERN_VALUELINQ
             System.Linq.IOrderedEnumerable<int> source = null;
             AssertExtensions.Throws<ArgumentNullException>("source", () => source.ThenBy(i => i));
+#endif
         }
 
         [Fact]
@@ -165,11 +167,13 @@ And Immortality.".Split(new[] { ' ', '\n', '\r', '—' }, StringSplitOptions.Rem
             AssertExtensions.Throws<ArgumentNullException>("keySelector", () => Enumerable.Empty<DateTime>().OrderBy<DateTime, DateTime>(e => e).ThenBy(keySelector));
         }
 
-        [Fact]
+        [Fact(Skip = "CISTERN.VALUELINQ Doesn't implemenet IOrderedEnumerable")]
         public void NullSourceComparer()
         {
+#if !CISTERN_VALUELINQ
             System.Linq.IOrderedEnumerable<int> source = null;
             AssertExtensions.Throws<ArgumentNullException>("source", () => source.ThenBy(i => i, null));
+#endif
         }
 
         [Fact]

@@ -4,17 +4,27 @@
 <#@ import namespace="System.Text" #>
 <#@ import namespace="System.Collections.Generic" #>
 <#@ include file="Collections.tth" #>
-
 <#
     var transformTypes = new []
     {
+        (
+            Signature  : new Func<string, string>(collection => $"OrderBy<TSource, TKey>(this {collection} source, Func<TSource, TKey> keySelector, IComparer<TKey> comparer = null)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.OrderBy(Enumerable.ToNode(source), keySelector, comparer, false))"),
+            OutputType : "TSource",
+            NodeName   : new Func<string, string>(collectionNodeName => $"OrderByNode<TSource, KeySelectors<TSource, TKey, KeySelectorsRoot<TSource>>, {collectionNodeName}>")
+        ),
+        (
+            Signature  : new Func<string, string>(collection => $"OrderByDescending<TSource, TKey>(this {collection} source, Func<TSource, TKey> keySelector, IComparer<TKey> comparer = null)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.OrderBy(Enumerable.ToNode(source), keySelector, comparer, true))"),
+            OutputType : "TSource",
+            NodeName   : new Func<string, string>(collectionNodeName => $"OrderByNode<TSource, KeySelectors<TSource, TKey, KeySelectorsRoot<TSource>>, {collectionNodeName}>")
+        ),
         (
             Signature  : new Func<string, string>(collection => $"Reverse<TSource>(this {collection} source)"),
             Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Reverse<TSource, {collectionNodeName}>(Enumerable.ToNode(source)))"),
             OutputType : "TSource",
             NodeName   : new Func<string, string>(collectionNodeName => $"ReverseNode<TSource, {collectionNodeName}>")
         ),
-
         (
             Signature  : new Func<string, string>(collection => $"Select<TSource, TResult>(this {collection} source, Func<TSource, TResult> selector)"),
             Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Select(Enumerable.ToNode(source), selector))"),
@@ -104,10 +114,8 @@
         ),
     };
 #>
-
 using Cistern.ValueLinq.Containers;
 using Cistern.ValueLinq.Nodes;
-using Cistern.ValueLinq.ValueEnumerable;
 using System;
 using System.Collections.Generic;
 

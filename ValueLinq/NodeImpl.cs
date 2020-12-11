@@ -2,7 +2,6 @@
 using Cistern.ValueLinq.Containers;
 using Cistern.ValueLinq.Nodes;
 using Cistern.ValueLinq.Utils;
-using Cistern.ValueLinq.ValueEnumerable;
 using System;
 using System.Buffers;
 using System.Collections.Generic;

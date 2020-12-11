@@ -1,8 +1,5 @@
-﻿
-
-using Cistern.ValueLinq.Containers;
+﻿using Cistern.ValueLinq.Containers;
 using Cistern.ValueLinq.Nodes;
-using Cistern.ValueLinq.ValueEnumerable;
 using System;
 using System.Collections.Generic;
 
@@ -10,6 +7,12 @@ namespace Cistern.ValueLinq
 {
     public static partial class Enumerable
     {
+        public static ValueEnumerable<TSource, OrderByNode<TSource, KeySelectors<TSource, TKey, KeySelectorsRoot<TSource>>, EnumerableNode<TSource>>> OrderBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, IComparer<TKey> comparer = null) =>
+            new (NodeImpl.OrderBy(Enumerable.ToNode(source), keySelector, comparer, false));
+
+        public static ValueEnumerable<TSource, OrderByNode<TSource, KeySelectors<TSource, TKey, KeySelectorsRoot<TSource>>, EnumerableNode<TSource>>> OrderByDescending<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, IComparer<TKey> comparer = null) =>
+            new (NodeImpl.OrderBy(Enumerable.ToNode(source), keySelector, comparer, true));
+
         public static ValueEnumerable<TSource, ReverseNode<TSource, EnumerableNode<TSource>>> Reverse<TSource>(this IEnumerable<TSource> source) =>
             new (NodeImpl.Reverse<TSource, EnumerableNode<TSource>>(Enumerable.ToNode(source)));
 
@@ -58,6 +61,12 @@ namespace Cistern.ValueLinq
     }
     public static partial class ValueLinqArray
     {
+        public static ValueEnumerable<TSource, OrderByNode<TSource, KeySelectors<TSource, TKey, KeySelectorsRoot<TSource>>, ArrayNode<TSource>>> OrderBy<TSource, TKey>(this TSource[] source, Func<TSource, TKey> keySelector, IComparer<TKey> comparer = null) =>
+            new (NodeImpl.OrderBy(Enumerable.ToNode(source), keySelector, comparer, false));
+
+        public static ValueEnumerable<TSource, OrderByNode<TSource, KeySelectors<TSource, TKey, KeySelectorsRoot<TSource>>, ArrayNode<TSource>>> OrderByDescending<TSource, TKey>(this TSource[] source, Func<TSource, TKey> keySelector, IComparer<TKey> comparer = null) =>
+            new (NodeImpl.OrderBy(Enumerable.ToNode(source), keySelector, comparer, true));
+
         public static ValueEnumerable<TSource, ReverseNode<TSource, ArrayNode<TSource>>> Reverse<TSource>(this TSource[] source) =>
             new (NodeImpl.Reverse<TSource, ArrayNode<TSource>>(Enumerable.ToNode(source)));
 
@@ -106,6 +115,12 @@ namespace Cistern.ValueLinq
     }
     public static partial class ValueLinqList
     {
+        public static ValueEnumerable<TSource, OrderByNode<TSource, KeySelectors<TSource, TKey, KeySelectorsRoot<TSource>>, ListNode<TSource>>> OrderBy<TSource, TKey>(this List<TSource> source, Func<TSource, TKey> keySelector, IComparer<TKey> comparer = null) =>
+            new (NodeImpl.OrderBy(Enumerable.ToNode(source), keySelector, comparer, false));
+
+        public static ValueEnumerable<TSource, OrderByNode<TSource, KeySelectors<TSource, TKey, KeySelectorsRoot<TSource>>, ListNode<TSource>>> OrderByDescending<TSource, TKey>(this List<TSource> source, Func<TSource, TKey> keySelector, IComparer<TKey> comparer = null) =>
+            new (NodeImpl.OrderBy(Enumerable.ToNode(source), keySelector, comparer, true));
+
         public static ValueEnumerable<TSource, ReverseNode<TSource, ListNode<TSource>>> Reverse<TSource>(this List<TSource> source) =>
             new (NodeImpl.Reverse<TSource, ListNode<TSource>>(Enumerable.ToNode(source)));
 
@@ -154,6 +169,12 @@ namespace Cistern.ValueLinq
     }
     public static partial class ValueLinqMemory
     {
+        public static ValueEnumerable<TSource, OrderByNode<TSource, KeySelectors<TSource, TKey, KeySelectorsRoot<TSource>>, MemoryNode<TSource>>> OrderBy<TSource, TKey>(this ReadOnlyMemory<TSource> source, Func<TSource, TKey> keySelector, IComparer<TKey> comparer = null) =>
+            new (NodeImpl.OrderBy(Enumerable.ToNode(source), keySelector, comparer, false));
+
+        public static ValueEnumerable<TSource, OrderByNode<TSource, KeySelectors<TSource, TKey, KeySelectorsRoot<TSource>>, MemoryNode<TSource>>> OrderByDescending<TSource, TKey>(this ReadOnlyMemory<TSource> source, Func<TSource, TKey> keySelector, IComparer<TKey> comparer = null) =>
+            new (NodeImpl.OrderBy(Enumerable.ToNode(source), keySelector, comparer, true));
+
         public static ValueEnumerable<TSource, ReverseNode<TSource, MemoryNode<TSource>>> Reverse<TSource>(this ReadOnlyMemory<TSource> source) =>
             new (NodeImpl.Reverse<TSource, MemoryNode<TSource>>(Enumerable.ToNode(source)));
 
