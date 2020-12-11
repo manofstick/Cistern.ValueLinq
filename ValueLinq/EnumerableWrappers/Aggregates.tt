@@ -9,6 +9,14 @@
     var aggregateTypes = new []
     {
         (
+            Signature: new Func<string, string>(collection => $"ToHashSet<TSource>(this {collection} source, IEqualityComparer<TSource> comparer = null)"),
+            Class: "ToHashSet<TSource>",
+            Args: "comparer",
+            AggregateReturns: "HashSet<TSource>",
+            FunctionReturns: "HashSet<TSource>",
+            WrapReturn: new Func<string, string>(s => s)
+        ),
+        (
             Signature: new Func<string, string>(collection => $"Aggregate<TSource>(this {collection} source, Func<TSource, TSource, TSource> func)"),
             Class: "ReduceForward<TSource>",
             Args: "func",

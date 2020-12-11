@@ -354,6 +354,10 @@ namespace Cistern.ValueLinq
                 ? Nodes<List<T>>.Aggregation<Inner, ToListViaStackMemoryPool<T>>(in inner, new ToListViaStackMemoryPool<T>(maxStackItemCount, arrayPoolInfo.Value.arrayPool, arrayPoolInfo.Value.cleanBuffers))
                 : Nodes<List<T>>.Aggregation<Inner, ToListViaStackAndGarbage<T>>(in inner, new ToListViaStackAndGarbage<T>(maxStackItemCount));
 
+        internal static HashSet<T> ToHashSet<T, Inner>(in Inner inner, IEqualityComparer<T> comparer = null)
+            where Inner : INode<T>
+            => inner.CreateViaPush<HashSet<T>, ToHashSet<T>>(new ToHashSet<T>(comparer));
+
         internal static T Last<T, Inner>(in Inner inner)
             where Inner : INode<T> =>
             (inner.TryPushOptimization<Optimizations.TryLast, (bool, T)>(new Optimizations.TryLast(), out var maybeLast), maybeLast) switch

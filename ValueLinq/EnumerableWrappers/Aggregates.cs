@@ -9,6 +9,9 @@ namespace Cistern.ValueLinq
 {
     public static partial class Enumerable
     {
+        public static HashSet<TSource> ToHashSet<TSource>(this IEnumerable<TSource> source, IEqualityComparer<TSource> comparer = null) =>
+            EnumerableNode.FastEnumerateSwitch<TSource, HashSet<TSource>, ToHashSet<TSource>>(source, new ToHashSet<TSource>(comparer)); 
+
         public static TSource Aggregate<TSource>(this IEnumerable<TSource> source, Func<TSource, TSource, TSource> func) =>
             EnumerableNode.FastEnumerateSwitch<TSource, TSource, ReduceForward<TSource>>(source, new ReduceForward<TSource>(func)); 
 
@@ -63,6 +66,13 @@ namespace Cistern.ValueLinq
     }
     public static partial class ValueLinqArray
     {
+        public static HashSet<TSource> ToHashSet<TSource>(this TSource[] source, IEqualityComparer<TSource> comparer = null)
+        {
+            var aggregate = new ToHashSet<TSource>(comparer);
+            ArrayNode.ProcessArray(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
         public static TSource Aggregate<TSource>(this TSource[] source, Func<TSource, TSource, TSource> func)
         {
             var aggregate = new ReduceForward<TSource>(func);
@@ -185,6 +195,13 @@ namespace Cistern.ValueLinq
     }
     public static partial class ValueLinqList
     {
+        public static HashSet<TSource> ToHashSet<TSource>(this List<TSource> source, IEqualityComparer<TSource> comparer = null)
+        {
+            var aggregate = new ToHashSet<TSource>(comparer);
+            ListSegmentNode.ProcessList(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
         public static TSource Aggregate<TSource>(this List<TSource> source, Func<TSource, TSource, TSource> func)
         {
             var aggregate = new ReduceForward<TSource>(func);
@@ -307,6 +324,13 @@ namespace Cistern.ValueLinq
     }
     public static partial class ValueLinqMemory
     {
+        public static HashSet<TSource> ToHashSet<TSource>(this ReadOnlyMemory<TSource> source, IEqualityComparer<TSource> comparer = null)
+        {
+            var aggregate = new ToHashSet<TSource>(comparer);
+            MemoryNode.ProcessMemory(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
         public static TSource Aggregate<TSource>(this ReadOnlyMemory<TSource> source, Func<TSource, TSource, TSource> func)
         {
             var aggregate = new ReduceForward<TSource>(func);

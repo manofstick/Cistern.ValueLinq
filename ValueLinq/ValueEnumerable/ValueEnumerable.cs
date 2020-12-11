@@ -157,6 +157,10 @@ namespace Cistern.ValueLinq
             where Inner : INode<TSource>
             => NodeImpl.ToListUseStack(in inner.Node, maxStackItemCount, arrayPoolInfo);
 
+        public static HashSet<TSource> ToHashSet<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, IEqualityComparer<TSource> equalityComparer = null)
+            where Inner : INode<TSource>
+            => NodeImpl.ToHashSet(in inner.Node, equalityComparer);
+
         public static TSource Last<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner)
             where Inner : INode<TSource>
             => NodeImpl.Last<TSource, Inner>(in inner.Node);
