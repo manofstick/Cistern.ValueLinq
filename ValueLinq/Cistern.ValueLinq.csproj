@@ -5,7 +5,7 @@
     <RootNamespace>Cistern.ValueLinq</RootNamespace>
     <AssemblyName>Cistern.ValueLinq</AssemblyName>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.1.7</Version>
+    <Version>0.1.8</Version>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
 
