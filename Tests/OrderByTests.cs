@@ -205,7 +205,7 @@ namespace Linqs.Tests
         [Fact]
         public void EmptyOrderedToArray()
         {
-            Assert.Empty(Enumerable.Empty<int>().OrderBy(e => e).ToArray());
+            Assert.Empty(Enumerable.Empty<int>().OrderBy<int, int>(e => e).ToArray());
         }
 
         [Fact]
@@ -236,7 +236,7 @@ namespace Linqs.Tests
         [Fact]
         public void EmptyOrderedToList()
         {
-            Assert.Empty(Enumerable.Empty<int>().OrderBy(e => e).ToList());
+            Assert.Empty(Enumerable.Empty<int>().OrderBy<int, int>(e => e).ToList());
         }
 
         //FIXME: This will hang with a larger source. Do we want to deal with that case?
@@ -279,7 +279,7 @@ namespace Linqs.Tests
         public void NullKeySelector()
         {
             Func<DateTime, int> keySelector = null;
-            AssertExtensions.Throws<ArgumentNullException>("keySelector", () => Enumerable.Empty<DateTime>().OrderBy(keySelector));
+            AssertExtensions.Throws<ArgumentNullException>("keySelector", () => Enumerable.Empty<DateTime>().OrderBy<DateTime, int>(keySelector));
         }
 
         [Fact]
@@ -293,7 +293,7 @@ namespace Linqs.Tests
         [Fact]
         public void FirstOnEmptyOrderedThrows()
         {
-            Assert.Throws<InvalidOperationException>(() => Enumerable.Empty<int>().OrderBy(i => i).First());
+            Assert.Throws<InvalidOperationException>(() => Enumerable.Empty<int>().OrderBy<int, int>(i => i).First());
         }
 
         [Fact]
@@ -302,7 +302,7 @@ namespace Linqs.Tests
             Assert.Equal(0, Enumerable.Range(0, 10).Shuffle().OrderBy(i => i).FirstOrDefault());
             Assert.Equal(9, Enumerable.Range(0, 10).Shuffle().OrderByDescending(i => i).FirstOrDefault());
             Assert.Equal(10, Enumerable.Range(0, 100).Shuffle().OrderByDescending(i => i.ToString().Length).ThenBy(i => i).FirstOrDefault());
-            Assert.Equal(0, Enumerable.Empty<int>().OrderBy(i => i).FirstOrDefault());
+            Assert.Equal(0, Enumerable.Empty<int>().OrderBy<int, int>(i => i).FirstOrDefault());
         }
 
         [Fact]
@@ -326,7 +326,7 @@ namespace Linqs.Tests
         [Fact]
         public void LastOnEmptyOrderedThrows()
         {
-            Assert.Throws<InvalidOperationException>(() => Enumerable.Empty<int>().OrderBy(i => i).Last());
+            Assert.Throws<InvalidOperationException>(() => Enumerable.Empty<int>().OrderBy<int, int>(i => i).Last());
         }
 
         [Fact]
@@ -335,7 +335,7 @@ namespace Linqs.Tests
             Assert.Equal(9, Enumerable.Range(0, 10).Shuffle().OrderBy(i => i).LastOrDefault());
             Assert.Equal(0, Enumerable.Range(0, 10).Shuffle().OrderByDescending(i => i).LastOrDefault());
             Assert.Equal(10, Enumerable.Range(0, 100).Shuffle().OrderBy(i => i.ToString().Length).ThenByDescending(i => i).LastOrDefault());
-            Assert.Equal(0, Enumerable.Empty<int>().OrderBy(i => i).LastOrDefault());
+            Assert.Equal(0, Enumerable.Empty<int>().OrderBy<int, int>(i => i).LastOrDefault());
         }
 
         [Fact]
@@ -349,23 +349,37 @@ namespace Linqs.Tests
         [Fact]
         public void OrderByIsCovariantTestWithCast()
         {
-            var ordered = Enumerable.Range(0, 100).Select(i => i.ToString()).OrderBy(i => i.Length);
-            System.Linq.IOrderedEnumerable<IComparable> covariantOrdered = ordered;
-            covariantOrdered = covariantOrdered.ThenBy(i => i);
+            var ordered = Enumerable.Range(0, 100).Select(i => i.ToString()).OrderBy<string, int>(i => i.Length);
+            var covariantOrderedTmp = ordered;
+            var covariantOrdered = covariantOrderedTmp.ThenBy(i => i);
             string[] expected =
-                Enumerable.Range(0, 100).Select(i => i.ToString()).OrderBy(i => i.Length).ThenBy(i => i).ToArray();
+                Enumerable.Range(0, 100).Select(i => i.ToString()).OrderBy<string, int>(i => i.Length)
+#if CISTERN_VALUELINQ
+                .ThenBy(i => i)
+#else
+                .ThenBy((object i) => i)
+#endif
+                .ToArray();
             Assert.Equal(expected, covariantOrdered);
         }
 
         [Fact]
         public void OrderByIsCovariantTestWithAssignToArgument()
         {
-            var ordered = Enumerable.Range(0, 100).Select(i => i.ToString()).OrderBy(i => i.Length);
-            System.Linq.IOrderedEnumerable<IComparable> covariantOrdered = ordered.ThenByDescending<IComparable, IComparable>(i => i);
+            var ordered = Enumerable.Range(0, 100).Select(i => i.ToString()).OrderBy<string, int>(i => i.Length);
+#if CISTERN_VALUELINQ
+            var covariantOrdered = ordered.ThenByDescending(i => i);
+#else
+            var covariantOrdered = ordered.ThenByDescending<IComparable, IComparable>(i => i);
+#endif
             string[] expected = Enumerable.Range(0, 100)
                 .Select(i => i.ToString())
-                .OrderBy(i => i.Length)
+                .OrderBy<string, int>(i => i.Length)
+#if CISTERN_VALUELINQ
                 .ThenByDescending(i => i)
+#else
+                .ThenByDescending((object i) => i)
+#endif
                 .ToArray();
             Assert.Equal(expected, covariantOrdered);
         }
@@ -388,7 +402,13 @@ namespace Linqs.Tests
                     i => i.Length);
             ordered = System.Linq.Queryable.ThenBy(ordered, i => i);
             string[] expected =
-                Enumerable.Range(0, 100).Select(i => i.ToString()).OrderBy(i => i.Length).ThenBy(i => i).ToArray();
+                Enumerable.Range(0, 100).Select(i => i.ToString()).OrderBy<string, int>(i => i.Length)
+#if CISTERN_VALUELINQ
+                .ThenBy(i => i)
+#else
+                .ThenBy((object i) => i)
+#endif
+                .ToArray();
             Assert.Equal(expected, ordered);
         }
 
@@ -399,7 +419,7 @@ namespace Linqs.Tests
             IEnumerable<int> expected = NumberRangeGuaranteedNotCollectionType(0, Items);
 
             IEnumerable<int> unordered = expected.Select(i => i);
-            System.Linq.IOrderedEnumerable<int> ordered = unordered.OrderBy(i => i);
+            var ordered = unordered.OrderBy(i => i);
 
             Assert.Equal(expected, ordered);
         }
@@ -411,7 +431,7 @@ namespace Linqs.Tests
             IEnumerable<int> expected = NumberRangeGuaranteedNotCollectionType(0, Items);
 
             IEnumerable<int> unordered = expected.Select(i => Items - i - 1);
-            System.Linq.IOrderedEnumerable<int> ordered = unordered.OrderBy(i => i);
+            var ordered = unordered.OrderBy(i => i);
 
             Assert.Equal(expected, ordered);
         }

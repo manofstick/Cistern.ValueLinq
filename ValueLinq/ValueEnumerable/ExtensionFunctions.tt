@@ -1,4 +1,6 @@
-﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+﻿<# /* #>
+
+<#@ template debug="false" hostspecific="false" language="C#" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Text" #>
@@ -404,9 +406,33 @@ namespace Cistern.ValueLinq
             where TPrior : <#= nodeTSource #>
             where Predicate : IFuncBase<TSource, bool>
             => new (NodeImpl.Where<TSource, TPrior, Predicate>(in prior.Node, predicate));
-    }
 
+        public static ValueOrderedEnumerable<TSource, OrderByNode<TSource, TKey, TPrior>> OrderBy<TSource, TKey, TPrior>(in this <#= valueEnumerableType #><TSource, TPrior> prior, Func<TSource, TKey> keySelector, IComparer<TKey> comparer)
+            where TPrior : <#= nodeTSource #>
+            => new(NodeImpl.OrderBy<TSource, TKey, TPrior>(in prior.Node, keySelector, comparer, false));
+
+        public static ValueOrderedEnumerable<TSource, OrderByNode<TSource, TKey, TPrior>> OrderByDescending<TSource, TKey, TPrior>(in this <#= valueEnumerableType #><TSource, TPrior> prior, Func<TSource, TKey> keySelector, IComparer<TKey> comparer)
+            where TPrior : <#= nodeTSource #>
+            => new(NodeImpl.OrderBy<TSource, TKey, TPrior>(in prior.Node, keySelector, comparer, true));
+<#
+        if (valueEnumerableType == "ValueOrderedEnumerable")
+        {
+#>
+
+        public static ValueOrderedEnumerable<TSource, ThenByNode<TSource, TKey, TPrior>> ThenBy<TSource, TKey, TPrior>(in this ValueOrderedEnumerable<TSource, TPrior> prior, Func<TSource, TKey> keySelector, IComparer<TKey> comparer)
+            where TPrior : <#= nodeTSource #>
+            => new(NodeImpl.ThenBy<TSource, TKey, TPrior>(in prior.Node, keySelector, comparer, false));
+
+        public static ValueOrderedEnumerable<TSource, ThenByNode<TSource, TKey, TPrior>> ThenByDescending<TSource, TKey, TPrior>(in this ValueOrderedEnumerable<TSource, TPrior> prior, Func<TSource, TKey> keySelector, IComparer<TKey> comparer)
+            where TPrior : <#= nodeTSource #>
+            => new(NodeImpl.ThenBy<TSource, TKey, TPrior>(in prior.Node, keySelector, comparer, true));
+<#
+        }
+#>
+    }
 <#
     }
 #>
 }
+
+<# */ #>

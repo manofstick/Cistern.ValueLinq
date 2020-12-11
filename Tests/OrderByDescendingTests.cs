@@ -193,7 +193,7 @@ namespace Linqs.Tests
             IEnumerable<int> expected = NumberRangeGuaranteedNotCollectionType(0, Items);
 
             IEnumerable<int> unordered = expected.Select(i => i);
-            System.Linq.IOrderedEnumerable<int> ordered = unordered.OrderByDescending(i => -i);
+            var ordered = unordered.OrderByDescending(i => -i);
 
             Assert.Equal(expected, ordered);
         }
@@ -205,7 +205,7 @@ namespace Linqs.Tests
             IEnumerable<int> expected = NumberRangeGuaranteedNotCollectionType(0, Items);
 
             IEnumerable<int> unordered = expected.Select(i => Items - i - 1);
-            System.Linq.IOrderedEnumerable<int> ordered = unordered.OrderByDescending(i => -i);
+            var ordered = unordered.OrderByDescending(i => -i);
 
             Assert.Equal(expected, ordered);
         }

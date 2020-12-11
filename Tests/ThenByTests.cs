@@ -162,7 +162,7 @@ And Immortality.".Split(new[] { ' ', '\n', '\r', '—' }, StringSplitOptions.Rem
         public void NullKeySelector()
         {
             Func<DateTime, int> keySelector = null;
-            AssertExtensions.Throws<ArgumentNullException>("keySelector", () => Enumerable.Empty<DateTime>().OrderBy(e => e).ThenBy(keySelector));
+            AssertExtensions.Throws<ArgumentNullException>("keySelector", () => Enumerable.Empty<DateTime>().OrderBy<DateTime, DateTime>(e => e).ThenBy(keySelector));
         }
 
         [Fact]
@@ -176,7 +176,7 @@ And Immortality.".Split(new[] { ' ', '\n', '\r', '—' }, StringSplitOptions.Rem
         public void NullKeySelectorComparer()
         {
             Func<DateTime, int> keySelector = null;
-            AssertExtensions.Throws<ArgumentNullException>("keySelector", () => Enumerable.Empty<DateTime>().OrderBy(e => e).ThenBy(keySelector, null));
+            AssertExtensions.Throws<ArgumentNullException>("keySelector", () => Enumerable.Empty<DateTime>().OrderBy<DateTime, DateTime>(e => e).ThenBy(keySelector, null));
         }
 
         [Theory]
@@ -189,12 +189,13 @@ And Immortality.".Split(new[] { ' ', '\n', '\r', '—' }, StringSplitOptions.Rem
             IEnumerable<int> expected = NumberRangeGuaranteedNotCollectionType(0, Items);
 
             IEnumerable<int> unordered = expected.Select(i => i);
-            System.Linq.IOrderedEnumerable<int> ordered = unordered.OrderBy(_ => 0);
+            var orderedTmp = unordered.OrderBy(_ => 0);
+            IEnumerable<int> ordered = null;
             switch (thenBys)
             {
-                case 1: ordered = ordered.ThenBy(i => i); break;
-                case 2: ordered = ordered.ThenBy(i => 0).ThenBy(i => i); break;
-                case 3: ordered = ordered.ThenBy(i => 0).ThenBy(i => 0).ThenBy(i => i); break;
+                case 1: ordered = orderedTmp.ThenBy(i => i); break;
+                case 2: ordered = orderedTmp.ThenBy(i => 0).ThenBy(i => i); break;
+                case 3: ordered = orderedTmp.ThenBy(i => 0).ThenBy(i => 0).ThenBy(i => i); break;
             }
 
             Assert.Equal(expected, ordered);
@@ -210,12 +211,13 @@ And Immortality.".Split(new[] { ' ', '\n', '\r', '—' }, StringSplitOptions.Rem
             IEnumerable<int> expected = NumberRangeGuaranteedNotCollectionType(0, Items);
 
             IEnumerable<int> unordered = expected.Select(i => Items - i - 1);
-            System.Linq.IOrderedEnumerable<int> ordered = unordered.OrderBy(_ => 0);
+            var orderedTmp = unordered.OrderBy(_ => 0);
+            IEnumerable<int> ordered = null;
             switch (thenBys)
             {
-                case 1: ordered = ordered.ThenBy(i => i); break;
-                case 2: ordered = ordered.ThenBy(i => 0).ThenBy(i => i); break;
-                case 3: ordered = ordered.ThenBy(i => 0).ThenBy(i => 0).ThenBy(i => i); break;
+                case 1: ordered = orderedTmp.ThenBy(i => i); break;
+                case 2: ordered = orderedTmp.ThenBy(i => 0).ThenBy(i => i); break;
+                case 3: ordered = orderedTmp.ThenBy(i => 0).ThenBy(i => 0).ThenBy(i => i); break;
             }
 
             Assert.Equal(expected, ordered);
@@ -232,12 +234,13 @@ And Immortality.".Split(new[] { ' ', '\n', '\r', '—' }, StringSplitOptions.Rem
 
             int[] randomized = Enumerable.Range(0, Items).Select(i => r.Next()).ToArray();
 
-            System.Linq.IOrderedEnumerable<int> orderedEnumerable = randomized.OrderBy(_ => 0);
+            var orderedTmp = randomized.OrderBy(_ => 0);
+            IEnumerable<int> orderedEnumerable = null;
             switch (thenBys)
             {
-                case 1: orderedEnumerable = orderedEnumerable.ThenBy(i => i); break;
-                case 2: orderedEnumerable = orderedEnumerable.ThenBy(i => 0).ThenBy(i => i); break;
-                case 3: orderedEnumerable = orderedEnumerable.ThenBy(i => 0).ThenBy(i => 0).ThenBy(i => i); break;
+                case 1: orderedEnumerable = orderedTmp.ThenBy(i => i); break;
+                case 2: orderedEnumerable = orderedTmp.ThenBy(i => 0).ThenBy(i => i); break;
+                case 3: orderedEnumerable = orderedTmp.ThenBy(i => 0).ThenBy(i => 0).ThenBy(i => i); break;
             }
             int[] ordered = orderedEnumerable.ToArray();
 

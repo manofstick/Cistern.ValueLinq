@@ -73,7 +73,7 @@ namespace Cistern.ValueLinq
             };
         }
 
-        private static T[] ToArrayWithoutOptimizationCheck<T, Inner>(in Inner inner, int? maybeMaxCountForStackBasedPath, in (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo)
+        private static T[] ToArrayWithoutOptimizationCheck<T, Inner>(in Inner inner, int maybeMaxCountForStackBasedPath, in (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo)
                 where Inner : INode<T>
         {
             inner.GetCountInformation(out var info);
@@ -94,7 +94,7 @@ namespace Cistern.ValueLinq
 
                 return inner.CreateObjectViaFastEnumerator<T[], ToArrayViaAllocatorForward<T, GarbageCollectedAllocator<T>>>(new ToArrayViaAllocatorForward<T, GarbageCollectedAllocator<T>>(default, 0, null));
 #else
-                return Nodes<T[]>.Aggregation<Inner, ToArrayViaStackAndGarbage<T>>(in inner, new ToArrayViaStackAndGarbage<T>(maybeMaxCountForStackBasedPath.Value));
+                return Nodes<T[]>.Aggregation<Inner, ToArrayViaStackAndGarbage<T>>(in inner, new ToArrayViaStackAndGarbage<T>(maybeMaxCountForStackBasedPath));
 #endif
             }
 
@@ -107,7 +107,7 @@ namespace Cistern.ValueLinq
             if (inner.TryPushOptimization<Optimizations.ToArray, T[]>(default, out var array))
                 return array;
 
-            return ToArrayWithoutOptimizationCheck(in inner, maybeMaxCountForStackBasedPath, in arrayPoolInfo);
+            return ToArrayWithoutOptimizationCheck(in inner, maybeMaxCountForStackBasedPath ?? 64, in arrayPoolInfo);
         }
 
 
@@ -288,9 +288,9 @@ namespace Cistern.ValueLinq
             return new TakeWhileIdxNode<T, TPrior>(in prior, predicate);
         }
 
-        internal static T[] ToArray<T, Inner>(in Inner inner, int? maybeMaxCountForStackBasedPath = 64, (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo = null)
-            where Inner : INode<T>
-            => NodeImpl.ToArray(in inner, maybeMaxCountForStackBasedPath, in arrayPoolInfo);
+        //internal static T[] ToArray<T, Inner>(in Inner inner, int? maybeMaxCountForStackBasedPath = 64, (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo = null)
+        //    where Inner : INode<T>
+        //    => NodeImpl.ToArray(in inner, maybeMaxCountForStackBasedPath, in arrayPoolInfo);
 
         internal static T[] ToArrayUsePool<T, Inner>(in Inner inner, ArrayPool<T> maybeArrayPool = null, bool? maybeCleanBuffers = null, bool viaPull = false)
             where Inner : INode<T>
@@ -590,6 +590,25 @@ namespace Cistern.ValueLinq
                 throw new ArgumentNullException(nameof(predicate));
 
             return new ValueWhereNode<T, TPrior, Predicate>(in prior, predicate);
+        }
+
+        public static OrderByNode<TSource, KeySelectors<TSource, TKey, KeySelectorsRoot<TSource>>, TPrior> OrderBy<TSource, TKey, TPrior>(in TPrior prior, Func<TSource, TKey> keySelector, IComparer<TKey> comparer, bool descending)
+            where TPrior : INode<TSource>
+        {
+            if (keySelector == null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new OrderByNode<TSource, KeySelectors<TSource, TKey, KeySelectorsRoot<TSource>>, TPrior>(in prior, new KeySelectors<TSource, TKey, KeySelectorsRoot<TSource>>(new KeySelectorsRoot<TSource>(), keySelector, comparer ?? Comparer<TKey>.Default, descending));
+        }
+
+        public static OrderByNode<TSource, KeySelectors<TSource, TKey, TPriorSelector>, TPrior> ThenBy<TSource, TKey, TPriorSelector, TPrior>(in OrderByNode<TSource, TPriorSelector, TPrior> prior, Func<TSource, TKey> keySelector, IComparer<TKey> comparer, bool descending)
+            where TPrior : INode<TSource>
+            where TPriorSelector: IKeySelectors<TSource>
+        {
+            if (keySelector == null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new OrderByNode<TSource, KeySelectors<TSource, TKey, TPriorSelector>, TPrior>(in prior._nodeT, new KeySelectors<TSource, TKey, TPriorSelector>(prior._keySelectors, keySelector, comparer ?? Comparer<TKey>.Default, descending));
         }
 
     }

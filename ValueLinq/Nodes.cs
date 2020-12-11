@@ -132,16 +132,6 @@ namespace Cistern.ValueLinq
         TResult CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<T>;
     }
 
-    public interface IOrderedNode<TElement> : INode<TElement>
-    {
-        TResult CreateOrderedEnumerableViaPush<TKey, TResult, FEnumerator>(in FEnumerator fenum, Func<TElement, TKey> keySelector, IComparer<TKey> comparer, bool descending)
-            where FEnumerator : IForwardEnumerator<TElement>;
-
-        CreationType CreateOrderedEnumerableViaPull<TKey, CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes, Func<TElement, TKey> keySelector, IComparer<TKey> comparer, bool descending)
-            where Head : INode
-            where Tail : INodes;
-    }
-
     public interface INodes
     {
         CreationType CreateObject<CreationType, EnumeratorElement, Enumerator>(ref Enumerator enumerator)

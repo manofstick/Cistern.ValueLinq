@@ -21,14 +21,22 @@ namespace Linqs.Tests
         [Fact]
         public void FirstMultipleTruePredicateResult()
         {
-            Assert.Equal(10, Enumerable.Range(1, 99).OrderBy(i => i).First(x => x % 10 == 0));
+#if CISTERN_VALUELINQ
+            Assert.Equal(10, Enumerable.Range(1, 99).OrderBy<int, int>(i => i).First(x => x % 10 == 0));
+#else
+            Assert.Equal(10, Enumerable.Range(1, 99).OrderBy<int, int>(i => i).First((object x) => x % 10 == 0));
+#endif
             Assert.Equal(100, Enumerable.Range(1, 999).Concat(Enumerable.Range(1001, 3)).OrderByDescending(i => i.ToString().Length).ThenBy(i => i).First(x => x % 10 == 0));
         }
 
         [Fact]
         public void FirstOrDefaultMultipleTruePredicateResult()
         {
-            Assert.Equal(10, Enumerable.Range(1, 99).OrderBy(i => i).FirstOrDefault(x => x % 10 == 0));
+#if CISTERN_VALUELINQ
+            Assert.Equal(10, Enumerable.Range(1, 99).OrderBy<int, int>(i => i).FirstOrDefault(x => x % 10 == 0));
+#else
+            Assert.Equal(10, Enumerable.Range(1, 99).OrderBy<int, int>(i => i).FirstOrDefault((object x) => x % 10 == 0));
+#endif
             Assert.Equal(100, Enumerable.Range(1, 999).Concat(Enumerable.Range(1001, 3)).OrderByDescending(i => i.ToString().Length).ThenBy(i => i).FirstOrDefault(x => x % 10 == 0));
         }
 
@@ -41,42 +49,66 @@ namespace Linqs.Tests
         [Fact]
         public void FirstEmptyOrderedEnumerable()
         {
-            Assert.Throws<InvalidOperationException>(() => Enumerable.Empty<int>().OrderBy(i => i).First());
-            Assert.Throws<InvalidOperationException>(() => Enumerable.Empty<int>().OrderBy(i => i).First(x => true));
+            Assert.Throws<InvalidOperationException>(() => Enumerable.Empty<int>().OrderBy<int, int>(i => i).First());
+#if CISTERN_VALUELINQ
+            Assert.Throws<InvalidOperationException>(() => Enumerable.Empty<int>().OrderBy<int, int>(i => i).First(x => true));
+#else
+            Assert.Throws<InvalidOperationException>(() => Enumerable.Empty<int>().OrderBy<int, int>(i => i).First((object x) => true));
+#endif
         }
 
         [Fact]
         public void FirstOrDefaultNoTruePredicateResult()
         {
-            Assert.Equal(0, Enumerable.Range(1, 99).OrderBy(i => i).FirstOrDefault(x => x > 1000));
+#if CISTERN_VALUELINQ
+            Assert.Equal(0, Enumerable.Range(1, 99).OrderBy<int, int>(i => i).FirstOrDefault(x => x > 1000));
+#else
+            Assert.Equal(0, Enumerable.Range(1, 99).OrderBy<int, int>(i => i).FirstOrDefault((object x) => x > 1000));
+#endif
         }
 
         [Fact]
         public void FirstOrDefaultEmptyOrderedEnumerable()
         {
-            Assert.Equal(0, Enumerable.Empty<int>().OrderBy(i => i).FirstOrDefault());
-            Assert.Equal(0, Enumerable.Empty<int>().OrderBy(i => i).FirstOrDefault(x => true));
+            Assert.Equal(0, Enumerable.Empty<int>().OrderBy<int, int>(i => i).FirstOrDefault());
+#if CISTERN_VALUELINQ
+            Assert.Equal(0, Enumerable.Empty<int>().OrderBy<int, int>(i => i).FirstOrDefault(x => true));
+#else
+            Assert.Equal(0, Enumerable.Empty<int>().OrderBy<int, int>(i => i).FirstOrDefault((object x) => true));
+#endif
         }
 
         [Fact]
         public void Last()
         {
             Assert.Equal(10, Enumerable.Range(1, 99).Reverse().OrderByDescending(i => i).Last(x => x % 10 == 0));
-            Assert.Equal(100, Enumerable.Range(1, 999).Concat(Enumerable.Range(1001, 3)).Reverse().OrderBy(i => i.ToString().Length).ThenByDescending(i => i).Last(x => x % 10 == 0));
-            Assert.Equal(10, Enumerable.Range(1, 10).OrderBy(i => 1).Last());
+#if CISTERN_VALUELINQ
+            Assert.Equal(100, Enumerable.Range(1, 999).Concat(Enumerable.Range(1001, 3)).Reverse().OrderBy<int, int>(i => i.ToString().Length).ThenByDescending(i => i).Last(x => x % 10 == 0));
+#else
+            Assert.Equal(100, Enumerable.Range(1, 999).Concat(Enumerable.Range(1001, 3)).Reverse().OrderBy<int, int>(i => i.ToString().Length).ThenByDescending((object i) => i).Last((object x) => x % 10 == 0));
+#endif
+            Assert.Equal(10, Enumerable.Range(1, 10).OrderBy<int, int>(i => 1).Last());
         }
 
         [Fact]
         public void LastMultipleTruePredicateResult()
         {
-            Assert.Equal(90, Enumerable.Range(1, 99).OrderBy(i => i).Last(x => x % 10 == 0));
+#if CISTERN_VALUELINQ
+            Assert.Equal(90, Enumerable.Range(1, 99).OrderBy<int, int>(i => i).Last(x => x % 10 == 0));
+#else
+            Assert.Equal(90, Enumerable.Range(1, 99).OrderBy<int, int>(i => i).Last((object x) => x % 10 == 0));
+#endif
             Assert.Equal(90, Enumerable.Range(1, 999).Concat(Enumerable.Range(1001, 3)).OrderByDescending(i => i.ToString().Length).ThenBy(i => i).Last(x => x % 10 == 0));
         }
 
         [Fact]
         public void LastOrDefaultMultipleTruePredicateResult()
         {
-            Assert.Equal(90, Enumerable.Range(1, 99).OrderBy(i => i).LastOrDefault(x => x % 10 == 0));
+#if CISTERN_VALUELINQ
+            Assert.Equal(90, Enumerable.Range(1, 99).OrderBy<int, int>(i => i).LastOrDefault(x => x % 10 == 0));
+#else
+            Assert.Equal(90, Enumerable.Range(1, 99).OrderBy<int, int>(i => i).LastOrDefault((object x) => x % 10 == 0));
+#endif
             Assert.Equal(90, Enumerable.Range(1, 999).Concat(Enumerable.Range(1001, 3)).OrderByDescending(i => i.ToString().Length).ThenBy(i => i).LastOrDefault(x => x % 10 == 0));
         }
 
@@ -89,21 +121,33 @@ namespace Linqs.Tests
         [Fact]
         public void LastEmptyOrderedEnumerable()
         {
-            Assert.Throws<InvalidOperationException>(() => Enumerable.Empty<int>().OrderBy(i => i).Last());
-            Assert.Throws<InvalidOperationException>(() => Enumerable.Empty<int>().OrderBy(i => i).Last(x => true));
+            Assert.Throws<InvalidOperationException>(() => Enumerable.Empty<int>().OrderBy<int, int>(i => i).Last());
+#if CISTERN_VALUELINQ
+            Assert.Throws<InvalidOperationException>(() => Enumerable.Empty<int>().OrderBy<int, int>(i => i).Last(x => true));
+#else
+            Assert.Throws<InvalidOperationException>(() => Enumerable.Empty<int>().OrderBy<int, int>(i => i).Last((object x) => true));
+#endif
         }
 
         [Fact]
         public void LastOrDefaultNoTruePredicateResult()
         {
-            Assert.Equal(0, Enumerable.Range(1, 99).OrderBy(i => i).LastOrDefault(x => x > 1000));
+#if CISTERN_VALUELINQ
+            Assert.Equal(0, Enumerable.Range(1, 99).OrderBy<int, int>(i => i).LastOrDefault(x => x > 1000));
+#else
+            Assert.Equal(0, Enumerable.Range(1, 99).OrderBy<int, int>(i => i).LastOrDefault((object x) => x > 1000));
+#endif
         }
 
         [Fact]
         public void LastOrDefaultEmptyOrderedEnumerable()
         {
-            Assert.Equal(0, Enumerable.Empty<int>().OrderBy(i => i).LastOrDefault());
-            Assert.Equal(0, Enumerable.Empty<int>().OrderBy(i => i).LastOrDefault(x => true));
+            Assert.Equal(0, Enumerable.Empty<int>().OrderBy<int, int>(i => i).LastOrDefault());
+#if CISTERN_VALUELINQ
+            Assert.Equal(0, Enumerable.Empty<int>().OrderBy<int, int>(i => i).LastOrDefault(x => true));
+#else
+            Assert.Equal(0, Enumerable.Empty<int>().OrderBy<int, int>(i => i).LastOrDefault((object x) => true));
+#endif
         }
 
         [Fact]
@@ -237,7 +281,7 @@ namespace Linqs.Tests
         //[SkipOnTargetFramework(~TargetFrameworkMonikers.Netcoreapp, "This fails with an OOM, as it iterates through the large array. See https://github.com/dotnet/corefx/pull/6821.")]
         public void TakeAndSkip_DoesntIterateRangeUnlessNecessary()
         {
-            Assert.Empty(Enumerable.Range(0, int.MaxValue).Take(int.MaxValue).OrderBy(i => i).Skip(int.MaxValue - 4).Skip(15));
+            Assert.Empty(Enumerable.Range(0, int.MaxValue).Take(int.MaxValue).OrderBy<int, int>(i => i).Skip(int.MaxValue - 4).Skip(15));
         }
 
         [Fact]

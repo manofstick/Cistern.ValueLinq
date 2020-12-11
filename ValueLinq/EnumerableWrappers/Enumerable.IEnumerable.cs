@@ -130,5 +130,11 @@ namespace Cistern.ValueLinq
 
         public static TSource ElementAtOrDefault<TSource>(this IEnumerable<TSource> source, int index) => source.OfEnumerable().ElementAtOrDefault(index);
 
+
+
+        public static ValueEnumerable<TSource, OrderByNode<TSource, KeySelectors<TSource, TKey, KeySelectorsRoot<TSource>>, EnumerableNode<TSource>>> OrderBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, IComparer<TKey> comparer = null)
+            => source.OfEnumerable().OrderBy(keySelector, comparer);
+        public static ValueEnumerable<TSource, OrderByNode<TSource, KeySelectors<TSource, TKey, KeySelectorsRoot<TSource>>, EnumerableNode<TSource>>> OrderByDescending<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, IComparer<TKey> comparer = null)
+            => source.OfEnumerable().OrderByDescending(keySelector, comparer);
     }
 }
