@@ -116,7 +116,7 @@ namespace Cistern.ValueLinq
         //        public static int Min(this IEnumerable<int> source) => System.Linq.Enumerable.Min(source);
         //        public static TSource Min<TSource>(this IEnumerable<TSource> source) => System.Linq.Enumerable.Min<TSource>(source);
         //        public static decimal Min(this IEnumerable<decimal> source) => System.Linq.Enumerable.Min(source);
-        [Obsolete("Not converted to ValueLinq yet")] public static IEnumerable<TResult> OfType<TResult>(this System.Collections.IEnumerable source) => System.Linq.Enumerable.OfType<TResult>(source);
+        //        public static IEnumerable<TResult> OfType<TResult>(this System.Collections.IEnumerable source) => System.Linq.Enumerable.OfType<TResult>(source);
         //        public static System.Linq.IOrderedEnumerable<TSource> OrderBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector) => System.Linq.Enumerable.OrderBy<TSource, TKey>(source, keySelector);
         //        public static System.Linq.IOrderedEnumerable<TSource> OrderBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, IComparer<TKey> comparer) => System.Linq.Enumerable.OrderBy<TSource, TKey>(source, keySelector, comparer);
         //        public static System.Linq.IOrderedEnumerable<TSource> OrderByDescending<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector) => System.Linq.Enumerable.OrderByDescending<TSource, TKey>(source, keySelector);

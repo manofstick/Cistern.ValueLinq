@@ -3,42 +3,48 @@ using System.Collections.Generic;
 
 namespace Cistern.ValueLinq.Containers
 {
-    struct CastEnumerableFastEnumerator<T>
+    struct OfTypeFastEnumerator<T>
         : IFastEnumerator<T>
     {
         private readonly System.Collections.IEnumerator _enumerator;
 
-        public CastEnumerableFastEnumerator(System.Collections.IEnumerable enumerable) => _enumerator = enumerable.GetEnumerator();
+        public OfTypeFastEnumerator(System.Collections.IEnumerable enumerable) => _enumerator = enumerable.GetEnumerator();
 
         public void Dispose() { if (_enumerator is IDisposable d) d.Dispose(); }
 
         public bool TryGetNext(out T current)
         {
-            if (_enumerator.MoveNext())
+            while (_enumerator.MoveNext())
             {
-                current = (T)_enumerator.Current;
-                return true;
+                if (_enumerator.Current is T t)
+                {
+                    current = t;
+                    return true;
+                }
             }
             current = default;
             return false;
         }
     }
 
-    struct CastObjectEnumerableFastEnumerator<T>
+    struct OfTypeEnumerableFastEnumerator<T>
         : IFastEnumerator<T>
     {
         private readonly IEnumerator<object> _enumerator;
 
-        public CastObjectEnumerableFastEnumerator(IEnumerable<object> enumerable) => _enumerator = enumerable.GetEnumerator();
+        public OfTypeEnumerableFastEnumerator(IEnumerable<object> enumerable) => _enumerator = enumerable.GetEnumerator();
 
         public void Dispose() { _enumerator.Dispose(); }
 
         public bool TryGetNext(out T current)
         {
-            if (_enumerator.MoveNext())
+            while (_enumerator.MoveNext())
             {
-                current = (T)_enumerator.Current;
-                return true;
+                if (_enumerator.Current is T t)
+                {
+                    current = t;
+                    return true;
+                }
             }
             current = default;
             return false;
@@ -46,7 +52,7 @@ namespace Cistern.ValueLinq.Containers
     }
 
 
-    public struct CastNode<T>
+    public struct OfTypeNode<T>
         : INode<T>
     {
         private readonly System.Collections.IEnumerable _enumerable;
@@ -54,14 +60,10 @@ namespace Cistern.ValueLinq.Containers
         public void GetCountInformation(out CountInformation info) =>
             EnumerableNode.GetCountInformation(_enumerable, out info);
 
-        public CastNode(System.Collections.IEnumerable source) => _enumerable = source;
+        public OfTypeNode(System.Collections.IEnumerable source) => _enumerable = source;
 
         CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
-        {
-            if (_enumerable is IEnumerable<T> e)
-                return EnumerableNode.CreateObjectDescent<T, CreationType, Head, Tail>(ref nodes, e);
-            return CastNode.CreateObjectDescent<T, CreationType, Head, Tail>(ref nodes, _enumerable);
-        }
+            => OfTypeNode.CreateObjectDescent<T, CreationType, Head, Tail>(ref nodes, _enumerable);
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) =>
             throw new InvalidOperationException();
@@ -71,23 +73,15 @@ namespace Cistern.ValueLinq.Containers
 
         readonly bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
-            if (_enumerable is IEnumerable<T> e)
-                return EnumerableNode.CheckForOptimization<T, TRequest, TResult>(e, in request, out result);
-
             result = default;
             return false;
         }
 
         TResult INode<T>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
-        {
-            if (_enumerable is IEnumerable<T> e)
-                return EnumerableNode.FastEnumerateSwitch<T, TResult, FEnumerator>(e, in fenum);
-
-            return CastNode.CreateViaPush<T, TResult, FEnumerator>(_enumerable, fenum);
-        }
+            => OfTypeNode.CreateViaPush<T, TResult, FEnumerator>(_enumerable, fenum);
     }
 
-    static class CastNode
+    static class OfTypeNode
     {
         public static CreationType CreateObjectDescent<T, CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes, System.Collections.IEnumerable enumerable)
             where Head : INode
@@ -95,13 +89,13 @@ namespace Cistern.ValueLinq.Containers
         {
             if (enumerable is IEnumerable<object> eo)
             {
-                var e = new CastObjectEnumerableFastEnumerator<T>(eo);
-                return nodes.CreateObject<CreationType, T, CastObjectEnumerableFastEnumerator<T>>(ref e);
+                var e = new OfTypeEnumerableFastEnumerator<T>(eo);
+                return nodes.CreateObject<CreationType, T, OfTypeEnumerableFastEnumerator<T>>(ref e);
             }
             else
             {
-                var e = new CastEnumerableFastEnumerator<T>(enumerable);
-                return nodes.CreateObject<CreationType, T, CastEnumerableFastEnumerator<T>>(ref e);
+                var e = new OfTypeFastEnumerator<T>(enumerable);
+                return nodes.CreateObject<CreationType, T, OfTypeFastEnumerator<T>>(ref e);
             }
         }
 
@@ -127,7 +121,7 @@ namespace Cistern.ValueLinq.Containers
         {
             foreach (var item in e)
             {
-                if (!fenum.ProcessNext((T)item))
+                if (item is T t && !fenum.ProcessNext(t))
                     break;
             }
         }
@@ -136,7 +130,7 @@ namespace Cistern.ValueLinq.Containers
         {
             foreach (var item in e)
             {
-                if (!fenum.ProcessNext((T)item))
+                if (item is T t && !fenum.ProcessNext(t))
                     break;
             }
         }

@@ -134,13 +134,29 @@ namespace Linqs.Tests
             AssertExtensions.Throws<ArgumentNullException>("source", () => ((IEnumerable<object>)null).OfType<string>());
         }
 
-        [Fact]
+        [Fact(Skip="CISTERN.VALUELINQ: Not applicable")]
         public void ForcedToEnumeratorDoesntEnumerate()
         {
-            var iterator = NumberRangeGuaranteedNotCollectionType(0, 3).OfType<int>();
-            // Don't insist on this behaviour, but check it's correct if it happens
-            var en = iterator as IEnumerator<int>;
-            Assert.False(en != null && en.MoveNext());
+            //var iterator = NumberRangeGuaranteedNotCollectionType(0, 3).OfType<int>();
+            //// Don't insist on this behaviour, but check it's correct if it happens
+            //var en = iterator as IEnumerator<int>;
+            //Assert.False(en != null && en.MoveNext());
+        }
+
+        class Base { }
+        class Derived : Base { }
+
+        [Fact]
+        public void BaseAndDerived()
+        {
+            var b = new Base();
+            var d = new Derived();
+
+            Base[] source = { b, d, b, d, b  };
+            Derived[] expected = { d, d };
+
+            Assert.Equal(expected, source.OfType<Derived>());
+            Assert.Equal(expected.ToList(), source.OfType<Derived>().ToList());
         }
     }
 }

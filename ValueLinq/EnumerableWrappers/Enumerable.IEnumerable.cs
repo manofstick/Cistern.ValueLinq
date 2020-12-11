@@ -135,5 +135,13 @@ namespace Cistern.ValueLinq
 
             return new(new CastNode<TResult>(source));
         }
+
+        public static ValueEnumerable<TResult, OfTypeNode<TResult>> OfType<TResult>(this System.Collections.IEnumerable source)
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+
+            return new(new OfTypeNode<TResult>(source));
+        }
     }
 }
