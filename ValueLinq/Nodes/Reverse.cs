@@ -28,7 +28,7 @@ namespace Cistern.ValueLinq.Nodes
             return array;
         }
 
-        CreationType INode.CreateViaPushDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
         {
             var reversed = GetReversedArray();
             return ArrayNode.Create<T, Nodes<Head, Tail>, CreationType>(reversed, ref nodes);
@@ -37,9 +37,9 @@ namespace Cistern.ValueLinq.Nodes
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
             => throw new InvalidOperationException();
 
-        bool INode.TryPushOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
+        bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
 
-        readonly bool INode.TryPullOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+        readonly bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
             if (typeof(TRequest) == typeof(Optimizations.Reverse))
             {
@@ -49,7 +49,7 @@ namespace Cistern.ValueLinq.Nodes
                 return true;
             }
 
-            if (_nodeT.TryPullOptimization<Optimizations.Reverse, NodeContainer<T>>(default, out var node))
+            if (_nodeT.TryPushOptimization<Optimizations.Reverse, NodeContainer<T>>(default, out var node))
             {
                 if (node.CheckForOptimization<TRequest, TResult>(in request, out result))
                     return true; // we carry on with false, because can still do some other optimizations
@@ -87,13 +87,13 @@ namespace Cistern.ValueLinq.Nodes
             return false;
         }
 
-        TResult INode<T>.CreateViaPull<TResult, FEnumerator>(in FEnumerator fenum)
+        TResult INode<T>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
         {
-            if (_nodeT.TryPullOptimization<Optimizations.Reverse, NodeContainer<T>>(new Optimizations.Reverse(), out var node))
+            if (_nodeT.TryPushOptimization<Optimizations.Reverse, NodeContainer<T>>(new Optimizations.Reverse(), out var node))
                 return node.CreateObjectViaFastEnumerator<TResult, FEnumerator>(fenum);
 
             var reversed = new ArrayNode<T>(GetReversedArray());
-            return reversed.CreateViaPull<TResult, FEnumerator>(fenum);
+            return reversed.CreateViaPush<TResult, FEnumerator>(fenum);
         }
     }
 }

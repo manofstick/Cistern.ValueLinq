@@ -139,7 +139,7 @@ namespace Cistern.ValueLinq.Containers
         readonly List<EnumerableNode<T>> TryCollectNodes()
         {
             (EnumerableNode<T>, EnumerableNode<T>) items;
-            if (!(_start is EnumerableNode<T> && _finish is EnumerableNode<T> && _start.TryPullOptimization(new Optimizations.SplitConcat<T>(), out items)))
+            if (!(_start is EnumerableNode<T> && _finish is EnumerableNode<T> && _start.TryPushOptimization(new Optimizations.SplitConcat<T>(), out items)))
                 return null;
 
             var heads = new List<EnumerableNode<T>>(_countInfo.Depth ?? byte.MaxValue);
@@ -183,7 +183,7 @@ namespace Cistern.ValueLinq.Containers
             }
         }
 
-        CreationType INode.CreateViaPushDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
         {
             var components = TryCollectNodes();
             if (components != null)
@@ -199,12 +199,12 @@ namespace Cistern.ValueLinq.Containers
             return ConcatNode.Create<T, Start, Finish, Head, Tail, CreationType>(in _start, in _finish, ref nodes);
         }
 
-        bool INode.TryPushOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
+        bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __)
             => throw new InvalidOperationException();
 
-        bool INode.TryPullOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+        bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
             if (typeof(TRequest) == typeof(Optimizations.Count))
             {
@@ -243,7 +243,7 @@ namespace Cistern.ValueLinq.Containers
             }
         }
 
-        TResult INode<T>.CreateViaPull<TResult, FEnumerator>(in FEnumerator fenum)
+        TResult INode<T>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
         {
             var components = TryCollectNodes();
             if (components != null)
@@ -257,7 +257,7 @@ namespace Cistern.ValueLinq.Containers
                 };
             }
 
-            return _start.CreateViaPull<TResult, ConcatStartFoward<T, Finish, FEnumerator>>(new ConcatStartFoward<T, Finish, FEnumerator>(fenum, _finish));
+            return _start.CreateViaPush<TResult, ConcatStartFoward<T, Finish, FEnumerator>>(new ConcatStartFoward<T, Finish, FEnumerator>(fenum, _finish));
         }
     }
 
@@ -328,7 +328,7 @@ namespace Cistern.ValueLinq.Containers
         public TResult GetResult<TResult>()
         {
             _disposedOrOntoFinish = true;
-            return _finish.CreateViaPull<TResult, ConcatFinishFoward<T, Next>>(new ConcatFinishFoward<T, Next>(in _next));
+            return _finish.CreateViaPush<TResult, ConcatFinishFoward<T, Next>>(new ConcatFinishFoward<T, Next>(in _next));
         }
 
         public bool ProcessNext(T input) => _next.ProcessNext(input);

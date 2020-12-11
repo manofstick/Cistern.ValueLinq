@@ -49,9 +49,9 @@ namespace Cistern.ValueLinq.Nodes
 
         public SkipNode(in NodeT nodeT, int count) => (_nodeT, _count) = (nodeT, Math.Max(0, count));
 
-        CreationType INode.CreateViaPushDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) =>
+        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) =>
             _count <= 0
-                ? _nodeT.CreateViaPushDescend<CreationType, Head, Tail>(ref nodes)
+                ? _nodeT.CreateViaPullDescend<CreationType, Head, Tail>(ref nodes)
                 : Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
@@ -60,7 +60,7 @@ namespace Cistern.ValueLinq.Nodes
             return tail.CreateObject<CreationType, EnumeratorElement, SkipNodeEnumerator<EnumeratorElement, Enumerator>>(ref nextEnumerator);
         }
 
-        bool INode.TryPushOptimization<TRequest, CreationType, Tail>(in TRequest request, ref Tail nodes, out CreationType creation)
+        bool INode.TryPullOptimization<TRequest, CreationType, Tail>(in TRequest request, ref Tail nodes, out CreationType creation)
         {
             if (typeof(TRequest) == typeof(Optimizations.SourceArray<T>))
             {
@@ -72,7 +72,7 @@ namespace Cistern.ValueLinq.Nodes
             return false;
         }
 
-        bool INode.TryPullOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+        bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
             if (typeof(TRequest) == typeof(Optimizations.Skip))
             {
@@ -85,7 +85,7 @@ namespace Cistern.ValueLinq.Nodes
                 }
             }
 
-            if (_nodeT.TryPullOptimization<Optimizations.Skip, NodeContainer<T>>(new Optimizations.Skip { Count = _count }, out var node))
+            if (_nodeT.TryPushOptimization<Optimizations.Skip, NodeContainer<T>>(new Optimizations.Skip { Count = _count }, out var node))
                 return node.CheckForOptimization<TRequest, TResult>(in request, out result);
 
             result = default;
@@ -97,7 +97,7 @@ namespace Cistern.ValueLinq.Nodes
             var total = (long)_count + count;
             if (total <= int.MaxValue)
             {
-                if (_nodeT.TryPullOptimization(new Optimizations.Skip { Count = (int)total }, out container))
+                if (_nodeT.TryPushOptimization(new Optimizations.Skip { Count = (int)total }, out container))
                 {
                     return true;
                 }
@@ -117,15 +117,15 @@ namespace Cistern.ValueLinq.Nodes
             return true;
         }
 
-        TResult INode<T>.CreateViaPull<TResult, FEnumerator>(in FEnumerator fenum)
+        TResult INode<T>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
         {
             if (_count <= 0)
-                return _nodeT.CreateViaPull<TResult, FEnumerator>(fenum);
+                return _nodeT.CreateViaPush<TResult, FEnumerator>(fenum);
 
-            if (_nodeT.TryPullOptimization<Optimizations.Skip, NodeContainer<T>>(new Optimizations.Skip { Count = _count}, out var node))
+            if (_nodeT.TryPushOptimization<Optimizations.Skip, NodeContainer<T>>(new Optimizations.Skip { Count = _count}, out var node))
                 return node.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum);
 
-            return _nodeT.CreateViaPull<TResult, SkipFoward<T, FEnumerator>>(new SkipFoward<T, FEnumerator>(fenum, _count));
+            return _nodeT.CreateViaPush<TResult, SkipFoward<T, FEnumerator>>(new SkipFoward<T, FEnumerator>(fenum, _count));
         }
     }
 

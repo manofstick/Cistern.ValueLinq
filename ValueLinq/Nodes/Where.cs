@@ -43,7 +43,7 @@ namespace Cistern.ValueLinq.Nodes
 
         public WhereNode(in NodeT nodeT, Func<T, bool> predicate) => (_nodeT, _filter) = (nodeT, predicate);
 
-        CreationType INode.CreateViaPushDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
             => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
@@ -52,7 +52,7 @@ namespace Cistern.ValueLinq.Nodes
             return tail.CreateObject<CreationType, EnumeratorElement, WhereNodeEnumerator<EnumeratorElement, Enumerator>>(ref nextEnumerator);
         }
 
-        bool INode.TryPushOptimization<TRequest, CreationType, Tail>(in TRequest request, ref Tail tail, out CreationType creation)
+        bool INode.TryPullOptimization<TRequest, CreationType, Tail>(in TRequest request, ref Tail tail, out CreationType creation)
         {
             if (typeof(TRequest) == typeof(Optimizations.CheckForWhere))
             {
@@ -82,9 +82,9 @@ namespace Cistern.ValueLinq.Nodes
             return false;
         }
 
-        bool INode.TryPullOptimization<TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
-        TResult INode<T>.CreateViaPull<TResult, FEnumerator>(in FEnumerator fenum) =>
-            _nodeT.CreateViaPull<TResult, WhereFoward<T, FEnumerator>>(new WhereFoward<T, FEnumerator>(fenum, _filter));
+        bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
+        TResult INode<T>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum) =>
+            _nodeT.CreateViaPush<TResult, WhereFoward<T, FEnumerator>>(new WhereFoward<T, FEnumerator>(fenum, _filter));
     }
 
     static class WhereNode

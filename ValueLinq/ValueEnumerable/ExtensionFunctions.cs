@@ -7,316 +7,326 @@ using System.Collections.Generic;
 
 namespace Cistern.ValueLinq
 {
-    public struct ValueEnumerable<T, TNode>
-        : IValueEnumerable<T>
-        , INode<T>
-        where TNode : INode<T>
+    public struct ValueEnumerable<TSource, TNode>
+        : IValueEnumerable<TSource>
+        , INode<TSource>
+        where TNode : INode<TSource>
     {
         internal TNode Node;
 
-        public ValueEnumerable(in TNode node) => Node = node;
+        public ValueEnumerable(in TNode node)
+            => Node = node;
 
-        public ValueEnumerator<T> GetEnumerator() => Nodes<T>.CreateValueEnumerator(in Node);
-        IEnumerator<T> IEnumerable<T>.GetEnumerator() => Nodes<T>.CreateEnumerator(in Node);
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => ((IEnumerable<T>)this).GetEnumerator();
+        public ValueEnumerator<TSource> GetEnumerator()
+            => Nodes<TSource>.CreateValueEnumerator(in Node);
+        IEnumerator<TSource> IEnumerable<TSource>.GetEnumerator()
+            => Nodes<TSource>.CreateEnumerator(in Node);
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+            => ((IEnumerable<TSource>)this).GetEnumerator();
 
-        void INode.GetCountInformation(out CountInformation info) => Node.GetCountInformation(out info);
+        void INode.GetCountInformation(out CountInformation info)
+            => Node.GetCountInformation(out info);
 
-        bool INode.TryPushOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
-        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator) => Node.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref tail, ref enumerator);
-        CreationType INode.CreateViaPushDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => Node.CreateViaPushDescend<CreationType, Head, Tail>(ref nodes);
+        bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation)
+            => Node.TryPullOptimization<TRequest, TResult, Nodes>(in request, ref nodes, out creation);
+        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
+            => Node.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref tail, ref enumerator);
+        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+            => Node.CreateViaPullDescend<CreationType, Head, Tail>(ref nodes);
 
-        bool INode.TryPullOptimization<TRequest, TResult>(in TRequest request, out TResult result) => Node.TryPullOptimization<TRequest, TResult>(in request, out result);
-        TResult INode<T>.CreateViaPull<TResult, FEnumerator>(in FEnumerator fenum) => Node.CreateViaPull<TResult, FEnumerator>(fenum);
+        bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+            => Node.TryPushOptimization<TRequest, TResult>(in request, out result);
+        TResult INode<TSource>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
+            => Node.CreateViaPush<TResult, FEnumerator>(fenum);
     }
 
 
     public static partial class Enumerable
     {
-        public static T Aggregate<T, Inner>(in this ValueEnumerable<T, Inner> source, Func<T, T, T> func)
-            where Inner : INode<T>
+        public static TSource Aggregate<TSource, Inner>(in this ValueEnumerable<TSource, Inner> source, Func<TSource, TSource, TSource> func)
+            where Inner : INode<TSource>
             => NodeImpl.Aggregate(in source.Node, func);
 
-        public static void ForEach<T, Inner>(in this ValueEnumerable<T, Inner> source, Action<T> func)
-            where Inner : INode<T>
+        public static void ForEach<TSource, Inner>(in this ValueEnumerable<TSource, Inner> source, Action<TSource> func)
+            where Inner : INode<TSource>
             => NodeImpl.ForEach(in source.Node, func);
 
-        public static T ForEach<T, U, Inner>(in this ValueEnumerable<U, Inner> source, T seed, RefAction<T, U> func)
+        public static TSource ForEach<TSource, U, Inner>(in this ValueEnumerable<U, Inner> source, TSource seed, RefAction<TSource, U> func)
             where Inner : INode<U>
             => NodeImpl.ForEach(in source.Node, seed, func);
 
-        public static T ForEach<T, U, Inner, RefAction>(in this ValueEnumerable<U, Inner> source, T seed, RefAction func)
+        public static TSource ForEach<TSource, U, Inner, RefAction>(in this ValueEnumerable<U, Inner> source, TSource seed, RefAction func)
             where Inner : INode<U>
-            where RefAction : IRefAction<T, U>
-            => NodeImpl.ForEach<T, U, Inner, RefAction>(in source.Node, seed, func);
+            where RefAction : IRefAction<TSource, U>
+            => NodeImpl.ForEach<TSource, U, Inner, RefAction>(in source.Node, seed, func);
 
-        public static TAccumulate Aggregate<T, TAccumulate, Inner>(in this ValueEnumerable<T, Inner> source, TAccumulate seed, Func<TAccumulate, T, TAccumulate> func)
-            where Inner : INode<T>
+        public static TAccumulate Aggregate<TSource, TAccumulate, Inner>(in this ValueEnumerable<TSource, Inner> source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func)
+            where Inner : INode<TSource>
             => NodeImpl.Aggregate(in source.Node, seed, func);
 
-        public static TResult Aggregate<T, TAccumulate, TResult, Inner>(in this ValueEnumerable<T, Inner> source, TAccumulate seed, Func<TAccumulate, T, TAccumulate> func, Func<TAccumulate, TResult> resultSelector)
-            where Inner : INode<T>
+        public static TResult Aggregate<TSource, TAccumulate, TResult, Inner>(in this ValueEnumerable<TSource, Inner> source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func, Func<TAccumulate, TResult> resultSelector)
+            where Inner : INode<TSource>
             => NodeImpl.Aggregate(in source.Node, seed, func, resultSelector);
 
-        public static bool All<T, Inner>(in this ValueEnumerable<T, Inner> source, Func<T, bool> predicate)
-            where Inner : INode<T>
+        public static bool All<TSource, Inner>(in this ValueEnumerable<TSource, Inner> source, Func<TSource, bool> predicate)
+            where Inner : INode<TSource>
             => NodeImpl.All(in source.Node, predicate);
 
-        public static bool All<T, Inner, Predicate>(in this ValueEnumerable<T, Inner> source, Predicate predicate)
-            where Inner : INode<T>
-            where Predicate : IFunc<T, bool>
-            => NodeImpl.All<T, Inner, Predicate>(in source.Node, predicate);
+        public static bool All<TSource, Inner, Predicate>(in this ValueEnumerable<TSource, Inner> source, Predicate predicate)
+            where Inner : INode<TSource>
+            where Predicate : IFunc<TSource, bool>
+            => NodeImpl.All<TSource, Inner, Predicate>(in source.Node, predicate);
 
-        public static bool Any<T, Inner>(in this ValueEnumerable<T, Inner> source)
-            where Inner : INode<T>
-            => NodeImpl.Any<T, Inner>(in source.Node);
+        public static bool Any<TSource, Inner>(in this ValueEnumerable<TSource, Inner> source)
+            where Inner : INode<TSource>
+            => NodeImpl.Any<TSource, Inner>(in source.Node);
 
-        public static bool Any<T, Inner>(in this ValueEnumerable<T, Inner> source, Func<T, bool> predicate)
-            where Inner : INode<T>
+        public static bool Any<TSource, Inner>(in this ValueEnumerable<TSource, Inner> source, Func<TSource, bool> predicate)
+            where Inner : INode<TSource>
             => NodeImpl.Any(in source.Node, predicate);
 
-        public static ValueEnumerable<U, SelectNode<T, U, TPrior>> Select<T, U, TPrior>(in this ValueEnumerable<T, TPrior> prior, Func<T, U> selector)
-            where TPrior : INode<T>
+        public static ValueEnumerable<U, SelectNode<TSource, U, TPrior>> Select<TSource, U, TPrior>(in this ValueEnumerable<TSource, TPrior> prior, Func<TSource, U> selector)
+            where TPrior : INode<TSource>
             => new (NodeImpl.Select(in prior.Node, selector));
 
-        public static ValueEnumerable<U, Select_InNode<T, U, TPrior>> Select<T, U, TPrior>(in this ValueEnumerable<T, TPrior> prior, InFunc<T, U> f)
-            where TPrior : INode<T>
+        public static ValueEnumerable<U, Select_InNode<TSource, U, TPrior>> Select<TSource, U, TPrior>(in this ValueEnumerable<TSource, TPrior> prior, InFunc<TSource, U> f)
+            where TPrior : INode<TSource>
             => new (NodeImpl.Select(in prior.Node, f));
 
-        public static ValueEnumerable<U, SelectIdxNode<T, U, TPrior>> Select<T, U, TPrior>(in this ValueEnumerable<T, TPrior> prior, Func<T, int, U> selector)
-            where TPrior : INode<T>
+        public static ValueEnumerable<U, SelectIdxNode<TSource, U, TPrior>> Select<TSource, U, TPrior>(in this ValueEnumerable<TSource, TPrior> prior, Func<TSource, int, U> selector)
+            where TPrior : INode<TSource>
             => new (NodeImpl.Select(in prior.Node, selector));
 
-        public static ValueEnumerable<T, WhereNode<T, TPrior>> Where<T, TPrior>(in this ValueEnumerable<T, TPrior> prior, Func<T, bool> predicate)
-            where TPrior : INode<T>
+        public static ValueEnumerable<TSource, WhereNode<TSource, TPrior>> Where<TSource, TPrior>(in this ValueEnumerable<TSource, TPrior> prior, Func<TSource, bool> predicate)
+            where TPrior : INode<TSource>
             => new (NodeImpl.Where(in prior.Node, predicate));
 
-        public static ValueEnumerable<T, WhereIdxNode<T, TPrior>> Where<T, TPrior>(in this ValueEnumerable<T, TPrior> prior, Func<T, int, bool> predicate)
-            where TPrior : INode<T>
+        public static ValueEnumerable<TSource, WhereIdxNode<TSource, TPrior>> Where<TSource, TPrior>(in this ValueEnumerable<TSource, TPrior> prior, Func<TSource, int, bool> predicate)
+            where TPrior : INode<TSource>
             => new (NodeImpl.Where(in prior.Node, predicate));
 
-        public static ValueEnumerable<T, Where_InNode<T, TPrior>> Where<T, TPrior>(in this ValueEnumerable<T, TPrior> prior, InFunc<T, bool> f)
-            where TPrior : INode<T>
+        public static ValueEnumerable<TSource, Where_InNode<TSource, TPrior>> Where<TSource, TPrior>(in this ValueEnumerable<TSource, TPrior> prior, InFunc<TSource, bool> f)
+            where TPrior : INode<TSource>
             => new (NodeImpl.Where(in prior.Node, f));
 
-        public static ValueEnumerable<T, SkipNode<T, TPrior>> Skip<T, TPrior>(in this ValueEnumerable<T, TPrior> prior, int count)
-            where TPrior : INode<T>
-            => new (NodeImpl.Skip<T, TPrior>(in prior.Node, count));
+        public static ValueEnumerable<TSource, SkipNode<TSource, TPrior>> Skip<TSource, TPrior>(in this ValueEnumerable<TSource, TPrior> prior, int count)
+            where TPrior : INode<TSource>
+            => new (NodeImpl.Skip<TSource, TPrior>(in prior.Node, count));
 
-        public static ValueEnumerable<T, SkipWhileNode<T, TPrior>> SkipWhile<T, TPrior>(in this ValueEnumerable<T, TPrior> prior, Func<T, bool> predicate)
-            where TPrior : INode<T>
+        public static ValueEnumerable<TSource, SkipWhileNode<TSource, TPrior>> SkipWhile<TSource, TPrior>(in this ValueEnumerable<TSource, TPrior> prior, Func<TSource, bool> predicate)
+            where TPrior : INode<TSource>
             => new(NodeImpl.SkipWhile(in prior.Node, predicate));
 
-        public static ValueEnumerable<T, SkipWhileIdxNode<T, TPrior>> SkipWhile<T, TPrior>(in this ValueEnumerable<T, TPrior> prior, Func<T, int, bool> predicate)
-            where TPrior : INode<T>
+        public static ValueEnumerable<TSource, SkipWhileIdxNode<TSource, TPrior>> SkipWhile<TSource, TPrior>(in this ValueEnumerable<TSource, TPrior> prior, Func<TSource, int, bool> predicate)
+            where TPrior : INode<TSource>
             => new (NodeImpl.SkipWhile(in prior.Node, predicate));
 
-        public static ValueEnumerable<T, TakeNode<T, TPrior>> Take<T, TPrior>(in this ValueEnumerable<T, TPrior> prior, int count)
-            where TPrior : INode<T>
-            => new (NodeImpl.Take<T, TPrior>(in prior.Node, count));
+        public static ValueEnumerable<TSource, TakeNode<TSource, TPrior>> Take<TSource, TPrior>(in this ValueEnumerable<TSource, TPrior> prior, int count)
+            where TPrior : INode<TSource>
+            => new (NodeImpl.Take<TSource, TPrior>(in prior.Node, count));
 
-        public static ValueEnumerable<T, TakeWhileNode<T, TPrior>> TakeWhile<T, TPrior>(in this ValueEnumerable<T, TPrior> prior, Func<T, bool> predicate)
-            where TPrior : INode<T>
+        public static ValueEnumerable<TSource, TakeWhileNode<TSource, TPrior>> TakeWhile<TSource, TPrior>(in this ValueEnumerable<TSource, TPrior> prior, Func<TSource, bool> predicate)
+            where TPrior : INode<TSource>
             => new (NodeImpl.TakeWhile(in prior.Node, predicate));
 
-        public static ValueEnumerable<T, TakeWhileIdxNode<T, TPrior>> TakeWhile<T, TPrior>(in this ValueEnumerable<T, TPrior> prior, Func<T, int, bool> predicate)
-            where TPrior : INode<T>
+        public static ValueEnumerable<TSource, TakeWhileIdxNode<TSource, TPrior>> TakeWhile<TSource, TPrior>(in this ValueEnumerable<TSource, TPrior> prior, Func<TSource, int, bool> predicate)
+            where TPrior : INode<TSource>
             => new(NodeImpl.TakeWhile(in prior.Node, predicate));
 
-        public static T[] ToArray<T, Inner>(in this ValueEnumerable<T, Inner> inner, int? maybeMaxCountForStackBasedPath = 64, (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo = null)
-            where Inner : INode<T>
+        public static TSource[] ToArray<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, int? maybeMaxCountForStackBasedPath = 64, (ArrayPool<TSource> arrayPool, bool cleanBuffers)? arrayPoolInfo = null)
+            where Inner : INode<TSource>
             => NodeImpl.ToArray(in inner.Node, maybeMaxCountForStackBasedPath, in arrayPoolInfo);
 
-        public static T[] ToArrayUsePool<T, Inner>(in this ValueEnumerable<T, Inner> inner, ArrayPool<T> maybeArrayPool = null, bool? maybeCleanBuffers = null, bool viaPull = false)
-            where Inner : INode<T>
+        public static TSource[] ToArrayUsePool<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, ArrayPool<TSource> maybeArrayPool = null, bool? maybeCleanBuffers = null, bool viaPull = false)
+            where Inner : INode<TSource>
             => NodeImpl.ToArrayUsePool(in inner.Node, maybeArrayPool, maybeCleanBuffers, viaPull);
 
-        public static T[] ToArrayUseStack<T, Inner>(in this ValueEnumerable<T, Inner> inner, int maxStackItemCount = 64, (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo = null)
-            where Inner : INode<T>
+        public static TSource[] ToArrayUseStack<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, int maxStackItemCount = 64, (ArrayPool<TSource> arrayPool, bool cleanBuffers)? arrayPoolInfo = null)
+            where Inner : INode<TSource>
             => NodeImpl.ToArrayUseStack(in inner.Node, maxStackItemCount, arrayPoolInfo);
 
-        public static List<T> ToList<T, Inner>(in this ValueEnumerable<T, Inner> inner, int? maybeMaxCountForStackBasedPath = 64, (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo = null)
-            where Inner : INode<T>
+        public static List<TSource> ToList<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, int? maybeMaxCountForStackBasedPath = 64, (ArrayPool<TSource> arrayPool, bool cleanBuffers)? arrayPoolInfo = null)
+            where Inner : INode<TSource>
             => NodeImpl.ToList(in inner.Node, maybeMaxCountForStackBasedPath, arrayPoolInfo);
 
-        public static List<T> ToListUsePool<T, Inner>(in this ValueEnumerable<T, Inner> inner, ArrayPool<T> maybeArrayPool = null, bool? maybeCleanBuffers = null, bool viaPull = false)
-            where Inner : INode<T>
+        public static List<TSource> ToListUsePool<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, ArrayPool<TSource> maybeArrayPool = null, bool? maybeCleanBuffers = null, bool viaPull = false)
+            where Inner : INode<TSource>
             => NodeImpl.ToListUsePool(in inner.Node, maybeArrayPool, maybeCleanBuffers, viaPull);
 
-        public static List<T> ToListUseStack<T, Inner>(in this ValueEnumerable<T, Inner> inner, int maxStackItemCount = 64, (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo = null)
-            where Inner : INode<T>
+        public static List<TSource> ToListUseStack<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, int maxStackItemCount = 64, (ArrayPool<TSource> arrayPool, bool cleanBuffers)? arrayPoolInfo = null)
+            where Inner : INode<TSource>
             => NodeImpl.ToListUseStack(in inner.Node, maxStackItemCount, arrayPoolInfo);
 
-        public static T Last<T, Inner>(in this ValueEnumerable<T, Inner> inner)
-            where Inner : INode<T>
-            => NodeImpl.Last<T, Inner>(in inner.Node);
+        public static TSource Last<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner)
+            where Inner : INode<TSource>
+            => NodeImpl.Last<TSource, Inner>(in inner.Node);
 
-        public static T Last<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, bool> predicate)
-            where Inner : INode<T>
+        public static TSource Last<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, bool> predicate)
+            where Inner : INode<TSource>
             => NodeImpl.Last(in inner.Node, predicate);
 
-        public static T LastOrDefault<T, Inner>(in this ValueEnumerable<T, Inner> inner)
-            where Inner : INode<T>
-            => NodeImpl.LastOrDefault<T, Inner>(in inner.Node);
+        public static TSource LastOrDefault<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner)
+            where Inner : INode<TSource>
+            => NodeImpl.LastOrDefault<TSource, Inner>(in inner.Node);
 
-        public static T LastOrDefault<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, bool> predicate)
-            where Inner : INode<T>
+        public static TSource LastOrDefault<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, bool> predicate)
+            where Inner : INode<TSource>
             => NodeImpl.LastOrDefault(in inner.Node, predicate);
 
-        public static T First<T, Inner>(in this ValueEnumerable<T, Inner> inner)
-            where Inner : INode<T>
-            => NodeImpl.First<T, Inner>(in inner.Node);
+        public static TSource First<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner)
+            where Inner : INode<TSource>
+            => NodeImpl.First<TSource, Inner>(in inner.Node);
 
-        public static T First<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, bool> predicate)
-            where Inner : INode<T>
+        public static TSource First<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, bool> predicate)
+            where Inner : INode<TSource>
             => NodeImpl.First(in inner.Node, predicate);
 
-        public static T FirstOrDefault<T, Inner>(in this ValueEnumerable<T, Inner> inner)
-            where Inner : INode<T>
-            => NodeImpl.FirstOrDefault<T, Inner>(in inner.Node);
+        public static TSource FirstOrDefault<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner)
+            where Inner : INode<TSource>
+            => NodeImpl.FirstOrDefault<TSource, Inner>(in inner.Node);
 
-        public static T FirstOrDefault<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, bool> predicate)
-            where Inner : INode<T>
+        public static TSource FirstOrDefault<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, bool> predicate)
+            where Inner : INode<TSource>
             => NodeImpl.FirstOrDefault(in inner.Node, predicate);
 
-        public static T Single<T, Inner>(in this ValueEnumerable<T, Inner> inner)
-            where Inner : INode<T> 
-            => NodeImpl.Single<T, Inner>(in inner.Node);
+        public static TSource Single<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner)
+            where Inner : INode<TSource> 
+            => NodeImpl.Single<TSource, Inner>(in inner.Node);
 
-        public static T Single<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, bool> predicate)
-            where Inner : INode<T>
+        public static TSource Single<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, bool> predicate)
+            where Inner : INode<TSource>
             => NodeImpl.Single(in inner.Node, predicate);
 
-        public static T SingleOrDefault<T, Inner>(in this ValueEnumerable<T, Inner> inner)
-            where Inner : INode<T>
-            => NodeImpl.SingleOrDefault<T, Inner>(in inner.Node);
+        public static TSource SingleOrDefault<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner)
+            where Inner : INode<TSource>
+            => NodeImpl.SingleOrDefault<TSource, Inner>(in inner.Node);
 
-        public static T SingleOrDefault<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, bool> predicate)
-            where Inner : INode<T>
+        public static TSource SingleOrDefault<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, bool> predicate)
+            where Inner : INode<TSource>
             => NodeImpl.SingleOrDefault(in inner.Node, predicate);
 
-        public static T ElementAt<T, Inner>(in this ValueEnumerable<T, Inner> inner, int index)
-            where Inner : INode<T>
-            => NodeImpl.ElementAt<T, Inner>(in inner.Node, index);
+        public static TSource ElementAt<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, int index)
+            where Inner : INode<TSource>
+            => NodeImpl.ElementAt<TSource, Inner>(in inner.Node, index);
 
-        public static T ElementAtOrDefault<T, Inner>(in this ValueEnumerable<T, Inner> inner, int index)
-            where Inner : INode<T>
-            => NodeImpl.ElementAtOrDefault<T, Inner>(in inner.Node, index);
+        public static TSource ElementAtOrDefault<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, int index)
+            where Inner : INode<TSource>
+            => NodeImpl.ElementAtOrDefault<TSource, Inner>(in inner.Node, index);
 
-        public static decimal Average<Inner>(in this ValueEnumerable<decimal, Inner> inner) where Inner : INode<decimal> => NodeImpl.AverageDecimal(in inner.Node);
+        public static decimal Average<Inner>(in this ValueEnumerable<decimal, Inner> inner) where Inner : INode<Decimal> => NodeImpl.AverageDecimal(in inner.Node);
         public static double  Average<Inner>(in this ValueEnumerable<double,  Inner> inner) where Inner : INode<double>  => NodeImpl.AverageDouble(in inner.Node);
         public static float   Average<Inner>(in this ValueEnumerable<float,   Inner> inner) where Inner : INode<float>   => NodeImpl.AverageFloat(in inner.Node);
         public static double  Average<Inner>(in this ValueEnumerable<int,     Inner> inner) where Inner : INode<int>     => NodeImpl.AverageInt(in inner.Node);
         public static double  Average<Inner>(in this ValueEnumerable<long,    Inner> inner) where Inner : INode<long>    => NodeImpl.AverageLong(in inner.Node);
 
-        public static decimal Average<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, decimal> selector) where Inner : INode<T> => NodeImpl.AverageDecimal(NodeImpl.Select(in inner.Node, selector));
-        public static double  Average<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, double> selector)  where Inner : INode<T> => NodeImpl.AverageDouble( NodeImpl.Select(in inner.Node, selector));
-        public static float   Average<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, float> selector)   where Inner : INode<T> => NodeImpl.AverageFloat(  NodeImpl.Select(in inner.Node, selector));
-        public static double  Average<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, int> selector)     where Inner : INode<T> => NodeImpl.AverageInt(    NodeImpl.Select(in inner.Node, selector));
-        public static double  Average<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, long> selector)    where Inner : INode<T> => NodeImpl.AverageLong(   NodeImpl.Select(in inner.Node, selector));
+        public static decimal Average<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, decimal> selector) where Inner : INode<TSource> => NodeImpl.AverageDecimal(NodeImpl.Select(in inner.Node, selector));
+        public static double  Average<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, double> selector)  where Inner : INode<TSource> => NodeImpl.AverageDouble( NodeImpl.Select(in inner.Node, selector));
+        public static float   Average<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, float> selector)   where Inner : INode<TSource> => NodeImpl.AverageFloat(  NodeImpl.Select(in inner.Node, selector));
+        public static double  Average<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, int> selector)     where Inner : INode<TSource> => NodeImpl.AverageInt(    NodeImpl.Select(in inner.Node, selector));
+        public static double  Average<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, long> selector)    where Inner : INode<TSource> => NodeImpl.AverageLong(   NodeImpl.Select(in inner.Node, selector));
 
-        public static decimal? Average<Inner>(in this ValueEnumerable<decimal?, Inner> inner) where Inner : INode<decimal?> => NodeImpl.AverageNullableDecimal(in inner.Node);
+        public static decimal? Average<Inner>(in this ValueEnumerable<decimal?, Inner> inner) where Inner : INode<Decimal?> => NodeImpl.AverageNullableDecimal(in inner.Node);
         public static double?  Average<Inner>(in this ValueEnumerable<double?,  Inner> inner) where Inner : INode<double?>  => NodeImpl.AverageNullableDouble(in inner.Node);
         public static float?   Average<Inner>(in this ValueEnumerable<float?,   Inner> inner) where Inner : INode<float?>   => NodeImpl.AverageNullableFloat(in inner.Node);
         public static double?  Average<Inner>(in this ValueEnumerable<int?,     Inner> inner) where Inner : INode<int?>     => NodeImpl.AverageNullableInt(in inner.Node);
         public static double?  Average<Inner>(in this ValueEnumerable<long?,    Inner> inner) where Inner : INode<long?>    => NodeImpl.AverageNullableLong(in inner.Node);
 
-        public static decimal? Average<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, decimal?> selector) where Inner : INode<T> => NodeImpl.AverageNullableDecimal(NodeImpl.Select(in inner.Node, selector));
-        public static double?  Average<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, double?>  selector) where Inner : INode<T> => NodeImpl.AverageNullableDouble( NodeImpl.Select(in inner.Node, selector));
-        public static float?   Average<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, float?>   selector) where Inner : INode<T> => NodeImpl.AverageNullableFloat(  NodeImpl.Select(in inner.Node, selector));
-        public static double?  Average<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, int?>     selector) where Inner : INode<T> => NodeImpl.AverageNullableInt(    NodeImpl.Select(in inner.Node, selector));
-        public static double?  Average<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, long?>    selector) where Inner : INode<T> => NodeImpl.AverageNullableLong(   NodeImpl.Select(in inner.Node, selector));
+        public static decimal? Average<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, decimal?> selector) where Inner : INode<TSource> => NodeImpl.AverageNullableDecimal(NodeImpl.Select(in inner.Node, selector));
+        public static double?  Average<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, double?>  selector) where Inner : INode<TSource> => NodeImpl.AverageNullableDouble( NodeImpl.Select(in inner.Node, selector));
+        public static float?   Average<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, float?>   selector) where Inner : INode<TSource> => NodeImpl.AverageNullableFloat(  NodeImpl.Select(in inner.Node, selector));
+        public static double?  Average<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, int?>     selector) where Inner : INode<TSource> => NodeImpl.AverageNullableInt(    NodeImpl.Select(in inner.Node, selector));
+        public static double?  Average<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, long?>    selector) where Inner : INode<TSource> => NodeImpl.AverageNullableLong(   NodeImpl.Select(in inner.Node, selector));
 
-        public static decimal Min<Inner>(   in this ValueEnumerable<decimal, Inner> inner) where Inner : INode<decimal>  => NodeImpl.MinDecimal(   in inner.Node);
+        public static decimal Min<Inner>(   in this ValueEnumerable<decimal, Inner> inner) where Inner : INode<Decimal>  => NodeImpl.MinDecimal(   in inner.Node);
         public static double  Min<Inner>(   in this ValueEnumerable<double,  Inner> inner) where Inner : INode<double>   => NodeImpl.MinDouble(    in inner.Node);
         public static float   Min<Inner>(   in this ValueEnumerable<float,   Inner> inner) where Inner : INode<float>    => NodeImpl.MinFloat(     in inner.Node);
         public static int     Min<Inner>(   in this ValueEnumerable<int,     Inner> inner) where Inner : INode<int>      => NodeImpl.MinInt(       in inner.Node);
         public static long    Min<Inner>(   in this ValueEnumerable<long,    Inner> inner) where Inner : INode<long>     => NodeImpl.MinLong(      in inner.Node);
-        public static T       Min<T, Inner>(in this ValueEnumerable<T,       Inner> inner) where Inner : INode<T>        => NodeImpl.Min<T, Inner>(in inner.Node);
+        public static TSource       Min<TSource, Inner>(in this ValueEnumerable<TSource,       Inner> inner) where Inner : INode<TSource>        => NodeImpl.Min<TSource, Inner>(in inner.Node);
 
-        public static decimal Min<T, Inner>(   in this ValueEnumerable<T, Inner> inner, Func<T, decimal> selector) where Inner : INode<T> => NodeImpl.MinDecimal(                   NodeImpl.Select(in inner.Node, selector));
-        public static double  Min<T, Inner>(   in this ValueEnumerable<T, Inner> inner, Func<T, double>  selector) where Inner : INode<T> => NodeImpl.MinDouble(                    NodeImpl.Select(in inner.Node, selector));
-        public static float   Min<T, Inner>(   in this ValueEnumerable<T, Inner> inner, Func<T, float>   selector) where Inner : INode<T> => NodeImpl.MinFloat(                     NodeImpl.Select(in inner.Node, selector));
-        public static int     Min<T, Inner>(   in this ValueEnumerable<T, Inner> inner, Func<T, int>     selector) where Inner : INode<T> => NodeImpl.MinInt(                       NodeImpl.Select(in inner.Node, selector));
-        public static long    Min<T, Inner>(   in this ValueEnumerable<T, Inner> inner, Func<T, long>    selector) where Inner : INode<T> => NodeImpl.MinLong(                      NodeImpl.Select(in inner.Node, selector));
-        public static U       Min<T, U, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, U>       selector) where Inner : INode<T> => NodeImpl.Min<U, SelectNode<T,U,Inner>>(NodeImpl.Select(in inner.Node, selector));
+        public static decimal Min<TSource, Inner>(   in this ValueEnumerable<TSource, Inner> inner, Func<TSource, decimal> selector) where Inner : INode<TSource> => NodeImpl.MinDecimal(                   NodeImpl.Select(in inner.Node, selector));
+        public static double  Min<TSource, Inner>(   in this ValueEnumerable<TSource, Inner> inner, Func<TSource, double>  selector) where Inner : INode<TSource> => NodeImpl.MinDouble(                    NodeImpl.Select(in inner.Node, selector));
+        public static float   Min<TSource, Inner>(   in this ValueEnumerable<TSource, Inner> inner, Func<TSource, float>   selector) where Inner : INode<TSource> => NodeImpl.MinFloat(                     NodeImpl.Select(in inner.Node, selector));
+        public static int     Min<TSource, Inner>(   in this ValueEnumerable<TSource, Inner> inner, Func<TSource, int>     selector) where Inner : INode<TSource> => NodeImpl.MinInt(                       NodeImpl.Select(in inner.Node, selector));
+        public static long    Min<TSource, Inner>(   in this ValueEnumerable<TSource, Inner> inner, Func<TSource, long>    selector) where Inner : INode<TSource> => NodeImpl.MinLong(                      NodeImpl.Select(in inner.Node, selector));
+        public static U       Min<TSource, U, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, U>       selector) where Inner : INode<TSource> => NodeImpl.Min<U, SelectNode<TSource,U,Inner>>(NodeImpl.Select(in inner.Node, selector));
 
-        public static decimal? Min<Inner>(in this ValueEnumerable<decimal?, Inner> inner) where Inner : INode<decimal?>  => NodeImpl.MinNullableDecimal(in inner.Node);
+        public static decimal? Min<Inner>(in this ValueEnumerable<decimal?, Inner> inner) where Inner : INode<Decimal?>  => NodeImpl.MinNullableDecimal(in inner.Node);
         public static double?  Min<Inner>(in this ValueEnumerable<double?,  Inner> inner) where Inner : INode<double?>   => NodeImpl.MinNullableDouble( in inner.Node);
         public static float?   Min<Inner>(in this ValueEnumerable<float?,   Inner> inner) where Inner : INode<float?>    => NodeImpl.MinNullableFloat(  in inner.Node);
         public static int?     Min<Inner>(in this ValueEnumerable<int?,     Inner> inner) where Inner : INode<int?>      => NodeImpl.MinNullableInt(    in inner.Node);
         public static long?    Min<Inner>(in this ValueEnumerable<long?,    Inner> inner) where Inner : INode<long?>     => NodeImpl.MinNullableLong(   in inner.Node);
 
-        public static decimal? Min<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, decimal?> selector) where Inner : INode<T> => NodeImpl.MinNullableDecimal(NodeImpl.Select(in inner.Node, selector));
-        public static double?  Min<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, double?>  selector) where Inner : INode<T> => NodeImpl.MinNullableDouble( NodeImpl.Select(in inner.Node, selector));
-        public static float?   Min<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, float?>   selector) where Inner : INode<T> => NodeImpl.MinNullableFloat(  NodeImpl.Select(in inner.Node, selector));
-        public static int?     Min<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, int?>     selector) where Inner : INode<T> => NodeImpl.MinNullableInt(    NodeImpl.Select(in inner.Node, selector));
-        public static long?    Min<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, long?>    selector) where Inner : INode<T> => NodeImpl.MinNullableLong(   NodeImpl.Select(in inner.Node, selector));
+        public static decimal? Min<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, decimal?> selector) where Inner : INode<TSource> => NodeImpl.MinNullableDecimal(NodeImpl.Select(in inner.Node, selector));
+        public static double?  Min<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, double?>  selector) where Inner : INode<TSource> => NodeImpl.MinNullableDouble( NodeImpl.Select(in inner.Node, selector));
+        public static float?   Min<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, float?>   selector) where Inner : INode<TSource> => NodeImpl.MinNullableFloat(  NodeImpl.Select(in inner.Node, selector));
+        public static int?     Min<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, int?>     selector) where Inner : INode<TSource> => NodeImpl.MinNullableInt(    NodeImpl.Select(in inner.Node, selector));
+        public static long?    Min<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, long?>    selector) where Inner : INode<TSource> => NodeImpl.MinNullableLong(   NodeImpl.Select(in inner.Node, selector));
 
-        public static decimal Max<Inner>(   in this ValueEnumerable<decimal, Inner> inner) where Inner : INode<decimal>  => NodeImpl.MaxDecimal(   in inner.Node);
+        public static decimal Max<Inner>(   in this ValueEnumerable<decimal, Inner> inner) where Inner : INode<Decimal> => NodeImpl.MaxDecimal(   in inner.Node);
         public static double  Max<Inner>(   in this ValueEnumerable<double,  Inner> inner) where Inner : INode<double>   => NodeImpl.MaxDouble(    in inner.Node);
         public static float   Max<Inner>(   in this ValueEnumerable<float,   Inner> inner) where Inner : INode<float>    => NodeImpl.MaxFloat(     in inner.Node);
         public static int     Max<Inner>(   in this ValueEnumerable<int,     Inner> inner) where Inner : INode<int>      => NodeImpl.MaxInt(       in inner.Node);
         public static long    Max<Inner>(   in this ValueEnumerable<long,    Inner> inner) where Inner : INode<long>     => NodeImpl.MaxLong(      in inner.Node);
-        public static T       Max<T, Inner>(in this ValueEnumerable<T,       Inner> inner) where Inner : INode<T>        => NodeImpl.Max<T, Inner>(in inner.Node);
+        public static TSource       Max<TSource, Inner>(in this ValueEnumerable<TSource,       Inner> inner) where Inner : INode<TSource>        => NodeImpl.Max<TSource, Inner>(in inner.Node);
 
-        public static decimal Max<T, Inner>(   in this ValueEnumerable<T, Inner> inner, Func<T, decimal> selector) where Inner : INode<T> => NodeImpl.MaxDecimal(                   NodeImpl.Select(in inner.Node, selector));
-        public static double  Max<T, Inner>(   in this ValueEnumerable<T, Inner> inner, Func<T, double>  selector) where Inner : INode<T> => NodeImpl.MaxDouble(                    NodeImpl.Select(in inner.Node, selector));
-        public static float   Max<T, Inner>(   in this ValueEnumerable<T, Inner> inner, Func<T, float>   selector) where Inner : INode<T> => NodeImpl.MaxFloat(                     NodeImpl.Select(in inner.Node, selector));
-        public static int     Max<T, Inner>(   in this ValueEnumerable<T, Inner> inner, Func<T, int>     selector) where Inner : INode<T> => NodeImpl.MaxInt(                       NodeImpl.Select(in inner.Node, selector));
-        public static long    Max<T, Inner>(   in this ValueEnumerable<T, Inner> inner, Func<T, long>    selector) where Inner : INode<T> => NodeImpl.MaxLong(                      NodeImpl.Select(in inner.Node, selector));
-        public static U       Max<T, U, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, U>       selector) where Inner : INode<T> => NodeImpl.Max<U, SelectNode<T,U,Inner>>(NodeImpl.Select(in inner.Node, selector));
+        public static decimal Max<TSource, Inner>(   in this ValueEnumerable<TSource, Inner> inner, Func<TSource, decimal> selector) where Inner : INode<TSource> => NodeImpl.MaxDecimal(                   NodeImpl.Select(in inner.Node, selector));
+        public static double  Max<TSource, Inner>(   in this ValueEnumerable<TSource, Inner> inner, Func<TSource, double>  selector) where Inner : INode<TSource> => NodeImpl.MaxDouble(                    NodeImpl.Select(in inner.Node, selector));
+        public static float   Max<TSource, Inner>(   in this ValueEnumerable<TSource, Inner> inner, Func<TSource, float>   selector) where Inner : INode<TSource> => NodeImpl.MaxFloat(                     NodeImpl.Select(in inner.Node, selector));
+        public static int     Max<TSource, Inner>(   in this ValueEnumerable<TSource, Inner> inner, Func<TSource, int>     selector) where Inner : INode<TSource> => NodeImpl.MaxInt(                       NodeImpl.Select(in inner.Node, selector));
+        public static long    Max<TSource, Inner>(   in this ValueEnumerable<TSource, Inner> inner, Func<TSource, long>    selector) where Inner : INode<TSource> => NodeImpl.MaxLong(                      NodeImpl.Select(in inner.Node, selector));
+        public static U       Max<TSource, U, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, U>       selector) where Inner : INode<TSource> => NodeImpl.Max<U, SelectNode<TSource,U,Inner>>(NodeImpl.Select(in inner.Node, selector));
 
-        public static decimal? Max<Inner>(in this ValueEnumerable<decimal?, Inner> inner) where Inner : INode<decimal?> => NodeImpl.MaxNullableDecimal(in inner.Node);
+        public static decimal? Max<Inner>(in this ValueEnumerable<decimal?, Inner> inner) where Inner : INode<Decimal?> => NodeImpl.MaxNullableDecimal(in inner.Node);
         public static double?  Max<Inner>(in this ValueEnumerable<double?,  Inner> inner) where Inner : INode<double?>  => NodeImpl.MaxNullableDouble( in inner.Node);
         public static float?   Max<Inner>(in this ValueEnumerable<float?,   Inner> inner) where Inner : INode<float?>   => NodeImpl.MaxNullableFloat(  in inner.Node);
         public static int?     Max<Inner>(in this ValueEnumerable<int?,     Inner> inner) where Inner : INode<int?>     => NodeImpl.MaxNullableInt(    in inner.Node);
         public static long?    Max<Inner>(in this ValueEnumerable<long?,    Inner> inner) where Inner : INode<long?>    => NodeImpl.MaxNullableLong(   in inner.Node);
 
-        public static decimal? Max<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, decimal?> selector) where Inner : INode<T> => NodeImpl.MaxNullableDecimal(NodeImpl.Select(in inner.Node, selector));
-        public static double?  Max<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, double?>  selector) where Inner : INode<T> => NodeImpl.MaxNullableDouble( NodeImpl.Select(in inner.Node, selector));
-        public static float?   Max<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, float?>   selector) where Inner : INode<T> => NodeImpl.MaxNullableFloat(  NodeImpl.Select(in inner.Node, selector));
-        public static int?     Max<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, int?>     selector) where Inner : INode<T> => NodeImpl.MaxNullableInt(    NodeImpl.Select(in inner.Node, selector));
-        public static long?    Max<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, long?>    selector) where Inner : INode<T> => NodeImpl.MaxNullableLong(   NodeImpl.Select(in inner.Node, selector));
+        public static decimal? Max<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, decimal?> selector) where Inner : INode<TSource> => NodeImpl.MaxNullableDecimal(NodeImpl.Select(in inner.Node, selector));
+        public static double?  Max<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, double?>  selector) where Inner : INode<TSource> => NodeImpl.MaxNullableDouble( NodeImpl.Select(in inner.Node, selector));
+        public static float?   Max<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, float?>   selector) where Inner : INode<TSource> => NodeImpl.MaxNullableFloat(  NodeImpl.Select(in inner.Node, selector));
+        public static int?     Max<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, int?>     selector) where Inner : INode<TSource> => NodeImpl.MaxNullableInt(    NodeImpl.Select(in inner.Node, selector));
+        public static long?    Max<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, long?>    selector) where Inner : INode<TSource> => NodeImpl.MaxNullableLong(   NodeImpl.Select(in inner.Node, selector));
 
-        public static decimal Sum<Inner>(   in this ValueEnumerable<decimal, Inner> inner) where Inner : INode<decimal>  => NodeImpl.SumDecimal(   in inner.Node);
+        public static decimal Sum<Inner>(   in this ValueEnumerable<decimal, Inner> inner) where Inner : INode<Decimal> => NodeImpl.SumDecimal(   in inner.Node);
         public static double  Sum<Inner>(   in this ValueEnumerable<double,  Inner> inner) where Inner : INode<double>   => NodeImpl.SumDouble(    in inner.Node);
         public static float   Sum<Inner>(   in this ValueEnumerable<float,   Inner> inner) where Inner : INode<float>    => NodeImpl.SumFloat(     in inner.Node);
         public static int     Sum<Inner>(   in this ValueEnumerable<int,     Inner> inner) where Inner : INode<int>      => NodeImpl.SumInt(       in inner.Node);
         public static long    Sum<Inner>(   in this ValueEnumerable<long,    Inner> inner) where Inner : INode<long>     => NodeImpl.SumLong(      in inner.Node);
 
-        public static decimal Sum<T, Inner>(   in this ValueEnumerable<T, Inner> inner, Func<T, decimal> selector) where Inner : INode<T> => NodeImpl.SumDecimal(NodeImpl.Select(in inner.Node, selector));
-        public static double  Sum<T, Inner>(   in this ValueEnumerable<T, Inner> inner, Func<T, double>  selector) where Inner : INode<T> => NodeImpl.SumDouble( NodeImpl.Select(in inner.Node, selector));
-        public static float   Sum<T, Inner>(   in this ValueEnumerable<T, Inner> inner, Func<T, float>   selector) where Inner : INode<T> => NodeImpl.SumFloat(  NodeImpl.Select(in inner.Node, selector));
-        public static int     Sum<T, Inner>(   in this ValueEnumerable<T, Inner> inner, Func<T, int>     selector) where Inner : INode<T> => NodeImpl.SumInt(    NodeImpl.Select(in inner.Node, selector));
-        public static long    Sum<T, Inner>(   in this ValueEnumerable<T, Inner> inner, Func<T, long>    selector) where Inner : INode<T> => NodeImpl.SumLong(   NodeImpl.Select(in inner.Node, selector));
+        public static decimal Sum<TSource, Inner>(   in this ValueEnumerable<TSource, Inner> inner, Func<TSource, decimal> selector) where Inner : INode<TSource> => NodeImpl.SumDecimal(NodeImpl.Select(in inner.Node, selector));
+        public static double  Sum<TSource, Inner>(   in this ValueEnumerable<TSource, Inner> inner, Func<TSource, double>  selector) where Inner : INode<TSource> => NodeImpl.SumDouble( NodeImpl.Select(in inner.Node, selector));
+        public static float   Sum<TSource, Inner>(   in this ValueEnumerable<TSource, Inner> inner, Func<TSource, float>   selector) where Inner : INode<TSource> => NodeImpl.SumFloat(  NodeImpl.Select(in inner.Node, selector));
+        public static int     Sum<TSource, Inner>(   in this ValueEnumerable<TSource, Inner> inner, Func<TSource, int>     selector) where Inner : INode<TSource> => NodeImpl.SumInt(    NodeImpl.Select(in inner.Node, selector));
+        public static long    Sum<TSource, Inner>(   in this ValueEnumerable<TSource, Inner> inner, Func<TSource, long>    selector) where Inner : INode<TSource> => NodeImpl.SumLong(   NodeImpl.Select(in inner.Node, selector));
 
-        public static decimal? Sum<Inner>(in this ValueEnumerable<decimal?, Inner> inner) where Inner : INode<decimal?>  =>  NodeImpl.SumNullableDecimal(in inner.Node);
+        public static decimal? Sum<Inner>(in this ValueEnumerable<decimal?, Inner> inner) where Inner : INode<Decimal?>  =>  NodeImpl.SumNullableDecimal(in inner.Node);
         public static double?  Sum<Inner>(in this ValueEnumerable<double?,  Inner> inner) where Inner : INode<double?>   =>  NodeImpl.SumNullableDouble( in inner.Node);
         public static float?   Sum<Inner>(in this ValueEnumerable<float?,   Inner> inner) where Inner : INode<float?>    =>  NodeImpl.SumNullableFloat(  in inner.Node);
         public static int?     Sum<Inner>(in this ValueEnumerable<int?,     Inner> inner) where Inner : INode<int?>      =>  NodeImpl.SumNullableInt(    in inner.Node);
         public static long?    Sum<Inner>(in this ValueEnumerable<long?,    Inner> inner) where Inner : INode<long?>     =>  NodeImpl.SumNullableLong(   in inner.Node);
 
-        public static decimal? Sum<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, decimal?> selector) where Inner : INode<T> => NodeImpl.SumNullableDecimal(NodeImpl.Select(in inner.Node, selector));
-        public static double?  Sum<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, double?>  selector) where Inner : INode<T> => NodeImpl.SumNullableDouble( NodeImpl.Select(in inner.Node, selector));
-        public static float?   Sum<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, float?>   selector) where Inner : INode<T> => NodeImpl.SumNullableFloat(  NodeImpl.Select(in inner.Node, selector));
-        public static int?     Sum<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, int?>     selector) where Inner : INode<T> => NodeImpl.SumNullableInt(    NodeImpl.Select(in inner.Node, selector));
-        public static long?    Sum<T, Inner>(in this ValueEnumerable<T, Inner> inner, Func<T, long?>    selector) where Inner : INode<T> => NodeImpl.SumNullableLong(   NodeImpl.Select(in inner.Node, selector));
+        public static decimal? Sum<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, decimal?> selector) where Inner : INode<TSource> => NodeImpl.SumNullableDecimal(NodeImpl.Select(in inner.Node, selector));
+        public static double?  Sum<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, double?>  selector) where Inner : INode<TSource> => NodeImpl.SumNullableDouble( NodeImpl.Select(in inner.Node, selector));
+        public static float?   Sum<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, float?>   selector) where Inner : INode<TSource> => NodeImpl.SumNullableFloat(  NodeImpl.Select(in inner.Node, selector));
+        public static int?     Sum<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, int?>     selector) where Inner : INode<TSource> => NodeImpl.SumNullableInt(    NodeImpl.Select(in inner.Node, selector));
+        public static long?    Sum<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, long?>    selector) where Inner : INode<TSource> => NodeImpl.SumNullableLong(   NodeImpl.Select(in inner.Node, selector));
 
-        public static int Count<T, Inner>(in this ValueEnumerable<T, Inner> inner, bool ignorePotentialSideEffects = false)
-            where Inner : INode<T>
-            => NodeImpl.Count<T, Inner>(in inner.Node, ignorePotentialSideEffects);
+        public static int Count<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, bool ignorePotentialSideEffects = false)
+            where Inner : INode<TSource>
+            => NodeImpl.Count<TSource, Inner>(in inner.Node, ignorePotentialSideEffects);
 
-        public static bool Count<T, Inner>(in this ValueEnumerable<T, Inner> source, Func<T, bool> predicate)
-            where Inner : INode<T>
-            => NodeImpl.Count<T, Inner>(in source.Node, predicate);
+        public static bool Count<TSource, Inner>(in this ValueEnumerable<TSource, Inner> source, Func<TSource, bool> predicate)
+            where Inner : INode<TSource>
+            => NodeImpl.Count<TSource, Inner>(in source.Node, predicate);
 
-        public static bool Contains<T, Inner>(in this ValueEnumerable<T, Inner> inner, T value)
-            where Inner : INode<T>
+        public static bool Contains<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, TSource value)
+            where Inner : INode<TSource>
             => NodeImpl.Contains(in inner.Node, value);
 
-        public static bool Contains<T, Inner>(in this ValueEnumerable<T, Inner> inner, T value, IEqualityComparer<T> comparer)
-            where Inner : INode<T>
+        public static bool Contains<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, TSource value, IEqualityComparer<TSource> comparer)
+            where Inner : INode<TSource>
             => NodeImpl.Contains(in inner.Node, value, comparer);
 
         public static ValueEnumerable<TResult, SelectManyNode<TSource, TResult, NodeT, NodeU>> SelectMany<TSource, TResult, NodeT, NodeU>(in this ValueEnumerable<TSource, NodeT> prior, Func<TSource, ValueEnumerable<TResult, NodeU>> selector)
@@ -329,366 +339,381 @@ namespace Cistern.ValueLinq
             where NodeU : INode<TCollection>
             => new (NodeImpl.SelectMany(in prior.Node, collectionSelector, resultSelector));
 
-        public static ValueEnumerable<T, ConcatNode<T, First, Second>> Concat<T, First, Second>(in this ValueEnumerable<T, First> first, in ValueEnumerable<T, Second> second)
-            where First : INode<T>
-            where Second : INode<T>
-            => new (NodeImpl.Concat<T, First, Second>(in first.Node, in second.Node));
+        public static ValueEnumerable<TSource, ConcatNode<TSource, First, Second>> Concat<TSource, First, Second>(in this ValueEnumerable<TSource, First> first, in ValueEnumerable<TSource, Second> second)
+            where First : INode<TSource>
+            where Second : INode<TSource>
+            => new (NodeImpl.Concat<TSource, First, Second>(in first.Node, in second.Node));
 
         public static ValueEnumerable<TSource, ReverseNode<TSource, Inner>> Reverse<TSource, Inner>(in this ValueEnumerable<TSource, Inner> source, int? maybeMaxCountForStackBasedPath = 64, (ArrayPool<TSource> arrayPool, bool cleanBuffers)? arrayPoolInfo = null)
             where Inner : INode<TSource>
             => new (NodeImpl.Reverse<TSource, Inner>(in source.Node, maybeMaxCountForStackBasedPath, arrayPoolInfo));
 
-        public static ValueEnumerable<U, ValueSelectNode<T, U, TPrior, IFunc>> Select<T, U, TPrior, IFunc>(in this ValueEnumerable<T, TPrior> prior, IFunc selector, U u = default)
-            where TPrior : INode<T>
-            where IFunc : IFuncBase<T, U>
-            => new (NodeImpl.Select<T, U, TPrior, IFunc>(in prior.Node, selector, u));
+        public static ValueEnumerable<U, ValueSelectNode<TSource, U, TPrior, IFunc>> Select<TSource, U, TPrior, IFunc>(in this ValueEnumerable<TSource, TPrior> prior, IFunc selector, U u = default)
+            where TPrior : INode<TSource>
+            where IFunc : IFuncBase<TSource, U>
+            => new (NodeImpl.Select<TSource, U, TPrior, IFunc>(in prior.Node, selector, u));
 
-        public static ValueEnumerable<T, ValueWhereNode<T, TPrior, Predicate>> Where<T, TPrior, Predicate>(in this ValueEnumerable<T, TPrior> prior, Predicate predicate)
-            where TPrior : INode<T>
-            where Predicate : IFuncBase<T, bool>
-            => new (NodeImpl.Where<T, TPrior, Predicate>(in prior.Node, predicate));
+        public static ValueEnumerable<TSource, ValueWhereNode<TSource, TPrior, Predicate>> Where<TSource, TPrior, Predicate>(in this ValueEnumerable<TSource, TPrior> prior, Predicate predicate)
+            where TPrior : INode<TSource>
+            where Predicate : IFuncBase<TSource, bool>
+            => new (NodeImpl.Where<TSource, TPrior, Predicate>(in prior.Node, predicate));
     }
 
-    public struct ValueOrderedEnumerable<T, TNode>
-        : IValueEnumerable<T>
-        , INode<T>
-        where TNode : INode<T>
+    public struct ValueOrderedEnumerable<TSource, TNode>
+        : IValueEnumerable<TSource>
+        , IOrderedNode<TSource>
+        where TNode : IOrderedNode<TSource>
     {
         internal TNode Node;
 
-        public ValueOrderedEnumerable(in TNode node) => Node = node;
+        public ValueOrderedEnumerable(in TNode node)
+            => Node = node;
 
-        public ValueEnumerator<T> GetEnumerator() => Nodes<T>.CreateValueEnumerator(in Node);
-        IEnumerator<T> IEnumerable<T>.GetEnumerator() => Nodes<T>.CreateEnumerator(in Node);
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => ((IEnumerable<T>)this).GetEnumerator();
+        public ValueEnumerator<TSource> GetEnumerator()
+            => Nodes<TSource>.CreateValueEnumerator(in Node);
+        IEnumerator<TSource> IEnumerable<TSource>.GetEnumerator()
+            => Nodes<TSource>.CreateEnumerator(in Node);
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+            => ((IEnumerable<TSource>)this).GetEnumerator();
 
-        void INode.GetCountInformation(out CountInformation info) => Node.GetCountInformation(out info);
+        void INode.GetCountInformation(out CountInformation info)
+            => Node.GetCountInformation(out info);
 
-        bool INode.TryPushOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
-        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator) => Node.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref tail, ref enumerator);
-        CreationType INode.CreateViaPushDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => Node.CreateViaPushDescend<CreationType, Head, Tail>(ref nodes);
+        bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation)
+            => Node.TryPullOptimization<TRequest, TResult, Nodes>(in request, ref nodes, out creation);
+        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
+            => Node.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref tail, ref enumerator);
+        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+            => Node.CreateViaPullDescend<CreationType, Head, Tail>(ref nodes);
 
-        bool INode.TryPullOptimization<TRequest, TResult>(in TRequest request, out TResult result) => Node.TryPullOptimization<TRequest, TResult>(in request, out result);
-        TResult INode<T>.CreateViaPull<TResult, FEnumerator>(in FEnumerator fenum) => Node.CreateViaPull<TResult, FEnumerator>(fenum);
+        bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+            => Node.TryPushOptimization<TRequest, TResult>(in request, out result);
+        TResult INode<TSource>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
+            => Node.CreateViaPush<TResult, FEnumerator>(fenum);
+
+        TResult IOrderedNode<TSource>.CreateOrderedEnumerableViaPush<TKey, TResult, FEnumerator>(in FEnumerator fenum, Func<TSource, TKey> keySelector, IComparer<TKey> comparer, bool descending)
+            => Node.CreateOrderedEnumerableViaPush<TKey, TResult, FEnumerator>(in fenum, keySelector, comparer, descending);
+        CreationType IOrderedNode<TSource>.CreateOrderedEnumerableViaPull<TKey, CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes, Func<TSource, TKey> keySelector, IComparer<TKey> comparer, bool descending)
+            => Node.CreateOrderedEnumerableViaPull<TKey, CreationType, Head, Tail>(ref nodes, keySelector, comparer, descending);
     }
 
 
     public static partial class Enumerable
     {
-        public static T Aggregate<T, Inner>(in this ValueOrderedEnumerable<T, Inner> source, Func<T, T, T> func)
-            where Inner : INode<T>
+        public static TSource Aggregate<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> source, Func<TSource, TSource, TSource> func)
+            where Inner : IOrderedNode<TSource>
             => NodeImpl.Aggregate(in source.Node, func);
 
-        public static void ForEach<T, Inner>(in this ValueOrderedEnumerable<T, Inner> source, Action<T> func)
-            where Inner : INode<T>
+        public static void ForEach<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> source, Action<TSource> func)
+            where Inner : IOrderedNode<TSource>
             => NodeImpl.ForEach(in source.Node, func);
 
-        public static T ForEach<T, U, Inner>(in this ValueOrderedEnumerable<U, Inner> source, T seed, RefAction<T, U> func)
-            where Inner : INode<U>
+        public static TSource ForEach<TSource, U, Inner>(in this ValueOrderedEnumerable<U, Inner> source, TSource seed, RefAction<TSource, U> func)
+            where Inner : IOrderedNode<U>
             => NodeImpl.ForEach(in source.Node, seed, func);
 
-        public static T ForEach<T, U, Inner, RefAction>(in this ValueOrderedEnumerable<U, Inner> source, T seed, RefAction func)
-            where Inner : INode<U>
-            where RefAction : IRefAction<T, U>
-            => NodeImpl.ForEach<T, U, Inner, RefAction>(in source.Node, seed, func);
+        public static TSource ForEach<TSource, U, Inner, RefAction>(in this ValueOrderedEnumerable<U, Inner> source, TSource seed, RefAction func)
+            where Inner : IOrderedNode<U>
+            where RefAction : IRefAction<TSource, U>
+            => NodeImpl.ForEach<TSource, U, Inner, RefAction>(in source.Node, seed, func);
 
-        public static TAccumulate Aggregate<T, TAccumulate, Inner>(in this ValueOrderedEnumerable<T, Inner> source, TAccumulate seed, Func<TAccumulate, T, TAccumulate> func)
-            where Inner : INode<T>
+        public static TAccumulate Aggregate<TSource, TAccumulate, Inner>(in this ValueOrderedEnumerable<TSource, Inner> source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func)
+            where Inner : IOrderedNode<TSource>
             => NodeImpl.Aggregate(in source.Node, seed, func);
 
-        public static TResult Aggregate<T, TAccumulate, TResult, Inner>(in this ValueOrderedEnumerable<T, Inner> source, TAccumulate seed, Func<TAccumulate, T, TAccumulate> func, Func<TAccumulate, TResult> resultSelector)
-            where Inner : INode<T>
+        public static TResult Aggregate<TSource, TAccumulate, TResult, Inner>(in this ValueOrderedEnumerable<TSource, Inner> source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func, Func<TAccumulate, TResult> resultSelector)
+            where Inner : IOrderedNode<TSource>
             => NodeImpl.Aggregate(in source.Node, seed, func, resultSelector);
 
-        public static bool All<T, Inner>(in this ValueOrderedEnumerable<T, Inner> source, Func<T, bool> predicate)
-            where Inner : INode<T>
+        public static bool All<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> source, Func<TSource, bool> predicate)
+            where Inner : IOrderedNode<TSource>
             => NodeImpl.All(in source.Node, predicate);
 
-        public static bool All<T, Inner, Predicate>(in this ValueOrderedEnumerable<T, Inner> source, Predicate predicate)
-            where Inner : INode<T>
-            where Predicate : IFunc<T, bool>
-            => NodeImpl.All<T, Inner, Predicate>(in source.Node, predicate);
+        public static bool All<TSource, Inner, Predicate>(in this ValueOrderedEnumerable<TSource, Inner> source, Predicate predicate)
+            where Inner : IOrderedNode<TSource>
+            where Predicate : IFunc<TSource, bool>
+            => NodeImpl.All<TSource, Inner, Predicate>(in source.Node, predicate);
 
-        public static bool Any<T, Inner>(in this ValueOrderedEnumerable<T, Inner> source)
-            where Inner : INode<T>
-            => NodeImpl.Any<T, Inner>(in source.Node);
+        public static bool Any<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> source)
+            where Inner : IOrderedNode<TSource>
+            => NodeImpl.Any<TSource, Inner>(in source.Node);
 
-        public static bool Any<T, Inner>(in this ValueOrderedEnumerable<T, Inner> source, Func<T, bool> predicate)
-            where Inner : INode<T>
+        public static bool Any<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> source, Func<TSource, bool> predicate)
+            where Inner : IOrderedNode<TSource>
             => NodeImpl.Any(in source.Node, predicate);
 
-        public static ValueEnumerable<U, SelectNode<T, U, TPrior>> Select<T, U, TPrior>(in this ValueOrderedEnumerable<T, TPrior> prior, Func<T, U> selector)
-            where TPrior : INode<T>
+        public static ValueEnumerable<U, SelectNode<TSource, U, TPrior>> Select<TSource, U, TPrior>(in this ValueOrderedEnumerable<TSource, TPrior> prior, Func<TSource, U> selector)
+            where TPrior : IOrderedNode<TSource>
             => new (NodeImpl.Select(in prior.Node, selector));
 
-        public static ValueEnumerable<U, Select_InNode<T, U, TPrior>> Select<T, U, TPrior>(in this ValueOrderedEnumerable<T, TPrior> prior, InFunc<T, U> f)
-            where TPrior : INode<T>
+        public static ValueEnumerable<U, Select_InNode<TSource, U, TPrior>> Select<TSource, U, TPrior>(in this ValueOrderedEnumerable<TSource, TPrior> prior, InFunc<TSource, U> f)
+            where TPrior : IOrderedNode<TSource>
             => new (NodeImpl.Select(in prior.Node, f));
 
-        public static ValueEnumerable<U, SelectIdxNode<T, U, TPrior>> Select<T, U, TPrior>(in this ValueOrderedEnumerable<T, TPrior> prior, Func<T, int, U> selector)
-            where TPrior : INode<T>
+        public static ValueEnumerable<U, SelectIdxNode<TSource, U, TPrior>> Select<TSource, U, TPrior>(in this ValueOrderedEnumerable<TSource, TPrior> prior, Func<TSource, int, U> selector)
+            where TPrior : IOrderedNode<TSource>
             => new (NodeImpl.Select(in prior.Node, selector));
 
-        public static ValueEnumerable<T, WhereNode<T, TPrior>> Where<T, TPrior>(in this ValueOrderedEnumerable<T, TPrior> prior, Func<T, bool> predicate)
-            where TPrior : INode<T>
+        public static ValueEnumerable<TSource, WhereNode<TSource, TPrior>> Where<TSource, TPrior>(in this ValueOrderedEnumerable<TSource, TPrior> prior, Func<TSource, bool> predicate)
+            where TPrior : IOrderedNode<TSource>
             => new (NodeImpl.Where(in prior.Node, predicate));
 
-        public static ValueEnumerable<T, WhereIdxNode<T, TPrior>> Where<T, TPrior>(in this ValueOrderedEnumerable<T, TPrior> prior, Func<T, int, bool> predicate)
-            where TPrior : INode<T>
+        public static ValueEnumerable<TSource, WhereIdxNode<TSource, TPrior>> Where<TSource, TPrior>(in this ValueOrderedEnumerable<TSource, TPrior> prior, Func<TSource, int, bool> predicate)
+            where TPrior : IOrderedNode<TSource>
             => new (NodeImpl.Where(in prior.Node, predicate));
 
-        public static ValueEnumerable<T, Where_InNode<T, TPrior>> Where<T, TPrior>(in this ValueOrderedEnumerable<T, TPrior> prior, InFunc<T, bool> f)
-            where TPrior : INode<T>
+        public static ValueEnumerable<TSource, Where_InNode<TSource, TPrior>> Where<TSource, TPrior>(in this ValueOrderedEnumerable<TSource, TPrior> prior, InFunc<TSource, bool> f)
+            where TPrior : IOrderedNode<TSource>
             => new (NodeImpl.Where(in prior.Node, f));
 
-        public static ValueEnumerable<T, SkipNode<T, TPrior>> Skip<T, TPrior>(in this ValueOrderedEnumerable<T, TPrior> prior, int count)
-            where TPrior : INode<T>
-            => new (NodeImpl.Skip<T, TPrior>(in prior.Node, count));
+        public static ValueEnumerable<TSource, SkipNode<TSource, TPrior>> Skip<TSource, TPrior>(in this ValueOrderedEnumerable<TSource, TPrior> prior, int count)
+            where TPrior : IOrderedNode<TSource>
+            => new (NodeImpl.Skip<TSource, TPrior>(in prior.Node, count));
 
-        public static ValueEnumerable<T, SkipWhileNode<T, TPrior>> SkipWhile<T, TPrior>(in this ValueOrderedEnumerable<T, TPrior> prior, Func<T, bool> predicate)
-            where TPrior : INode<T>
+        public static ValueEnumerable<TSource, SkipWhileNode<TSource, TPrior>> SkipWhile<TSource, TPrior>(in this ValueOrderedEnumerable<TSource, TPrior> prior, Func<TSource, bool> predicate)
+            where TPrior : IOrderedNode<TSource>
             => new(NodeImpl.SkipWhile(in prior.Node, predicate));
 
-        public static ValueEnumerable<T, SkipWhileIdxNode<T, TPrior>> SkipWhile<T, TPrior>(in this ValueOrderedEnumerable<T, TPrior> prior, Func<T, int, bool> predicate)
-            where TPrior : INode<T>
+        public static ValueEnumerable<TSource, SkipWhileIdxNode<TSource, TPrior>> SkipWhile<TSource, TPrior>(in this ValueOrderedEnumerable<TSource, TPrior> prior, Func<TSource, int, bool> predicate)
+            where TPrior : IOrderedNode<TSource>
             => new (NodeImpl.SkipWhile(in prior.Node, predicate));
 
-        public static ValueEnumerable<T, TakeNode<T, TPrior>> Take<T, TPrior>(in this ValueOrderedEnumerable<T, TPrior> prior, int count)
-            where TPrior : INode<T>
-            => new (NodeImpl.Take<T, TPrior>(in prior.Node, count));
+        public static ValueEnumerable<TSource, TakeNode<TSource, TPrior>> Take<TSource, TPrior>(in this ValueOrderedEnumerable<TSource, TPrior> prior, int count)
+            where TPrior : IOrderedNode<TSource>
+            => new (NodeImpl.Take<TSource, TPrior>(in prior.Node, count));
 
-        public static ValueEnumerable<T, TakeWhileNode<T, TPrior>> TakeWhile<T, TPrior>(in this ValueOrderedEnumerable<T, TPrior> prior, Func<T, bool> predicate)
-            where TPrior : INode<T>
+        public static ValueEnumerable<TSource, TakeWhileNode<TSource, TPrior>> TakeWhile<TSource, TPrior>(in this ValueOrderedEnumerable<TSource, TPrior> prior, Func<TSource, bool> predicate)
+            where TPrior : IOrderedNode<TSource>
             => new (NodeImpl.TakeWhile(in prior.Node, predicate));
 
-        public static ValueEnumerable<T, TakeWhileIdxNode<T, TPrior>> TakeWhile<T, TPrior>(in this ValueOrderedEnumerable<T, TPrior> prior, Func<T, int, bool> predicate)
-            where TPrior : INode<T>
+        public static ValueEnumerable<TSource, TakeWhileIdxNode<TSource, TPrior>> TakeWhile<TSource, TPrior>(in this ValueOrderedEnumerable<TSource, TPrior> prior, Func<TSource, int, bool> predicate)
+            where TPrior : IOrderedNode<TSource>
             => new(NodeImpl.TakeWhile(in prior.Node, predicate));
 
-        public static T[] ToArray<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, int? maybeMaxCountForStackBasedPath = 64, (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo = null)
-            where Inner : INode<T>
+        public static TSource[] ToArray<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, int? maybeMaxCountForStackBasedPath = 64, (ArrayPool<TSource> arrayPool, bool cleanBuffers)? arrayPoolInfo = null)
+            where Inner : IOrderedNode<TSource>
             => NodeImpl.ToArray(in inner.Node, maybeMaxCountForStackBasedPath, in arrayPoolInfo);
 
-        public static T[] ToArrayUsePool<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, ArrayPool<T> maybeArrayPool = null, bool? maybeCleanBuffers = null, bool viaPull = false)
-            where Inner : INode<T>
+        public static TSource[] ToArrayUsePool<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, ArrayPool<TSource> maybeArrayPool = null, bool? maybeCleanBuffers = null, bool viaPull = false)
+            where Inner : IOrderedNode<TSource>
             => NodeImpl.ToArrayUsePool(in inner.Node, maybeArrayPool, maybeCleanBuffers, viaPull);
 
-        public static T[] ToArrayUseStack<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, int maxStackItemCount = 64, (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo = null)
-            where Inner : INode<T>
+        public static TSource[] ToArrayUseStack<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, int maxStackItemCount = 64, (ArrayPool<TSource> arrayPool, bool cleanBuffers)? arrayPoolInfo = null)
+            where Inner : IOrderedNode<TSource>
             => NodeImpl.ToArrayUseStack(in inner.Node, maxStackItemCount, arrayPoolInfo);
 
-        public static List<T> ToList<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, int? maybeMaxCountForStackBasedPath = 64, (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo = null)
-            where Inner : INode<T>
+        public static List<TSource> ToList<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, int? maybeMaxCountForStackBasedPath = 64, (ArrayPool<TSource> arrayPool, bool cleanBuffers)? arrayPoolInfo = null)
+            where Inner : IOrderedNode<TSource>
             => NodeImpl.ToList(in inner.Node, maybeMaxCountForStackBasedPath, arrayPoolInfo);
 
-        public static List<T> ToListUsePool<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, ArrayPool<T> maybeArrayPool = null, bool? maybeCleanBuffers = null, bool viaPull = false)
-            where Inner : INode<T>
+        public static List<TSource> ToListUsePool<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, ArrayPool<TSource> maybeArrayPool = null, bool? maybeCleanBuffers = null, bool viaPull = false)
+            where Inner : IOrderedNode<TSource>
             => NodeImpl.ToListUsePool(in inner.Node, maybeArrayPool, maybeCleanBuffers, viaPull);
 
-        public static List<T> ToListUseStack<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, int maxStackItemCount = 64, (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo = null)
-            where Inner : INode<T>
+        public static List<TSource> ToListUseStack<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, int maxStackItemCount = 64, (ArrayPool<TSource> arrayPool, bool cleanBuffers)? arrayPoolInfo = null)
+            where Inner : IOrderedNode<TSource>
             => NodeImpl.ToListUseStack(in inner.Node, maxStackItemCount, arrayPoolInfo);
 
-        public static T Last<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner)
-            where Inner : INode<T>
-            => NodeImpl.Last<T, Inner>(in inner.Node);
+        public static TSource Last<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner)
+            where Inner : IOrderedNode<TSource>
+            => NodeImpl.Last<TSource, Inner>(in inner.Node);
 
-        public static T Last<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, bool> predicate)
-            where Inner : INode<T>
+        public static TSource Last<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, bool> predicate)
+            where Inner : IOrderedNode<TSource>
             => NodeImpl.Last(in inner.Node, predicate);
 
-        public static T LastOrDefault<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner)
-            where Inner : INode<T>
-            => NodeImpl.LastOrDefault<T, Inner>(in inner.Node);
+        public static TSource LastOrDefault<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner)
+            where Inner : IOrderedNode<TSource>
+            => NodeImpl.LastOrDefault<TSource, Inner>(in inner.Node);
 
-        public static T LastOrDefault<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, bool> predicate)
-            where Inner : INode<T>
+        public static TSource LastOrDefault<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, bool> predicate)
+            where Inner : IOrderedNode<TSource>
             => NodeImpl.LastOrDefault(in inner.Node, predicate);
 
-        public static T First<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner)
-            where Inner : INode<T>
-            => NodeImpl.First<T, Inner>(in inner.Node);
+        public static TSource First<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner)
+            where Inner : IOrderedNode<TSource>
+            => NodeImpl.First<TSource, Inner>(in inner.Node);
 
-        public static T First<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, bool> predicate)
-            where Inner : INode<T>
+        public static TSource First<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, bool> predicate)
+            where Inner : IOrderedNode<TSource>
             => NodeImpl.First(in inner.Node, predicate);
 
-        public static T FirstOrDefault<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner)
-            where Inner : INode<T>
-            => NodeImpl.FirstOrDefault<T, Inner>(in inner.Node);
+        public static TSource FirstOrDefault<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner)
+            where Inner : IOrderedNode<TSource>
+            => NodeImpl.FirstOrDefault<TSource, Inner>(in inner.Node);
 
-        public static T FirstOrDefault<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, bool> predicate)
-            where Inner : INode<T>
+        public static TSource FirstOrDefault<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, bool> predicate)
+            where Inner : IOrderedNode<TSource>
             => NodeImpl.FirstOrDefault(in inner.Node, predicate);
 
-        public static T Single<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner)
-            where Inner : INode<T> 
-            => NodeImpl.Single<T, Inner>(in inner.Node);
+        public static TSource Single<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner)
+            where Inner : IOrderedNode<TSource> 
+            => NodeImpl.Single<TSource, Inner>(in inner.Node);
 
-        public static T Single<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, bool> predicate)
-            where Inner : INode<T>
+        public static TSource Single<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, bool> predicate)
+            where Inner : IOrderedNode<TSource>
             => NodeImpl.Single(in inner.Node, predicate);
 
-        public static T SingleOrDefault<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner)
-            where Inner : INode<T>
-            => NodeImpl.SingleOrDefault<T, Inner>(in inner.Node);
+        public static TSource SingleOrDefault<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner)
+            where Inner : IOrderedNode<TSource>
+            => NodeImpl.SingleOrDefault<TSource, Inner>(in inner.Node);
 
-        public static T SingleOrDefault<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, bool> predicate)
-            where Inner : INode<T>
+        public static TSource SingleOrDefault<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, bool> predicate)
+            where Inner : IOrderedNode<TSource>
             => NodeImpl.SingleOrDefault(in inner.Node, predicate);
 
-        public static T ElementAt<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, int index)
-            where Inner : INode<T>
-            => NodeImpl.ElementAt<T, Inner>(in inner.Node, index);
+        public static TSource ElementAt<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, int index)
+            where Inner : IOrderedNode<TSource>
+            => NodeImpl.ElementAt<TSource, Inner>(in inner.Node, index);
 
-        public static T ElementAtOrDefault<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, int index)
-            where Inner : INode<T>
-            => NodeImpl.ElementAtOrDefault<T, Inner>(in inner.Node, index);
+        public static TSource ElementAtOrDefault<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, int index)
+            where Inner : IOrderedNode<TSource>
+            => NodeImpl.ElementAtOrDefault<TSource, Inner>(in inner.Node, index);
 
-        public static decimal Average<Inner>(in this ValueOrderedEnumerable<decimal, Inner> inner) where Inner : INode<decimal> => NodeImpl.AverageDecimal(in inner.Node);
-        public static double  Average<Inner>(in this ValueOrderedEnumerable<double,  Inner> inner) where Inner : INode<double>  => NodeImpl.AverageDouble(in inner.Node);
-        public static float   Average<Inner>(in this ValueOrderedEnumerable<float,   Inner> inner) where Inner : INode<float>   => NodeImpl.AverageFloat(in inner.Node);
-        public static double  Average<Inner>(in this ValueOrderedEnumerable<int,     Inner> inner) where Inner : INode<int>     => NodeImpl.AverageInt(in inner.Node);
-        public static double  Average<Inner>(in this ValueOrderedEnumerable<long,    Inner> inner) where Inner : INode<long>    => NodeImpl.AverageLong(in inner.Node);
+        public static decimal Average<Inner>(in this ValueOrderedEnumerable<decimal, Inner> inner) where Inner : IOrderedNode<Decimal> => NodeImpl.AverageDecimal(in inner.Node);
+        public static double  Average<Inner>(in this ValueOrderedEnumerable<double,  Inner> inner) where Inner : IOrderedNode<double>  => NodeImpl.AverageDouble(in inner.Node);
+        public static float   Average<Inner>(in this ValueOrderedEnumerable<float,   Inner> inner) where Inner : IOrderedNode<float>   => NodeImpl.AverageFloat(in inner.Node);
+        public static double  Average<Inner>(in this ValueOrderedEnumerable<int,     Inner> inner) where Inner : IOrderedNode<int>     => NodeImpl.AverageInt(in inner.Node);
+        public static double  Average<Inner>(in this ValueOrderedEnumerable<long,    Inner> inner) where Inner : IOrderedNode<long>    => NodeImpl.AverageLong(in inner.Node);
 
-        public static decimal Average<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, decimal> selector) where Inner : INode<T> => NodeImpl.AverageDecimal(NodeImpl.Select(in inner.Node, selector));
-        public static double  Average<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, double> selector)  where Inner : INode<T> => NodeImpl.AverageDouble( NodeImpl.Select(in inner.Node, selector));
-        public static float   Average<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, float> selector)   where Inner : INode<T> => NodeImpl.AverageFloat(  NodeImpl.Select(in inner.Node, selector));
-        public static double  Average<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, int> selector)     where Inner : INode<T> => NodeImpl.AverageInt(    NodeImpl.Select(in inner.Node, selector));
-        public static double  Average<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, long> selector)    where Inner : INode<T> => NodeImpl.AverageLong(   NodeImpl.Select(in inner.Node, selector));
+        public static decimal Average<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, decimal> selector) where Inner : IOrderedNode<TSource> => NodeImpl.AverageDecimal(NodeImpl.Select(in inner.Node, selector));
+        public static double  Average<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, double> selector)  where Inner : IOrderedNode<TSource> => NodeImpl.AverageDouble( NodeImpl.Select(in inner.Node, selector));
+        public static float   Average<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, float> selector)   where Inner : IOrderedNode<TSource> => NodeImpl.AverageFloat(  NodeImpl.Select(in inner.Node, selector));
+        public static double  Average<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, int> selector)     where Inner : IOrderedNode<TSource> => NodeImpl.AverageInt(    NodeImpl.Select(in inner.Node, selector));
+        public static double  Average<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, long> selector)    where Inner : IOrderedNode<TSource> => NodeImpl.AverageLong(   NodeImpl.Select(in inner.Node, selector));
 
-        public static decimal? Average<Inner>(in this ValueOrderedEnumerable<decimal?, Inner> inner) where Inner : INode<decimal?> => NodeImpl.AverageNullableDecimal(in inner.Node);
-        public static double?  Average<Inner>(in this ValueOrderedEnumerable<double?,  Inner> inner) where Inner : INode<double?>  => NodeImpl.AverageNullableDouble(in inner.Node);
-        public static float?   Average<Inner>(in this ValueOrderedEnumerable<float?,   Inner> inner) where Inner : INode<float?>   => NodeImpl.AverageNullableFloat(in inner.Node);
-        public static double?  Average<Inner>(in this ValueOrderedEnumerable<int?,     Inner> inner) where Inner : INode<int?>     => NodeImpl.AverageNullableInt(in inner.Node);
-        public static double?  Average<Inner>(in this ValueOrderedEnumerable<long?,    Inner> inner) where Inner : INode<long?>    => NodeImpl.AverageNullableLong(in inner.Node);
+        public static decimal? Average<Inner>(in this ValueOrderedEnumerable<decimal?, Inner> inner) where Inner : IOrderedNode<Decimal?> => NodeImpl.AverageNullableDecimal(in inner.Node);
+        public static double?  Average<Inner>(in this ValueOrderedEnumerable<double?,  Inner> inner) where Inner : IOrderedNode<double?>  => NodeImpl.AverageNullableDouble(in inner.Node);
+        public static float?   Average<Inner>(in this ValueOrderedEnumerable<float?,   Inner> inner) where Inner : IOrderedNode<float?>   => NodeImpl.AverageNullableFloat(in inner.Node);
+        public static double?  Average<Inner>(in this ValueOrderedEnumerable<int?,     Inner> inner) where Inner : IOrderedNode<int?>     => NodeImpl.AverageNullableInt(in inner.Node);
+        public static double?  Average<Inner>(in this ValueOrderedEnumerable<long?,    Inner> inner) where Inner : IOrderedNode<long?>    => NodeImpl.AverageNullableLong(in inner.Node);
 
-        public static decimal? Average<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, decimal?> selector) where Inner : INode<T> => NodeImpl.AverageNullableDecimal(NodeImpl.Select(in inner.Node, selector));
-        public static double?  Average<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, double?>  selector) where Inner : INode<T> => NodeImpl.AverageNullableDouble( NodeImpl.Select(in inner.Node, selector));
-        public static float?   Average<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, float?>   selector) where Inner : INode<T> => NodeImpl.AverageNullableFloat(  NodeImpl.Select(in inner.Node, selector));
-        public static double?  Average<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, int?>     selector) where Inner : INode<T> => NodeImpl.AverageNullableInt(    NodeImpl.Select(in inner.Node, selector));
-        public static double?  Average<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, long?>    selector) where Inner : INode<T> => NodeImpl.AverageNullableLong(   NodeImpl.Select(in inner.Node, selector));
+        public static decimal? Average<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, decimal?> selector) where Inner : IOrderedNode<TSource> => NodeImpl.AverageNullableDecimal(NodeImpl.Select(in inner.Node, selector));
+        public static double?  Average<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, double?>  selector) where Inner : IOrderedNode<TSource> => NodeImpl.AverageNullableDouble( NodeImpl.Select(in inner.Node, selector));
+        public static float?   Average<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, float?>   selector) where Inner : IOrderedNode<TSource> => NodeImpl.AverageNullableFloat(  NodeImpl.Select(in inner.Node, selector));
+        public static double?  Average<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, int?>     selector) where Inner : IOrderedNode<TSource> => NodeImpl.AverageNullableInt(    NodeImpl.Select(in inner.Node, selector));
+        public static double?  Average<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, long?>    selector) where Inner : IOrderedNode<TSource> => NodeImpl.AverageNullableLong(   NodeImpl.Select(in inner.Node, selector));
 
-        public static decimal Min<Inner>(   in this ValueOrderedEnumerable<decimal, Inner> inner) where Inner : INode<decimal>  => NodeImpl.MinDecimal(   in inner.Node);
-        public static double  Min<Inner>(   in this ValueOrderedEnumerable<double,  Inner> inner) where Inner : INode<double>   => NodeImpl.MinDouble(    in inner.Node);
-        public static float   Min<Inner>(   in this ValueOrderedEnumerable<float,   Inner> inner) where Inner : INode<float>    => NodeImpl.MinFloat(     in inner.Node);
-        public static int     Min<Inner>(   in this ValueOrderedEnumerable<int,     Inner> inner) where Inner : INode<int>      => NodeImpl.MinInt(       in inner.Node);
-        public static long    Min<Inner>(   in this ValueOrderedEnumerable<long,    Inner> inner) where Inner : INode<long>     => NodeImpl.MinLong(      in inner.Node);
-        public static T       Min<T, Inner>(in this ValueOrderedEnumerable<T,       Inner> inner) where Inner : INode<T>        => NodeImpl.Min<T, Inner>(in inner.Node);
+        public static decimal Min<Inner>(   in this ValueOrderedEnumerable<decimal, Inner> inner) where Inner : IOrderedNode<Decimal>  => NodeImpl.MinDecimal(   in inner.Node);
+        public static double  Min<Inner>(   in this ValueOrderedEnumerable<double,  Inner> inner) where Inner : IOrderedNode<double>   => NodeImpl.MinDouble(    in inner.Node);
+        public static float   Min<Inner>(   in this ValueOrderedEnumerable<float,   Inner> inner) where Inner : IOrderedNode<float>    => NodeImpl.MinFloat(     in inner.Node);
+        public static int     Min<Inner>(   in this ValueOrderedEnumerable<int,     Inner> inner) where Inner : IOrderedNode<int>      => NodeImpl.MinInt(       in inner.Node);
+        public static long    Min<Inner>(   in this ValueOrderedEnumerable<long,    Inner> inner) where Inner : IOrderedNode<long>     => NodeImpl.MinLong(      in inner.Node);
+        public static TSource       Min<TSource, Inner>(in this ValueOrderedEnumerable<TSource,       Inner> inner) where Inner : IOrderedNode<TSource>        => NodeImpl.Min<TSource, Inner>(in inner.Node);
 
-        public static decimal Min<T, Inner>(   in this ValueOrderedEnumerable<T, Inner> inner, Func<T, decimal> selector) where Inner : INode<T> => NodeImpl.MinDecimal(                   NodeImpl.Select(in inner.Node, selector));
-        public static double  Min<T, Inner>(   in this ValueOrderedEnumerable<T, Inner> inner, Func<T, double>  selector) where Inner : INode<T> => NodeImpl.MinDouble(                    NodeImpl.Select(in inner.Node, selector));
-        public static float   Min<T, Inner>(   in this ValueOrderedEnumerable<T, Inner> inner, Func<T, float>   selector) where Inner : INode<T> => NodeImpl.MinFloat(                     NodeImpl.Select(in inner.Node, selector));
-        public static int     Min<T, Inner>(   in this ValueOrderedEnumerable<T, Inner> inner, Func<T, int>     selector) where Inner : INode<T> => NodeImpl.MinInt(                       NodeImpl.Select(in inner.Node, selector));
-        public static long    Min<T, Inner>(   in this ValueOrderedEnumerable<T, Inner> inner, Func<T, long>    selector) where Inner : INode<T> => NodeImpl.MinLong(                      NodeImpl.Select(in inner.Node, selector));
-        public static U       Min<T, U, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, U>       selector) where Inner : INode<T> => NodeImpl.Min<U, SelectNode<T,U,Inner>>(NodeImpl.Select(in inner.Node, selector));
+        public static decimal Min<TSource, Inner>(   in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, decimal> selector) where Inner : IOrderedNode<TSource> => NodeImpl.MinDecimal(                   NodeImpl.Select(in inner.Node, selector));
+        public static double  Min<TSource, Inner>(   in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, double>  selector) where Inner : IOrderedNode<TSource> => NodeImpl.MinDouble(                    NodeImpl.Select(in inner.Node, selector));
+        public static float   Min<TSource, Inner>(   in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, float>   selector) where Inner : IOrderedNode<TSource> => NodeImpl.MinFloat(                     NodeImpl.Select(in inner.Node, selector));
+        public static int     Min<TSource, Inner>(   in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, int>     selector) where Inner : IOrderedNode<TSource> => NodeImpl.MinInt(                       NodeImpl.Select(in inner.Node, selector));
+        public static long    Min<TSource, Inner>(   in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, long>    selector) where Inner : IOrderedNode<TSource> => NodeImpl.MinLong(                      NodeImpl.Select(in inner.Node, selector));
+        public static U       Min<TSource, U, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, U>       selector) where Inner : IOrderedNode<TSource> => NodeImpl.Min<U, SelectNode<TSource,U,Inner>>(NodeImpl.Select(in inner.Node, selector));
 
-        public static decimal? Min<Inner>(in this ValueOrderedEnumerable<decimal?, Inner> inner) where Inner : INode<decimal?>  => NodeImpl.MinNullableDecimal(in inner.Node);
-        public static double?  Min<Inner>(in this ValueOrderedEnumerable<double?,  Inner> inner) where Inner : INode<double?>   => NodeImpl.MinNullableDouble( in inner.Node);
-        public static float?   Min<Inner>(in this ValueOrderedEnumerable<float?,   Inner> inner) where Inner : INode<float?>    => NodeImpl.MinNullableFloat(  in inner.Node);
-        public static int?     Min<Inner>(in this ValueOrderedEnumerable<int?,     Inner> inner) where Inner : INode<int?>      => NodeImpl.MinNullableInt(    in inner.Node);
-        public static long?    Min<Inner>(in this ValueOrderedEnumerable<long?,    Inner> inner) where Inner : INode<long?>     => NodeImpl.MinNullableLong(   in inner.Node);
+        public static decimal? Min<Inner>(in this ValueOrderedEnumerable<decimal?, Inner> inner) where Inner : IOrderedNode<Decimal?>  => NodeImpl.MinNullableDecimal(in inner.Node);
+        public static double?  Min<Inner>(in this ValueOrderedEnumerable<double?,  Inner> inner) where Inner : IOrderedNode<double?>   => NodeImpl.MinNullableDouble( in inner.Node);
+        public static float?   Min<Inner>(in this ValueOrderedEnumerable<float?,   Inner> inner) where Inner : IOrderedNode<float?>    => NodeImpl.MinNullableFloat(  in inner.Node);
+        public static int?     Min<Inner>(in this ValueOrderedEnumerable<int?,     Inner> inner) where Inner : IOrderedNode<int?>      => NodeImpl.MinNullableInt(    in inner.Node);
+        public static long?    Min<Inner>(in this ValueOrderedEnumerable<long?,    Inner> inner) where Inner : IOrderedNode<long?>     => NodeImpl.MinNullableLong(   in inner.Node);
 
-        public static decimal? Min<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, decimal?> selector) where Inner : INode<T> => NodeImpl.MinNullableDecimal(NodeImpl.Select(in inner.Node, selector));
-        public static double?  Min<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, double?>  selector) where Inner : INode<T> => NodeImpl.MinNullableDouble( NodeImpl.Select(in inner.Node, selector));
-        public static float?   Min<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, float?>   selector) where Inner : INode<T> => NodeImpl.MinNullableFloat(  NodeImpl.Select(in inner.Node, selector));
-        public static int?     Min<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, int?>     selector) where Inner : INode<T> => NodeImpl.MinNullableInt(    NodeImpl.Select(in inner.Node, selector));
-        public static long?    Min<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, long?>    selector) where Inner : INode<T> => NodeImpl.MinNullableLong(   NodeImpl.Select(in inner.Node, selector));
+        public static decimal? Min<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, decimal?> selector) where Inner : IOrderedNode<TSource> => NodeImpl.MinNullableDecimal(NodeImpl.Select(in inner.Node, selector));
+        public static double?  Min<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, double?>  selector) where Inner : IOrderedNode<TSource> => NodeImpl.MinNullableDouble( NodeImpl.Select(in inner.Node, selector));
+        public static float?   Min<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, float?>   selector) where Inner : IOrderedNode<TSource> => NodeImpl.MinNullableFloat(  NodeImpl.Select(in inner.Node, selector));
+        public static int?     Min<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, int?>     selector) where Inner : IOrderedNode<TSource> => NodeImpl.MinNullableInt(    NodeImpl.Select(in inner.Node, selector));
+        public static long?    Min<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, long?>    selector) where Inner : IOrderedNode<TSource> => NodeImpl.MinNullableLong(   NodeImpl.Select(in inner.Node, selector));
 
-        public static decimal Max<Inner>(   in this ValueOrderedEnumerable<decimal, Inner> inner) where Inner : INode<decimal>  => NodeImpl.MaxDecimal(   in inner.Node);
-        public static double  Max<Inner>(   in this ValueOrderedEnumerable<double,  Inner> inner) where Inner : INode<double>   => NodeImpl.MaxDouble(    in inner.Node);
-        public static float   Max<Inner>(   in this ValueOrderedEnumerable<float,   Inner> inner) where Inner : INode<float>    => NodeImpl.MaxFloat(     in inner.Node);
-        public static int     Max<Inner>(   in this ValueOrderedEnumerable<int,     Inner> inner) where Inner : INode<int>      => NodeImpl.MaxInt(       in inner.Node);
-        public static long    Max<Inner>(   in this ValueOrderedEnumerable<long,    Inner> inner) where Inner : INode<long>     => NodeImpl.MaxLong(      in inner.Node);
-        public static T       Max<T, Inner>(in this ValueOrderedEnumerable<T,       Inner> inner) where Inner : INode<T>        => NodeImpl.Max<T, Inner>(in inner.Node);
+        public static decimal Max<Inner>(   in this ValueOrderedEnumerable<decimal, Inner> inner) where Inner : IOrderedNode<Decimal> => NodeImpl.MaxDecimal(   in inner.Node);
+        public static double  Max<Inner>(   in this ValueOrderedEnumerable<double,  Inner> inner) where Inner : IOrderedNode<double>   => NodeImpl.MaxDouble(    in inner.Node);
+        public static float   Max<Inner>(   in this ValueOrderedEnumerable<float,   Inner> inner) where Inner : IOrderedNode<float>    => NodeImpl.MaxFloat(     in inner.Node);
+        public static int     Max<Inner>(   in this ValueOrderedEnumerable<int,     Inner> inner) where Inner : IOrderedNode<int>      => NodeImpl.MaxInt(       in inner.Node);
+        public static long    Max<Inner>(   in this ValueOrderedEnumerable<long,    Inner> inner) where Inner : IOrderedNode<long>     => NodeImpl.MaxLong(      in inner.Node);
+        public static TSource       Max<TSource, Inner>(in this ValueOrderedEnumerable<TSource,       Inner> inner) where Inner : IOrderedNode<TSource>        => NodeImpl.Max<TSource, Inner>(in inner.Node);
 
-        public static decimal Max<T, Inner>(   in this ValueOrderedEnumerable<T, Inner> inner, Func<T, decimal> selector) where Inner : INode<T> => NodeImpl.MaxDecimal(                   NodeImpl.Select(in inner.Node, selector));
-        public static double  Max<T, Inner>(   in this ValueOrderedEnumerable<T, Inner> inner, Func<T, double>  selector) where Inner : INode<T> => NodeImpl.MaxDouble(                    NodeImpl.Select(in inner.Node, selector));
-        public static float   Max<T, Inner>(   in this ValueOrderedEnumerable<T, Inner> inner, Func<T, float>   selector) where Inner : INode<T> => NodeImpl.MaxFloat(                     NodeImpl.Select(in inner.Node, selector));
-        public static int     Max<T, Inner>(   in this ValueOrderedEnumerable<T, Inner> inner, Func<T, int>     selector) where Inner : INode<T> => NodeImpl.MaxInt(                       NodeImpl.Select(in inner.Node, selector));
-        public static long    Max<T, Inner>(   in this ValueOrderedEnumerable<T, Inner> inner, Func<T, long>    selector) where Inner : INode<T> => NodeImpl.MaxLong(                      NodeImpl.Select(in inner.Node, selector));
-        public static U       Max<T, U, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, U>       selector) where Inner : INode<T> => NodeImpl.Max<U, SelectNode<T,U,Inner>>(NodeImpl.Select(in inner.Node, selector));
+        public static decimal Max<TSource, Inner>(   in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, decimal> selector) where Inner : IOrderedNode<TSource> => NodeImpl.MaxDecimal(                   NodeImpl.Select(in inner.Node, selector));
+        public static double  Max<TSource, Inner>(   in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, double>  selector) where Inner : IOrderedNode<TSource> => NodeImpl.MaxDouble(                    NodeImpl.Select(in inner.Node, selector));
+        public static float   Max<TSource, Inner>(   in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, float>   selector) where Inner : IOrderedNode<TSource> => NodeImpl.MaxFloat(                     NodeImpl.Select(in inner.Node, selector));
+        public static int     Max<TSource, Inner>(   in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, int>     selector) where Inner : IOrderedNode<TSource> => NodeImpl.MaxInt(                       NodeImpl.Select(in inner.Node, selector));
+        public static long    Max<TSource, Inner>(   in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, long>    selector) where Inner : IOrderedNode<TSource> => NodeImpl.MaxLong(                      NodeImpl.Select(in inner.Node, selector));
+        public static U       Max<TSource, U, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, U>       selector) where Inner : IOrderedNode<TSource> => NodeImpl.Max<U, SelectNode<TSource,U,Inner>>(NodeImpl.Select(in inner.Node, selector));
 
-        public static decimal? Max<Inner>(in this ValueOrderedEnumerable<decimal?, Inner> inner) where Inner : INode<decimal?> => NodeImpl.MaxNullableDecimal(in inner.Node);
-        public static double?  Max<Inner>(in this ValueOrderedEnumerable<double?,  Inner> inner) where Inner : INode<double?>  => NodeImpl.MaxNullableDouble( in inner.Node);
-        public static float?   Max<Inner>(in this ValueOrderedEnumerable<float?,   Inner> inner) where Inner : INode<float?>   => NodeImpl.MaxNullableFloat(  in inner.Node);
-        public static int?     Max<Inner>(in this ValueOrderedEnumerable<int?,     Inner> inner) where Inner : INode<int?>     => NodeImpl.MaxNullableInt(    in inner.Node);
-        public static long?    Max<Inner>(in this ValueOrderedEnumerable<long?,    Inner> inner) where Inner : INode<long?>    => NodeImpl.MaxNullableLong(   in inner.Node);
+        public static decimal? Max<Inner>(in this ValueOrderedEnumerable<decimal?, Inner> inner) where Inner : IOrderedNode<Decimal?> => NodeImpl.MaxNullableDecimal(in inner.Node);
+        public static double?  Max<Inner>(in this ValueOrderedEnumerable<double?,  Inner> inner) where Inner : IOrderedNode<double?>  => NodeImpl.MaxNullableDouble( in inner.Node);
+        public static float?   Max<Inner>(in this ValueOrderedEnumerable<float?,   Inner> inner) where Inner : IOrderedNode<float?>   => NodeImpl.MaxNullableFloat(  in inner.Node);
+        public static int?     Max<Inner>(in this ValueOrderedEnumerable<int?,     Inner> inner) where Inner : IOrderedNode<int?>     => NodeImpl.MaxNullableInt(    in inner.Node);
+        public static long?    Max<Inner>(in this ValueOrderedEnumerable<long?,    Inner> inner) where Inner : IOrderedNode<long?>    => NodeImpl.MaxNullableLong(   in inner.Node);
 
-        public static decimal? Max<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, decimal?> selector) where Inner : INode<T> => NodeImpl.MaxNullableDecimal(NodeImpl.Select(in inner.Node, selector));
-        public static double?  Max<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, double?>  selector) where Inner : INode<T> => NodeImpl.MaxNullableDouble( NodeImpl.Select(in inner.Node, selector));
-        public static float?   Max<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, float?>   selector) where Inner : INode<T> => NodeImpl.MaxNullableFloat(  NodeImpl.Select(in inner.Node, selector));
-        public static int?     Max<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, int?>     selector) where Inner : INode<T> => NodeImpl.MaxNullableInt(    NodeImpl.Select(in inner.Node, selector));
-        public static long?    Max<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, long?>    selector) where Inner : INode<T> => NodeImpl.MaxNullableLong(   NodeImpl.Select(in inner.Node, selector));
+        public static decimal? Max<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, decimal?> selector) where Inner : IOrderedNode<TSource> => NodeImpl.MaxNullableDecimal(NodeImpl.Select(in inner.Node, selector));
+        public static double?  Max<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, double?>  selector) where Inner : IOrderedNode<TSource> => NodeImpl.MaxNullableDouble( NodeImpl.Select(in inner.Node, selector));
+        public static float?   Max<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, float?>   selector) where Inner : IOrderedNode<TSource> => NodeImpl.MaxNullableFloat(  NodeImpl.Select(in inner.Node, selector));
+        public static int?     Max<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, int?>     selector) where Inner : IOrderedNode<TSource> => NodeImpl.MaxNullableInt(    NodeImpl.Select(in inner.Node, selector));
+        public static long?    Max<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, long?>    selector) where Inner : IOrderedNode<TSource> => NodeImpl.MaxNullableLong(   NodeImpl.Select(in inner.Node, selector));
 
-        public static decimal Sum<Inner>(   in this ValueOrderedEnumerable<decimal, Inner> inner) where Inner : INode<decimal>  => NodeImpl.SumDecimal(   in inner.Node);
-        public static double  Sum<Inner>(   in this ValueOrderedEnumerable<double,  Inner> inner) where Inner : INode<double>   => NodeImpl.SumDouble(    in inner.Node);
-        public static float   Sum<Inner>(   in this ValueOrderedEnumerable<float,   Inner> inner) where Inner : INode<float>    => NodeImpl.SumFloat(     in inner.Node);
-        public static int     Sum<Inner>(   in this ValueOrderedEnumerable<int,     Inner> inner) where Inner : INode<int>      => NodeImpl.SumInt(       in inner.Node);
-        public static long    Sum<Inner>(   in this ValueOrderedEnumerable<long,    Inner> inner) where Inner : INode<long>     => NodeImpl.SumLong(      in inner.Node);
+        public static decimal Sum<Inner>(   in this ValueOrderedEnumerable<decimal, Inner> inner) where Inner : IOrderedNode<Decimal> => NodeImpl.SumDecimal(   in inner.Node);
+        public static double  Sum<Inner>(   in this ValueOrderedEnumerable<double,  Inner> inner) where Inner : IOrderedNode<double>   => NodeImpl.SumDouble(    in inner.Node);
+        public static float   Sum<Inner>(   in this ValueOrderedEnumerable<float,   Inner> inner) where Inner : IOrderedNode<float>    => NodeImpl.SumFloat(     in inner.Node);
+        public static int     Sum<Inner>(   in this ValueOrderedEnumerable<int,     Inner> inner) where Inner : IOrderedNode<int>      => NodeImpl.SumInt(       in inner.Node);
+        public static long    Sum<Inner>(   in this ValueOrderedEnumerable<long,    Inner> inner) where Inner : IOrderedNode<long>     => NodeImpl.SumLong(      in inner.Node);
 
-        public static decimal Sum<T, Inner>(   in this ValueOrderedEnumerable<T, Inner> inner, Func<T, decimal> selector) where Inner : INode<T> => NodeImpl.SumDecimal(NodeImpl.Select(in inner.Node, selector));
-        public static double  Sum<T, Inner>(   in this ValueOrderedEnumerable<T, Inner> inner, Func<T, double>  selector) where Inner : INode<T> => NodeImpl.SumDouble( NodeImpl.Select(in inner.Node, selector));
-        public static float   Sum<T, Inner>(   in this ValueOrderedEnumerable<T, Inner> inner, Func<T, float>   selector) where Inner : INode<T> => NodeImpl.SumFloat(  NodeImpl.Select(in inner.Node, selector));
-        public static int     Sum<T, Inner>(   in this ValueOrderedEnumerable<T, Inner> inner, Func<T, int>     selector) where Inner : INode<T> => NodeImpl.SumInt(    NodeImpl.Select(in inner.Node, selector));
-        public static long    Sum<T, Inner>(   in this ValueOrderedEnumerable<T, Inner> inner, Func<T, long>    selector) where Inner : INode<T> => NodeImpl.SumLong(   NodeImpl.Select(in inner.Node, selector));
+        public static decimal Sum<TSource, Inner>(   in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, decimal> selector) where Inner : IOrderedNode<TSource> => NodeImpl.SumDecimal(NodeImpl.Select(in inner.Node, selector));
+        public static double  Sum<TSource, Inner>(   in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, double>  selector) where Inner : IOrderedNode<TSource> => NodeImpl.SumDouble( NodeImpl.Select(in inner.Node, selector));
+        public static float   Sum<TSource, Inner>(   in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, float>   selector) where Inner : IOrderedNode<TSource> => NodeImpl.SumFloat(  NodeImpl.Select(in inner.Node, selector));
+        public static int     Sum<TSource, Inner>(   in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, int>     selector) where Inner : IOrderedNode<TSource> => NodeImpl.SumInt(    NodeImpl.Select(in inner.Node, selector));
+        public static long    Sum<TSource, Inner>(   in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, long>    selector) where Inner : IOrderedNode<TSource> => NodeImpl.SumLong(   NodeImpl.Select(in inner.Node, selector));
 
-        public static decimal? Sum<Inner>(in this ValueOrderedEnumerable<decimal?, Inner> inner) where Inner : INode<decimal?>  =>  NodeImpl.SumNullableDecimal(in inner.Node);
-        public static double?  Sum<Inner>(in this ValueOrderedEnumerable<double?,  Inner> inner) where Inner : INode<double?>   =>  NodeImpl.SumNullableDouble( in inner.Node);
-        public static float?   Sum<Inner>(in this ValueOrderedEnumerable<float?,   Inner> inner) where Inner : INode<float?>    =>  NodeImpl.SumNullableFloat(  in inner.Node);
-        public static int?     Sum<Inner>(in this ValueOrderedEnumerable<int?,     Inner> inner) where Inner : INode<int?>      =>  NodeImpl.SumNullableInt(    in inner.Node);
-        public static long?    Sum<Inner>(in this ValueOrderedEnumerable<long?,    Inner> inner) where Inner : INode<long?>     =>  NodeImpl.SumNullableLong(   in inner.Node);
+        public static decimal? Sum<Inner>(in this ValueOrderedEnumerable<decimal?, Inner> inner) where Inner : IOrderedNode<Decimal?>  =>  NodeImpl.SumNullableDecimal(in inner.Node);
+        public static double?  Sum<Inner>(in this ValueOrderedEnumerable<double?,  Inner> inner) where Inner : IOrderedNode<double?>   =>  NodeImpl.SumNullableDouble( in inner.Node);
+        public static float?   Sum<Inner>(in this ValueOrderedEnumerable<float?,   Inner> inner) where Inner : IOrderedNode<float?>    =>  NodeImpl.SumNullableFloat(  in inner.Node);
+        public static int?     Sum<Inner>(in this ValueOrderedEnumerable<int?,     Inner> inner) where Inner : IOrderedNode<int?>      =>  NodeImpl.SumNullableInt(    in inner.Node);
+        public static long?    Sum<Inner>(in this ValueOrderedEnumerable<long?,    Inner> inner) where Inner : IOrderedNode<long?>     =>  NodeImpl.SumNullableLong(   in inner.Node);
 
-        public static decimal? Sum<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, decimal?> selector) where Inner : INode<T> => NodeImpl.SumNullableDecimal(NodeImpl.Select(in inner.Node, selector));
-        public static double?  Sum<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, double?>  selector) where Inner : INode<T> => NodeImpl.SumNullableDouble( NodeImpl.Select(in inner.Node, selector));
-        public static float?   Sum<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, float?>   selector) where Inner : INode<T> => NodeImpl.SumNullableFloat(  NodeImpl.Select(in inner.Node, selector));
-        public static int?     Sum<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, int?>     selector) where Inner : INode<T> => NodeImpl.SumNullableInt(    NodeImpl.Select(in inner.Node, selector));
-        public static long?    Sum<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, Func<T, long?>    selector) where Inner : INode<T> => NodeImpl.SumNullableLong(   NodeImpl.Select(in inner.Node, selector));
+        public static decimal? Sum<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, decimal?> selector) where Inner : IOrderedNode<TSource> => NodeImpl.SumNullableDecimal(NodeImpl.Select(in inner.Node, selector));
+        public static double?  Sum<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, double?>  selector) where Inner : IOrderedNode<TSource> => NodeImpl.SumNullableDouble( NodeImpl.Select(in inner.Node, selector));
+        public static float?   Sum<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, float?>   selector) where Inner : IOrderedNode<TSource> => NodeImpl.SumNullableFloat(  NodeImpl.Select(in inner.Node, selector));
+        public static int?     Sum<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, int?>     selector) where Inner : IOrderedNode<TSource> => NodeImpl.SumNullableInt(    NodeImpl.Select(in inner.Node, selector));
+        public static long?    Sum<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, Func<TSource, long?>    selector) where Inner : IOrderedNode<TSource> => NodeImpl.SumNullableLong(   NodeImpl.Select(in inner.Node, selector));
 
-        public static int Count<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, bool ignorePotentialSideEffects = false)
-            where Inner : INode<T>
-            => NodeImpl.Count<T, Inner>(in inner.Node, ignorePotentialSideEffects);
+        public static int Count<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, bool ignorePotentialSideEffects = false)
+            where Inner : IOrderedNode<TSource>
+            => NodeImpl.Count<TSource, Inner>(in inner.Node, ignorePotentialSideEffects);
 
-        public static bool Count<T, Inner>(in this ValueOrderedEnumerable<T, Inner> source, Func<T, bool> predicate)
-            where Inner : INode<T>
-            => NodeImpl.Count<T, Inner>(in source.Node, predicate);
+        public static bool Count<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> source, Func<TSource, bool> predicate)
+            where Inner : IOrderedNode<TSource>
+            => NodeImpl.Count<TSource, Inner>(in source.Node, predicate);
 
-        public static bool Contains<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, T value)
-            where Inner : INode<T>
+        public static bool Contains<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, TSource value)
+            where Inner : IOrderedNode<TSource>
             => NodeImpl.Contains(in inner.Node, value);
 
-        public static bool Contains<T, Inner>(in this ValueOrderedEnumerable<T, Inner> inner, T value, IEqualityComparer<T> comparer)
-            where Inner : INode<T>
+        public static bool Contains<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> inner, TSource value, IEqualityComparer<TSource> comparer)
+            where Inner : IOrderedNode<TSource>
             => NodeImpl.Contains(in inner.Node, value, comparer);
 
         public static ValueEnumerable<TResult, SelectManyNode<TSource, TResult, NodeT, NodeU>> SelectMany<TSource, TResult, NodeT, NodeU>(in this ValueOrderedEnumerable<TSource, NodeT> prior, Func<TSource, ValueEnumerable<TResult, NodeU>> selector)
-            where NodeT : INode<TSource>
+            where NodeT : IOrderedNode<TSource>
             where NodeU : INode<TResult>
             => new (NodeImpl.SelectMany(in prior.Node, selector));
 
         public static ValueEnumerable<TResult, SelectManyNode<TSource, TCollection, TResult, NodeT, NodeU>> SelectMany<TSource, TCollection, TResult, NodeT, NodeU>(in this ValueOrderedEnumerable<TSource, NodeT> prior, Func<TSource, ValueEnumerable<TCollection, NodeU>> collectionSelector, Func<TSource, TCollection, TResult> resultSelector)
-            where NodeT : INode<TSource>
+            where NodeT : IOrderedNode<TSource>
             where NodeU : INode<TCollection>
             => new (NodeImpl.SelectMany(in prior.Node, collectionSelector, resultSelector));
 
-        public static ValueEnumerable<T, ConcatNode<T, First, Second>> Concat<T, First, Second>(in this ValueOrderedEnumerable<T, First> first, in ValueEnumerable<T, Second> second)
-            where First : INode<T>
-            where Second : INode<T>
-            => new (NodeImpl.Concat<T, First, Second>(in first.Node, in second.Node));
+        public static ValueEnumerable<TSource, ConcatNode<TSource, First, Second>> Concat<TSource, First, Second>(in this ValueOrderedEnumerable<TSource, First> first, in ValueEnumerable<TSource, Second> second)
+            where First : IOrderedNode<TSource>
+            where Second : IOrderedNode<TSource>
+            => new (NodeImpl.Concat<TSource, First, Second>(in first.Node, in second.Node));
 
         public static ValueEnumerable<TSource, ReverseNode<TSource, Inner>> Reverse<TSource, Inner>(in this ValueOrderedEnumerable<TSource, Inner> source, int? maybeMaxCountForStackBasedPath = 64, (ArrayPool<TSource> arrayPool, bool cleanBuffers)? arrayPoolInfo = null)
-            where Inner : INode<TSource>
+            where Inner : IOrderedNode<TSource>
             => new (NodeImpl.Reverse<TSource, Inner>(in source.Node, maybeMaxCountForStackBasedPath, arrayPoolInfo));
 
-        public static ValueEnumerable<U, ValueSelectNode<T, U, TPrior, IFunc>> Select<T, U, TPrior, IFunc>(in this ValueOrderedEnumerable<T, TPrior> prior, IFunc selector, U u = default)
-            where TPrior : INode<T>
-            where IFunc : IFuncBase<T, U>
-            => new (NodeImpl.Select<T, U, TPrior, IFunc>(in prior.Node, selector, u));
+        public static ValueEnumerable<U, ValueSelectNode<TSource, U, TPrior, IFunc>> Select<TSource, U, TPrior, IFunc>(in this ValueOrderedEnumerable<TSource, TPrior> prior, IFunc selector, U u = default)
+            where TPrior : IOrderedNode<TSource>
+            where IFunc : IFuncBase<TSource, U>
+            => new (NodeImpl.Select<TSource, U, TPrior, IFunc>(in prior.Node, selector, u));
 
-        public static ValueEnumerable<T, ValueWhereNode<T, TPrior, Predicate>> Where<T, TPrior, Predicate>(in this ValueOrderedEnumerable<T, TPrior> prior, Predicate predicate)
-            where TPrior : INode<T>
-            where Predicate : IFuncBase<T, bool>
-            => new (NodeImpl.Where<T, TPrior, Predicate>(in prior.Node, predicate));
+        public static ValueEnumerable<TSource, ValueWhereNode<TSource, TPrior, Predicate>> Where<TSource, TPrior, Predicate>(in this ValueOrderedEnumerable<TSource, TPrior> prior, Predicate predicate)
+            where TPrior : IOrderedNode<TSource>
+            where Predicate : IFuncBase<TSource, bool>
+            => new (NodeImpl.Where<TSource, TPrior, Predicate>(in prior.Node, predicate));
     }
 
 }

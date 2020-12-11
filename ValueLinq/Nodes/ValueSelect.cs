@@ -48,7 +48,7 @@ namespace Cistern.ValueLinq.Nodes
 
         public ValueSelectNode(in NodeT nodeT, Func selector) => (_nodeT, _map) = (nodeT, selector);
 
-        CreationType INode.CreateViaPushDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
+        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
         {
@@ -56,16 +56,16 @@ namespace Cistern.ValueLinq.Nodes
             return tail.CreateObject<CreationType, U, ValueSelectNodeEnumerator<EnumeratorElement, U, Enumerator, T, Func>>(ref nextEnumerator);
         }
 
-        bool INode.TryPushOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
+        bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
 
-        bool INode.TryPullOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+        bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
             result = default;
             return false;
         }
 
-        TResult INode<U>.CreateViaPull<TResult, Next>(in Next fenum) =>
-            _nodeT.CreateViaPull<TResult, ValueSelectFoward<T, U, Next, Func>>(new ValueSelectFoward<T, U, Next, Func>(fenum, _map));
+        TResult INode<U>.CreateViaPush<TResult, Next>(in Next fenum) =>
+            _nodeT.CreateViaPush<TResult, ValueSelectFoward<T, U, Next, Func>>(new ValueSelectFoward<T, U, Next, Func>(fenum, _map));
     }
 
     struct ValueSelectFoward<T, U, Next, Func>

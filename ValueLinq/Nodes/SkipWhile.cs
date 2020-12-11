@@ -52,7 +52,7 @@ namespace Cistern.ValueLinq.Nodes
 
         public SkipWhileNode(in NodeT nodeT, Func<T, bool> predicate) => (_nodeT, _predicate) = (nodeT, predicate);
 
-        CreationType INode.CreateViaPushDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
             => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
@@ -61,16 +61,16 @@ namespace Cistern.ValueLinq.Nodes
             return tail.CreateObject<CreationType, EnumeratorElement, SkipWhileNodeEnumerator<EnumeratorElement, Enumerator>>(ref nextEnumerator);
         }
 
-        bool INode.TryPushOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
+        bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
 
-        bool INode.TryPullOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+        bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
             result = default;
             return false;
         }
 
-        TResult INode<T>.CreateViaPull<TResult, FEnumerator>(in FEnumerator fenum) =>
-            _nodeT.CreateViaPull<TResult, SkipWhileFoward<T, FEnumerator>>(new SkipWhileFoward<T, FEnumerator>(fenum, _predicate));
+        TResult INode<T>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum) =>
+            _nodeT.CreateViaPush<TResult, SkipWhileFoward<T, FEnumerator>>(new SkipWhileFoward<T, FEnumerator>(fenum, _predicate));
     }
 
     struct SkipWhileFoward<T, Next>

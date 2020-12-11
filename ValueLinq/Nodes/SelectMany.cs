@@ -118,7 +118,7 @@ namespace Cistern.ValueLinq.Nodes
 
         public SelectManyNode(in NodeT nodeT, Func<T, ValueEnumerable<U, NodeU>> selector) => (_nodeT, _map) = (nodeT, selector);
 
-        CreationType INode.CreateViaPushDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
+        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
         {
@@ -126,8 +126,8 @@ namespace Cistern.ValueLinq.Nodes
             return tail.CreateObject<CreationType, U, SelectManyNodeEnumerator<EnumeratorElement, U, Enumerator, NodeU>>(ref nextEnumerator);
         }
 
-        bool INode.TryPushOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
-        bool INode.TryPullOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+        bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
+        bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
             if (typeof(TRequest) == typeof(Optimizations.Count))
             {
@@ -146,8 +146,8 @@ namespace Cistern.ValueLinq.Nodes
             return SelectManyImpl.Count(e, _map);
         }
 
-        TResult INode<U>.CreateViaPull<TResult, FEnumerator>(in FEnumerator fenum)
-            => _nodeT.CreateViaPull<TResult, SelectManyFoward<T, U, NodeU, FEnumerator>>(new SelectManyFoward<T, U, NodeU, FEnumerator>(new SelectManyCommonNext<U, FEnumerator>(in fenum), _map));
+        TResult INode<U>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
+            => _nodeT.CreateViaPush<TResult, SelectManyFoward<T, U, NodeU, FEnumerator>>(new SelectManyFoward<T, U, NodeU, FEnumerator>(new SelectManyCommonNext<U, FEnumerator>(in fenum), _map));
     }
 
     public struct SelectManyNode<TSource, TCollection, TResult, NodeSource, NodeCollection>
@@ -165,7 +165,7 @@ namespace Cistern.ValueLinq.Nodes
         public SelectManyNode(in NodeSource nodeSource, Func<TSource, ValueEnumerable<TCollection, NodeCollection>> collectionSelector, Func<TSource, TCollection, TResult> resultSelector)
             => (_nodeSource, _collectionSelector, _resultSelector) = (nodeSource, collectionSelector, resultSelector);
 
-        CreationType INode.CreateViaPushDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
             => Nodes<CreationType>.Descend(ref _nodeSource, in this, in nodes);
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
@@ -174,15 +174,15 @@ namespace Cistern.ValueLinq.Nodes
             return tail.CreateObject<CreationType, TResult, SelectManyNodeEnumerator<EnumeratorElement, TCollection, TResult, Enumerator, NodeCollection>>(ref nextEnumerator);
         }
 
-        bool INode.TryPushOptimization<TRequest, TObjResult, Nodes>(in TRequest request, ref Nodes nodes, out TObjResult creation) { creation = default; return false; }
-        bool INode.TryPullOptimization<TRequest, TObjResult>(in TRequest request, out TObjResult result)
+        bool INode.TryPullOptimization<TRequest, TObjResult, Nodes>(in TRequest request, ref Nodes nodes, out TObjResult creation) { creation = default; return false; }
+        bool INode.TryPushOptimization<TRequest, TObjResult>(in TRequest request, out TObjResult result)
         {
             result = default;
             return false;
         }
 
-        TObjResult INode<TResult>.CreateViaPull<TObjResult, FEnumerator>(in FEnumerator fenum)
-            => _nodeSource.CreateViaPull<TObjResult, SelectManyFoward<TSource, TCollection, TResult, NodeCollection, FEnumerator>>(new SelectManyFoward<TSource, TCollection, TResult, NodeCollection, FEnumerator>(new SelectManyCommonNext<TResult, FEnumerator>(in fenum), _collectionSelector, _resultSelector));
+        TObjResult INode<TResult>.CreateViaPush<TObjResult, FEnumerator>(in FEnumerator fenum)
+            => _nodeSource.CreateViaPush<TObjResult, SelectManyFoward<TSource, TCollection, TResult, NodeCollection, FEnumerator>>(new SelectManyFoward<TSource, TCollection, TResult, NodeCollection, FEnumerator>(new SelectManyCommonNext<TResult, FEnumerator>(in fenum), _collectionSelector, _resultSelector));
     }
 
     static class SelectManyImpl
@@ -265,7 +265,7 @@ namespace Cistern.ValueLinq.Nodes
         public TResult GetResult<TResult>() => _next.GetResult<TResult>();
 
         public bool ProcessNext(T input) =>
-            _getEnumerable(input).Node.CreateViaPull<bool, SelectManyProcessNextForward<U, Next>>(new SelectManyProcessNextForward<U, Next>(_next));
+            _getEnumerable(input).Node.CreateViaPush<bool, SelectManyProcessNextForward<U, Next>>(new SelectManyProcessNextForward<U, Next>(_next));
     }
 
     struct SelectManyFoward<TSource, TCollection, TResult, NodeCollection, Next>
@@ -286,7 +286,7 @@ namespace Cistern.ValueLinq.Nodes
         public TObjResult GetResult<TObjResult>() => _next.GetResult<TObjResult>();
 
         public bool ProcessNext(TSource input) =>
-            _collectionSelector(input).Node.CreateViaPull<bool, SelectManyProcessNextForward<TSource, TCollection, TResult, Next>>(new SelectManyProcessNextForward<TSource, TCollection, TResult, Next>(input, _resultSelector, _next));
+            _collectionSelector(input).Node.CreateViaPush<bool, SelectManyProcessNextForward<TSource, TCollection, TResult, Next>>(new SelectManyProcessNextForward<TSource, TCollection, TResult, Next>(input, _resultSelector, _next));
     }
 
 }

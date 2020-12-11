@@ -39,13 +39,13 @@ namespace Cistern.ValueLinq.Containers
 
         public IReadOnlyListNode(List list) => _list = list;
 
-        CreationType INode.CreateViaPushDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => IReadOnlyListNode.Create<T, Head, Tail, CreationType, List>(_list, ref nodes);
+        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => IReadOnlyListNode.Create<T, Head, Tail, CreationType, List>(_list, ref nodes);
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
 
-        bool INode.TryPushOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
+        bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
 
-        bool INode.TryPullOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+        bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
             if (typeof(TRequest) == typeof(Optimizations.Count))
             {
@@ -57,7 +57,7 @@ namespace Cistern.ValueLinq.Containers
             return false;
         }
 
-        TResult INode<T>.CreateViaPull<TResult, FEnumerator>(in FEnumerator fenum) 
+        TResult INode<T>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum) 
             => IReadOnlyListNode.FastEnumerate<T, TResult, FEnumerator, List>(_list, fenum);
     }
 
