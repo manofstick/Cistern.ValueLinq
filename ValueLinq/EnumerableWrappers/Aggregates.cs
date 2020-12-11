@@ -9,6 +9,12 @@ namespace Cistern.ValueLinq
 {
     public static partial class Enumerable
     {
+        public static Dictionary<TKey, TSource> ToDictionary<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer = null) =>
+            EnumerableNode.FastEnumerateSwitch<TSource, Dictionary<TKey, TSource>, ToDictionary<TSource, TKey>>(source, new ToDictionary<TSource, TKey>(keySelector, comparer)); 
+
+        public static Dictionary<TKey, TValue> ToDictionary<TSource, TKey, TValue>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, Func<TSource, TValue> elementSelector, IEqualityComparer<TKey> comparer = null) =>
+            EnumerableNode.FastEnumerateSwitch<TSource, Dictionary<TKey, TValue>, ToDictionary<TSource, TKey, TValue>>(source, new ToDictionary<TSource, TKey, TValue>(keySelector, elementSelector, comparer)); 
+
         public static HashSet<TSource> ToHashSet<TSource>(this IEnumerable<TSource> source, IEqualityComparer<TSource> comparer = null) =>
             EnumerableNode.FastEnumerateSwitch<TSource, HashSet<TSource>, ToHashSet<TSource>>(source, new ToHashSet<TSource>(comparer)); 
 
@@ -66,6 +72,20 @@ namespace Cistern.ValueLinq
     }
     public static partial class ValueLinqArray
     {
+        public static Dictionary<TKey, TSource> ToDictionary<TSource, TKey>(this TSource[] source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer = null)
+        {
+            var aggregate = new ToDictionary<TSource, TKey>(keySelector, comparer);
+            ArrayNode.ProcessArray(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        public static Dictionary<TKey, TValue> ToDictionary<TSource, TKey, TValue>(this TSource[] source, Func<TSource, TKey> keySelector, Func<TSource, TValue> elementSelector, IEqualityComparer<TKey> comparer = null)
+        {
+            var aggregate = new ToDictionary<TSource, TKey, TValue>(keySelector, elementSelector, comparer);
+            ArrayNode.ProcessArray(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
         public static HashSet<TSource> ToHashSet<TSource>(this TSource[] source, IEqualityComparer<TSource> comparer = null)
         {
             var aggregate = new ToHashSet<TSource>(comparer);
@@ -195,6 +215,20 @@ namespace Cistern.ValueLinq
     }
     public static partial class ValueLinqList
     {
+        public static Dictionary<TKey, TSource> ToDictionary<TSource, TKey>(this List<TSource> source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer = null)
+        {
+            var aggregate = new ToDictionary<TSource, TKey>(keySelector, comparer);
+            ListSegmentNode.ProcessList(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        public static Dictionary<TKey, TValue> ToDictionary<TSource, TKey, TValue>(this List<TSource> source, Func<TSource, TKey> keySelector, Func<TSource, TValue> elementSelector, IEqualityComparer<TKey> comparer = null)
+        {
+            var aggregate = new ToDictionary<TSource, TKey, TValue>(keySelector, elementSelector, comparer);
+            ListSegmentNode.ProcessList(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
         public static HashSet<TSource> ToHashSet<TSource>(this List<TSource> source, IEqualityComparer<TSource> comparer = null)
         {
             var aggregate = new ToHashSet<TSource>(comparer);
@@ -324,6 +358,20 @@ namespace Cistern.ValueLinq
     }
     public static partial class ValueLinqMemory
     {
+        public static Dictionary<TKey, TSource> ToDictionary<TSource, TKey>(this ReadOnlyMemory<TSource> source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer = null)
+        {
+            var aggregate = new ToDictionary<TSource, TKey>(keySelector, comparer);
+            MemoryNode.ProcessMemory(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        public static Dictionary<TKey, TValue> ToDictionary<TSource, TKey, TValue>(this ReadOnlyMemory<TSource> source, Func<TSource, TKey> keySelector, Func<TSource, TValue> elementSelector, IEqualityComparer<TKey> comparer = null)
+        {
+            var aggregate = new ToDictionary<TSource, TKey, TValue>(keySelector, elementSelector, comparer);
+            MemoryNode.ProcessMemory(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
         public static HashSet<TSource> ToHashSet<TSource>(this ReadOnlyMemory<TSource> source, IEqualityComparer<TSource> comparer = null)
         {
             var aggregate = new ToHashSet<TSource>(comparer);

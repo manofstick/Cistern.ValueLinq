@@ -358,6 +358,14 @@ namespace Cistern.ValueLinq
             where Inner : INode<T>
             => inner.CreateViaPush<HashSet<T>, ToHashSet<T>>(new ToHashSet<T>(comparer));
 
+        internal static Dictionary<TKey, T> ToDictionary<T, TKey, Inner>(in Inner inner, Func<T, TKey> keySelector, IEqualityComparer<TKey> comparer = null)
+            where Inner : INode<T>
+            => inner.CreateViaPush<Dictionary<TKey, T>, ToDictionary<T, TKey>>(new ToDictionary<T, TKey>(keySelector, comparer));
+
+        internal static Dictionary<TKey, TValue> ToDictionary<T, TKey, TValue, Inner>(in Inner inner, Func<T, TKey> keySelector, Func<T, TValue> elementSelector, IEqualityComparer<TKey> comparer = null)
+            where Inner : INode<T>
+            => inner.CreateViaPush<Dictionary<TKey, TValue>, ToDictionary<T, TKey, TValue>>(new ToDictionary<T, TKey, TValue>(keySelector, elementSelector, comparer));
+
         internal static T Last<T, Inner>(in Inner inner)
             where Inner : INode<T> =>
             (inner.TryPushOptimization<Optimizations.TryLast, (bool, T)>(new Optimizations.TryLast(), out var maybeLast), maybeLast) switch

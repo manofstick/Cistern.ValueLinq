@@ -161,6 +161,14 @@ namespace Cistern.ValueLinq
             where Inner : INode<TSource>
             => NodeImpl.ToHashSet(in inner.Node, equalityComparer);
 
+        public static Dictionary<TKey, TSource> ToHashSet<TSource, TKey, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> equalityComparer = null)
+            where Inner : INode<TSource>
+            => NodeImpl.ToDictionary(in inner.Node, keySelector, equalityComparer);
+
+        public static Dictionary<TKey, TValue> ToHashSet<TSource, TKey, TValue, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, TKey> keySelector, Func<TSource, TValue> valueSelector, IEqualityComparer<TKey> equalityComparer = null)
+            where Inner : INode<TSource>
+            => NodeImpl.ToDictionary(in inner.Node, keySelector, valueSelector, equalityComparer);
+
         public static TSource Last<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner)
             where Inner : INode<TSource>
             => NodeImpl.Last<TSource, Inner>(in inner.Node);

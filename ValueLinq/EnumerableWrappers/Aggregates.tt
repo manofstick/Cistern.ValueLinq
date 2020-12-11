@@ -9,6 +9,22 @@
     var aggregateTypes = new []
     {
         (
+            Signature: new Func<string, string>(collection => $"ToDictionary<TSource, TKey>(this {collection} source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer = null)"),
+            Class: "ToDictionary<TSource, TKey>",
+            Args: "keySelector, comparer",
+            AggregateReturns: "Dictionary<TKey, TSource>",
+            FunctionReturns: "Dictionary<TKey, TSource>",
+            WrapReturn: new Func<string, string>(s => s)
+        ),
+        (
+            Signature: new Func<string, string>(collection => $"ToDictionary<TSource, TKey, TValue>(this {collection} source, Func<TSource, TKey> keySelector, Func<TSource, TValue> elementSelector, IEqualityComparer<TKey> comparer = null)"),
+            Class: "ToDictionary<TSource, TKey, TValue>",
+            Args: "keySelector, elementSelector, comparer",
+            AggregateReturns: "Dictionary<TKey, TValue>",
+            FunctionReturns: "Dictionary<TKey, TValue>",
+            WrapReturn: new Func<string, string>(s => s)
+        ),
+        (
             Signature: new Func<string, string>(collection => $"ToHashSet<TSource>(this {collection} source, IEqualityComparer<TSource> comparer = null)"),
             Class: "ToHashSet<TSource>",
             Args: "comparer",
