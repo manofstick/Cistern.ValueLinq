@@ -52,7 +52,7 @@ namespace Cistern.ValueLinq.Nodes
             if (_nodeT.TryPushOptimization<Optimizations.Reverse, NodeContainer<T>>(default, out var node))
             {
                 if (node.CheckForOptimization<TRequest, TResult>(in request, out result))
-                    return true; // we carry on with false, because can still do some other optimizations
+                    return true; // we carry on with false, because can still do some other optimizations (TODO: Is this true?)
             }
 
             if (typeof(TRequest) == typeof(Optimizations.ToArray))
