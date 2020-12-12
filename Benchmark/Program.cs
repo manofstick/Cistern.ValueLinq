@@ -1,7 +1,9 @@
 ﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 using Cistern.ValueLinq;
+using Microsoft.Diagnostics.Tracing.Parsers.FrameworkEventSource;
 using System;
+//using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -68,6 +70,24 @@ namespace Cistern.Benchmarks
 
         public static void Main(string[] args)
         {
+            var a = new[] { 1, 2, 3, 4, 5, 6, 7 };
+            var b = a.Skip(1);
+            var c = a.Zip(b);
+
+            for (var j = 0; j < 10; ++j)
+            {
+                var sw = Stopwatch.StartNew();
+                for (var i = 0; i < 1000000; ++i)
+                {
+                    var d = c.Count();
+                }
+                Console.WriteLine(sw.ElapsedMilliseconds);
+            }
+
+            return;
+
+
+
             //var Z = new DummyData.OrderByToArray();
             //Z.Length = 5;
             //Z.SetupData();
@@ -127,6 +147,7 @@ namespace Cistern.Benchmarks
             DoubleDoubleDouble.OrderByThenByThenByToArray.SanityCheck();
 
             DummyData.OrderByToArray.SanityCheck();
+            DummyData.WhereSelectOrderByToArray.SanityCheck();
 
             Double.ToList.SanityCheck();
             Double.SelectToList.SanityCheck();
@@ -163,7 +184,7 @@ namespace Cistern.Benchmarks
 
 
 
-            var summary = BenchmarkRunner.Run<Double.SelectManySum>();
+            var summary = BenchmarkRunner.Run<DummyData.WhereSelectOrderByToArray>();
         }
     }
 }

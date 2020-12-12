@@ -116,6 +116,21 @@ namespace Cistern.ValueLinq.Containers
     {
         internal static bool CheckForOptimization<T, TRequest, TResult>(ReadOnlyMemory<T> memory, in TRequest request, out TResult result)
         {
+            if (typeof(TRequest) == typeof(Optimizations.AsMemory))
+            {
+                var requestAsMemory = (Optimizations.AsMemory)(object)request;
+                if (requestAsMemory.Probe)
+                {
+                    result = default;
+                    return true;
+                }
+                else
+                {
+                    result = (TResult)(object)memory;
+                    return true;
+                }
+            }
+
             if (typeof(TRequest) == typeof(Optimizations.ToArray))
             {
                 result = (TResult)(object)MemoryNode.ToArray(memory);

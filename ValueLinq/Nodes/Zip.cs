@@ -50,11 +50,8 @@ namespace Cistern.ValueLinq.Nodes
             }
             else
             {
-                info.ActualLengthIsMaximumLength = false;
                 info.MaximumLength = null;
             }
-
-            info.LengthIsImmutable = info.LengthIsImmutable && infoU.LengthIsImmutable;
         }
 
         public ZipNode(in NodeT nodeT, in NodeU nodeU) => (_nodeT, _nodeU) = (nodeT, nodeU);
@@ -79,13 +76,15 @@ namespace Cistern.ValueLinq.Nodes
 
         TResult INode<(T, U)>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
         {
-            if (_nodeT.TryPushOptimization<Optimizations.AsMemory, Memory<T>>(default, out var memoryT))
+            if (Optimizations.AsMemory.IsAvailable<T, NodeT>(ref _nodeT))
             {
-                throw new NotImplementedException();
-            }
-            if (_nodeU.TryPushOptimization<Optimizations.AsMemory, Memory<U>>(default, out var memoryU))
-            {
-                throw new NotImplementedException();
+                if (Optimizations.AsMemory.TryGet<U, NodeU>(ref _nodeU, out var memoryU))
+                {
+                    if (!Optimizations.AsMemory.TryGet<T, NodeT>(ref _nodeT, out var memoryT))
+                        throw new InvalidOperationException();
+
+                    return ZipNode.FastEnumerate<T, U, TResult, FEnumerator>(memoryT.Span, memoryU.Span, fenum);
+                }
             }
 
             return _nodeT.CreateViaPush<TResult, ZipFoward<T, U, FEnumerator>>(new ZipFoward<T, U, FEnumerator>(fenum, Nodes<U>.CreateFastEnumerator(_nodeU)));
@@ -113,4 +112,33 @@ namespace Cistern.ValueLinq.Nodes
             return true;
         }
     }
+
+    static class ZipNode
+    {
+        internal static TResult FastEnumerate<T, U, TResult, FEnumerator>(ReadOnlySpan<T> ts, ReadOnlySpan<U> us, FEnumerator fenum)
+            where FEnumerator : IForwardEnumerator<(T, U)>
+        {
+            try
+            {
+                ProcessSpans<T, U, FEnumerator>(ts, us, ref fenum);
+                return fenum.GetResult<TResult>();
+            }
+            finally
+            {
+                fenum.Dispose();
+            }
+        }
+
+        internal static void ProcessSpans<T, U, FEnumerator>(ReadOnlySpan<T> ts, ReadOnlySpan<U> us, ref FEnumerator fenum)
+            where FEnumerator : IForwardEnumerator<(T, U)>
+        {
+            var len = Math.Min(ts.Length, us.Length);
+            for (var i = 0; i < len; ++i)
+            {
+                if (!fenum.ProcessNext((ts[i], us[i])))
+                    break;
+            }
+        }
+    }
+
 }

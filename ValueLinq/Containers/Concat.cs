@@ -136,10 +136,10 @@ namespace Cistern.ValueLinq.Containers
         }
 
 
-        readonly List<EnumerableNode<T>> TryCollectNodes()
+        List<EnumerableNode<T>> TryCollectNodes()
         {
             (EnumerableNode<T>, EnumerableNode<T>) items;
-            if (!(_start is EnumerableNode<T> && _finish is EnumerableNode<T> && _start.TryPushOptimization(new Optimizations.SplitConcat<T>(), out items)))
+            if (!(_start is EnumerableNode<T> && _finish is EnumerableNode<T> && Optimizations.SplitConcat.TrySplit<T, Start>(ref _start, out items)))
                 return null;
 
             var heads = new List<EnumerableNode<T>>(_countInfo.Depth ?? byte.MaxValue);
@@ -150,7 +150,7 @@ namespace Cistern.ValueLinq.Containers
             tails.Add(items.Item2);
             while (headHasValue)
             {
-                while (Helper.CheckForOptimization(in head, new Optimizations.SplitConcat<T>(), out items))
+                while (Optimizations.SplitConcat.TrySplit<T, EnumerableNode<T>>(ref head, out items))
                 {
                     head = items.Item1;
                     tails.Add(items.Item2);
@@ -215,7 +215,7 @@ namespace Cistern.ValueLinq.Containers
 
             // recursive concats, which this is designed to find, should of been defined through IEnumerable<T>, which will mean that
             // they are of type EnumerableNode<T>
-            if (typeof(TRequest) == typeof(Optimizations.SplitConcat<T>)
+            if (typeof(TRequest) == typeof(Optimizations.SplitConcat)
                 && _start is EnumerableNode<T>
                 && _finish is EnumerableNode<T>)
             {
@@ -227,7 +227,7 @@ namespace Cistern.ValueLinq.Containers
             return false;
         }
 
-        private readonly int Count(bool ignorePotentialSideEffects)
+        private int Count(bool ignorePotentialSideEffects)
         {
             checked
             {
