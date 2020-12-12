@@ -387,5 +387,11 @@ namespace Cistern.ValueLinq
             where TPrior : INode<TSource>
             where TPriorKeySelector : IKeySelectors<TSource>
             => new (NodeImpl.ThenBy<TSource, TKey, TPriorKeySelector, TPrior>(in prior.Node, keySelector, comparer, true));
+
+        public static ValueEnumerable<(TFirst First, TSecond Second), ZipNode<TFirst, TSecond, FirstNode, SecondNode>> Zip<TFirst, TSecond, FirstNode, SecondNode>(in this ValueEnumerable<TFirst, FirstNode> first, in ValueEnumerable<TSecond, SecondNode> second)
+            where FirstNode : INode<TFirst>
+            where SecondNode : INode<TSecond>
+            => new (NodeImpl.Zip<TFirst, TSecond, FirstNode, SecondNode>(in first.Node, in second.Node));
+
     }
 }

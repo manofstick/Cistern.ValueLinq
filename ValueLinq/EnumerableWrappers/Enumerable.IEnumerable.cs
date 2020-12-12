@@ -123,6 +123,17 @@ namespace Cistern.ValueLinq
             return first.OfEnumerable().Concat(second.OfEnumerable());
         }
 
+        public static ValueEnumerable<(T First, U Second), ZipNode<T, U, EnumerableNode<T>, EnumerableNode<U>>> Zip<T, U>(this IEnumerable<T> first, IEnumerable<U> second)
+        {
+            if (first == null)
+                throw new ArgumentNullException(nameof(first));
+            if (second == null)
+                throw new ArgumentNullException(nameof(second));
+
+            return new (new (new (first), new (second)));
+        }
+
+
         public static TSource ElementAt<TSource>(this IEnumerable<TSource> source, int index) =>
             source.OfEnumerable().ElementAt(index);
 

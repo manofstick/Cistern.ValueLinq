@@ -57,7 +57,7 @@ namespace Linqs.Tests
         }
 
 
-        [Fact(Skip ="Waiting for .net 5.0")]
+        [Fact]
         public void Zip2_ExceptionThrownFromFirstsEnumerator()
         {
             ThrowsOnMatchEnumerable<int> first = new ThrowsOnMatchEnumerable<int>(new int[] { 1, 3, 3 }, 2);

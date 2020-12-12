@@ -1,5 +1,4 @@
-﻿using Cistern.ValueLinq.ValueEnumerable;
-using System;
+﻿using System;
 
 namespace Cistern.ValueLinq.Nodes
 {

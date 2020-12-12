@@ -622,5 +622,9 @@ namespace Cistern.ValueLinq
             return new OrderByNode<TSource, KeySelectors<TSource, TKey, TPriorSelector>, TPrior>(in prior._nodeT, new KeySelectors<TSource, TKey, TPriorSelector>(prior._keySelectors, keySelector, comparer ?? Comparer<TKey>.Default, descending));
         }
 
+        internal static ZipNode<TFirst, TSecond, FirstNode, SecondNode> Zip<TFirst, TSecond, FirstNode, SecondNode>(in FirstNode first, in SecondNode second)
+            where FirstNode : INode<TFirst>
+            where SecondNode : INode<TSecond>
+            => new ZipNode<TFirst, TSecond, FirstNode, SecondNode>(in first, in second);
     }
 }
