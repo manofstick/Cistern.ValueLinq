@@ -6,6 +6,12 @@
     /// </summary>
     struct Take
     {
-        public int Count;
+        private Take(int count) => Count = count;
+
+        public int Count { get; }
+
+        public static bool Try<T, Node>(ref Node node, int count, out NodeContainer<T> container)
+            where Node : INode<T>
+            => node.TryPushOptimization(new Take(count), out container);
     }
 }

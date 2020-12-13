@@ -21,9 +21,9 @@ namespace Cistern.ValueLinq.Nodes
         public ReverseNode(in NodeT nodeT, int? maybeMaxCountForStackBasedPath, (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo) =>
             (_nodeT, _maybeMaxCountForStackBasedPath, _arrayPoolInfo) = (nodeT, maybeMaxCountForStackBasedPath, arrayPoolInfo);
 
-        private readonly T[] GetReversedArray()
+        private T[] GetReversedArray()
         {
-            var array = NodeImpl.ToArray(in _nodeT, _maybeMaxCountForStackBasedPath, _arrayPoolInfo);
+            var array = NodeImpl.ToArrayByRef(ref _nodeT, _maybeMaxCountForStackBasedPath, _arrayPoolInfo);
             Array.Reverse(array);
             return array;
         }
@@ -39,7 +39,7 @@ namespace Cistern.ValueLinq.Nodes
 
         bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
 
-        readonly bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+        bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
             if (typeof(TRequest) == typeof(Optimizations.Reverse))
             {
@@ -49,7 +49,7 @@ namespace Cistern.ValueLinq.Nodes
                 return true;
             }
 
-            if (_nodeT.TryPushOptimization<Optimizations.Reverse, NodeContainer<T>>(default, out var node))
+            if (Optimizations.Reverse.Try<T, NodeT>(ref _nodeT, out var node))
             {
                 if (node.CheckForOptimization<TRequest, TResult>(in request, out result))
                     return true; // we carry on with false, because can still do some other optimizations (TODO: Is this true?)
@@ -89,7 +89,7 @@ namespace Cistern.ValueLinq.Nodes
 
         TResult INode<T>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
         {
-            if (_nodeT.TryPushOptimization<Optimizations.Reverse, NodeContainer<T>>(new Optimizations.Reverse(), out var node))
+            if (Optimizations.Reverse.Try<T, NodeT>(ref _nodeT, out var node))
                 return node.CreateObjectViaFastEnumerator<TResult, FEnumerator>(fenum);
 
             var reversed = new ArrayNode<T>(GetReversedArray());

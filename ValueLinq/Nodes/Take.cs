@@ -94,10 +94,8 @@ namespace Cistern.ValueLinq.Nodes
                 return true;
             }
 
-            if (_nodeT.TryPushOptimization<Optimizations.Take, NodeContainer<T>>(new Optimizations.Take { Count = _count }, out var node))
-            {
+            if (Optimizations.Take.Try<T, NodeT>(ref _nodeT, _count, out var node))
                 return node.CheckForOptimization<TRequest, TResult>(in request, out result);
-            }
 
             result = default;
             return false;
@@ -110,7 +108,7 @@ namespace Cistern.ValueLinq.Nodes
             {
                 container.SetEmpty();
             }
-            else if (!_nodeT.TryPushOptimization(new Optimizations.Take { Count = total }, out container))
+            else if (!Optimizations.Take.Try<T, NodeT>(ref _nodeT, _count, out container))
             {
                 container.SetNode(new TakeNode<T, NodeT>(_nodeT, total));
             }
@@ -121,7 +119,7 @@ namespace Cistern.ValueLinq.Nodes
             if (_count <= 0)
                 return EmptyNode<T>.Empty.CreateViaPush<TResult, FEnumerator>(fenum);
 
-            if (_nodeT.TryPushOptimization<Optimizations.Take, NodeContainer<T>>(new Optimizations.Take { Count = _count }, out var node))
+            if (Optimizations.Take.Try<T, NodeT>(ref _nodeT, _count, out var node))
                 return node.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum);
 
             return _nodeT.CreateViaPush<TResult, TakeFoward<T, FEnumerator>>(new TakeFoward<T, FEnumerator>(fenum, _count));

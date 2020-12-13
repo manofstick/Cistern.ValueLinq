@@ -329,7 +329,7 @@ namespace Cistern.ValueLinq.Nodes
 
         private T[] GetOrderedArray()
         {
-            var array = NodeImpl.ToArray<T, NodeT>(in _nodeT, null, null); // TODO: ArrayPool
+            var array = NodeImpl.ToArrayByRef<T, NodeT>(ref _nodeT, null, null); // TODO: ArrayPool
             if (array.Length > 1)
                 _keySelectors.SortElements(array, new IntSort());
             return array;

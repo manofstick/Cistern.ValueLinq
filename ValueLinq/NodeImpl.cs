@@ -100,16 +100,21 @@ namespace Cistern.ValueLinq
             return inner.CreateViaPush<T[], ToArrayViaAllocatorForward<T, ArrayPoolAllocator<T>>>(new ToArrayViaAllocatorForward<T, ArrayPoolAllocator<T>>(new ArrayPoolAllocator<T>(arrayPoolInfo.Value.arrayPool, arrayPoolInfo.Value.cleanBuffers), 0, info.ActualSize));
         }
 
-        internal static T[] ToArray<T, Inner>(in Inner inner, int? maybeMaxCountForStackBasedPath, in (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo)
+        internal static T[] ToArrayByRef<T, Inner>(ref Inner inner, int? maybeMaxCountForStackBasedPath, in (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo)
                 where Inner : INode<T>
         {
-            if (inner.TryPushOptimization<Optimizations.ToArray, T[]>(default, out var array))
+            if (Optimizations.ToArray.Try<T, Inner>(ref inner, out var array))
                 return array;
 
             return ToArrayWithoutOptimizationCheck(in inner, maybeMaxCountForStackBasedPath ?? 64, in arrayPoolInfo);
         }
 
-
+        internal static T[] ToArray<T, Inner>(in Inner inner, int? maybeMaxCountForStackBasedPath, in (ArrayPool<T> arrayPool, bool cleanBuffers)? arrayPoolInfo)
+                where Inner : INode<T>
+        {
+            var tmp = inner;
+            return ToArrayByRef(ref tmp, maybeMaxCountForStackBasedPath ?? 64, in arrayPoolInfo);
+        }
 
         internal static void GetCountInformation<Node>(this Node node, out CountInformation ci) where Node : INode => node.GetCountInformation(out ci);
 

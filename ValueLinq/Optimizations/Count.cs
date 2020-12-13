@@ -1,4 +1,5 @@
-﻿namespace Cistern.ValueLinq.Optimizations
+﻿
+namespace Cistern.ValueLinq.Optimizations
 {
     /// <summary>
     /// Returns an int that is the count of the collection
