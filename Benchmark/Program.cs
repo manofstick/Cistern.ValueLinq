@@ -1,7 +1,9 @@
 ﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 using Cistern.ValueLinq;
+using Microsoft.Diagnostics.Tracing.Parsers.Clr;
 using Microsoft.Diagnostics.Tracing.Parsers.FrameworkEventSource;
+//using NetFabric.Hyperlinq;
 using System;
 //using System.Linq;
 using System.Collections.Generic;
@@ -47,6 +49,8 @@ namespace Cistern.Benchmarks
         }
     }
 
+
+
     public class Program
     {
         static string[][] Source = new[] { new[] { "foo", "bar" }, new[] { "fizz", "buzz" }, new[] { "hello", "world" } };
@@ -70,21 +74,66 @@ namespace Cistern.Benchmarks
 
         public static void Main(string[] args)
         {
-            var a = new[] { 1, 2, 3, 4, 5, 6, 7 };
-            var b = a.Skip(1);
-            var c = a.Zip(b);
+//            for (var j = 0; j < 10; ++j)
+//            {
+//                var sw = Stopwatch.StartNew();
 
-            for (var j = 0; j < 10; ++j)
-            {
-                var sw = Stopwatch.StartNew();
-                for (var i = 0; i < 1000000; ++i)
-                {
-                    var d = c.Count();
-                }
-                Console.WriteLine(sw.ElapsedMilliseconds);
-            }
+//                double z = 0;
+//                for (var i = 0; i < 10000; ++i)
+//                {
+//#if truex
+//                    var reified =
+//                        Enumerable
+//                        .Range(100, 10000)
+//                        .Select(x => (long)x)
+//                        .Where(x => true)
+//                        .ToArray();
 
-            return;
+//                    var last = reified.Last();
+//                    var average = reified.Count();
+//                    var count = reified.Average();
+//#else
+//                    var (last, average, count) =
+//                        Enumerable
+//                        .Range(100, 10000)
+//                        .Select(x => (long)x)
+//                        .Where(x => true)
+//                        .Fork(
+//                            x => x.Last(),
+//                            x => x.Count(),
+//                            x => x.Average())
+//                        ;
+//#endif
+//                    //Console.WriteLine($"{last}, {min}, {max}");
+//                    z += average;
+//                }
+
+//                Console.WriteLine($"{sw.ElapsedMilliseconds} ({z})");
+//            }
+
+//            return;
+
+
+
+
+            //            var (min, max) = y.Fork(x => x.Select(y => (byte)y).Min(), x => x.Select(y => (decimal)y).Max());
+
+
+            //var a = new[] { 1, 2, 3, 4, 5, 6, 7 };
+            //var b = a.Skip(1);
+            //var c = a.Zip(b);
+
+            //for (var j = 0; j < 10; ++j)
+            //{
+            //    var sw = Stopwatch.StartNew();
+            //    for (var i = 0; i < 1000000; ++i)
+            //    {
+            //        var d = c.Count();
+            //    }
+            //    Console.WriteLine(sw.ElapsedMilliseconds);
+            //}
+
+            //return;
 
 
 
@@ -171,6 +220,11 @@ namespace Cistern.Benchmarks
 
             ImmutableArray.WhereSelectToList.SanityCheck();
 
+            Fork.RangeSelectWhereFork2.SanityCheck();
+            Fork.RangeSelectWhereFork3.SanityCheck();
+            Fork.ArrayWhereSelectFork2.SanityCheck();
+            Fork.ArrayWhereSelectFork3.SanityCheck();
+            Fork.ArrayFork3Optimized.SanityCheck();
 
             //var t = new Thing();
             //for (var j = 0; j < 10; ++j)
@@ -184,7 +238,7 @@ namespace Cistern.Benchmarks
 
 
 
-            var summary = BenchmarkRunner.Run<DummyData.WhereSelectOrderByToArray>();
+            var summary = BenchmarkRunner.Run<Fork.ArrayFork3Optimized>();
         }
     }
 }
