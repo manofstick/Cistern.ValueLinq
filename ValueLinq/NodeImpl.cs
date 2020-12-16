@@ -631,5 +631,28 @@ namespace Cistern.ValueLinq
             where FirstNode : INode<TFirst>
             where SecondNode : INode<TSecond>
             => new ZipNode<TFirst, TSecond, FirstNode, SecondNode>(in first, in second);
+
+        internal static (U, V) Fork<T, U, V, Inner>(in Inner inner, Func<ValueEnumerable<T, Fork<T>>, U> getFirstValue, Func<ValueEnumerable<T, Fork<T>>, V> getSecondValue)
+            where Inner : INode<T>
+        {
+            var fork = new Fork<T, U, V, Inner>(inner, getSecondValue);
+
+            var u = getFirstValue(new (fork));
+            var v = fork.SecondValue;
+
+            return (u, v);
+        }
+        internal static (U, V, W) Fork<T, U, V, W, Inner>(in Inner inner, Func<ValueEnumerable<T, Fork<T>>, U> getFirstValue, Func<ValueEnumerable<T, Fork<T>>, V> getSecondValue, Func<ValueEnumerable<T, Fork<T>>, W> getThirdValue)
+            where Inner : INode<T>
+        {
+            var forkInner = new Fork<T, (U, V), W, Inner>(inner, getThirdValue);
+            var forkOuter = new Fork<T, U, V, Fork<T, (U, V), W, Inner>>(forkInner, getSecondValue);
+
+            var u = getFirstValue(new (forkOuter));
+            var v = forkOuter.SecondValue;
+            var w = forkInner.SecondValue;
+
+            return (u, v, w);
+        }
     }
 }

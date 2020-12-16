@@ -393,5 +393,12 @@ namespace Cistern.ValueLinq
             where SecondNode : INode<TSecond>
             => new (NodeImpl.Zip<TFirst, TSecond, FirstNode, SecondNode>(in first.Node, in second.Node));
 
+        public static (U, V) Fork<T, U, V, InnerNode>(in this ValueEnumerable<T, InnerNode> node, Func<ValueEnumerable<T, Aggregation.Fork<T>>, U> t2u, Func<ValueEnumerable<T, Aggregation.Fork<T>>, V> t2v)
+            where InnerNode : INode<T>
+            => NodeImpl.Fork<T, U, V, InnerNode>(in node.Node, t2u, t2v);
+
+        public static (U, V, W) Fork<T, U, V, W, InnerNode>(in this ValueEnumerable<T, InnerNode> node, Func<ValueEnumerable<T, Aggregation.Fork<T>>, U> t2u, Func<ValueEnumerable<T, Aggregation.Fork<T>>, V> t2v, Func<ValueEnumerable<T, Aggregation.Fork<T>>, W> t2w)
+            where InnerNode : INode<T>
+            => NodeImpl.Fork<T, U, V, W, InnerNode>(in node.Node, t2u, t2v, t2w);
     }
 }
