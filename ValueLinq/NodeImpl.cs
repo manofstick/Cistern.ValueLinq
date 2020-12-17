@@ -587,8 +587,6 @@ namespace Cistern.ValueLinq
             where Inner : INode<TSource>
             => new ReverseNode<TSource, Inner>(in source, maybeMaxCountForStackBasedPath, arrayPoolInfo);
 
-        // -- Value based operators
-
         internal static ValueSelectNode<T, U, TPrior, IFunc> Select<T, U, TPrior, IFunc>(in TPrior prior, IFunc selector, U u = default)
             where TPrior : INode<T>
             where IFunc : IFuncBase<T, U>

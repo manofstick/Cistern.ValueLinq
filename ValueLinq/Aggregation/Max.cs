@@ -1,9 +1,7 @@
 ﻿using Cistern.ValueLinq.Maths;
 using System;
 using System.Collections.Generic;
-using System.Data.SqlTypes;
-using System.Numerics;
-using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 
 namespace Cistern.ValueLinq.Aggregation
 {
@@ -31,6 +29,7 @@ namespace Cistern.ValueLinq.Aggregation
             return result;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ProcessNext(T input)
         {
             if (noData)
@@ -72,47 +71,7 @@ namespace Cistern.ValueLinq.Aggregation
         }
 
         private BatchProcessResult ProcessBatch(ReadOnlySpan<T> source)
-        {
-            var result = _result;
-
-            _noData &= source.Length == 0;
-            var idx = 0;
-            for (; math.IsNaN(result) && idx < source.Length; ++idx)
-            {
-                result = source[idx];
-            }
-
-            const int NumberOfVectorsToMakeThisWorthwhile = 5; // from some random testing
-            if (Vector.IsHardwareAccelerated && math.SupportsVectorization && ((source.Length - idx) / Vector<T>.Count > NumberOfVectorsToMakeThisWorthwhile))
-            {
-                var remainder = source.Slice(idx);
-                var asVector = MemoryMarshal.Cast<T, Vector<T>>(remainder);
-                var maxes = new Vector<T>(result);
-                foreach (var v in asVector)
-                {
-                    maxes = Vector.Max(maxes, v);
-                }
-                for (var i = 0; i < Vector<T>.Count; ++i)
-                {
-                    var input = maxes[i];
-                    if (math.GreaterThan(input, result))
-                        result = input;
-                }
-
-                idx += asVector.Length * Vector<T>.Count;
-            }
-
-            for (; idx < source.Length; ++idx)
-            {
-                var input = source[idx];
-                if (math.GreaterThan(input, result))
-                    result = input;
-            }
-
-            _result = result;
-
-            return BatchProcessResult.SuccessAndContinue;
-        }
+            => SIMD.Max<T, Accumulator, Quotient, Math>(source, ref _result, ref _noData);
 
         public void Dispose() { }
         public TResult GetResult<TResult>() => (TResult)(object)GetResult();
@@ -124,6 +83,7 @@ namespace Cistern.ValueLinq.Aggregation
             return _result;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ProcessNext(T input)
         {
             _noData = false;
@@ -153,6 +113,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public T? GetResult() => noData ? (T?)null : result;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ProcessNext(T? input)
         {
             if (input.HasValue)

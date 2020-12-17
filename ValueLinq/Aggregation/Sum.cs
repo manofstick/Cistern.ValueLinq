@@ -1,5 +1,6 @@
 ﻿using Cistern.ValueLinq.Maths;
 using System;
+using System.Runtime.CompilerServices;
 
 namespace Cistern.ValueLinq.Aggregation
 {
@@ -41,6 +42,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public T GetResult() => math.Cast(sum);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ProcessNext(T input)
         {
             sum = math.Add(sum, input);
@@ -67,6 +69,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public T GetResult() => math.Cast(sum);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ProcessNext(T? input)
         {
             sum = math.Add(sum, input);

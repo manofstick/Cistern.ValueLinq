@@ -36,22 +36,15 @@ namespace Cistern.ValueLinq.Aggregation
         protected void InvalidOperation() => throw new InvalidOperationException("Unexpected usage of fork");
     }
 
-    public abstract class Fork<T, Inner>
+    public class Fork<T, Inner>
         : Fork<T>
         where Inner : INode<T>
     {
         protected Inner inner;
 
-        protected Fork(in Inner inner) => this.inner = inner;
+        internal Fork(in Inner inner) => this.inner = inner;
 
         public override void GetCountInformation(out CountInformation info) => inner.GetCountInformation(out info);
-    }
-
-    sealed public class Fork<T, V, Inner>
-        : Fork<T, Inner>
-        where Inner : INode<T>
-    {
-        public Fork(in Inner inner) : base(inner) {}
 
         public override TResult CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
             => inner.CreateViaPush<TResult, FEnumerator>(fenum);
@@ -93,7 +86,7 @@ namespace Cistern.ValueLinq.Aggregation
         {
             if (this.inner.TryPushOptimization<TRequest, TResult>(in request, out result))
             {
-                secondValue = _getSecondValue(new (new Fork<T, V, Inner>(inner)));
+                secondValue = _getSecondValue(new (new Fork<T, Inner>(inner)));
                 _completeSucessfully = true;
                 return true;
             }

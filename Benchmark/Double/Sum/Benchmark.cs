@@ -10,14 +10,14 @@ namespace Cistern.Benchmarks.Double
     {
         IEnumerable<double> _double;
 
-#if trueX
+#if true
         [Params(0, 1, 10, 100, 1000, 1000000)]
 #else
         [Params(100)]
 #endif
         public int Length { get; set; } = 0;
 
-#if trueX
+#if true
         [Params(ContainerTypes.Array, ContainerTypes.Enumerable, ContainerTypes.List)]
 #else
         [Params(ContainerTypes.Array)]

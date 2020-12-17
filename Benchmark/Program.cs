@@ -238,7 +238,7 @@ namespace Cistern.Benchmarks
 
 
 
-            var summary = BenchmarkRunner.Run<Fork.ArrayFork3Optimized>();
+            var summary = BenchmarkRunner.Run<Double.Sum>();
         }
     }
 }
