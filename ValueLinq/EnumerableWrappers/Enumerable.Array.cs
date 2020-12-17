@@ -1,5 +1,6 @@
 ﻿using Cistern.ValueLinq.Containers;
 using Cistern.ValueLinq.Nodes;
+using Cistern.ValueLinq.Optimizations;
 using Cistern.ValueLinq.ValueEnumerable;
 using System;
 using System.Collections.Generic;
@@ -37,10 +38,18 @@ namespace Cistern.ValueLinq
             return source.OfArray().SelectMany(selector);
         }
 
-        public static IEnumerable<T> Concat<T>(this T[] first, T[] second) => first.OfArray().Concat(second.OfArray());
+        public static IEnumerable<T> Concat<T>(this T[] first, T[] second)
+            => first.OfArray().Concat(second.OfArray());
 
-        public static TSource ElementAt<TSource>(this TSource[] source, int index) => source.OfArray().ElementAt(index);
-        public static TSource ElementAtOrDefault<TSource>(this TSource[] source, int index) => source.OfArray().ElementAtOrDefault(index);
+        public static TSource ElementAt<TSource>(this TSource[] source, int index)
+            => NodeImpl.ElementAt<TSource, ArrayNode<TSource>>(new ArrayNode<TSource>(source), index);
+        public static TSource ElementAtOrDefault<TSource>(this TSource[] source, int index)
+            => NodeImpl.ElementAtOrDefault<TSource, ArrayNode<TSource>>(new ArrayNode<TSource>(source), index);
+
+        public static (U, V) Fork<T, U, V>(this T[] source, Func<ValueEnumerable<T, Aggregation.Fork<T>>, U> t2u, Func<ValueEnumerable<T, Aggregation.Fork<T>>, V> t2v)
+            => NodeImpl.Fork(new ArrayNode<T>(source), t2u, t2v);
+        public static (U, V, W) Fork<T, U, V, W>(this T[] source, Func<ValueEnumerable<T, Aggregation.Fork<T>>, U> t2u, Func<ValueEnumerable<T, Aggregation.Fork<T>>, V> t2v, Func<ValueEnumerable<T, Aggregation.Fork<T>>, W> t2w)
+            => NodeImpl.Fork(new ArrayNode<T>(source), t2u, t2v, t2w);
 
     }
 }

@@ -38,5 +38,10 @@ namespace Cistern.ValueLinq
 
         public static TSource ElementAt<TSource>(this List<TSource> source, int index) => source[index];
         public static TSource ElementAtOrDefault<TSource>(this List<TSource> source, int index) => index >= source.Count ? default : source[index];
+
+        public static (U, V) Fork<T, U, V>(this List<T> source, Func<ValueEnumerable<T, Aggregation.Fork<T>>, U> t2u, Func<ValueEnumerable<T, Aggregation.Fork<T>>, V> t2v)
+            => NodeImpl.Fork(new ListNode<T>(source), t2u, t2v);
+        public static (U, V, W) Fork<T, U, V, W>(this List<T> source, Func<ValueEnumerable<T, Aggregation.Fork<T>>, U> t2u, Func<ValueEnumerable<T, Aggregation.Fork<T>>, V> t2v, Func<ValueEnumerable<T, Aggregation.Fork<T>>, W> t2w)
+            => NodeImpl.Fork(new ListNode<T>(source), t2u, t2v, t2w);
     }
 }

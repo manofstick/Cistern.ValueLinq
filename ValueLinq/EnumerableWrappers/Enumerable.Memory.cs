@@ -57,5 +57,9 @@ namespace Cistern.ValueLinq
         public static TSource ElementAt<TSource>(this ReadOnlyMemory<TSource> source, int index) => source.OfMemory().ElementAt(index);
         public static TSource ElementAtOrDefault<TSource>(this ReadOnlyMemory<TSource> source, int index) => source.OfMemory().ElementAtOrDefault(index);
 
+        public static (U, V) Fork<T, U, V>(this Memory<T> source, Func<ValueEnumerable<T, Aggregation.Fork<T>>, U> t2u, Func<ValueEnumerable<T, Aggregation.Fork<T>>, V> t2v)
+            => NodeImpl.Fork(new MemoryNode<T>(source), t2u, t2v);
+        public static (U, V, W) Fork<T, U, V, W>(this Memory<T> source, Func<ValueEnumerable<T, Aggregation.Fork<T>>, U> t2u, Func<ValueEnumerable<T, Aggregation.Fork<T>>, V> t2v, Func<ValueEnumerable<T, Aggregation.Fork<T>>, W> t2w)
+            => NodeImpl.Fork(new MemoryNode<T>(source), t2u, t2v, t2w);
     }
 }

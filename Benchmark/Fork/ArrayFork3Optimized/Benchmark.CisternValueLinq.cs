@@ -26,7 +26,6 @@ namespace Cistern.Benchmarks.Fork
         [Benchmark]
         public (double, double, double) CisternValueLinq_Fork() =>
             Data
-            .OfArray()
             .Fork(
                 x => x.Min(),
                 x => x.Max(),

@@ -154,5 +154,10 @@ namespace Cistern.ValueLinq
 
             return new(new OfTypeNode<TResult>(source));
         }
+
+        public static (U, V) Fork<T, U, V>(this IEnumerable<T> source, Func<ValueEnumerable<T, Aggregation.Fork<T>>, U> t2u, Func<ValueEnumerable<T, Aggregation.Fork<T>>, V> t2v)
+            => NodeImpl.Fork(new EnumerableNode<T>(source), t2u, t2v);
+        public static (U, V, W) Fork<T, U, V, W>(this IEnumerable<T> source, Func<ValueEnumerable<T, Aggregation.Fork<T>>, U> t2u, Func<ValueEnumerable<T, Aggregation.Fork<T>>, V> t2v, Func<ValueEnumerable<T, Aggregation.Fork<T>>, W> t2w)
+            => NodeImpl.Fork(new EnumerableNode<T>(source), t2u, t2v, t2w);
     }
 }
