@@ -130,7 +130,7 @@
             Name:"Average",
             GetFullName:new Func<bool, string>(isNullable => "Cistern.ValueLinq.Aggregation.Average" + (isNullable ? "Nullable" : "")),
             IsAverage:true,
-            SIMDOptions:false,
+            SIMDOptions:true,
             HasGenericVersion:false
         ),
         (

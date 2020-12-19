@@ -1,4 +1,5 @@
 ﻿using Cistern.ValueLinq.Maths;
+using System;
 using System.Runtime.CompilerServices;
 
 namespace Cistern.ValueLinq.Aggregation
@@ -12,12 +13,25 @@ namespace Cistern.ValueLinq.Aggregation
     {
         static Math math = default;
 
+        private SIMDOptions _options;
         private Accumulator sum;
         private long counter;
 
-        public Average(bool _) => (sum, counter) = (math.Zero, 0);
+        public Average(SIMDOptions options) => (sum, counter, _options) = (math.Zero, 0, options);
 
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
+        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request)
+        {
+            if (typeof(TRequest) == typeof(Containers.GetSpan<TObject, T>))
+            {
+                var getSpan = (Containers.GetSpan<TObject, T>)(object)request;
+                return ProcessBatch(getSpan(obj));
+            }
+            return BatchProcessResult.Unavailable;
+        }
+
+        private BatchProcessResult ProcessBatch(ReadOnlySpan<T> span)
+            => SIMD.Average<T, Accumulator, Quotient, Math>(span, _options, ref sum, ref counter);
+
         public void Dispose() { }
         public TResult GetResult<TResult>() => (TResult)(object)GetResult();
 

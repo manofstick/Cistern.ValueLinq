@@ -23,7 +23,7 @@ namespace Cistern.ValueLinq.Maths
         /// </summary>
         WithOverflowHandling,
         /// <summary>
-        /// Ignore any potential issues such as overflow
+        /// Ignore any potential issues such as overflow or floating point rounding errors.
         /// </summary>
         Fastest
     };
@@ -148,6 +148,24 @@ namespace Cistern.ValueLinq.Maths
         }
 
 
+        internal static BatchProcessResult Average<T, Accumulator, Quotient, Math>(ReadOnlySpan<T> source, SIMDOptions simdOptions, ref Accumulator result, ref long counter)
+            where T : struct
+            where Accumulator : struct
+            where Quotient : struct
+            where Math : struct, IMathsOperations<T, Accumulator, Quotient>
+        {
+            counter += source.Length;
+
+            return simdOptions switch
+            {
+                SIMDOptions.OnlyIfSame => SumNoSimd<T, Accumulator, Quotient, Math>(source, ref result),
+                SIMDOptions.WithOverflowHandling => SumSimdChecked<T, Accumulator, Quotient, Math>(source, ref result),
+                SIMDOptions.Fastest => SumSimdUnchecked<T, Accumulator, Quotient, Math>(source, ref result),
+
+                _ => throw new InvalidOperationException()
+            };
+        }
+
         internal static BatchProcessResult Sum<T, Accumulator, Quotient, Math>(ReadOnlySpan<T> source, SIMDOptions simdOptions, ref Accumulator result)
             where T : struct
             where Accumulator : struct
@@ -159,6 +177,7 @@ namespace Cistern.ValueLinq.Maths
                 SIMDOptions.OnlyIfSame => SumNoSimd<T, Accumulator, Quotient, Math>(source, ref result),
                 SIMDOptions.WithOverflowHandling => SumSimdChecked<T, Accumulator, Quotient, Math>(source, ref result),
                 SIMDOptions.Fastest => SumSimdUnchecked<T, Accumulator, Quotient, Math>(source, ref result),
+
                 _ => throw new InvalidOperationException()
             };
         }
@@ -260,6 +279,5 @@ namespace Cistern.ValueLinq.Maths
 
             return BatchProcessResult.SuccessAndContinue;
         }
-
     }
 }

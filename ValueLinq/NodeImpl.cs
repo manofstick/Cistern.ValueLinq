@@ -469,11 +469,11 @@ namespace Cistern.ValueLinq
             return inner.CreateViaPush<T, ElementAtOrDefault<T>>(new ElementAtOrDefault<T>(index, countInfo.ActualSize));
         }
 
-        internal static decimal AverageDecimal<Inner>(in Inner inner) where Inner : INode<decimal> => inner.CreateViaPush<decimal, AverageDecimal>(new AverageDecimal(true));
-        internal static double  AverageDouble<Inner>(in Inner inner) where Inner : INode<double>  => inner.CreateViaPush<double,  AverageDouble >(new AverageDouble(true));
-        internal static float   AverageFloat<Inner>(in Inner inner) where Inner : INode<float>   => inner.CreateViaPush<float,   AverageFloat  >(new AverageFloat(true));
-        internal static double  AverageInt<Inner>(in Inner inner) where Inner : INode<int>     => inner.CreateViaPush<double,  AverageInt    >(new AverageInt(true));
-        internal static double  AverageLong<Inner>(in Inner inner) where Inner : INode<long>    => inner.CreateViaPush<double,  AverageLong   >(new AverageLong(true));
+        internal static decimal AverageDecimal<Inner>(in Inner inner) where Inner : INode<decimal> => inner.CreateViaPush<decimal, AverageDecimal>(new AverageDecimal(SIMDOptions.OnlyIfSame));
+        internal static double  AverageDouble<Inner>(in Inner inner, SIMDOptions simdOptions) where Inner : INode<double>  => inner.CreateViaPush<double,  AverageDouble >(new AverageDouble(simdOptions));
+        internal static float   AverageFloat<Inner>(in Inner inner, SIMDOptions simdOptions) where Inner : INode<float>   => inner.CreateViaPush<float,   AverageFloat  >(new AverageFloat(simdOptions));
+        internal static double  AverageInt<Inner>(in Inner inner, SIMDOptions simdOptions) where Inner : INode<int>     => inner.CreateViaPush<double,  AverageInt    >(new AverageInt(simdOptions));
+        internal static double  AverageLong<Inner>(in Inner inner, SIMDOptions simdOptions) where Inner : INode<long>    => inner.CreateViaPush<double,  AverageLong   >(new AverageLong(simdOptions));
 
         internal static decimal Average<T, Inner>(in Inner inner, Func<T, decimal> selector) where Inner : INode<T> =>
             inner.CreateViaPush<decimal, SelectFoward<T, decimal, AverageDecimal>>(new SelectFoward<T, decimal, AverageDecimal>(new AverageDecimal(default), selector));

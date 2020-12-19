@@ -51,10 +51,10 @@ namespace Cistern.ValueLinq
     public static partial class Enumerable
     {
         public static decimal Average(this IEnumerable<decimal> source) =>
-            EnumerableNode.FastEnumerateSwitch<decimal, decimal, AverageDecimal>(source, new AverageDecimal(true));
+            EnumerableNode.FastEnumerateSwitch<decimal, decimal, AverageDecimal>(source, new AverageDecimal(SIMDOptions.OnlyIfSame));
 
         public static decimal Average<TSource>(this IEnumerable<TSource> source, Func<TSource, decimal> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, decimal, SelectFoward<TSource, decimal, AverageDecimal>>(source, new SelectFoward<TSource, decimal, AverageDecimal>(new AverageDecimal(true), selector));
+            EnumerableNode.FastEnumerateSwitch<TSource, decimal, SelectFoward<TSource, decimal, AverageDecimal>>(source, new SelectFoward<TSource, decimal, AverageDecimal>(new AverageDecimal(SIMDOptions.OnlyIfSame), selector));
 
         public static decimal? Average(this IEnumerable<decimal?> source) =>
             EnumerableNode.FastEnumerateSwitch<decimal?, decimal?, AverageDecimalNullable>(source, new AverageDecimalNullable(true));
@@ -62,11 +62,11 @@ namespace Cistern.ValueLinq
         public static decimal? Average<TSource>(this IEnumerable<TSource> source, Func<TSource, decimal?> selector) =>
             EnumerableNode.FastEnumerateSwitch<TSource, decimal?, SelectFoward<TSource, decimal?, AverageDecimalNullable>>(source, new SelectFoward<TSource, decimal?, AverageDecimalNullable>(new AverageDecimalNullable(true), selector));
 
-        public static double Average(this IEnumerable<double> source) =>
-            EnumerableNode.FastEnumerateSwitch<double, double, AverageDouble>(source, new AverageDouble(true));
+        public static double Average(this IEnumerable<double> source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame) =>
+            EnumerableNode.FastEnumerateSwitch<double, double, AverageDouble>(source, new AverageDouble(simdOptions));
 
         public static double Average<TSource>(this IEnumerable<TSource> source, Func<TSource, double> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, double, SelectFoward<TSource, double, AverageDouble>>(source, new SelectFoward<TSource, double, AverageDouble>(new AverageDouble(true), selector));
+            EnumerableNode.FastEnumerateSwitch<TSource, double, SelectFoward<TSource, double, AverageDouble>>(source, new SelectFoward<TSource, double, AverageDouble>(new AverageDouble(SIMDOptions.OnlyIfSame), selector));
 
         public static double? Average(this IEnumerable<double?> source) =>
             EnumerableNode.FastEnumerateSwitch<double?, double?, AverageDoubleNullable>(source, new AverageDoubleNullable(true));
@@ -74,11 +74,11 @@ namespace Cistern.ValueLinq
         public static double? Average<TSource>(this IEnumerable<TSource> source, Func<TSource, double?> selector) =>
             EnumerableNode.FastEnumerateSwitch<TSource, double?, SelectFoward<TSource, double?, AverageDoubleNullable>>(source, new SelectFoward<TSource, double?, AverageDoubleNullable>(new AverageDoubleNullable(true), selector));
 
-        public static float Average(this IEnumerable<float> source) =>
-            EnumerableNode.FastEnumerateSwitch<float, float, AverageFloat>(source, new AverageFloat(true));
+        public static float Average(this IEnumerable<float> source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame) =>
+            EnumerableNode.FastEnumerateSwitch<float, float, AverageFloat>(source, new AverageFloat(simdOptions));
 
         public static float Average<TSource>(this IEnumerable<TSource> source, Func<TSource, float> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, float, SelectFoward<TSource, float, AverageFloat>>(source, new SelectFoward<TSource, float, AverageFloat>(new AverageFloat(true), selector));
+            EnumerableNode.FastEnumerateSwitch<TSource, float, SelectFoward<TSource, float, AverageFloat>>(source, new SelectFoward<TSource, float, AverageFloat>(new AverageFloat(SIMDOptions.OnlyIfSame), selector));
 
         public static float? Average(this IEnumerable<float?> source) =>
             EnumerableNode.FastEnumerateSwitch<float?, float?, AverageFloatNullable>(source, new AverageFloatNullable(true));
@@ -86,11 +86,11 @@ namespace Cistern.ValueLinq
         public static float? Average<TSource>(this IEnumerable<TSource> source, Func<TSource, float?> selector) =>
             EnumerableNode.FastEnumerateSwitch<TSource, float?, SelectFoward<TSource, float?, AverageFloatNullable>>(source, new SelectFoward<TSource, float?, AverageFloatNullable>(new AverageFloatNullable(true), selector));
 
-        public static double Average(this IEnumerable<int> source) =>
-            EnumerableNode.FastEnumerateSwitch<int, double, AverageInt>(source, new AverageInt(true));
+        public static double Average(this IEnumerable<int> source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame) =>
+            EnumerableNode.FastEnumerateSwitch<int, double, AverageInt>(source, new AverageInt(simdOptions));
 
         public static double Average<TSource>(this IEnumerable<TSource> source, Func<TSource, int> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, double, SelectFoward<TSource, int, AverageInt>>(source, new SelectFoward<TSource, int, AverageInt>(new AverageInt(true), selector));
+            EnumerableNode.FastEnumerateSwitch<TSource, double, SelectFoward<TSource, int, AverageInt>>(source, new SelectFoward<TSource, int, AverageInt>(new AverageInt(SIMDOptions.OnlyIfSame), selector));
 
         public static double? Average(this IEnumerable<int?> source) =>
             EnumerableNode.FastEnumerateSwitch<int?, double?, AverageIntNullable>(source, new AverageIntNullable(true));
@@ -98,11 +98,11 @@ namespace Cistern.ValueLinq
         public static double? Average<TSource>(this IEnumerable<TSource> source, Func<TSource, int?> selector) =>
             EnumerableNode.FastEnumerateSwitch<TSource, double?, SelectFoward<TSource, int?, AverageIntNullable>>(source, new SelectFoward<TSource, int?, AverageIntNullable>(new AverageIntNullable(true), selector));
 
-        public static double Average(this IEnumerable<long> source) =>
-            EnumerableNode.FastEnumerateSwitch<long, double, AverageLong>(source, new AverageLong(true));
+        public static double Average(this IEnumerable<long> source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame) =>
+            EnumerableNode.FastEnumerateSwitch<long, double, AverageLong>(source, new AverageLong(simdOptions));
 
         public static double Average<TSource>(this IEnumerable<TSource> source, Func<TSource, long> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, double, SelectFoward<TSource, long, AverageLong>>(source, new SelectFoward<TSource, long, AverageLong>(new AverageLong(true), selector));
+            EnumerableNode.FastEnumerateSwitch<TSource, double, SelectFoward<TSource, long, AverageLong>>(source, new SelectFoward<TSource, long, AverageLong>(new AverageLong(SIMDOptions.OnlyIfSame), selector));
 
         public static double? Average(this IEnumerable<long?> source) =>
             EnumerableNode.FastEnumerateSwitch<long?, double?, AverageLongNullable>(source, new AverageLongNullable(true));
@@ -308,14 +308,14 @@ namespace Cistern.ValueLinq
     {
         public static decimal Average(this decimal[] source)
         {
-            var aggregate = new AverageDecimal(true);
+            var aggregate = new AverageDecimal(SIMDOptions.OnlyIfSame);
             ArrayNode.ProcessArray(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static decimal Average<TSource>(this TSource[] source, Func<TSource, decimal> selector)
         {
-            var select = new SelectFoward<TSource, decimal, AverageDecimal>(new AverageDecimal(true), selector);
+            var select = new SelectFoward<TSource, decimal, AverageDecimal>(new AverageDecimal(SIMDOptions.OnlyIfSame), selector);
             ArrayNode.ProcessArray(source, ref select);
             return select._next.GetResult();
         }
@@ -334,16 +334,16 @@ namespace Cistern.ValueLinq
             return select._next.GetResult();
         }
 
-        public static double Average(this double[] source)
+        public static double Average(this double[] source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame)
         {
-            var aggregate = new AverageDouble(true);
+            var aggregate = new AverageDouble(simdOptions);
             ArrayNode.ProcessArray(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static double Average<TSource>(this TSource[] source, Func<TSource, double> selector)
         {
-            var select = new SelectFoward<TSource, double, AverageDouble>(new AverageDouble(true), selector);
+            var select = new SelectFoward<TSource, double, AverageDouble>(new AverageDouble(SIMDOptions.OnlyIfSame), selector);
             ArrayNode.ProcessArray(source, ref select);
             return select._next.GetResult();
         }
@@ -362,16 +362,16 @@ namespace Cistern.ValueLinq
             return select._next.GetResult();
         }
 
-        public static float Average(this float[] source)
+        public static float Average(this float[] source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame)
         {
-            var aggregate = new AverageFloat(true);
+            var aggregate = new AverageFloat(simdOptions);
             ArrayNode.ProcessArray(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static float Average<TSource>(this TSource[] source, Func<TSource, float> selector)
         {
-            var select = new SelectFoward<TSource, float, AverageFloat>(new AverageFloat(true), selector);
+            var select = new SelectFoward<TSource, float, AverageFloat>(new AverageFloat(SIMDOptions.OnlyIfSame), selector);
             ArrayNode.ProcessArray(source, ref select);
             return select._next.GetResult();
         }
@@ -390,16 +390,16 @@ namespace Cistern.ValueLinq
             return select._next.GetResult();
         }
 
-        public static double Average(this int[] source)
+        public static double Average(this int[] source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame)
         {
-            var aggregate = new AverageInt(true);
+            var aggregate = new AverageInt(simdOptions);
             ArrayNode.ProcessArray(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static double Average<TSource>(this TSource[] source, Func<TSource, int> selector)
         {
-            var select = new SelectFoward<TSource, int, AverageInt>(new AverageInt(true), selector);
+            var select = new SelectFoward<TSource, int, AverageInt>(new AverageInt(SIMDOptions.OnlyIfSame), selector);
             ArrayNode.ProcessArray(source, ref select);
             return select._next.GetResult();
         }
@@ -418,16 +418,16 @@ namespace Cistern.ValueLinq
             return select._next.GetResult();
         }
 
-        public static double Average(this long[] source)
+        public static double Average(this long[] source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame)
         {
-            var aggregate = new AverageLong(true);
+            var aggregate = new AverageLong(simdOptions);
             ArrayNode.ProcessArray(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static double Average<TSource>(this TSource[] source, Func<TSource, long> selector)
         {
-            var select = new SelectFoward<TSource, long, AverageLong>(new AverageLong(true), selector);
+            var select = new SelectFoward<TSource, long, AverageLong>(new AverageLong(SIMDOptions.OnlyIfSame), selector);
             ArrayNode.ProcessArray(source, ref select);
             return select._next.GetResult();
         }
@@ -898,14 +898,14 @@ namespace Cistern.ValueLinq
     {
         public static decimal Average(this List<decimal> source)
         {
-            var aggregate = new AverageDecimal(true);
+            var aggregate = new AverageDecimal(SIMDOptions.OnlyIfSame);
             ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static decimal Average<TSource>(this List<TSource> source, Func<TSource, decimal> selector)
         {
-            var select = new SelectFoward<TSource, decimal, AverageDecimal>(new AverageDecimal(true), selector);
+            var select = new SelectFoward<TSource, decimal, AverageDecimal>(new AverageDecimal(SIMDOptions.OnlyIfSame), selector);
             ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
@@ -924,16 +924,16 @@ namespace Cistern.ValueLinq
             return select._next.GetResult();
         }
 
-        public static double Average(this List<double> source)
+        public static double Average(this List<double> source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame)
         {
-            var aggregate = new AverageDouble(true);
+            var aggregate = new AverageDouble(simdOptions);
             ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static double Average<TSource>(this List<TSource> source, Func<TSource, double> selector)
         {
-            var select = new SelectFoward<TSource, double, AverageDouble>(new AverageDouble(true), selector);
+            var select = new SelectFoward<TSource, double, AverageDouble>(new AverageDouble(SIMDOptions.OnlyIfSame), selector);
             ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
@@ -952,16 +952,16 @@ namespace Cistern.ValueLinq
             return select._next.GetResult();
         }
 
-        public static float Average(this List<float> source)
+        public static float Average(this List<float> source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame)
         {
-            var aggregate = new AverageFloat(true);
+            var aggregate = new AverageFloat(simdOptions);
             ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static float Average<TSource>(this List<TSource> source, Func<TSource, float> selector)
         {
-            var select = new SelectFoward<TSource, float, AverageFloat>(new AverageFloat(true), selector);
+            var select = new SelectFoward<TSource, float, AverageFloat>(new AverageFloat(SIMDOptions.OnlyIfSame), selector);
             ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
@@ -980,16 +980,16 @@ namespace Cistern.ValueLinq
             return select._next.GetResult();
         }
 
-        public static double Average(this List<int> source)
+        public static double Average(this List<int> source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame)
         {
-            var aggregate = new AverageInt(true);
+            var aggregate = new AverageInt(simdOptions);
             ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static double Average<TSource>(this List<TSource> source, Func<TSource, int> selector)
         {
-            var select = new SelectFoward<TSource, int, AverageInt>(new AverageInt(true), selector);
+            var select = new SelectFoward<TSource, int, AverageInt>(new AverageInt(SIMDOptions.OnlyIfSame), selector);
             ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
@@ -1008,16 +1008,16 @@ namespace Cistern.ValueLinq
             return select._next.GetResult();
         }
 
-        public static double Average(this List<long> source)
+        public static double Average(this List<long> source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame)
         {
-            var aggregate = new AverageLong(true);
+            var aggregate = new AverageLong(simdOptions);
             ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static double Average<TSource>(this List<TSource> source, Func<TSource, long> selector)
         {
-            var select = new SelectFoward<TSource, long, AverageLong>(new AverageLong(true), selector);
+            var select = new SelectFoward<TSource, long, AverageLong>(new AverageLong(SIMDOptions.OnlyIfSame), selector);
             ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
@@ -1488,14 +1488,14 @@ namespace Cistern.ValueLinq
     {
         public static decimal Average(this ReadOnlyMemory<decimal> source)
         {
-            var aggregate = new AverageDecimal(true);
+            var aggregate = new AverageDecimal(SIMDOptions.OnlyIfSame);
             MemoryNode.ProcessMemory(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static decimal Average<TSource>(this ReadOnlyMemory<TSource> source, Func<TSource, decimal> selector)
         {
-            var select = new SelectFoward<TSource, decimal, AverageDecimal>(new AverageDecimal(true), selector);
+            var select = new SelectFoward<TSource, decimal, AverageDecimal>(new AverageDecimal(SIMDOptions.OnlyIfSame), selector);
             MemoryNode.ProcessMemory(source, ref select);
             return select._next.GetResult();
         }
@@ -1514,16 +1514,16 @@ namespace Cistern.ValueLinq
             return select._next.GetResult();
         }
 
-        public static double Average(this ReadOnlyMemory<double> source)
+        public static double Average(this ReadOnlyMemory<double> source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame)
         {
-            var aggregate = new AverageDouble(true);
+            var aggregate = new AverageDouble(simdOptions);
             MemoryNode.ProcessMemory(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static double Average<TSource>(this ReadOnlyMemory<TSource> source, Func<TSource, double> selector)
         {
-            var select = new SelectFoward<TSource, double, AverageDouble>(new AverageDouble(true), selector);
+            var select = new SelectFoward<TSource, double, AverageDouble>(new AverageDouble(SIMDOptions.OnlyIfSame), selector);
             MemoryNode.ProcessMemory(source, ref select);
             return select._next.GetResult();
         }
@@ -1542,16 +1542,16 @@ namespace Cistern.ValueLinq
             return select._next.GetResult();
         }
 
-        public static float Average(this ReadOnlyMemory<float> source)
+        public static float Average(this ReadOnlyMemory<float> source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame)
         {
-            var aggregate = new AverageFloat(true);
+            var aggregate = new AverageFloat(simdOptions);
             MemoryNode.ProcessMemory(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static float Average<TSource>(this ReadOnlyMemory<TSource> source, Func<TSource, float> selector)
         {
-            var select = new SelectFoward<TSource, float, AverageFloat>(new AverageFloat(true), selector);
+            var select = new SelectFoward<TSource, float, AverageFloat>(new AverageFloat(SIMDOptions.OnlyIfSame), selector);
             MemoryNode.ProcessMemory(source, ref select);
             return select._next.GetResult();
         }
@@ -1570,16 +1570,16 @@ namespace Cistern.ValueLinq
             return select._next.GetResult();
         }
 
-        public static double Average(this ReadOnlyMemory<int> source)
+        public static double Average(this ReadOnlyMemory<int> source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame)
         {
-            var aggregate = new AverageInt(true);
+            var aggregate = new AverageInt(simdOptions);
             MemoryNode.ProcessMemory(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static double Average<TSource>(this ReadOnlyMemory<TSource> source, Func<TSource, int> selector)
         {
-            var select = new SelectFoward<TSource, int, AverageInt>(new AverageInt(true), selector);
+            var select = new SelectFoward<TSource, int, AverageInt>(new AverageInt(SIMDOptions.OnlyIfSame), selector);
             MemoryNode.ProcessMemory(source, ref select);
             return select._next.GetResult();
         }
@@ -1598,16 +1598,16 @@ namespace Cistern.ValueLinq
             return select._next.GetResult();
         }
 
-        public static double Average(this ReadOnlyMemory<long> source)
+        public static double Average(this ReadOnlyMemory<long> source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame)
         {
-            var aggregate = new AverageLong(true);
+            var aggregate = new AverageLong(simdOptions);
             MemoryNode.ProcessMemory(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static double Average<TSource>(this ReadOnlyMemory<TSource> source, Func<TSource, long> selector)
         {
-            var select = new SelectFoward<TSource, long, AverageLong>(new AverageLong(true), selector);
+            var select = new SelectFoward<TSource, long, AverageLong>(new AverageLong(SIMDOptions.OnlyIfSame), selector);
             MemoryNode.ProcessMemory(source, ref select);
             return select._next.GetResult();
         }

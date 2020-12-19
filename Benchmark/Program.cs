@@ -216,6 +216,7 @@ namespace Cistern.Benchmarks
             Float.Sum.SanityCheck();
 
             Int.Sum.SanityCheck();
+            Int.Average.SanityCheck();
 
             ValueLambdas.WhereSelectSum.SanityCheck();
             ValueLambdas.SelectWhereMax.SanityCheck();
@@ -243,7 +244,7 @@ namespace Cistern.Benchmarks
 
 
 
-            var summary = BenchmarkRunner.Run<Int.Sum>();
+            var summary = BenchmarkRunner.Run<Int.Average>();
         }
     }
 }

@@ -227,16 +227,16 @@ namespace Cistern.ValueLinq
             => NodeImpl.ElementAtOrDefault<TSource, Inner>(in inner.Node, index);
 
         public static decimal Average<Inner>(in this ValueEnumerable<decimal, Inner> inner) where Inner : INode<Decimal> => NodeImpl.AverageDecimal(in inner.Node);
-        public static double  Average<Inner>(in this ValueEnumerable<double,  Inner> inner) where Inner : INode<double>  => NodeImpl.AverageDouble(in inner.Node);
-        public static float   Average<Inner>(in this ValueEnumerable<float,   Inner> inner) where Inner : INode<float>   => NodeImpl.AverageFloat(in inner.Node);
-        public static double  Average<Inner>(in this ValueEnumerable<int,     Inner> inner) where Inner : INode<int>     => NodeImpl.AverageInt(in inner.Node);
-        public static double  Average<Inner>(in this ValueEnumerable<long,    Inner> inner) where Inner : INode<long>    => NodeImpl.AverageLong(in inner.Node);
+        public static double  Average<Inner>(in this ValueEnumerable<double,  Inner> inner, SIMDOptions simdOptions) where Inner : INode<double>  => NodeImpl.AverageDouble(in inner.Node, simdOptions);
+        public static float   Average<Inner>(in this ValueEnumerable<float,   Inner> inner, SIMDOptions simdOptions) where Inner : INode<float>   => NodeImpl.AverageFloat(in inner.Node, simdOptions);
+        public static double  Average<Inner>(in this ValueEnumerable<int,     Inner> inner, SIMDOptions simdOptions) where Inner : INode<int>     => NodeImpl.AverageInt(in inner.Node, simdOptions);
+        public static double  Average<Inner>(in this ValueEnumerable<long,    Inner> inner, SIMDOptions simdOptions) where Inner : INode<long>    => NodeImpl.AverageLong(in inner.Node, simdOptions);
 
         public static decimal Average<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, decimal> selector) where Inner : INode<TSource> => NodeImpl.AverageDecimal(NodeImpl.Select(in inner.Node, selector));
-        public static double  Average<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, double> selector)  where Inner : INode<TSource> => NodeImpl.AverageDouble( NodeImpl.Select(in inner.Node, selector));
-        public static float   Average<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, float> selector)   where Inner : INode<TSource> => NodeImpl.AverageFloat(  NodeImpl.Select(in inner.Node, selector));
-        public static double  Average<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, int> selector)     where Inner : INode<TSource> => NodeImpl.AverageInt(    NodeImpl.Select(in inner.Node, selector));
-        public static double  Average<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, long> selector)    where Inner : INode<TSource> => NodeImpl.AverageLong(   NodeImpl.Select(in inner.Node, selector));
+        public static double  Average<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, double> selector)  where Inner : INode<TSource> => NodeImpl.AverageDouble( NodeImpl.Select(in inner.Node, selector), SIMDOptions.OnlyIfSame);
+        public static float   Average<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, float> selector)   where Inner : INode<TSource> => NodeImpl.AverageFloat(  NodeImpl.Select(in inner.Node, selector), SIMDOptions.OnlyIfSame);
+        public static double  Average<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, int> selector)     where Inner : INode<TSource> => NodeImpl.AverageInt(    NodeImpl.Select(in inner.Node, selector), SIMDOptions.OnlyIfSame);
+        public static double  Average<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, long> selector)    where Inner : INode<TSource> => NodeImpl.AverageLong(   NodeImpl.Select(in inner.Node, selector), SIMDOptions.OnlyIfSame);
 
         public static decimal? Average<Inner>(in this ValueEnumerable<decimal?, Inner> inner) where Inner : INode<Decimal?> => NodeImpl.AverageNullableDecimal(in inner.Node);
         public static double?  Average<Inner>(in this ValueEnumerable<double?,  Inner> inner) where Inner : INode<double?>  => NodeImpl.AverageNullableDouble(in inner.Node);
