@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace Cistern.ValueLinq.Maths
 {
@@ -114,41 +115,68 @@ namespace Cistern.ValueLinq.Maths
         public float MinInit => float.PositiveInfinity;
     }
 
-    struct OpsInt : IMathsOperations<int, int, double>
+    struct OpsInt : IMathsOperations<int, long, double>
     {
         public bool SupportsVectorization => true;
-        public bool HasNaNs => false;
-        public int NaN => default;
-        public int Zero => 0;
+
+        public long Zero => 0;
         public int One => 1;
+
         public int MinValue => int.MinValue;
         public int MaxValue => int.MaxValue;
-        public int Add(int lhs, int rhs) { checked { return lhs + rhs; } }
-        public int Add(int lhs, int? rhs) { checked { return lhs + rhs.GetValueOrDefault(); } }
-        public int AddInt(int lhs, int rhs) { checked { return lhs + rhs; } }
-        public double DivLong(int lhs, long rhs) => (double)lhs / rhs;
-        public int Cast(int a) => a;
+        public int MinInit => int.MaxValue;
+        public int MaxInit => int.MinValue;
+
+        public bool HasNaNs => false;
+        public int NaN => default;
         public bool IsNaN(int x) => false;
-        public bool GreaterThan(int lhs, int rhs) => lhs > rhs;
-        public bool LessThan(int lhs, int rhs) => lhs < rhs;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Vector<int> Add(Vector<int> lhs, Vector<int> rhs)
+        public Vector<long> Add(Vector<long> lhs, Vector<int> rhs)
         {
-            var result = Vector.Add(lhs, rhs);
             // Adapted from Hacker's Delight p26, where both inputs need to be of the same sign, and that sign is different from result
             // (i.e. xors for diff, and for both, less and zero for checking sign bit set)
-            if (Vector.LessThanAny(Vector.BitwiseAnd(Vector.Xor(result, lhs), Vector.Xor(result, rhs)), Vector<int>.Zero))
+            Vector.Widen(rhs, out var rhs1, out var rhs2);
+
+            var partialResult = Vector.Add(lhs, rhs1);
+            var partialResultCheck = Vector.BitwiseAnd(Vector.Xor(partialResult, lhs), Vector.Xor(partialResult, rhs1));
+
+            var finalResult = Vector.Add(partialResult, rhs2);
+            var finalResultCheck = Vector.BitwiseAnd(Vector.Xor(finalResult, partialResult), Vector.Xor(finalResult, rhs2));
+
+            if (Vector.LessThanAny(Vector.BitwiseOr(partialResultCheck, finalResultCheck), Vector<long>.Zero))
                 MathOperationError.Overflow();
-            return result;
+
+            return finalResult;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Vector<int> AddUnchecked(Vector<int> lhs, Vector<int> rhs) => Vector.Add(lhs, rhs);
-        public int AddUnchecked(int lhs, int rhs) => lhs + rhs;
+        public long Add(long lhs, long rhs) { checked { return lhs + rhs; } }
+        public long Add(long lhs, int rhs) { checked { return lhs + rhs; } }
+        public long Add(long lhs, int? rhs) { checked { return lhs + rhs.GetValueOrDefault(); } }
+        public long AddInt(long lhs, int rhs) { checked { return lhs + rhs; } }
 
-        public int MaxInit => int.MinValue;
-        public int MinInit => int.MaxValue;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector<long> AddUnchecked(Vector<long> lhs, Vector<int> rhs)
+        {
+            Vector.Widen(rhs, out var rhs1, out var rhs2);
+            return Vector.Add(Vector.Add(lhs, rhs1), rhs2);
+        }
+
+        public long AddUnchecked(long lhs, long rhs) => lhs + rhs;
+        public long AddUnchecked(long lhs, int rhs) => lhs + rhs;
+
+        public int Cast(long a)
+        {
+            if (a < int.MinValue || a > int.MaxValue)
+                MathOperationError.Overflow();
+            return (int)a;
+        }
+        public int Cast(int a) => a;
+        long IMathsOperations<int, long, double>.Cast(int a) => (long)a;
+
+        public double DivLong(long lhs, long rhs) => (double)lhs / rhs;
+        public bool GreaterThan(int lhs, int rhs) => lhs > rhs;
+        public bool LessThan(int lhs, int rhs) => lhs < rhs;
     }
 
     struct OpsLong : IMathsOperations<long, long, double>

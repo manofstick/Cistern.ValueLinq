@@ -82,7 +82,7 @@
             AverageType:"double",
             IsNullable:false,
             UnderlyingType:"int",
-            AccumulatorType:"int",
+            AccumulatorType:"long",
             QuotientType:"double",
             AllowSIMD:true,
             Ops:"Cistern.ValueLinq.Maths.OpsInt"
@@ -93,7 +93,7 @@
             AverageType:"double?",
             IsNullable:true,
             UnderlyingType:"int",
-            AccumulatorType:"int",
+            AccumulatorType:"long",
             QuotientType:"double",
             AllowSIMD:false,
             Ops:"Cistern.ValueLinq.Maths.OpsInt"
