@@ -3,12 +3,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Cistern.Benchmarks.Double
+namespace Cistern.Benchmarks.Float
 {
     [MemoryDiagnoser]
     public partial class Sum
     {
-        IEnumerable<double> _double;
+        IEnumerable<float> _data;
 
 #if true
         [Params(0, 1, 10, 100, 1000, 1000000)]
@@ -29,7 +29,7 @@ namespace Cistern.Benchmarks.Double
         {
             var data = Create(Length);
 
-            _double = ContainerType switch
+            _data = ContainerType switch
             {
                 ContainerTypes.Enumerable => data,
                 ContainerTypes.Array => data.ToArray(),
@@ -39,10 +39,10 @@ namespace Cistern.Benchmarks.Double
             };
         }
 
-        private static IEnumerable<double> Create(int size)
+        private static IEnumerable<float> Create(int size)
         {
             for (var i = 0; i < size; ++i)
-                yield return (double)i;
+                yield return (float)i;
         }
 
         internal static void SanityCheck()
@@ -80,8 +80,6 @@ namespace Cistern.Benchmarks.Double
             var cisternlinq = check.CisternLinq();
             if (cisternlinq != baseline) throw new Exception();
 #endif
-
-            // check.HyperLinq(); // doesn't support Aggregate
         }
     }
 }

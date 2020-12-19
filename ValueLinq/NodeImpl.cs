@@ -53,7 +53,7 @@ using SumDoubleNullable  = Cistern.ValueLinq.Aggregation.SumNullable<double,  do
 using SumFloatNullable   = Cistern.ValueLinq.Aggregation.SumNullable<float,   double,  float,   Cistern.ValueLinq.Maths.OpsFloat>;
 using SumIntNullable     = Cistern.ValueLinq.Aggregation.SumNullable<int,     int,     double,  Cistern.ValueLinq.Maths.OpsInt>;
 using SumLongNullable    = Cistern.ValueLinq.Aggregation.SumNullable<long,    long,    double,  Cistern.ValueLinq.Maths.OpsLong>;
-
+using Cistern.ValueLinq.Maths;
 
 namespace Cistern.ValueLinq
 {
@@ -529,11 +529,11 @@ namespace Cistern.ValueLinq
         internal static int?     MaxNullableInt<Inner>(in Inner inner) where Inner : INode<int?>     => inner.CreateViaPush<int?,     MaxIntNullable    >(new MaxIntNullable(true));
         internal static long?    MaxNullableLong<Inner>(in Inner inner) where Inner : INode<long?>    => inner.CreateViaPush<long?,    MaxLongNullable   >(new MaxLongNullable(true));
 
-        internal static decimal SumDecimal<Inner>(in Inner inner) where Inner : INode<decimal> => inner.CreateViaPush<decimal, SumDecimal>(new SumDecimal(true));
-        internal static double  SumDouble<Inner>(in Inner inner) where Inner : INode<double>  => inner.CreateViaPush<double,  SumDouble >(new SumDouble(true));
-        internal static float   SumFloat<Inner>(in Inner inner) where Inner : INode<float>   => inner.CreateViaPush<float,   SumFloat  >(new SumFloat(true));
-        internal static int     SumInt<Inner>(in Inner inner) where Inner : INode<int>     => inner.CreateViaPush<int,     SumInt    >(new SumInt(true));
-        internal static long    SumLong<Inner>(in Inner inner) where Inner : INode<long>    => inner.CreateViaPush<long,    SumLong   >(new SumLong(true));
+        internal static decimal SumDecimal<Inner>(in Inner inner) where Inner : INode<decimal> => inner.CreateViaPush<decimal, SumDecimal>(new SumDecimal(SIMDOptions.OnlyIfSame));
+        internal static double  SumDouble<Inner>(in Inner inner, SIMDOptions simdOptions) where Inner : INode<double>  => inner.CreateViaPush<double,  SumDouble >(new SumDouble(simdOptions));
+        internal static float   SumFloat<Inner>(in Inner inner, SIMDOptions simdOptions) where Inner : INode<float>   => inner.CreateViaPush<float,   SumFloat  >(new SumFloat(simdOptions));
+        internal static int     SumInt<Inner>(in Inner inner, SIMDOptions simdOptions) where Inner : INode<int>     => inner.CreateViaPush<int,     SumInt    >(new SumInt(simdOptions));
+        internal static long    SumLong<Inner>(in Inner inner, SIMDOptions simdOptions) where Inner : INode<long>    => inner.CreateViaPush<long,    SumLong   >(new SumLong(simdOptions));
 
         internal static decimal? SumNullableDecimal<Inner>(in Inner inner) where Inner : INode<decimal?> => inner.CreateViaPush<decimal, SumDecimalNullable>(new SumDecimalNullable(true));
         internal static double?  SumNullableDouble<Inner>(in Inner inner) where Inner : INode<double?>  => inner.CreateViaPush<double,  SumDoubleNullable >(new SumDoubleNullable(true));

@@ -13,9 +13,10 @@ namespace Cistern.ValueLinq.Aggregation
     {
         static Math math = default;
 
+        private SIMDOptions _options;
         private Accumulator sum;
 
-        public Sum(bool _) => (sum) = (math.Zero);
+        public Sum(SIMDOptions options) => (_options, sum) = (options, math.Zero);
 
         public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request)
         {
@@ -28,14 +29,7 @@ namespace Cistern.ValueLinq.Aggregation
         }
 
         private BatchProcessResult ProcessBatch(ReadOnlySpan<T> span)
-        {
-            var sum = this.sum;
-            foreach (var x in span)
-                sum = math.Add(sum, x);
-            this.sum = sum;
-
-            return BatchProcessResult.SuccessAndContinue;
-        }
+            => SIMD.Sum<T, Accumulator, Quotient, Math>(span, _options, ref sum);
 
         public void Dispose() { }
         public TResult GetResult<TResult>() => (TResult)(object)GetResult();

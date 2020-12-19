@@ -1,4 +1,5 @@
 ﻿using Cistern.ValueLinq.Containers;
+using Cistern.ValueLinq.Maths;
 using Cistern.ValueLinq.Nodes;
 using Cistern.ValueLinq.ValueEnumerable;
 using System;
@@ -301,17 +302,17 @@ namespace Cistern.ValueLinq
         public static int?     Max<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, int?>     selector) where Inner : INode<TSource> => NodeImpl.MaxNullableInt(    NodeImpl.Select(in inner.Node, selector));
         public static long?    Max<TSource, Inner>(in this ValueEnumerable<TSource, Inner> inner, Func<TSource, long?>    selector) where Inner : INode<TSource> => NodeImpl.MaxNullableLong(   NodeImpl.Select(in inner.Node, selector));
 
-        public static decimal Sum<Inner>(   in this ValueEnumerable<decimal, Inner> inner) where Inner : INode<Decimal> => NodeImpl.SumDecimal(   in inner.Node);
-        public static double  Sum<Inner>(   in this ValueEnumerable<double,  Inner> inner) where Inner : INode<double>   => NodeImpl.SumDouble(    in inner.Node);
-        public static float   Sum<Inner>(   in this ValueEnumerable<float,   Inner> inner) where Inner : INode<float>    => NodeImpl.SumFloat(     in inner.Node);
-        public static int     Sum<Inner>(   in this ValueEnumerable<int,     Inner> inner) where Inner : INode<int>      => NodeImpl.SumInt(       in inner.Node);
-        public static long    Sum<Inner>(   in this ValueEnumerable<long,    Inner> inner) where Inner : INode<long>     => NodeImpl.SumLong(      in inner.Node);
+        public static decimal Sum<Inner>(in this ValueEnumerable<decimal, Inner> inner)                                                   where Inner : INode<Decimal> => NodeImpl.SumDecimal(   in inner.Node);
+        public static double  Sum<Inner>(in this ValueEnumerable<double,  Inner> inner, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame) where Inner : INode<double>  => NodeImpl.SumDouble(    in inner.Node, simdOptions);
+        public static float   Sum<Inner>(in this ValueEnumerable<float,   Inner> inner, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame) where Inner : INode<float>   => NodeImpl.SumFloat(     in inner.Node, simdOptions);
+        public static int     Sum<Inner>(in this ValueEnumerable<int,     Inner> inner, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame) where Inner : INode<int>     => NodeImpl.SumInt(       in inner.Node, simdOptions);
+        public static long    Sum<Inner>(in this ValueEnumerable<long,    Inner> inner, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame) where Inner : INode<long>    => NodeImpl.SumLong(      in inner.Node, simdOptions);
 
         public static decimal Sum<TSource, Inner>(   in this ValueEnumerable<TSource, Inner> inner, Func<TSource, decimal> selector) where Inner : INode<TSource> => NodeImpl.SumDecimal(NodeImpl.Select(in inner.Node, selector));
-        public static double  Sum<TSource, Inner>(   in this ValueEnumerable<TSource, Inner> inner, Func<TSource, double>  selector) where Inner : INode<TSource> => NodeImpl.SumDouble( NodeImpl.Select(in inner.Node, selector));
-        public static float   Sum<TSource, Inner>(   in this ValueEnumerable<TSource, Inner> inner, Func<TSource, float>   selector) where Inner : INode<TSource> => NodeImpl.SumFloat(  NodeImpl.Select(in inner.Node, selector));
-        public static int     Sum<TSource, Inner>(   in this ValueEnumerable<TSource, Inner> inner, Func<TSource, int>     selector) where Inner : INode<TSource> => NodeImpl.SumInt(    NodeImpl.Select(in inner.Node, selector));
-        public static long    Sum<TSource, Inner>(   in this ValueEnumerable<TSource, Inner> inner, Func<TSource, long>    selector) where Inner : INode<TSource> => NodeImpl.SumLong(   NodeImpl.Select(in inner.Node, selector));
+        public static double  Sum<TSource, Inner>(   in this ValueEnumerable<TSource, Inner> inner, Func<TSource, double>  selector) where Inner : INode<TSource> => NodeImpl.SumDouble( NodeImpl.Select(in inner.Node, selector), SIMDOptions.OnlyIfSame);
+        public static float   Sum<TSource, Inner>(   in this ValueEnumerable<TSource, Inner> inner, Func<TSource, float>   selector) where Inner : INode<TSource> => NodeImpl.SumFloat(  NodeImpl.Select(in inner.Node, selector), SIMDOptions.OnlyIfSame);
+        public static int     Sum<TSource, Inner>(   in this ValueEnumerable<TSource, Inner> inner, Func<TSource, int>     selector) where Inner : INode<TSource> => NodeImpl.SumInt(    NodeImpl.Select(in inner.Node, selector), SIMDOptions.OnlyIfSame);
+        public static long    Sum<TSource, Inner>(   in this ValueEnumerable<TSource, Inner> inner, Func<TSource, long>    selector) where Inner : INode<TSource> => NodeImpl.SumLong(   NodeImpl.Select(in inner.Node, selector), SIMDOptions.OnlyIfSame);
 
         public static decimal? Sum<Inner>(in this ValueEnumerable<decimal?, Inner> inner) where Inner : INode<Decimal?>  =>  NodeImpl.SumNullableDecimal(in inner.Node);
         public static double?  Sum<Inner>(in this ValueEnumerable<double?,  Inner> inner) where Inner : INode<double?>   =>  NodeImpl.SumNullableDouble( in inner.Node);

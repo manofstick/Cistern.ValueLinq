@@ -15,6 +15,7 @@
             UnderlyingType:"decimal",
             AccumulatorType:"decimal",
             QuotientType:"decimal",
+            AllowSIMD:false,
             Ops:"Cistern.ValueLinq.Maths.OpsDecimal"
         ),
         (
@@ -25,6 +26,7 @@
             UnderlyingType:"decimal",
             AccumulatorType:"decimal",
             QuotientType:"decimal",
+            AllowSIMD:false,
             Ops:"Cistern.ValueLinq.Maths.OpsDecimal"
         ),
 
@@ -36,6 +38,7 @@
             UnderlyingType:"double",
             AccumulatorType:"double",
             QuotientType:"double",
+            AllowSIMD:true,
             Ops:"Cistern.ValueLinq.Maths.OpsDouble"
         ),
         (
@@ -46,6 +49,7 @@
             UnderlyingType:"double",
             AccumulatorType:"double",
             QuotientType:"double",
+            AllowSIMD:false,
             Ops:"Cistern.ValueLinq.Maths.OpsDouble"
         ),
 
@@ -57,6 +61,7 @@
             UnderlyingType:"float",
             AccumulatorType:"double",
             QuotientType:"float",
+            AllowSIMD:true,
             Ops:"Cistern.ValueLinq.Maths.OpsFloat"
         ),
         (
@@ -67,6 +72,7 @@
             UnderlyingType:"float",
             AccumulatorType:"double",
             QuotientType:"float",
+            AllowSIMD:false,
             Ops:"Cistern.ValueLinq.Maths.OpsFloat"
         ),
 
@@ -78,6 +84,7 @@
             UnderlyingType:"int",
             AccumulatorType:"int",
             QuotientType:"double",
+            AllowSIMD:true,
             Ops:"Cistern.ValueLinq.Maths.OpsInt"
         ),
         (
@@ -88,6 +95,7 @@
             UnderlyingType:"int",
             AccumulatorType:"int",
             QuotientType:"double",
+            AllowSIMD:false,
             Ops:"Cistern.ValueLinq.Maths.OpsInt"
         ),
 
@@ -99,6 +107,7 @@
             UnderlyingType:"long",
             AccumulatorType:"long",
             QuotientType:"double",
+            AllowSIMD:true,
             Ops:"Cistern.ValueLinq.Maths.OpsLong"
         ),
         (
@@ -109,6 +118,7 @@
             UnderlyingType:"long",
             AccumulatorType:"long",
             QuotientType:"double",
+            AllowSIMD:false,
             Ops:"Cistern.ValueLinq.Maths.OpsLong"
         ),
         
@@ -120,24 +130,28 @@
             Name:"Average",
             GetFullName:new Func<bool, string>(isNullable => "Cistern.ValueLinq.Aggregation.Average" + (isNullable ? "Nullable" : "")),
             IsAverage:true,
+            SIMDOptions:false,
             HasGenericVersion:false
         ),
         (
             Name:"Min",
             GetFullName:new Func<bool, string>(isNullable => "Cistern.ValueLinq.Aggregation.Min" + (isNullable ? "Nullable" : "")),
             IsAverage:false,
+            SIMDOptions:false,
             HasGenericVersion:true
         ),
         (
             Name:"Max",
             GetFullName:new Func<bool, string>(isNullable => "Cistern.ValueLinq.Aggregation.Max" + (isNullable ? "Nullable" : "")),
             IsAverage:false,
+            SIMDOptions:false,
             HasGenericVersion:true
         ),
         (
             Name:"Sum",
             GetFullName:new Func<bool, string>(isNullable => "Cistern.ValueLinq.Aggregation.Sum" + (isNullable ? "Nullable" : "")),
             IsAverage:false,
+            SIMDOptions:true,
             HasGenericVersion:false
         ),
     };
@@ -146,6 +160,7 @@
 #>
 using Cistern.ValueLinq.Aggregation;
 using Cistern.ValueLinq.Containers;
+using Cistern.ValueLinq.Maths;
 using Cistern.ValueLinq.Nodes;
 using System;
 using System.Collections.Generic;
@@ -183,20 +198,36 @@ namespace Cistern.ValueLinq
                 var collectionType = collection.CollectionType(mathType.ActualType);
                 var aggregationType = $"{function}{mathType.Name}";
                 var selectForward = $"SelectFoward<{genericArg}, {mathType.ActualType}, {aggregationType}>";
+                var useSIMD = mathFunction.SIMDOptions && mathType.AllowSIMD;
+                var simdOptionsArgs = useSIMD ? ", SIMDOptions simdOptions = SIMDOptions.OnlyIfSame" : "";
+                var simdOptionsCall = 
+                    (mathFunction.SIMDOptions, mathType.AllowSIMD, mathType.Name == "Decimal") switch
+                    {
+                        (true, true, _) => "simdOptions",
+                        (true, false, true) => "SIMDOptions.OnlyIfSame",
+                        _ => "true",
+                    };
+                var simdOptionsTransformCall = 
+                    (mathFunction.SIMDOptions, mathType.AllowSIMD, mathType.Name == "Decimal") switch
+                    {
+                        (true, true, _) => "SIMDOptions.OnlyIfSame",
+                        (true, false, true) => "SIMDOptions.OnlyIfSame",
+                        _ => "true",
+                    };
 
                 if (collection.OptimizedCall != null)
                 {
 #>
-        public static <#= returnType #> <#= function #>(this <#= collectionType #> source)
+        public static <#= returnType #> <#= function #>(this <#= collectionType #> source<#= simdOptionsArgs #>)
         {
-            var aggregate = new <#= aggregationType #>(true);
+            var aggregate = new <#= aggregationType #>(<#= simdOptionsCall #>);
             <#= collection.OptimizedCall #>(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static <#= returnType #> <#= function #><<#= genericArg #>>(this <#= genericCollectionType #> source, Func<<#= genericArg #>, <#= mathType.ActualType #>> selector)
         {
-            var select = new <#= selectForward #>(new <#= aggregationType #>(true), selector);
+            var select = new <#= selectForward #>(new <#= aggregationType #>(<#= simdOptionsTransformCall #>), selector);
             <#= collection.OptimizedCall #>(source, ref select);
             return select._next.GetResult();
         }
@@ -206,11 +237,11 @@ namespace Cistern.ValueLinq
                 else
                 {
 #>
-        public static <#= returnType #> <#= function #>(this <#= collectionType #> source) =>
-            <#= collection.FastEnumerate #><<#= mathType.ActualType #>, <#= returnType #>, <#= aggregationType #>>(source, new <#= aggregationType #>(true));
+        public static <#= returnType #> <#= function #>(this <#= collectionType #> source<#= simdOptionsArgs #>) =>
+            <#= collection.FastEnumerate #><<#= mathType.ActualType #>, <#= returnType #>, <#= aggregationType #>>(source, new <#= aggregationType #>(<#= simdOptionsCall #>));
 
         public static <#= returnType #> <#= function #><<#= genericArg #>>(this <#= genericCollectionType #> source, Func<<#= genericArg #>, <#= mathType.ActualType #>> selector) =>
-            <#= collection.FastEnumerate #><<#= genericArg #>, <#= returnType #>, <#= selectForward #>>(source, new <#= selectForward #>(new <#= aggregationType #>(true), selector));
+            <#= collection.FastEnumerate #><<#= genericArg #>, <#= returnType #>, <#= selectForward #>>(source, new <#= selectForward #>(new <#= aggregationType #>(<#= simdOptionsTransformCall #>), selector));
 
 <#
                 }

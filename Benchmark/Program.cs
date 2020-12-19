@@ -206,11 +206,16 @@ namespace Cistern.Benchmarks
             Double.WhereSelectToList.SanityCheck();
             Double.WhereSelectIToList.SanityCheck();
             Double.WhereWhereToList.SanityCheck();
+            Double.Max.SanityCheck();
             Double.Sum.SanityCheck();
             Double.Any.SanityCheck();
             Double.SelectSum.SanityCheck();
             Double.SelectManySum.SanityCheck();
             Double.SkipReverseSkipToArray.SanityCheck();
+
+            Float.Sum.SanityCheck();
+
+            Int.Sum.SanityCheck();
 
             ValueLambdas.WhereSelectSum.SanityCheck();
             ValueLambdas.SelectWhereMax.SanityCheck();
@@ -238,7 +243,7 @@ namespace Cistern.Benchmarks
 
 
 
-            var summary = BenchmarkRunner.Run<Double.Sum>();
+            var summary = BenchmarkRunner.Run<Int.Sum>();
         }
     }
 }

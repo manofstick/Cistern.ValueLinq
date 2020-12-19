@@ -1,5 +1,6 @@
 ﻿using Cistern.ValueLinq.Aggregation;
 using Cistern.ValueLinq.Containers;
+using Cistern.ValueLinq.Maths;
 using Cistern.ValueLinq.Nodes;
 using System;
 using System.Collections.Generic;
@@ -242,10 +243,10 @@ namespace Cistern.ValueLinq
             EnumerableNode.FastEnumerateSwitch<TSource, T, SelectFoward<TSource, T, Max<T>>>(source, new SelectFoward<TSource, T, Max<T>>(new Max<T>(true), selector));
 
         public static decimal Sum(this IEnumerable<decimal> source) =>
-            EnumerableNode.FastEnumerateSwitch<decimal, decimal, SumDecimal>(source, new SumDecimal(true));
+            EnumerableNode.FastEnumerateSwitch<decimal, decimal, SumDecimal>(source, new SumDecimal(SIMDOptions.OnlyIfSame));
 
         public static decimal Sum<TSource>(this IEnumerable<TSource> source, Func<TSource, decimal> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, decimal, SelectFoward<TSource, decimal, SumDecimal>>(source, new SelectFoward<TSource, decimal, SumDecimal>(new SumDecimal(true), selector));
+            EnumerableNode.FastEnumerateSwitch<TSource, decimal, SelectFoward<TSource, decimal, SumDecimal>>(source, new SelectFoward<TSource, decimal, SumDecimal>(new SumDecimal(SIMDOptions.OnlyIfSame), selector));
 
         public static decimal? Sum(this IEnumerable<decimal?> source) =>
             EnumerableNode.FastEnumerateSwitch<decimal?, decimal?, SumDecimalNullable>(source, new SumDecimalNullable(true));
@@ -253,11 +254,11 @@ namespace Cistern.ValueLinq
         public static decimal? Sum<TSource>(this IEnumerable<TSource> source, Func<TSource, decimal?> selector) =>
             EnumerableNode.FastEnumerateSwitch<TSource, decimal?, SelectFoward<TSource, decimal?, SumDecimalNullable>>(source, new SelectFoward<TSource, decimal?, SumDecimalNullable>(new SumDecimalNullable(true), selector));
 
-        public static double Sum(this IEnumerable<double> source) =>
-            EnumerableNode.FastEnumerateSwitch<double, double, SumDouble>(source, new SumDouble(true));
+        public static double Sum(this IEnumerable<double> source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame) =>
+            EnumerableNode.FastEnumerateSwitch<double, double, SumDouble>(source, new SumDouble(simdOptions));
 
         public static double Sum<TSource>(this IEnumerable<TSource> source, Func<TSource, double> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, double, SelectFoward<TSource, double, SumDouble>>(source, new SelectFoward<TSource, double, SumDouble>(new SumDouble(true), selector));
+            EnumerableNode.FastEnumerateSwitch<TSource, double, SelectFoward<TSource, double, SumDouble>>(source, new SelectFoward<TSource, double, SumDouble>(new SumDouble(SIMDOptions.OnlyIfSame), selector));
 
         public static double? Sum(this IEnumerable<double?> source) =>
             EnumerableNode.FastEnumerateSwitch<double?, double?, SumDoubleNullable>(source, new SumDoubleNullable(true));
@@ -265,11 +266,11 @@ namespace Cistern.ValueLinq
         public static double? Sum<TSource>(this IEnumerable<TSource> source, Func<TSource, double?> selector) =>
             EnumerableNode.FastEnumerateSwitch<TSource, double?, SelectFoward<TSource, double?, SumDoubleNullable>>(source, new SelectFoward<TSource, double?, SumDoubleNullable>(new SumDoubleNullable(true), selector));
 
-        public static float Sum(this IEnumerable<float> source) =>
-            EnumerableNode.FastEnumerateSwitch<float, float, SumFloat>(source, new SumFloat(true));
+        public static float Sum(this IEnumerable<float> source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame) =>
+            EnumerableNode.FastEnumerateSwitch<float, float, SumFloat>(source, new SumFloat(simdOptions));
 
         public static float Sum<TSource>(this IEnumerable<TSource> source, Func<TSource, float> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, float, SelectFoward<TSource, float, SumFloat>>(source, new SelectFoward<TSource, float, SumFloat>(new SumFloat(true), selector));
+            EnumerableNode.FastEnumerateSwitch<TSource, float, SelectFoward<TSource, float, SumFloat>>(source, new SelectFoward<TSource, float, SumFloat>(new SumFloat(SIMDOptions.OnlyIfSame), selector));
 
         public static float? Sum(this IEnumerable<float?> source) =>
             EnumerableNode.FastEnumerateSwitch<float?, float?, SumFloatNullable>(source, new SumFloatNullable(true));
@@ -277,11 +278,11 @@ namespace Cistern.ValueLinq
         public static float? Sum<TSource>(this IEnumerable<TSource> source, Func<TSource, float?> selector) =>
             EnumerableNode.FastEnumerateSwitch<TSource, float?, SelectFoward<TSource, float?, SumFloatNullable>>(source, new SelectFoward<TSource, float?, SumFloatNullable>(new SumFloatNullable(true), selector));
 
-        public static int Sum(this IEnumerable<int> source) =>
-            EnumerableNode.FastEnumerateSwitch<int, int, SumInt>(source, new SumInt(true));
+        public static int Sum(this IEnumerable<int> source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame) =>
+            EnumerableNode.FastEnumerateSwitch<int, int, SumInt>(source, new SumInt(simdOptions));
 
         public static int Sum<TSource>(this IEnumerable<TSource> source, Func<TSource, int> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, int, SelectFoward<TSource, int, SumInt>>(source, new SelectFoward<TSource, int, SumInt>(new SumInt(true), selector));
+            EnumerableNode.FastEnumerateSwitch<TSource, int, SelectFoward<TSource, int, SumInt>>(source, new SelectFoward<TSource, int, SumInt>(new SumInt(SIMDOptions.OnlyIfSame), selector));
 
         public static int? Sum(this IEnumerable<int?> source) =>
             EnumerableNode.FastEnumerateSwitch<int?, int?, SumIntNullable>(source, new SumIntNullable(true));
@@ -289,11 +290,11 @@ namespace Cistern.ValueLinq
         public static int? Sum<TSource>(this IEnumerable<TSource> source, Func<TSource, int?> selector) =>
             EnumerableNode.FastEnumerateSwitch<TSource, int?, SelectFoward<TSource, int?, SumIntNullable>>(source, new SelectFoward<TSource, int?, SumIntNullable>(new SumIntNullable(true), selector));
 
-        public static long Sum(this IEnumerable<long> source) =>
-            EnumerableNode.FastEnumerateSwitch<long, long, SumLong>(source, new SumLong(true));
+        public static long Sum(this IEnumerable<long> source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame) =>
+            EnumerableNode.FastEnumerateSwitch<long, long, SumLong>(source, new SumLong(simdOptions));
 
         public static long Sum<TSource>(this IEnumerable<TSource> source, Func<TSource, long> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, long, SelectFoward<TSource, long, SumLong>>(source, new SelectFoward<TSource, long, SumLong>(new SumLong(true), selector));
+            EnumerableNode.FastEnumerateSwitch<TSource, long, SelectFoward<TSource, long, SumLong>>(source, new SelectFoward<TSource, long, SumLong>(new SumLong(SIMDOptions.OnlyIfSame), selector));
 
         public static long? Sum(this IEnumerable<long?> source) =>
             EnumerableNode.FastEnumerateSwitch<long?, long?, SumLongNullable>(source, new SumLongNullable(true));
@@ -753,14 +754,14 @@ namespace Cistern.ValueLinq
         }
         public static decimal Sum(this decimal[] source)
         {
-            var aggregate = new SumDecimal(true);
+            var aggregate = new SumDecimal(SIMDOptions.OnlyIfSame);
             ArrayNode.ProcessArray(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static decimal Sum<TSource>(this TSource[] source, Func<TSource, decimal> selector)
         {
-            var select = new SelectFoward<TSource, decimal, SumDecimal>(new SumDecimal(true), selector);
+            var select = new SelectFoward<TSource, decimal, SumDecimal>(new SumDecimal(SIMDOptions.OnlyIfSame), selector);
             ArrayNode.ProcessArray(source, ref select);
             return select._next.GetResult();
         }
@@ -779,16 +780,16 @@ namespace Cistern.ValueLinq
             return select._next.GetResult();
         }
 
-        public static double Sum(this double[] source)
+        public static double Sum(this double[] source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame)
         {
-            var aggregate = new SumDouble(true);
+            var aggregate = new SumDouble(simdOptions);
             ArrayNode.ProcessArray(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static double Sum<TSource>(this TSource[] source, Func<TSource, double> selector)
         {
-            var select = new SelectFoward<TSource, double, SumDouble>(new SumDouble(true), selector);
+            var select = new SelectFoward<TSource, double, SumDouble>(new SumDouble(SIMDOptions.OnlyIfSame), selector);
             ArrayNode.ProcessArray(source, ref select);
             return select._next.GetResult();
         }
@@ -807,16 +808,16 @@ namespace Cistern.ValueLinq
             return select._next.GetResult();
         }
 
-        public static float Sum(this float[] source)
+        public static float Sum(this float[] source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame)
         {
-            var aggregate = new SumFloat(true);
+            var aggregate = new SumFloat(simdOptions);
             ArrayNode.ProcessArray(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static float Sum<TSource>(this TSource[] source, Func<TSource, float> selector)
         {
-            var select = new SelectFoward<TSource, float, SumFloat>(new SumFloat(true), selector);
+            var select = new SelectFoward<TSource, float, SumFloat>(new SumFloat(SIMDOptions.OnlyIfSame), selector);
             ArrayNode.ProcessArray(source, ref select);
             return select._next.GetResult();
         }
@@ -835,16 +836,16 @@ namespace Cistern.ValueLinq
             return select._next.GetResult();
         }
 
-        public static int Sum(this int[] source)
+        public static int Sum(this int[] source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame)
         {
-            var aggregate = new SumInt(true);
+            var aggregate = new SumInt(simdOptions);
             ArrayNode.ProcessArray(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static int Sum<TSource>(this TSource[] source, Func<TSource, int> selector)
         {
-            var select = new SelectFoward<TSource, int, SumInt>(new SumInt(true), selector);
+            var select = new SelectFoward<TSource, int, SumInt>(new SumInt(SIMDOptions.OnlyIfSame), selector);
             ArrayNode.ProcessArray(source, ref select);
             return select._next.GetResult();
         }
@@ -863,16 +864,16 @@ namespace Cistern.ValueLinq
             return select._next.GetResult();
         }
 
-        public static long Sum(this long[] source)
+        public static long Sum(this long[] source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame)
         {
-            var aggregate = new SumLong(true);
+            var aggregate = new SumLong(simdOptions);
             ArrayNode.ProcessArray(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static long Sum<TSource>(this TSource[] source, Func<TSource, long> selector)
         {
-            var select = new SelectFoward<TSource, long, SumLong>(new SumLong(true), selector);
+            var select = new SelectFoward<TSource, long, SumLong>(new SumLong(SIMDOptions.OnlyIfSame), selector);
             ArrayNode.ProcessArray(source, ref select);
             return select._next.GetResult();
         }
@@ -1343,14 +1344,14 @@ namespace Cistern.ValueLinq
         }
         public static decimal Sum(this List<decimal> source)
         {
-            var aggregate = new SumDecimal(true);
+            var aggregate = new SumDecimal(SIMDOptions.OnlyIfSame);
             ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static decimal Sum<TSource>(this List<TSource> source, Func<TSource, decimal> selector)
         {
-            var select = new SelectFoward<TSource, decimal, SumDecimal>(new SumDecimal(true), selector);
+            var select = new SelectFoward<TSource, decimal, SumDecimal>(new SumDecimal(SIMDOptions.OnlyIfSame), selector);
             ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
@@ -1369,16 +1370,16 @@ namespace Cistern.ValueLinq
             return select._next.GetResult();
         }
 
-        public static double Sum(this List<double> source)
+        public static double Sum(this List<double> source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame)
         {
-            var aggregate = new SumDouble(true);
+            var aggregate = new SumDouble(simdOptions);
             ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static double Sum<TSource>(this List<TSource> source, Func<TSource, double> selector)
         {
-            var select = new SelectFoward<TSource, double, SumDouble>(new SumDouble(true), selector);
+            var select = new SelectFoward<TSource, double, SumDouble>(new SumDouble(SIMDOptions.OnlyIfSame), selector);
             ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
@@ -1397,16 +1398,16 @@ namespace Cistern.ValueLinq
             return select._next.GetResult();
         }
 
-        public static float Sum(this List<float> source)
+        public static float Sum(this List<float> source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame)
         {
-            var aggregate = new SumFloat(true);
+            var aggregate = new SumFloat(simdOptions);
             ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static float Sum<TSource>(this List<TSource> source, Func<TSource, float> selector)
         {
-            var select = new SelectFoward<TSource, float, SumFloat>(new SumFloat(true), selector);
+            var select = new SelectFoward<TSource, float, SumFloat>(new SumFloat(SIMDOptions.OnlyIfSame), selector);
             ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
@@ -1425,16 +1426,16 @@ namespace Cistern.ValueLinq
             return select._next.GetResult();
         }
 
-        public static int Sum(this List<int> source)
+        public static int Sum(this List<int> source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame)
         {
-            var aggregate = new SumInt(true);
+            var aggregate = new SumInt(simdOptions);
             ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static int Sum<TSource>(this List<TSource> source, Func<TSource, int> selector)
         {
-            var select = new SelectFoward<TSource, int, SumInt>(new SumInt(true), selector);
+            var select = new SelectFoward<TSource, int, SumInt>(new SumInt(SIMDOptions.OnlyIfSame), selector);
             ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
@@ -1453,16 +1454,16 @@ namespace Cistern.ValueLinq
             return select._next.GetResult();
         }
 
-        public static long Sum(this List<long> source)
+        public static long Sum(this List<long> source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame)
         {
-            var aggregate = new SumLong(true);
+            var aggregate = new SumLong(simdOptions);
             ListSegmentNode.ProcessList(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static long Sum<TSource>(this List<TSource> source, Func<TSource, long> selector)
         {
-            var select = new SelectFoward<TSource, long, SumLong>(new SumLong(true), selector);
+            var select = new SelectFoward<TSource, long, SumLong>(new SumLong(SIMDOptions.OnlyIfSame), selector);
             ListSegmentNode.ProcessList(source, ref select);
             return select._next.GetResult();
         }
@@ -1933,14 +1934,14 @@ namespace Cistern.ValueLinq
         }
         public static decimal Sum(this ReadOnlyMemory<decimal> source)
         {
-            var aggregate = new SumDecimal(true);
+            var aggregate = new SumDecimal(SIMDOptions.OnlyIfSame);
             MemoryNode.ProcessMemory(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static decimal Sum<TSource>(this ReadOnlyMemory<TSource> source, Func<TSource, decimal> selector)
         {
-            var select = new SelectFoward<TSource, decimal, SumDecimal>(new SumDecimal(true), selector);
+            var select = new SelectFoward<TSource, decimal, SumDecimal>(new SumDecimal(SIMDOptions.OnlyIfSame), selector);
             MemoryNode.ProcessMemory(source, ref select);
             return select._next.GetResult();
         }
@@ -1959,16 +1960,16 @@ namespace Cistern.ValueLinq
             return select._next.GetResult();
         }
 
-        public static double Sum(this ReadOnlyMemory<double> source)
+        public static double Sum(this ReadOnlyMemory<double> source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame)
         {
-            var aggregate = new SumDouble(true);
+            var aggregate = new SumDouble(simdOptions);
             MemoryNode.ProcessMemory(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static double Sum<TSource>(this ReadOnlyMemory<TSource> source, Func<TSource, double> selector)
         {
-            var select = new SelectFoward<TSource, double, SumDouble>(new SumDouble(true), selector);
+            var select = new SelectFoward<TSource, double, SumDouble>(new SumDouble(SIMDOptions.OnlyIfSame), selector);
             MemoryNode.ProcessMemory(source, ref select);
             return select._next.GetResult();
         }
@@ -1987,16 +1988,16 @@ namespace Cistern.ValueLinq
             return select._next.GetResult();
         }
 
-        public static float Sum(this ReadOnlyMemory<float> source)
+        public static float Sum(this ReadOnlyMemory<float> source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame)
         {
-            var aggregate = new SumFloat(true);
+            var aggregate = new SumFloat(simdOptions);
             MemoryNode.ProcessMemory(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static float Sum<TSource>(this ReadOnlyMemory<TSource> source, Func<TSource, float> selector)
         {
-            var select = new SelectFoward<TSource, float, SumFloat>(new SumFloat(true), selector);
+            var select = new SelectFoward<TSource, float, SumFloat>(new SumFloat(SIMDOptions.OnlyIfSame), selector);
             MemoryNode.ProcessMemory(source, ref select);
             return select._next.GetResult();
         }
@@ -2015,16 +2016,16 @@ namespace Cistern.ValueLinq
             return select._next.GetResult();
         }
 
-        public static int Sum(this ReadOnlyMemory<int> source)
+        public static int Sum(this ReadOnlyMemory<int> source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame)
         {
-            var aggregate = new SumInt(true);
+            var aggregate = new SumInt(simdOptions);
             MemoryNode.ProcessMemory(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static int Sum<TSource>(this ReadOnlyMemory<TSource> source, Func<TSource, int> selector)
         {
-            var select = new SelectFoward<TSource, int, SumInt>(new SumInt(true), selector);
+            var select = new SelectFoward<TSource, int, SumInt>(new SumInt(SIMDOptions.OnlyIfSame), selector);
             MemoryNode.ProcessMemory(source, ref select);
             return select._next.GetResult();
         }
@@ -2043,16 +2044,16 @@ namespace Cistern.ValueLinq
             return select._next.GetResult();
         }
 
-        public static long Sum(this ReadOnlyMemory<long> source)
+        public static long Sum(this ReadOnlyMemory<long> source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame)
         {
-            var aggregate = new SumLong(true);
+            var aggregate = new SumLong(simdOptions);
             MemoryNode.ProcessMemory(source, ref aggregate);
             return aggregate.GetResult();
         }
 
         public static long Sum<TSource>(this ReadOnlyMemory<TSource> source, Func<TSource, long> selector)
         {
-            var select = new SelectFoward<TSource, long, SumLong>(new SumLong(true), selector);
+            var select = new SelectFoward<TSource, long, SumLong>(new SumLong(SIMDOptions.OnlyIfSame), selector);
             MemoryNode.ProcessMemory(source, ref select);
             return select._next.GetResult();
         }

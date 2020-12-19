@@ -7,6 +7,10 @@ namespace Cistern.Benchmarks.Double
     {
         [Benchmark]
         public double CisternValueLinq() => _double.Sum();
+        [Benchmark]
+        public double CisternValueLinq_SIMDOptions_Fastest() => _double.Sum(ValueLinq.Maths.SIMDOptions.Fastest);
+        [Benchmark]
+        public double CisternValueLinq_SIMDOptions_WithOverflowHandling() => _double.Sum(ValueLinq.Maths.SIMDOptions.WithOverflowHandling);
 
         [Benchmark]
         public double CisternValueLinq_Foreach()

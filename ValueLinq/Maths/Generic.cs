@@ -1,11 +1,22 @@
-﻿namespace Cistern.ValueLinq.Maths
+﻿using System;
+using System.Numerics;
+using System.Runtime.CompilerServices;
+
+namespace Cistern.ValueLinq.Maths
 {
+    static class MathOperationError
+    {
+        public static void Overflow() => throw new OverflowException();
+    }
+
     interface IMathsOperations<T, Accumulator, Quotient>
         where T : struct
         where Accumulator : struct
         where Quotient : struct
     {
         bool SupportsVectorization { get; }
+        Vector<Accumulator> Add(Vector<Accumulator> lhs, Vector<T> rhs);
+        Vector<Accumulator> AddUnchecked(Vector<Accumulator> lhs, Vector<T> rhs);
 
         Accumulator Zero { get; }
         T One { get; }
@@ -16,7 +27,10 @@
         bool HasNaNs { get; }
         T NaN { get; }
 
+        Accumulator Add(Accumulator lhs, Accumulator rhs);
         Accumulator Add(Accumulator lhs, T rhs);
+        Accumulator AddUnchecked(Accumulator lhs, Accumulator rhs);
+        Accumulator AddUnchecked(Accumulator lhs, T rhs);
         Accumulator Add(Accumulator lhs, T? rhs);
         Accumulator AddInt(Accumulator lhs, int rhs);
         Quotient DivLong(Accumulator lhs, long rhs);
@@ -53,6 +67,12 @@
         public bool GreaterThan(double lhs, double rhs) => lhs > rhs;
         public bool LessThan(double lhs, double rhs) => lhs < rhs;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector<double> Add(Vector<double> lhs, Vector<double> rhs) => Vector.Add(lhs, rhs);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector<double> AddUnchecked(Vector<double> lhs, Vector<double> rhs) => Vector.Add(lhs, rhs);
+        public double AddUnchecked(double lhs, double rhs) => lhs + rhs;
+
         public double MaxInit => double.NaN;
         public double MinInit => double.PositiveInfinity;
     }
@@ -66,6 +86,7 @@
         public float One => 1.0f;
         public float MinValue => float.MinValue;
         public float MaxValue => float.MaxValue;
+        public double Add(double lhs, double rhs) => lhs + rhs;
         public double Add(double lhs, float rhs) => lhs + rhs;
         public double Add(double lhs, float? rhs) => lhs + rhs.GetValueOrDefault();
         public double AddInt(double lhs, int rhs) => lhs + rhs;
@@ -76,6 +97,19 @@
         public bool IsNaN(float x) => float.IsNaN(x);
         public bool GreaterThan(float lhs, float rhs) => lhs > rhs;
         public bool LessThan(float lhs, float rhs) => lhs < rhs;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector<double> Add(Vector<double> lhs, Vector<float> rhs)
+        {
+            Vector.Widen(rhs, out var l, out var r);
+            return Vector.Add(Vector.Add(lhs, l), r);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector<double> AddUnchecked(Vector<double> lhs, Vector<float> rhs) => Add(lhs, rhs);
+        public double AddUnchecked(double lhs, double rhs) => lhs + rhs;
+        public double AddUnchecked(double lhs, float rhs) => lhs + rhs;
+
         public float MaxInit => float.NaN;
         public float MinInit => float.PositiveInfinity;
     }
@@ -97,6 +131,22 @@
         public bool IsNaN(int x) => false;
         public bool GreaterThan(int lhs, int rhs) => lhs > rhs;
         public bool LessThan(int lhs, int rhs) => lhs < rhs;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector<int> Add(Vector<int> lhs, Vector<int> rhs)
+        {
+            var result = Vector.Add(lhs, rhs);
+            // Adapted from Hacker's Delight p26, where both inputs need to be of the same sign, and that sign is different from result
+            // (i.e. xors for diff, and for both, less and zero for checking sign bit set)
+            if (Vector.LessThanAny(Vector.BitwiseAnd(Vector.Xor(result, lhs), Vector.Xor(result, rhs)), Vector<int>.Zero))
+                MathOperationError.Overflow();
+            return result;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector<int> AddUnchecked(Vector<int> lhs, Vector<int> rhs) => Vector.Add(lhs, rhs);
+        public int AddUnchecked(int lhs, int rhs) => lhs + rhs;
+
         public int MaxInit => int.MinValue;
         public int MinInit => int.MaxValue;
     }
@@ -119,6 +169,20 @@
         public bool IsNaN(long x) => false;
         public bool GreaterThan(long lhs, long rhs) => lhs > rhs;
         public bool LessThan(long lhs, long rhs) => lhs < rhs;
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector<long> Add(Vector<long> lhs, Vector<long> rhs)
+        {
+            var result = Vector.Add(lhs, rhs);
+            if (Vector.LessThanAny(Vector.BitwiseAnd(Vector.Xor(result, lhs), Vector.Xor(result, rhs)), Vector<long>.Zero))
+                throw new OverflowException();
+            return result;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector<long> AddUnchecked(Vector<long> lhs, Vector<long> rhs) => Vector.Add(lhs, rhs);
+        public long AddUnchecked(long lhs, long rhs) => lhs + rhs;
+
         public long MaxInit => long.MinValue;
         public long MinInit => long.MaxValue;
     }
@@ -142,6 +206,13 @@
         public bool IsNaN(decimal x) => false;
         public bool GreaterThan(decimal lhs, decimal rhs) => lhs > rhs;
         public bool LessThan(decimal lhs, decimal rhs) => lhs < rhs;
+
+        public Vector<decimal> Add(Vector<decimal> lhs, Vector<decimal> rhs) => throw new InvalidOperationException();
+
+        public Vector<decimal> AddUnchecked(Vector<decimal> lhs, Vector<decimal> rhs) => throw new InvalidOperationException();
+
+        public decimal AddUnchecked(decimal lhs, decimal rhs) => lhs + rhs;
+
         public decimal MaxInit => decimal.MinValue;
         public decimal MinInit => decimal.MaxValue;
     }
