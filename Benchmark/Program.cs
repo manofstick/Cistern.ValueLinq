@@ -240,10 +240,6 @@ namespace Cistern.Benchmarks
             //    Console.Write('.');
             //}
 
-
-
-
-
             var summary = BenchmarkRunner.Run<Int.Average>();
         }
     }

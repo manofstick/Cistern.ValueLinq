@@ -1,4 +1,5 @@
 ﻿using BenchmarkDotNet.Attributes;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Cistern.Benchmarks.Int
@@ -11,14 +12,17 @@ namespace Cistern.Benchmarks.Int
         [Benchmark]
         public double Linq_Foreach()
         {
-            var count = 0;
-            var total = 0;
-            foreach (var item in _data)
+            checked
             {
-                ++count;
-                total += item;
+                var count = 0L;
+                var total = 0L;
+                foreach (var item in _data)
+                {
+                    ++count;
+                    total += item;
+                }
+                return (double)total / count;
             }
-            return (double)total/count;
         }
     }
 }

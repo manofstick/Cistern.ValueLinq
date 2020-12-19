@@ -15,14 +15,17 @@ namespace Cistern.Benchmarks.Int
         [Benchmark]
         public double CisternValueLinq_Foreach()
         {
-            var count = 0;
-            var total = 0;
-            foreach (var item in _data.OfEnumerable())
+            checked
             {
-                ++count;
-                total += item;
+                var count = 0L;
+                var total = 0L;
+                foreach (var item in _data.OfEnumerable())
+                {
+                    ++count;
+                    total += item;
+                }
+                return (double)total / count;
             }
-            return (double)total/count;
         }
     }
 }
