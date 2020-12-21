@@ -411,5 +411,9 @@ namespace Cistern.ValueLinq
         public static (U, V, W) Fork<T, U, V, W, InnerNode>(in this ValueEnumerable<T, InnerNode> node, Func<ValueEnumerable<T, Aggregation.Fork<T>>, U> t2u, Func<ValueEnumerable<T, Aggregation.Fork<T>>, V> t2v, Func<ValueEnumerable<T, Aggregation.Fork<T>>, W> t2w)
             where InnerNode : INode<T>
             => NodeImpl.Fork<T, U, V, W, InnerNode>(in node.Node, t2u, t2v, t2w);
+
+        public static ExceptNode<TSource, InnerNode> Except<TSource, InnerNode>(in this ValueEnumerable<TSource, InnerNode> node, IEnumerable<TSource> second, IEqualityComparer<TSource> comparer = null)
+            where InnerNode : INode<TSource>
+            => NodeImpl.Except<TSource, InnerNode>(in node.Node, second, comparer);
     }
 }

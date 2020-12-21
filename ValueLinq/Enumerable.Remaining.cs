@@ -46,8 +46,8 @@ namespace Cistern.ValueLinq
         //        public static TSource ElementAt<TSource>(this IEnumerable<TSource> source, int index) => System.Linq.Enumerable.ElementAt<TSource>(source, index);
         //        public static TSource ElementAtOrDefault<TSource>(this IEnumerable<TSource> source, int index) => System.Linq.Enumerable.ElementAtOrDefault<TSource>(source, index);
         //        public static IEnumerable<TResult> Empty<TResult>() => System.Linq.Enumerable.Empty<TResult>();
-        [Obsolete("Not converted to ValueLinq yet")] public static IEnumerable<TSource> Except<TSource>(this IEnumerable<TSource> first, IEnumerable<TSource> second) => System.Linq.Enumerable.Except<TSource>(first, second);
-        [Obsolete("Not converted to ValueLinq yet")] public static IEnumerable<TSource> Except<TSource>(this IEnumerable<TSource> first, IEnumerable<TSource> second, IEqualityComparer<TSource> comparer) => System.Linq.Enumerable.Except<TSource>(first, second, comparer);
+        //        public static IEnumerable<TSource> Except<TSource>(this IEnumerable<TSource> first, IEnumerable<TSource> second) => System.Linq.Enumerable.Except<TSource>(first, second);
+        //        public static IEnumerable<TSource> Except<TSource>(this IEnumerable<TSource> first, IEnumerable<TSource> second, IEqualityComparer<TSource> comparer) => System.Linq.Enumerable.Except<TSource>(first, second, comparer);
         //        public static TSource First<TSource>(this IEnumerable<TSource> source) => System.Linq.Enumerable.First<TSource>(source);
         //        public static TSource First<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) => System.Linq.Enumerable.First<TSource>(source, predicate);
         //        public static TSource FirstOrDefault<TSource>(this IEnumerable<TSource> source) => System.Linq.Enumerable.FirstOrDefault<TSource>(source);

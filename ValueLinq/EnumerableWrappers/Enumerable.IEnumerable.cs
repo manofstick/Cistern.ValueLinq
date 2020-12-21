@@ -4,7 +4,7 @@ using Cistern.ValueLinq.Nodes;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
-using System.Net.Http.Headers;
+using System.Diagnostics;
 
 namespace Cistern.ValueLinq
 {
@@ -168,5 +168,12 @@ namespace Cistern.ValueLinq
             => NodeImpl.Fork(new EnumerableNode<T>(source), t2u, t2v);
         public static (U, V, W) Fork<T, U, V, W>(this IEnumerable<T> source, Func<ValueEnumerable<T, Aggregation.Fork<T>>, U> t2u, Func<ValueEnumerable<T, Aggregation.Fork<T>>, V> t2v, Func<ValueEnumerable<T, Aggregation.Fork<T>>, W> t2w)
             => NodeImpl.Fork(new EnumerableNode<T>(source), t2u, t2v, t2w);
+
+        public static ValueEnumerable<TSource, ExceptNode<TSource, EnumerableNode<TSource>>> Except<TSource>(this IEnumerable<TSource> first, IEnumerable<TSource> second, IEqualityComparer<TSource> comparer = null)
+        {
+            if (first == null)
+                throw new ArgumentNullException("first");
+            return new(first.OfEnumerable().Except(second, comparer));
+        }
     }
 }

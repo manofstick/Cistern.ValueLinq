@@ -670,5 +670,14 @@ namespace Cistern.ValueLinq
 
             return (u, v, w);
         }
+
+        internal static ExceptNode<TSource, TPrior> Except<TSource, TPrior>(in TPrior prior, IEnumerable<TSource> second, IEqualityComparer<TSource> comparer)
+            where TPrior : INode<TSource>
+        {
+            if (second == null)
+                throw new ArgumentNullException(nameof(second));
+
+            return new ExceptNode<TSource, TPrior>(in prior, second, comparer);
+        }
     }
 }
