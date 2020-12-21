@@ -173,7 +173,11 @@ namespace Cistern.ValueLinq
         {
             if (first == null)
                 throw new ArgumentNullException("first");
+
             return new(first.OfEnumerable().Except(second, comparer));
         }
+
+        public static ValueEnumerable<TSource, ExceptNode<TSource, EnumerableNode<TSource>>> Distinct<TSource>(this IEnumerable<TSource> first, IEqualityComparer<TSource> comparer = null)
+            => new (first.OfEnumerable().Distinct(comparer));
     }
 }

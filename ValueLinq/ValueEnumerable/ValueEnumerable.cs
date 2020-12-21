@@ -415,5 +415,8 @@ namespace Cistern.ValueLinq
         public static ExceptNode<TSource, InnerNode> Except<TSource, InnerNode>(in this ValueEnumerable<TSource, InnerNode> node, IEnumerable<TSource> second, IEqualityComparer<TSource> comparer = null)
             where InnerNode : INode<TSource>
             => NodeImpl.Except<TSource, InnerNode>(in node.Node, second, comparer);
+        public static ExceptNode<TSource, InnerNode> Distinct<TSource, InnerNode>(in this ValueEnumerable<TSource, InnerNode> node, IEqualityComparer<TSource> comparer = null)
+            where InnerNode : INode<TSource>
+            => NodeImpl.Except<TSource, InnerNode>(in node.Node, Array.Empty<TSource>(), comparer);
     }
 }

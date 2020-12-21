@@ -41,8 +41,8 @@ namespace Cistern.ValueLinq
         //        public static int Count<TSource>(this IEnumerable<TSource> source) => System.Linq.Enumerable.Count<TSource>(source);
         [Obsolete("Not converted to ValueLinq yet")] public static IEnumerable<TSource> DefaultIfEmpty<TSource>(this IEnumerable<TSource> source, TSource defaultValue) => System.Linq.Enumerable.DefaultIfEmpty<TSource>(source, defaultValue);
         [Obsolete("Not converted to ValueLinq yet")] public static IEnumerable<TSource> DefaultIfEmpty<TSource>(this IEnumerable<TSource> source) => System.Linq.Enumerable.DefaultIfEmpty<TSource>(source);
-        [Obsolete("Not converted to ValueLinq yet")] public static IEnumerable<TSource> Distinct<TSource>(this IEnumerable<TSource> source) => System.Linq.Enumerable.Distinct<TSource>(source);
-        [Obsolete("Not converted to ValueLinq yet")] public static IEnumerable<TSource> Distinct<TSource>(this IEnumerable<TSource> source, IEqualityComparer<TSource> comparer) => System.Linq.Enumerable.Distinct<TSource>(source, comparer);
+        //        public static IEnumerable<TSource> Distinct<TSource>(this IEnumerable<TSource> source) => System.Linq.Enumerable.Distinct<TSource>(source);
+        //        public static IEnumerable<TSource> Distinct<TSource>(this IEnumerable<TSource> source, IEqualityComparer<TSource> comparer) => System.Linq.Enumerable.Distinct<TSource>(source, comparer);
         //        public static TSource ElementAt<TSource>(this IEnumerable<TSource> source, int index) => System.Linq.Enumerable.ElementAt<TSource>(source, index);
         //        public static TSource ElementAtOrDefault<TSource>(this IEnumerable<TSource> source, int index) => System.Linq.Enumerable.ElementAtOrDefault<TSource>(source, index);
         //        public static IEnumerable<TResult> Empty<TResult>() => System.Linq.Enumerable.Empty<TResult>();
