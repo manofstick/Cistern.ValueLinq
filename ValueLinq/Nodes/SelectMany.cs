@@ -3,7 +3,7 @@
 namespace Cistern.ValueLinq.Nodes
 {
 
-    struct SelectManyNodeEnumerator2<NodeU_Alt, U, TInEnumerator, NodeU>
+    struct SelectManyNodeEnumerator<NodeU_Alt, U, TInEnumerator, NodeU>
         : IFastEnumerator<U>
         where TInEnumerator : IFastEnumerator<NodeU_Alt>
         where NodeU : INode<U>
@@ -11,7 +11,7 @@ namespace Cistern.ValueLinq.Nodes
         private TInEnumerator _outer;
         private FastEnumerator<U> _inner;
 
-        public SelectManyNodeEnumerator2(in TInEnumerator enumerator) => (_outer, _inner) = (enumerator, FastEnumerator<U>.Empty);
+        public SelectManyNodeEnumerator(in TInEnumerator enumerator) => (_outer, _inner) = (enumerator, FastEnumerator<U>.Empty);
 
         public void Dispose()
         {
@@ -50,19 +50,18 @@ namespace Cistern.ValueLinq.Nodes
         }
     }
 
-    struct SelectManyNodeEnumerator<TSource, TCollection, TResult, TSourceEnumerator, NodeCollection>
+    struct SelectManyNodeEnumerator<NodeU_Alt, TSource, TCollection, TResult, TSourceEnumerator, NodeCollection>
         : IFastEnumerator<TResult>
-        where TSourceEnumerator : IFastEnumerator<TSource>
+        where TSourceEnumerator : IFastEnumerator<NodeU_Alt>
         where NodeCollection : INode<TCollection>
     {
         private TSourceEnumerator _outer;
-        private Func<TSource, ValueEnumerable<TCollection, NodeCollection>> _collectionSelector;
         private Func<TSource, TCollection, TResult> _resultSelector;
         private TSource _source;
         private FastEnumerator<TCollection> _inner;
 
-        public SelectManyNodeEnumerator(in TSourceEnumerator sourceEnumerator, Func<TSource, ValueEnumerable<TCollection, NodeCollection>> collectionSelector, Func<TSource, TCollection, TResult> resultSelector)
-            => (_outer, _collectionSelector, _resultSelector, _source, _inner) = (sourceEnumerator, collectionSelector, resultSelector, default, FastEnumerator<TCollection>.Empty);
+        public SelectManyNodeEnumerator(in TSourceEnumerator sourceEnumerator, Func<TSource, TCollection, TResult> resultSelector)
+            => (_outer, _resultSelector, _source, _inner) = (sourceEnumerator, resultSelector, default, FastEnumerator<TCollection>.Empty);
 
         public void Dispose()
         {
@@ -93,18 +92,20 @@ namespace Cistern.ValueLinq.Nodes
             _inner.Dispose();
             _inner = FastEnumerator<TCollection>.Empty;
 
-            if (!_outer.TryGetNext(out _source))
+            if (!_outer.TryGetNext(out var tmp))
             {
                 return false;
             }
 
-            _inner = Nodes<TCollection>.CreateFastEnumerator(_collectionSelector(_source));
+            var correctlyTyped = ((TSource, NodeCollection))(object)tmp;
+            _source = correctlyTyped.Item1;
+            _inner = Nodes<TCollection>.CreateFastEnumerator(correctlyTyped.Item2);
 
             return true;
         }
     }
 
-    public struct SelectManyNode2<U, NodeU, NodeEU>
+    public struct SelectManyNode<U, NodeU, NodeEU>
         : INode<U>
         where NodeU : INode<U>
         where NodeEU : INode<NodeU>
@@ -114,15 +115,15 @@ namespace Cistern.ValueLinq.Nodes
         public void GetCountInformation(out CountInformation info) =>
             info = new CountInformation();
 
-        public SelectManyNode2(in NodeEU nodeEU) => (_nodeEU) = (nodeEU);
+        public SelectManyNode(in NodeEU nodeEU) => (_nodeEU) = (nodeEU);
 
         CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
             => Nodes<CreationType>.Descend(ref _nodeEU, in this, in nodes);
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
         {
-            var nextEnumerator = new SelectManyNodeEnumerator2<EnumeratorElement, U, Enumerator, NodeU>(in enumerator);
-            return tail.CreateObject<CreationType, U, SelectManyNodeEnumerator2<EnumeratorElement, U, Enumerator, NodeU>>(ref nextEnumerator);
+            var nextEnumerator = new SelectManyNodeEnumerator<EnumeratorElement, U, Enumerator, NodeU>(in enumerator);
+            return tail.CreateObject<CreationType, U, SelectManyNodeEnumerator<EnumeratorElement, U, Enumerator, NodeU>>(ref nextEnumerator);
         }
 
         bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
@@ -149,39 +150,54 @@ namespace Cistern.ValueLinq.Nodes
             => _nodeEU.CreateViaPush<TResult, SelectManyFoward2<U, NodeU, FEnumerator, NodeEU>>(new SelectManyFoward2<U, NodeU, FEnumerator, NodeEU>(new SelectManyCommonNext<U, FEnumerator>(in fenum)));
     }
 
-    public struct SelectManyNode<TSource, TCollection, TResult, NodeSource, NodeCollection>
+    public struct SelectManyNode<TSource, TCollection, TResult, NodeCollection, NodeSrcCol>
         : INode<TResult>
-        where NodeSource : INode<TSource>
         where NodeCollection : INode<TCollection>
+        where NodeSrcCol : INode<(TSource, NodeCollection)>
     {
-        private NodeSource _nodeSource;
-        private Func<TSource, ValueEnumerable<TCollection, NodeCollection>> _collectionSelector;
+        private NodeSrcCol _nodeSource;
         private Func<TSource, TCollection, TResult> _resultSelector;
 
         public void GetCountInformation(out CountInformation info) =>
             info = new CountInformation();
 
-        public SelectManyNode(in NodeSource nodeSource, Func<TSource, ValueEnumerable<TCollection, NodeCollection>> collectionSelector, Func<TSource, TCollection, TResult> resultSelector)
-            => (_nodeSource, _collectionSelector, _resultSelector) = (nodeSource, collectionSelector, resultSelector);
+        public SelectManyNode(in NodeSrcCol nodeSource, Func<TSource, TCollection, TResult> resultSelector)
+            => (_nodeSource, _resultSelector) = (nodeSource, resultSelector);
 
         CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
             => Nodes<CreationType>.Descend(ref _nodeSource, in this, in nodes);
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
         {
-            var nextEnumerator = new SelectManyNodeEnumerator<EnumeratorElement, TCollection, TResult, Enumerator, NodeCollection>(in enumerator, (Func<EnumeratorElement, ValueEnumerable<TCollection, NodeCollection>>)(object)_collectionSelector, (Func<EnumeratorElement, TCollection, TResult>)(object)_resultSelector);
-            return tail.CreateObject<CreationType, TResult, SelectManyNodeEnumerator<EnumeratorElement, TCollection, TResult, Enumerator, NodeCollection>>(ref nextEnumerator);
+            var nextEnumerator = new SelectManyNodeEnumerator<EnumeratorElement, TSource, TCollection, TResult, Enumerator, NodeCollection>(in enumerator, _resultSelector);
+            return tail.CreateObject<CreationType, TResult, SelectManyNodeEnumerator<EnumeratorElement, TSource, TCollection, TResult, Enumerator, NodeCollection>>(ref nextEnumerator);
         }
 
         bool INode.TryPullOptimization<TRequest, TObjResult, Nodes>(in TRequest request, ref Nodes nodes, out TObjResult creation) { creation = default; return false; }
-        bool INode.TryPushOptimization<TRequest, TObjResult>(in TRequest request, out TObjResult result)
+        bool INode.TryPushOptimization<TRequest, TResultLocal>(in TRequest request, out TResultLocal result)
         {
+            if (typeof(TRequest) == typeof(Optimizations.Count))
+            {
+                result = (TResultLocal)(object)Count();
+                return true;
+            }
+
             result = default;
             return false;
         }
 
+        private readonly int Count()
+        {
+            // TODO: change to forwards?
+            using var e = Nodes<NodeCollection>.CreateFastEnumerator(_nodeSource);
+            return SelectManyImpl.Count<TCollection, NodeCollection>(e);
+        }
+
         TObjResult INode<TResult>.CreateViaPush<TObjResult, FEnumerator>(in FEnumerator fenum)
-            => _nodeSource.CreateViaPush<TObjResult, SelectManyFoward<TSource, TCollection, TResult, NodeCollection, FEnumerator>>(new SelectManyFoward<TSource, TCollection, TResult, NodeCollection, FEnumerator>(new SelectManyCommonNext<TResult, FEnumerator>(in fenum), _collectionSelector, _resultSelector));
+        {
+            throw new NotImplementedException();
+            //=> _nodeSource.CreateViaPush<TObjResult, SelectManyFoward<TSource, TCollection, TResult, NodeCollection, FEnumerator>>(new SelectManyFoward<TSource, TCollection, TResult, NodeCollection, FEnumerator>(new SelectManyCommonNext<TResult, FEnumerator>(in fenum), _collectionSelector, _resultSelector));
+        }
     }
 
     static class SelectManyImpl

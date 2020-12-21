@@ -247,6 +247,9 @@ namespace Linqs.Tests
             string[] expected = { "1", "2", "3", "4", "5", "6", "8", "9", "-10", "100" };
 
             Assert.Equal(expected, source.SelectMany(e => e.total, (e, f) => f.ToString()));
+#if CISTERN_VALUELINQ
+            Assert.Equal(expected, source.SelectMany(e => e.total, (e, f) => f.ToString()).ToArrayUsePool());
+#endif
         }
 
         [Fact]
@@ -375,12 +378,12 @@ namespace Linqs.Tests
             //Assert.False(en != null && en.MoveNext());
         }
 
-        [Fact]
+        [Fact(Skip = "CISTERN.VALUELINQ: Irrelevant")]
         public void ForcedToEnumeratorDoesntEnumerateIndexedResultSel()
         {
-            var iterator = NumberRangeGuaranteedNotCollectionType(0, 3).SelectMany((e, i) => new int[0], (e, i) => e);
-            var en = iterator as IEnumerator<int>;
-            Assert.False(en != null && en.MoveNext());
+            //var iterator = NumberRangeGuaranteedNotCollectionType(0, 3).SelectMany((e, i) => new int[0], (e, i) => e);
+            //var en = iterator as IEnumerator<int>;
+            //Assert.False(en != null && en.MoveNext());
         }
 
         [Theory]

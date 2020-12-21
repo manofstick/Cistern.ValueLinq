@@ -556,7 +556,7 @@ namespace Cistern.ValueLinq
             inner.CreateViaPush<bool, ContainsByComparer<T>>(new ContainsByComparer<T>(comparer, value));
 
 
-        internal static SelectManyNode2<TResult, NodeU, SelectNode<TSource, NodeU, NodeT>> SelectMany<TSource, TResult, NodeT, NodeU>(in NodeT prior, Func<TSource, NodeU> selector)
+        internal static SelectManyNode<TResult, NodeU, SelectNode<TSource, NodeU, NodeT>> SelectMany<TSource, TResult, NodeT, NodeU>(in NodeT prior, Func<TSource, NodeU> selector)
             where NodeT : INode<TSource>
             where NodeU : INode<TResult>
         {
@@ -565,7 +565,7 @@ namespace Cistern.ValueLinq
 
             return new (new(prior, selector));
         }
-        internal static SelectManyNode2<TResult, NodeU, SelectIdxNode<TSource, NodeU, NodeT>> SelectMany<TSource, TResult, NodeT, NodeU>(in NodeT prior, Func<TSource, int, NodeU> selector)
+        internal static SelectManyNode<TResult, NodeU, SelectIdxNode<TSource, NodeU, NodeT>> SelectMany<TSource, TResult, NodeT, NodeU>(in NodeT prior, Func<TSource, int, NodeU> selector)
             where NodeT : INode<TSource>
             where NodeU : INode<TResult>
         {
@@ -584,16 +584,16 @@ namespace Cistern.ValueLinq
         //    return new SelectManyNode<TSource, TResult, NodeT, NodeU>(in prior, selector);
         //}
 
-        internal static SelectManyNode<TSource, TCollection, TResult, NodeT, NodeU> SelectMany<TSource, TCollection, TResult, NodeT, NodeU>(in NodeT prior, Func<TSource, ValueEnumerable<TCollection, NodeU>> collectionSelector, Func<TSource, TCollection, TResult> resultSelector)
-            where NodeT : INode<TSource>
+        internal static SelectManyNode<TSource, TCollection, TResult, NodeU, NodeT> SelectMany<TSource, TCollection, TResult, NodeU, NodeT>(in NodeT prior, Func<TSource, ValueEnumerable<TCollection, NodeU>> collectionSelector, Func<TSource, TCollection, TResult> resultSelector)
             where NodeU : INode<TCollection>
+            where NodeT : INode<(TSource, NodeU)>
         {
             if (collectionSelector == null)
                 throw new ArgumentNullException(nameof(collectionSelector));
             if (resultSelector == null)
                 throw new ArgumentNullException(nameof(resultSelector));
 
-            return new SelectManyNode<TSource, TCollection, TResult, NodeT, NodeU>(in prior, collectionSelector, resultSelector);
+            return new SelectManyNode<TSource, TCollection, TResult, NodeU, NodeT>(in prior, resultSelector);
         }
 
         internal static ConcatNode<T, First, Second> Concat<T, First, Second>(in First first, in Second second)

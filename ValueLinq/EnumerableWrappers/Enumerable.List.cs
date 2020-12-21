@@ -17,7 +17,7 @@ namespace Cistern.ValueLinq
 
         public static int Count<T>(this List<T> inner) => inner.Count;
 
-        public static ValueEnumerable<TResult, SelectManyNode2<TResult, EnumerableNode<TResult>, SelectNode<TSource, EnumerableNode<TResult>, ListNode<TSource>>>> SelectMany<TSource, TResult>(this List<TSource> source, Func<TSource, IEnumerable<TResult>> selector)
+        public static ValueEnumerable<TResult, SelectManyNode<TResult, EnumerableNode<TResult>, SelectNode<TSource, EnumerableNode<TResult>, ListNode<TSource>>>> SelectMany<TSource, TResult>(this List<TSource> source, Func<TSource, IEnumerable<TResult>> selector)
         {
             if (selector == null)
                 throw new ArgumentNullException(nameof(selector));
@@ -25,7 +25,7 @@ namespace Cistern.ValueLinq
             return new(new(new(new(source), source => new(selector(source)))));
         }
 
-        public static ValueEnumerable<TResult, SelectManyNode2<TResult, EnumerableNode<TResult>, SelectIdxNode<TSource, EnumerableNode<TResult>, ListNode<TSource>>>> SelectMany<TSource, TResult>(this List<TSource> source, Func<TSource, int, IEnumerable<TResult>> selector)
+        public static ValueEnumerable<TResult, SelectManyNode<TResult, EnumerableNode<TResult>, SelectIdxNode<TSource, EnumerableNode<TResult>, ListNode<TSource>>>> SelectMany<TSource, TResult>(this List<TSource> source, Func<TSource, int, IEnumerable<TResult>> selector)
         {
             if (selector == null)
                 throw new ArgumentNullException(nameof(selector));
