@@ -103,7 +103,13 @@ namespace Cistern.ValueLinq.Containers
         public void GetCountInformation(out CountInformation info) =>
             EnumerableNode.GetCountInformation(_enumerable, out info);
 
-        public EnumerableNode(IEnumerable<T> source) => _enumerable = source;
+        public EnumerableNode(IEnumerable<T> source)
+        {
+            if (source == null)
+                throw new ArgumentNullException("source");
+
+            _enumerable = source;
+        }
 
         CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) =>
             EnumerableNode.CreateObjectDescent<T, CreationType, Head, Tail>(ref nodes, _enumerable);

@@ -556,15 +556,33 @@ namespace Cistern.ValueLinq
             inner.CreateViaPush<bool, ContainsByComparer<T>>(new ContainsByComparer<T>(comparer, value));
 
 
-        internal static SelectManyNode<TSource, TResult, NodeT, NodeU> SelectMany<TSource, TResult, NodeT, NodeU>(in NodeT prior, Func<TSource, ValueEnumerable<TResult, NodeU>> selector)
+        internal static SelectManyNode2<TResult, NodeU, SelectNode<TSource, NodeU, NodeT>> SelectMany<TSource, TResult, NodeT, NodeU>(in NodeT prior, Func<TSource, NodeU> selector)
             where NodeT : INode<TSource>
             where NodeU : INode<TResult>
         {
             if (selector == null)
                 throw new ArgumentNullException(nameof(selector));
 
-            return new SelectManyNode<TSource, TResult, NodeT, NodeU>(in prior, selector);
+            return new (new(prior, selector));
         }
+        internal static SelectManyNode2<TResult, NodeU, SelectIdxNode<TSource, NodeU, NodeT>> SelectMany<TSource, TResult, NodeT, NodeU>(in NodeT prior, Func<TSource, int, NodeU> selector)
+            where NodeT : INode<TSource>
+            where NodeU : INode<TResult>
+        {
+            if (selector == null)
+                throw new ArgumentNullException(nameof(selector));
+
+            return new(new(prior, selector));
+        }
+        //internal static SelectManyNode<TSource, TResult, NodeT, NodeU> SelectMany<TSource, TResult, NodeT, NodeU>(in NodeT prior, Func<TSource, ValueEnumerable<TResult, NodeU>> selector)
+        //    where NodeT : INode<TSource>
+        //    where NodeU : INode<TResult>
+        //{
+        //    if (selector == null)
+        //        throw new ArgumentNullException(nameof(selector));
+
+        //    return new SelectManyNode<TSource, TResult, NodeT, NodeU>(in prior, selector);
+        //}
 
         internal static SelectManyNode<TSource, TCollection, TResult, NodeT, NodeU> SelectMany<TSource, TCollection, TResult, NodeT, NodeU>(in NodeT prior, Func<TSource, ValueEnumerable<TCollection, NodeU>> collectionSelector, Func<TSource, TCollection, TResult> resultSelector)
             where NodeT : INode<TSource>

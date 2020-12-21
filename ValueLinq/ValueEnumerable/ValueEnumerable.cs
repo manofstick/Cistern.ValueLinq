@@ -342,15 +342,25 @@ namespace Cistern.ValueLinq
             where Inner : INode<TSource>
             => NodeImpl.Contains(in inner.Node, value, comparer);
 
-        public static ValueEnumerable<TResult, SelectManyNode<TSource, TResult, NodeT, NodeU>> SelectMany<TSource, TResult, NodeT, NodeU>(in this ValueEnumerable<TSource, NodeT> prior, Func<TSource, ValueEnumerable<TResult, NodeU>> selector)
+        public static ValueEnumerable<TResult, SelectManyNode2<TResult, ValueEnumerable<TResult, NodeU>, SelectNode<TSource, ValueEnumerable<TResult, NodeU>, NodeT>>> SelectMany<TSource, TResult, NodeT, NodeU>(in this ValueEnumerable<TSource, NodeT> prior, Func<TSource, ValueEnumerable<TResult, NodeU>> selector)
             where NodeT : INode<TSource>
             where NodeU : INode<TResult>
-            => new (NodeImpl.SelectMany(in prior.Node, selector));
+            => new (NodeImpl.SelectMany<TSource, TResult, NodeT, ValueEnumerable<TResult, NodeU>>(in prior.Node, selector));
+
+        public static ValueEnumerable<TResult, SelectManyNode2<TResult, ValueEnumerable<TResult, NodeU>, SelectIdxNode<TSource, ValueEnumerable<TResult, NodeU>, NodeT>>> SelectMany<TSource, TResult, NodeT, NodeU>(in this ValueEnumerable<TSource, NodeT> prior, Func<TSource, int, ValueEnumerable<TResult, NodeU>> selector)
+            where NodeT : INode<TSource>
+            where NodeU : INode<TResult>
+            => new(NodeImpl.SelectMany<TSource, TResult, NodeT, ValueEnumerable<TResult, NodeU>>(in prior.Node, selector));
+
+        //public static ValueEnumerable<TResult, SelectManyNode<TSource, TResult, NodeT, NodeU>> SelectMany<TSource, TResult, NodeT, NodeU>(in this ValueEnumerable<TSource, NodeT> prior, Func<TSource, ValueEnumerable<TResult, NodeU>> selector)
+        //    where NodeT : INode<TSource>
+        //    where NodeU : INode<TResult>
+        //    => new (NodeImpl.SelectMany(in prior.Node, selector));
 
         public static ValueEnumerable<TResult, SelectManyNode<TSource, TCollection, TResult, NodeT, NodeU>> SelectMany<TSource, TCollection, TResult, NodeT, NodeU>(in this ValueEnumerable<TSource, NodeT> prior, Func<TSource, ValueEnumerable<TCollection, NodeU>> collectionSelector, Func<TSource, TCollection, TResult> resultSelector)
             where NodeT : INode<TSource>
             where NodeU : INode<TCollection>
-            => new (NodeImpl.SelectMany(in prior.Node, collectionSelector, resultSelector));
+            => new(NodeImpl.SelectMany(in prior.Node, collectionSelector, resultSelector));
 
         public static ValueEnumerable<TSource, ConcatNode<TSource, First, Second>> Concat<TSource, First, Second>(in this ValueEnumerable<TSource, First> first, in ValueEnumerable<TSource, Second> second)
             where First : INode<TSource>

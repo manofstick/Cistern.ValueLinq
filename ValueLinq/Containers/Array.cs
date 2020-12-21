@@ -115,7 +115,13 @@ namespace Cistern.ValueLinq.Containers
         public void GetCountInformation(out CountInformation info) =>
             info = new CountInformation(_array.Length, true);
 
-        public ArrayNode(T[] array) => _array = array;
+        public ArrayNode(T[] array)
+        {
+            if (array == null)
+                throw new ArgumentNullException("source");
+
+            _array = array;
+        }
 
         CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
         {

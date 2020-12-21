@@ -17,22 +17,38 @@ namespace Cistern.ValueLinq
 
         public static int Count<T>(this List<T> inner) => inner.Count;
 
-        public static ValueEnumerable<TResult, SelectManyNode<TSource, TResult, ListNode<TSource>, EnumerableNode<TResult>>> SelectMany<TSource, TResult>(this List<TSource> source, Func<TSource, IEnumerable<TResult>> selector)
+        public static ValueEnumerable<TResult, SelectManyNode2<TResult, EnumerableNode<TResult>, SelectNode<TSource, EnumerableNode<TResult>, ListNode<TSource>>>> SelectMany<TSource, TResult>(this List<TSource> source, Func<TSource, IEnumerable<TResult>> selector)
         {
             if (selector == null)
                 throw new ArgumentNullException(nameof(selector));
 
-            return source.OfList().SelectMany(src => selector(src).OfEnumerable());
+            return new(new(new(new(source), source => new(selector(source)))));
         }
 
-        public static ValueEnumerable<TResult, SelectManyNode<TSource, TResult, ListNode<TSource>, NodeU>> SelectMany<TSource, TResult, NodeU>(this List<TSource> source, Func<TSource, ValueEnumerable<TResult, NodeU>> selector)
-            where NodeU : INode<TResult>
+        public static ValueEnumerable<TResult, SelectManyNode2<TResult, EnumerableNode<TResult>, SelectIdxNode<TSource, EnumerableNode<TResult>, ListNode<TSource>>>> SelectMany<TSource, TResult>(this List<TSource> source, Func<TSource, int, IEnumerable<TResult>> selector)
         {
             if (selector == null)
                 throw new ArgumentNullException(nameof(selector));
 
-            return source.OfList().SelectMany(selector);
+            return new(new(new(new(source), (source, idx) => new(selector(source, idx)))));
         }
+
+        //public static ValueEnumerable<TResult, SelectManyNode<TSource, TResult, ListNode<TSource>, EnumerableNode<TResult>>> SelectMany<TSource, TResult>(this List<TSource> source, Func<TSource, IEnumerable<TResult>> selector)
+        //{
+        //    if (selector == null)
+        //        throw new ArgumentNullException(nameof(selector));
+
+        //    return source.OfList().SelectMany(src => selector(src).OfEnumerable());
+        //}
+
+        //public static ValueEnumerable<TResult, SelectManyNode<TSource, TResult, ListNode<TSource>, NodeU>> SelectMany<TSource, TResult, NodeU>(this List<TSource> source, Func<TSource, ValueEnumerable<TResult, NodeU>> selector)
+        //    where NodeU : INode<TResult>
+        //{
+        //    if (selector == null)
+        //        throw new ArgumentNullException(nameof(selector));
+
+        //    return source.OfList().SelectMany(selector);
+        //}
 
         public static IEnumerable<T> Concat<T>(this List<T> first, List<T> second) => new ValueEnumerable<T, ConcatNode<T, ListNode<T>, ListNode<T>>>(NodeImpl.Concat<T, ListNode<T>, ListNode<T>>(Enumerable.ToNode(first), Enumerable.ToNode(second)));
 
