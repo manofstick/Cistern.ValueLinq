@@ -2,7 +2,6 @@
 
 namespace Cistern.ValueLinq.Nodes
 {
-
     struct SelectManyNodeEnumerator<NodeU_Alt, U, TInEnumerator, NodeU>
         : IFastEnumerator<U>
         where TInEnumerator : IFastEnumerator<NodeU_Alt>
@@ -193,11 +192,8 @@ namespace Cistern.ValueLinq.Nodes
             return SelectManyImpl.Count<TCollection, NodeCollection>(e);
         }
 
-        TObjResult INode<TResult>.CreateViaPush<TObjResult, FEnumerator>(in FEnumerator fenum)
-        {
-            throw new NotImplementedException();
-            //=> _nodeSource.CreateViaPush<TObjResult, SelectManyFoward<TSource, TCollection, TResult, NodeCollection, FEnumerator>>(new SelectManyFoward<TSource, TCollection, TResult, NodeCollection, FEnumerator>(new SelectManyCommonNext<TResult, FEnumerator>(in fenum), _collectionSelector, _resultSelector));
-        }
+        TObjResult INode<TResult>.CreateViaPush<TObjResult, FEnumerator>(in FEnumerator fenum) =>
+            _nodeSource.CreateViaPush<TObjResult, SelectManyFoward<TSource, TCollection, TResult, NodeCollection, FEnumerator>>(new SelectManyFoward<TSource, TCollection, TResult, NodeCollection, FEnumerator>(new SelectManyCommonNext<TResult, FEnumerator>(in fenum), _resultSelector));
     }
 
     static class SelectManyImpl
@@ -284,24 +280,23 @@ namespace Cistern.ValueLinq.Nodes
     }
 
     struct SelectManyFoward<TSource, TCollection, TResult, NodeCollection, Next>
-        : IForwardEnumerator<TSource>
+        : IForwardEnumerator<(TSource, NodeCollection)>
         where Next : IForwardEnumerator<TResult>
         where NodeCollection : INode<TCollection>
     {
         private SelectManyCommonNext<TResult, Next> _next;
-        private Func<TSource, ValueEnumerable<TCollection, NodeCollection>> _collectionSelector;
         private Func<TSource, TCollection, TResult> _resultSelector;
 
-        public SelectManyFoward(in SelectManyCommonNext<TResult, Next> next, Func<TSource, ValueEnumerable<TCollection, NodeCollection>> collectionSelector, Func<TSource, TCollection, TResult> resultSelector)
-            => (_next, _collectionSelector, _resultSelector) = (next, collectionSelector, resultSelector);
+        public SelectManyFoward(in SelectManyCommonNext<TResult, Next> next, Func<TSource, TCollection, TResult> resultSelector)
+            => (_next, _resultSelector) = (next, resultSelector);
 
         public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() => _next.Dispose();
 
         public TObjResult GetResult<TObjResult>() => _next.GetResult<TObjResult>();
 
-        public bool ProcessNext(TSource input) =>
-            _collectionSelector(input).Node.CreateViaPush<bool, SelectManyProcessNextForward<TSource, TCollection, TResult, Next>>(new SelectManyProcessNextForward<TSource, TCollection, TResult, Next>(input, _resultSelector, _next));
+        public bool ProcessNext((TSource, NodeCollection) input) =>
+            input.Item2.CreateViaPush<bool, SelectManyProcessNextForward<TSource, TCollection, TResult, Next>>(new SelectManyProcessNextForward<TSource, TCollection, TResult, Next>(input.Item1, _resultSelector, _next));
     }
 
 }
