@@ -1,18 +1,25 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace Cistern.ValueLinq.Containers
 {
-    class InstanceOfEmptyEnumerator<T>
+    class InstanceOfEmpty<T>
         : IEnumerator<T>
+        , IEnumerable<T>
     {
-        public static readonly IEnumerator<T> Instance = new InstanceOfEmptyEnumerator<T>();
-        private InstanceOfEmptyEnumerator() { }
+        private static InstanceOfEmpty<T> _instance = new InstanceOfEmpty<T>();
+
+        public static readonly IEnumerator<T> AsEnumerator = _instance;
+        public static readonly IEnumerable<T> AsEnumerable = _instance;
+        private InstanceOfEmpty() { }
         public T Current => default;
         object System.Collections.IEnumerator.Current => Current;
         public void Dispose() { }
         public bool MoveNext() => false;
         public void Reset() { }
+        IEnumerator IEnumerable.GetEnumerator() => this;
+        public IEnumerator<T> GetEnumerator() => this;
     }
 
     class InstanceOfEmptyFastEnumerator<T>

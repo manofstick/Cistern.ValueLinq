@@ -36,7 +36,7 @@ namespace Cistern.ValueLinq.ValueEnumerable
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
         {
             if (typeof(Enumerator) == typeof(Containers.EmptyFastEnumerator<EnumeratorElement>))
-                return (CreationType)(object)InstanceOfEmptyEnumerator<EnumeratorElement>.Instance;
+                return (CreationType)(object)InstanceOfEmpty<EnumeratorElement>.AsEnumerator;
 
             return (CreationType)(object)(new FastEnumeratorToEnumerator<EnumeratorElement, Enumerator>(in enumerator));
         }

@@ -139,14 +139,14 @@ namespace Linqs.Tests
             var e = oddsEvens.GetEnumerator();
 
             Assert.True(e.MoveNext());
-            IList<int> odds = (IList<int>)e.Current;
-            Assert.Equal(1, odds[0]);
-            Assert.Equal(3, odds[1]);
-
-            Assert.True(e.MoveNext());
             IList<int> evens = (IList<int>)e.Current;
             Assert.Equal(2, evens[0]);
             Assert.Equal(4, evens[1]);
+
+            Assert.True(e.MoveNext());
+            IList<int> odds = (IList<int>)e.Current;
+            Assert.Equal(1, odds[0]);
+            Assert.Equal(3, odds[1]);
         }
 
         [Fact]
@@ -168,18 +168,18 @@ namespace Linqs.Tests
             var e = oddsEvens.GetEnumerator();
 
             Assert.True(e.MoveNext());
-            ICollection<int> odds = (IList<int>)e.Current;
-            Assert.True(odds.Contains(1));
-            Assert.True(odds.Contains(3));
-            Assert.False(odds.Contains(2));
-            Assert.False(odds.Contains(4));
-
-            Assert.True(e.MoveNext());
             ICollection<int> evens = (IList<int>)e.Current;
             Assert.True(evens.Contains(2));
             Assert.True(evens.Contains(4));
             Assert.False(evens.Contains(1));
             Assert.False(evens.Contains(3));
+
+            Assert.True(e.MoveNext());
+            ICollection<int> odds = (IList<int>)e.Current;
+            Assert.True(odds.Contains(1));
+            Assert.True(odds.Contains(3));
+            Assert.False(odds.Contains(2));
+            Assert.False(odds.Contains(4));
         }
 
         [Fact]
@@ -189,18 +189,18 @@ namespace Linqs.Tests
             var e = oddsEvens.GetEnumerator();
 
             Assert.True(e.MoveNext());
-            IList<int> odds = (IList<int>)e.Current;
-            Assert.Equal(0, odds.IndexOf(1));
-            Assert.Equal(1, odds.IndexOf(3));
-            Assert.Equal(-1, odds.IndexOf(2));
-            Assert.Equal(-1, odds.IndexOf(4));
-
-            Assert.True(e.MoveNext());
             IList<int> evens = (IList<int>)e.Current;
             Assert.Equal(0, evens.IndexOf(2));
             Assert.Equal(1, evens.IndexOf(4));
             Assert.Equal(-1, evens.IndexOf(1));
             Assert.Equal(-1, evens.IndexOf(3));
+
+            Assert.True(e.MoveNext());
+            IList<int> odds = (IList<int>)e.Current;
+            Assert.Equal(0, odds.IndexOf(1));
+            Assert.Equal(1, odds.IndexOf(3));
+            Assert.Equal(-1, odds.IndexOf(2));
+            Assert.Equal(-1, odds.IndexOf(4));
         }
 
         [Fact]
