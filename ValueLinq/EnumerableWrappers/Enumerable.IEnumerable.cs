@@ -181,11 +181,8 @@ namespace Cistern.ValueLinq
             => new (first.OfEnumerable().Distinct(comparer));
 
         public static ValueEnumerable<System.Linq.IGrouping<TKey, TSource>, GroupByNode<TSource, TKey, EnumerableNode<TSource>>> GroupBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer = null)
-        {
-            if (keySelector == null)
-                throw new ArgumentNullException(nameof(keySelector));
-
-            return new(new(new(source), keySelector, comparer));
-        }
+            => new (NodeImpl.GroupBy(ToNode(source), keySelector, comparer));
+        public static ValueEnumerable<System.Linq.IGrouping<TKey, TElement>, GroupByNode<TSource, TKey, TElement, EnumerableNode<TSource>>> GroupBy<TSource, TKey, TElement>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, IEqualityComparer<TKey> comparer = null)
+            => new(NodeImpl.GroupBy(ToNode(source), keySelector, elementSelector, comparer));
     }
 }

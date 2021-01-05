@@ -679,5 +679,22 @@ namespace Cistern.ValueLinq
 
             return new ExceptNode<TSource, TPrior>(in prior, second, comparer);
         }
+
+        public static GroupByNode<TSource, TKey, TPrior> GroupBy<TSource, TKey, TPrior>(in TPrior prior, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer)
+            where TPrior : INode<TSource>
+        {
+            if (keySelector == null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new (prior, keySelector, comparer);
+        }
+        public static GroupByNode<TSource, TKey, TElement, TPrior> GroupBy<TSource, TKey, TElement, TPrior>(in TPrior prior, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, IEqualityComparer<TKey> comparer)
+            where TPrior : INode<TSource>
+        {
+            if (keySelector == null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new(prior, keySelector, elementSelector, comparer);
+        }
     }
 }

@@ -76,5 +76,10 @@ namespace Cistern.ValueLinq
             => NodeImpl.Fork(new MemoryNode<T>(source), t2u, t2v);
         public static (U, V, W) Fork<T, U, V, W>(this Memory<T> source, Func<ValueEnumerable<T, Aggregation.Fork<T>>, U> t2u, Func<ValueEnumerable<T, Aggregation.Fork<T>>, V> t2v, Func<ValueEnumerable<T, Aggregation.Fork<T>>, W> t2w)
             => NodeImpl.Fork(new MemoryNode<T>(source), t2u, t2v, t2w);
+
+        public static ValueEnumerable<System.Linq.IGrouping<TKey, TSource>, GroupByNode<TSource, TKey, MemoryNode<TSource>>> GroupBy<TSource, TKey>(this Memory<TSource> source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer = null)
+        => new(NodeImpl.GroupBy(new MemoryNode<TSource>(source), keySelector, comparer));
+        public static ValueEnumerable<System.Linq.IGrouping<TKey, TElement>, GroupByNode<TSource, TKey, TElement, MemoryNode<TSource>>> GroupBy<TSource, TKey, TElement>(this Memory<TSource> source, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, IEqualityComparer<TKey> comparer = null)
+            => new(NodeImpl.GroupBy(new MemoryNode<TSource>(source), keySelector, elementSelector, comparer));
     }
 }

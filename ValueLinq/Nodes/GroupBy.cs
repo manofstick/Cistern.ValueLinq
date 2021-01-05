@@ -831,8 +831,13 @@ namespace Cistern.ValueLinq.Nodes
 
         public void GetCountInformation(out CountInformation info) => info = new CountInformation();
 
-        public GroupByNode(in NodeT nodeT, Func<TSource, TKey> selector, IEqualityComparer<TKey> comparer)
-            => (_nodeT, _keySelector, _comparer) = (nodeT, selector, comparer);
+        public GroupByNode(in NodeT nodeT, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer)
+        {
+            if (keySelector == null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            (_nodeT, _keySelector, _comparer) = (nodeT, keySelector, comparer);
+        }
 
         CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
         {
@@ -863,11 +868,62 @@ namespace Cistern.ValueLinq.Nodes
         }
     }
 
+    public struct GroupByNode<TSource, TKey, TElement, NodeT>
+        : INode<System.Linq.IGrouping<TKey, TElement>>
+        where NodeT : INode<TSource>
+    {
+        private NodeT _nodeT;
+        private Func<TSource, TKey> _keySelector;
+        private Func<TSource, TElement> _elementSelector;
+        private IEqualityComparer<TKey> _comparer;
+
+        public void GetCountInformation(out CountInformation info) => info = new CountInformation();
+
+        public GroupByNode(in NodeT nodeT, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, IEqualityComparer<TKey> comparer)
+        {
+            if (keySelector == null)
+                throw new ArgumentNullException(nameof(keySelector));
+            if (elementSelector == null)
+                throw new ArgumentNullException(nameof(elementSelector));
+
+            (_nodeT, _keySelector, _elementSelector, _comparer) = (nodeT, keySelector, elementSelector, comparer);
+        }
+
+        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+        {
+            var lookup = _nodeT.CreateViaPush<Lookup<TKey, TElement>, LookupFoward<TSource, TKey, TElement>>(new LookupFoward<TSource, TKey, TElement>(_comparer, _keySelector, _elementSelector));
+            var enumerator = new LookupEnumerator<TKey, TElement>(lookup._lastGrouping);
+            return nodes.CreateObject<CreationType, System.Linq.IGrouping<TKey, TElement>, LookupEnumerator<TKey, TElement>>(ref enumerator);
+        }
+
+        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
+            => throw new InvalidOperationException();
+
+        bool INode.TryPullOptimization<TRequest, CreationType, Tail>(in TRequest request, ref Tail tail, out CreationType creation)
+        {
+            creation = default;
+            return false;
+        }
+
+        bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+        {
+            result = default;
+            return false;
+        }
+
+        TResult INode<System.Linq.IGrouping<TKey, TElement>>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
+        {
+            var lookup = _nodeT.CreateViaPush<Lookup<TKey, TElement>, LookupFoward<TSource, TKey, TElement>>(new LookupFoward<TSource, TKey, TElement>(_comparer, _keySelector, _elementSelector));
+            return GroupByNode.FastEnumerate<TKey, TElement, TResult, FEnumerator>(lookup, fenum);
+        }
+    }
+
+
     static class GroupByNode
     {
-        public static Lookup<TKey, TSource> CreateLookup<TSource, TKey>(IEqualityComparer<TKey> comparer)
+        public static Lookup<TKey, TElement> CreateLookup<TElement, TKey>(IEqualityComparer<TKey> comparer)
         {
-            var lookup = new LookupWithComparer<TKey, TSource>(comparer ?? EqualityComparer<TKey>.Default);
+            var lookup = new LookupWithComparer<TKey, TElement>(comparer ?? EqualityComparer<TKey>.Default);
             return lookup;
         }
 
@@ -925,6 +981,34 @@ namespace Cistern.ValueLinq.Nodes
         public bool ProcessNext(TSource input)
         {
             _lookup.GetGrouping(_keySelector(input), true).Add(input);
+            return true;
+        }
+    }
+
+    struct LookupFoward<TSource, TKey, TElement>
+            : IForwardEnumerator<TSource>
+    {
+        Lookup<TKey, TElement> _lookup;
+        Func<TSource, TKey> _keySelector;
+        Func<TSource, TElement> _elementSelector;
+
+        public LookupFoward(IEqualityComparer<TKey> comparer, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector)
+        {
+            if (keySelector == null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            (_keySelector, _elementSelector, _lookup) = (keySelector, elementSelector, GroupByNode.CreateLookup<TElement, TKey>(comparer));
+        }
+
+        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
+        public void Dispose() { }
+
+        public TResult GetResult<TResult>() => (TResult)(object)GetResult();
+        public Lookup<TKey, TElement> GetResult() => _lookup;
+
+        public bool ProcessNext(TSource input)
+        {
+            _lookup.GetGrouping(_keySelector(input), true).Add(_elementSelector(input));
             return true;
         }
     }
