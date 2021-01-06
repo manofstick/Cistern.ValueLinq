@@ -69,7 +69,7 @@ namespace Cistern.ValueLinq.Containers
             throw new InvalidOperationException();
 
         bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation)
-        { creation = default; return false; }
+            => throw new InvalidOperationException();
 
         readonly bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {

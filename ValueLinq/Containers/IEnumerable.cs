@@ -118,7 +118,7 @@ namespace Cistern.ValueLinq.Containers
             throw new InvalidOperationException();
 
         bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation)
-        { creation = default; return false; }
+            => throw new InvalidOperationException();
 
         readonly bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result) =>
             EnumerableNode.CheckForOptimization<T, TRequest, TResult>(_enumerable, in request, out result);
@@ -146,7 +146,7 @@ namespace Cistern.ValueLinq.Containers
         {
             return enumerable switch
             {
-                T[] array    => MemoryNode.CheckForOptimization<T, TRequest, TResult>(array, in request, out result),
+                T[] array    => MemoryNode.TryPushOptimization<T, TRequest, TResult>(array, in request, out result),
                 List<T> list => ListSegmentNode.CheckForOptimization<T, TRequest, TResult>(new ListSegment<T>(list, 0, list.Count), in request, out result),
                 INode node   => node.TryPushOptimization<TRequest, TResult>(in request, out result),
                 _            => Vanilla(enumerable, in request, out result),

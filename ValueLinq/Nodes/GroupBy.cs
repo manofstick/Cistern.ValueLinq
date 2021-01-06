@@ -1,4 +1,5 @@
-﻿using Cistern.ValueLinq.ValueEnumerable;
+﻿using Cistern.ValueLinq.Containers;
+using Cistern.ValueLinq.ValueEnumerable;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -49,27 +50,18 @@ namespace Cistern.ValueLinq.Nodes
             _poolOrNull = null; // Initialize lazily, as only required for larger groupings
         }
 
-        internal GroupingArrayPool<TElement> Pool => _poolOrNull ??= new GroupingArrayPool<TElement>();
+        internal GroupingArrayPool<TElement> Pool =>
+            _poolOrNull ??= new GroupingArrayPool<TElement>();
 
         public int Count { get; protected set; }
 
-        public IEnumerable<TElement> this[TKey key]
-        {
-            get
-            {
-                Grouping<TKey, TElement> grouping = GetGrouping(key, create: false);
-                if (grouping != null)
-                {
-                    return grouping;
-                }
-
-                return Containers.InstanceOfEmpty<TElement>.AsEnumerable;
-            }
-        }
+        public IEnumerable<TElement> this[TKey key] =>
+            GetGrouping(key, create: false) ?? Containers.InstanceOfEmpty<TElement>.AsEnumerable;
 
         public bool Contains(TKey key) => GetGrouping(key, create: false) != null;
 
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => ((IEnumerable<System.Linq.IGrouping<TKey, TElement>>)this).GetEnumerator();
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+            => ((IEnumerable<System.Linq.IGrouping<TKey, TElement>>)this).GetEnumerator();
 
         IEnumerator<System.Linq.IGrouping<TKey, TElement>> IEnumerable<System.Linq.IGrouping<TKey, TElement>>.GetEnumerator() =>
             new FastEnumeratorToEnumerator<System.Linq.IGrouping<TKey, TElement>, LookupEnumerator<TKey, TElement>>(new(_lastGrouping));
@@ -489,63 +481,37 @@ namespace Cistern.ValueLinq.Nodes
     {
         internal GroupingInternal(Lookup<TKey, TElement> owner) : base(owner) { }
 
-        public CreationType CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Nodes>(ref Nodes nodes, ref Enumerator enumerator)
-            where Enumerator : IFastEnumerator<EnumeratorElement>
-            where Nodes : INodes
-        {
-            throw new NotImplementedException();
-        }
+        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) =>
+            this._count switch
+            {
+                0 => EmptyNode.Create<TElement, Nodes<Head, Tail>, CreationType>(ref nodes),
+                1 => ReturnNode.Create<TElement, CreationType, Head, Tail>(_element, ref nodes),
+                var count => ArrayNode.Create<TElement, Nodes<Head, Tail>, CreationType>(_elementsOrNull, 0, count, ref nodes)
+            };
 
-        public CreationType CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
-            where Head : INode
-            where Tail : INodes
-        {
-            throw new NotImplementedException();
-        }
+        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Nodes>(ref Nodes nodes, ref Enumerator enumerator)
+            => throw new InvalidOperationException();
+        bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation)
+            => throw new InvalidOperationException();
 
-        public TResult CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<TElement>
-        {
-            throw new NotImplementedException();
-        }
+        TResult INode<TElement>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum) =>
+            this._count switch
+            {
+                0 => EmptyNode.FastEnumerate<TElement, TResult, FEnumerator>(fenum),
+                1 => ReturnNode.FastEnumerate<TElement, TResult, FEnumerator>(_element, fenum),
+                var count => MemoryNode.FastEnumerate<TElement, TResult, FEnumerator>(_elementsOrNull.AsMemory(0, count), fenum)
+            };
 
-        public void GetCountInformation(out CountInformation info)
-        {
-            throw new NotImplementedException();
-        }
+        public void GetCountInformation(out CountInformation info) =>
+            info = new CountInformation(_count, true);
 
-        public bool TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) where Nodes : INodes
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
-        {
-            throw new NotImplementedException();
-        }
-
-        /*
-                public IConsumable<TElement> AddTail(ILink<TElement, TElement> transform) =>
-                    (_count == 1)
-                    ? (IConsumable<TElement>)new IList<TElement, TElement>(this, 0, 1, transform)
-                    : (IConsumable<TElement>)new Array<TElement, TElement>(_elementsOrNull, 0, _count, transform);
-
-                public IConsumable<U> AddTail<U>(ILink<TElement, U> transform) =>
-                    (_count == 1)
-                    ? (IConsumable<U>)new IList<TElement, U>(this, 0, 1, transform)
-                    : (IConsumable<U>)new Array<TElement, U>(_elementsOrNull, 0, _count, transform);
-
-                public void Consume(Consumer<TElement> consumer)
-                {
-                    if (_count == 1)
-                    {
-                        Cistern.Linq.Consume.IList.Invoke(this, 0, 1, consumer);
-                    }
-                    else
-                    {
-                        Cistern.Linq.Consume.ReadOnlySpan.Invoke(new ReadOnlySpan<TElement>(_elementsOrNull, 0, _count), consumer);
-                    }
-                }
-        */
+        bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result) =>
+            this._count switch
+            {
+                0 => EmptyNode.TryPushOptimization<TElement, TRequest, TResult>(in request, out result),
+                1 => ReturnNode.TryPushOptimization<TElement, TRequest, TResult>(_element, in request, out result),
+                var count => MemoryNode.TryPushOptimization<TElement, TRequest, TResult>(_elementsOrNull.AsMemory(0, count), in request, out result)
+            };
     }
 
 
@@ -564,7 +530,9 @@ namespace Cistern.ValueLinq.Nodes
     // (This is also why it is no longer a nested type of Lookup<,>).
     [DebuggerDisplay("Key = {Key}")]
 //    [DebuggerTypeProxy(typeof(SystemLinq_GroupingDebugView<,>))]
-    public class Grouping<TKey, TElement> : System.Linq.IGrouping<TKey, TElement>, IList<TElement>
+    public abstract class Grouping<TKey, TElement>
+        : System.Linq.IGrouping<TKey, TElement>
+        , IList<TElement>
     {
         internal TKey _key;
         internal int _hashCode;

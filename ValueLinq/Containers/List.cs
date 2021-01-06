@@ -116,7 +116,8 @@ namespace Cistern.ValueLinq.Containers
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator_, Tail>(ref Tail _, ref Enumerator_ __)
             => throw new InvalidOperationException();
 
-        bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
+        bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation)
+            => throw new InvalidOperationException();
 
         bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
             => ListSegmentNode.CheckForOptimization<T, TRequest, TResult>(new ListSegment<T>(_list, 0, _list.Count), in request, out result);

@@ -874,5 +874,94 @@ namespace Linqs.Tests
             PropertyInfo key = grouptype.GetProperty("Key", BindingFlags.Instance | BindingFlags.Public);
             Assert.NotNull(key);
         }
+
+        [Fact]
+        public static void GroupBy_CreateViaPush()
+        {
+            var counts = new[] { 2, 10, 1000 };
+
+            foreach (var count in counts)
+            {
+                var z =
+                    Enumerable
+                    .Range(0, count)
+                    .GroupBy(x => x % 2 == 0)
+                    .OrderBy(x => x.Key)
+                    .Select(x => x.Max())
+                    .ToList();
+
+                Assert.Equal(count - 1, z[0]);
+                Assert.Equal(count - 2, z[1]);
+            }
+        }
+
+        [Fact]
+        public static void GroupBy_CreateViaPullDescend()
+        {
+            var counts = new[] { 2, 10, 1000 };
+
+            foreach (var count in counts)
+            {
+                var z =
+                    Enumerable
+                    .Range(0, count)
+                    .GroupBy(x => x % 2 == 0)
+                    .OrderBy(x => x.Key)
+                    .Select(x => x.Where(_ => true).ToArray())
+                    .ToList();
+
+                Assert.Equal(count / 2, z[0].Length);
+                Assert.Equal(count / 2, z[1].Length);
+            }
+        }
+
+        [Fact]
+        public static void GroupBy_TryPushOptimization()
+        {
+            var counts = new[] { 2, 10, 1000 };
+
+            foreach (var count in counts)
+            {
+                var z =
+                    Enumerable
+                    .Range(0, count)
+                    .GroupBy(x => x % 2 == 0)
+                    .OrderBy(x => x.Key)
+                    .Select(x => x.Reverse().ToArray())
+                    .ToList();
+
+                Assert.Equal(count / 2, z[0].Length);
+                Assert.Equal(count / 2, z[1].Length);
+            }
+        }
+
+        [Fact]
+        public static void GroupBy_TryPullOptimization()
+        {
+            var counts = new[] { 2, 10, 1000 };
+
+            foreach (var count in counts)
+            {
+                var z =
+                    Enumerable
+                    .Range(1, count)
+                    .Select(x => -x)
+                    .GroupBy(x => x % 2 == 0)
+                    .OrderBy(x => x.Key)
+                    .Select(x =>
+                    {
+                        var max = int.MinValue;
+                        foreach(var n in x.Select(x => x))
+                        {
+                            max = Math.Max(max, n);
+                        }
+                        return max;
+                    })
+                    .ToList();
+
+                Assert.Equal(-1, z[0]);
+                Assert.Equal(-2, z[1]);
+            }
+        }
     }
 }

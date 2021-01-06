@@ -99,14 +99,17 @@ namespace Cistern.ValueLinq.Containers
 
         public MemoryNode(ReadOnlyMemory<T> Memory) => _memory = Memory;
 
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => MemoryNode.Create<T, Head, Tail, CreationType>(_memory, ref nodes);
+        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+            => MemoryNode.Create<T, Head, Tail, CreationType>(_memory, ref nodes);
 
-        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
+        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) 
+            => throw new InvalidOperationException();
 
-        bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
+        bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation)
+            => throw new InvalidOperationException();
 
         public bool TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
-            => MemoryNode.CheckForOptimization<T, TRequest, TResult>(_memory, in request, out result);
+            => MemoryNode.TryPushOptimization<T, TRequest, TResult>(_memory, in request, out result);
 
         public TResult CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<T>
             => MemoryNode.FastEnumerate<T, TResult, FEnumerator>(_memory, fenum);
@@ -114,7 +117,7 @@ namespace Cistern.ValueLinq.Containers
 
     static class MemoryNode
     {
-        internal static bool CheckForOptimization<T, TRequest, TResult>(ReadOnlyMemory<T> memory, in TRequest request, out TResult result)
+        internal static bool TryPushOptimization<T, TRequest, TResult>(ReadOnlyMemory<T> memory, in TRequest request, out TResult result)
         {
             if (typeof(TRequest) == typeof(Optimizations.AsMemory))
             {

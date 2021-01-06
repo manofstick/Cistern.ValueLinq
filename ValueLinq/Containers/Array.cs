@@ -131,10 +131,11 @@ namespace Cistern.ValueLinq.Containers
             return ArrayNode.Create<T, Nodes<Head, Tail>, CreationType>(_array, ref nodes);
         }
 
-        bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
+        bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation)
+            => throw new InvalidOperationException();
 
         public bool TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result) =>
-            MemoryNode.CheckForOptimization<T, TRequest, TResult>(_array, in request, out result);
+            MemoryNode.TryPushOptimization<T, TRequest, TResult>(_array, in request, out result);
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __)
             => throw new InvalidOperationException();
@@ -147,12 +148,16 @@ namespace Cistern.ValueLinq.Containers
     {
         internal static CreationType Create<T, Nodes, CreationType>(T[] array, ref Nodes nodes)
             where Nodes : INodes
+            => Create<T, Nodes, CreationType>(array, 0, array.Length, ref nodes);
+
+        internal static CreationType Create<T, Nodes, CreationType>(T[] array, int start, int count, ref Nodes nodes)
+            where Nodes : INodes
         {
-            var sa = new Optimizations.SourceArray<T> { Array = array, Start = 0, Count = array.Length };
+            var sa = new Optimizations.SourceArray<T> { Array = array, Start = start, Count = count };
             if (nodes.TryObjectAscentOptimization<Optimizations.SourceArray<T>, CreationType>(in sa, out var creation))
                 return creation;
 
-            var enumerator = new ArrayFastEnumerator<T>(array, 0, array.Length);
+            var enumerator = new ArrayFastEnumerator<T>(array, start, count);
             return nodes.CreateObject<CreationType, T, ArrayFastEnumerator<T>>(ref enumerator);
         }
 
