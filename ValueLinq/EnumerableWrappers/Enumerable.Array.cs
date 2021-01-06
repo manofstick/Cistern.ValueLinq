@@ -71,5 +71,8 @@ namespace Cistern.ValueLinq
             => new(NodeImpl.GroupBy(new ArrayNode<TSource>(source), keySelector, comparer));
         public static ValueEnumerable<System.Linq.IGrouping<TKey, TElement>, GroupByNode<TSource, TKey, TElement, ArrayNode<TSource>>> GroupBy<TSource, TKey, TElement>(this TSource[] source, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, IEqualityComparer<TKey> comparer = null)
             => new(NodeImpl.GroupBy(new ArrayNode<TSource>(source), keySelector, elementSelector, comparer));
+
+        public static ValueEnumerable<TResult, GroupByResultNode<TSource, TKey, TResult, ArrayNode<TSource>>> GroupBy<TSource, TKey, TResult>(this TSource[] source, Func<TSource, TKey> keySelector, Func<TKey, IEnumerable<TSource>, TResult> resultSelector, IEqualityComparer<TKey> comparer = null)
+            => new(NodeImpl.GroupBy(new ArrayNode<TSource>(source), keySelector, resultSelector, comparer));
     }
 }

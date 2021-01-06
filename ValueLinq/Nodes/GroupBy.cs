@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Threading;
 
 namespace Cistern.ValueLinq.Nodes
 {
@@ -21,6 +22,36 @@ namespace Cistern.ValueLinq.Nodes
             current = _g;
             if (_g == null)
                 return false;
+
+            _g = _g._next;
+            if (_g == _lastGrouping)
+                _g = null;
+
+            return true;
+        }
+
+        public void Dispose() => _g = _lastGrouping = null;
+    }
+
+    internal struct LookupResultEnumerator<TKey, TElement, TResult>
+        : IFastEnumerator<TResult>
+    {
+        Func<TKey, IEnumerable<TElement>, TResult> _resultSelector;
+        private Grouping<TKey, TElement> _lastGrouping;
+        private Grouping<TKey, TElement> _g;
+
+        public LookupResultEnumerator(Func<TKey, IEnumerable<TElement>, TResult> resultSelector, Grouping<TKey, TElement> lastGrouping) =>
+            (_resultSelector, _lastGrouping, _g) = (resultSelector, lastGrouping, lastGrouping);
+
+        public bool TryGetNext(out TResult current)
+        {
+            if (_g == null)
+            {
+                current = default;
+                return false;
+            }
+
+            current = _resultSelector(_g.Key, _g);
 
             _g = _g._next;
             if (_g == _lastGrouping)
@@ -886,6 +917,55 @@ namespace Cistern.ValueLinq.Nodes
         }
     }
 
+    public struct GroupByResultNode<TSource, TKey, TResult, NodeT>
+        : INode<TResult>
+        where NodeT : INode<TSource>
+    {
+        private NodeT _nodeT;
+        private Func<TSource, TKey> _keySelector;
+        private Func<TKey, IEnumerable<TSource>, TResult> _resultSelector;
+        private IEqualityComparer<TKey> _comparer;
+
+        public void GetCountInformation(out CountInformation info) => info = new CountInformation();
+
+        public GroupByResultNode(in NodeT nodeT, Func<TSource, TKey> keySelector, Func<TKey, IEnumerable<TSource>, TResult> resultSelector, IEqualityComparer<TKey> comparer)
+        {
+            if (keySelector == null)
+                throw new ArgumentNullException(nameof(keySelector));
+            if (resultSelector == null)
+                throw new ArgumentNullException(nameof(resultSelector));
+
+            (_nodeT, _keySelector, _resultSelector, _comparer) = (nodeT, keySelector, resultSelector, comparer);
+        }
+
+        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+        {
+            var lookup = _nodeT.CreateViaPush<Lookup<TKey, TSource>, LookupFoward<TSource, TKey>>(new LookupFoward<TSource, TKey>(_comparer, _keySelector));
+            var enumerator = new LookupResultEnumerator<TKey, TSource, TResult>(_resultSelector, lookup._lastGrouping); // why start with _next? to get same result as System.Linq...
+            return nodes.CreateObject<CreationType, TResult, LookupResultEnumerator<TKey, TSource, TResult>>(ref enumerator);
+        }
+
+        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
+            => throw new InvalidOperationException();
+
+        bool INode.TryPullOptimization<TRequest, CreationType, Tail>(in TRequest request, ref Tail tail, out CreationType creation)
+        {
+            creation = default;
+            return false;
+        }
+
+        bool INode.TryPushOptimization<TRequest, TPushResult>(in TRequest request, out TPushResult result)
+        {
+            result = default;
+            return false;
+        }
+
+        TPushResult INode<TResult>.CreateViaPush<TPushResult, FEnumerator>(in FEnumerator fenum)
+        {
+            var lookup = _nodeT.CreateViaPush<Lookup<TKey, TSource>, LookupFoward<TSource, TKey>>(new LookupFoward<TSource, TKey>(_comparer, _keySelector));
+            return GroupByResultNode.FastEnumerate<TKey, TSource, TResult, TPushResult, FEnumerator>(lookup, _resultSelector, fenum);
+        }
+    }
 
     static class GroupByNode
     {
@@ -925,6 +1005,39 @@ namespace Cistern.ValueLinq.Nodes
             }
         }
     }
+    static class GroupByResultNode
+    {
+        internal static TResultx FastEnumerate<TKey, TElement, TResult, TResultx, FEnumerator>(Lookup<TKey, TElement> lookup, Func<TKey, IEnumerable<TElement>, TResult> resultSelector, FEnumerator fenum)
+            where FEnumerator : IForwardEnumerator<TResult>
+        {
+            try
+            {
+                Loop(lookup, resultSelector, ref fenum);
+                return fenum.GetResult<TResultx>();
+            }
+            finally
+            {
+                fenum.Dispose();
+            }
+        }
+
+        private static void Loop<TKey, TElement, TResult, FEnumerator>(Lookup<TKey, TElement> lookup, Func<TKey, IEnumerable<TElement>, TResult> resultSelector, ref FEnumerator fenum)
+            where FEnumerator : IForwardEnumerator<TResult>
+        {
+            var last = lookup._lastGrouping;
+            var current = last;
+            if (current != null)
+            {
+                do
+                {
+                    if (!fenum.ProcessNext(resultSelector(current.Key, current)))
+                        break;
+                    current = current._next;
+                } while (current != last);
+            }
+        }
+    }
+
 
     struct LookupFoward<TSource, TKey>
         : IForwardEnumerator<TSource>
