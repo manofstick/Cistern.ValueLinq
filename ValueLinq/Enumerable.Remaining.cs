@@ -12,7 +12,7 @@ namespace Cistern.ValueLinq
         //        public static bool Any<TSource>(this IEnumerable<TSource> source) => System.Linq.Enumerable.Any<TSource>(source);
         //        public static bool Any<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) => System.Linq.Enumerable.Any<TSource>(source, predicate);
         [Obsolete("Not converted to ValueLinq yet")] public static IEnumerable<TSource> Append<TSource>(this IEnumerable<TSource> source, TSource element) => System.Linq.Enumerable.Append<TSource>(source, element);
-        [Obsolete("Not converted to ValueLinq yet")] public static IEnumerable<TSource> AsEnumerable<TSource>(this IEnumerable<TSource> source) => System.Linq.Enumerable.AsEnumerable<TSource>(source);
+        //        public static IEnumerable<TSource> AsEnumerable<TSource>(this IEnumerable<TSource> source) => System.Linq.Enumerable.AsEnumerable<TSource>(source);
         //        public static double Average<TSource>(this IEnumerable<TSource> source, Func<TSource, int> selector) => System.Linq.Enumerable.Average<TSource>(source, selector);
         //        public static double Average<TSource>(this IEnumerable<TSource> source, Func<TSource, long> selector) => System.Linq.Enumerable.Average<TSource>(source, selector);
         //        public static decimal? Average<TSource>(this IEnumerable<TSource> source, Func<TSource, decimal?> selector) => System.Linq.Enumerable.Average<TSource>(source, selector);
