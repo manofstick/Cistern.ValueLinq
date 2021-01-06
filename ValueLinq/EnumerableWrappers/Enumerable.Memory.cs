@@ -84,5 +84,7 @@ namespace Cistern.ValueLinq
 
         public static ValueEnumerable<TResult, GroupByResultNode<TSource, TKey, TResult, MemoryNode<TSource>>> GroupBy<TSource, TKey, TResult>(this ReadOnlyMemory<TSource> source, Func<TSource, TKey> keySelector, Func<TKey, IEnumerable<TSource>, TResult> resultSelector, IEqualityComparer<TKey> comparer = null)
             => new(NodeImpl.GroupBy(new MemoryNode<TSource>(source), keySelector, resultSelector, comparer));
+        public static ValueEnumerable<TResult, GroupByResultNode<TSource, TKey, TElement, TResult, MemoryNode<TSource>>> GroupBy<TSource, TKey, TElement, TResult>(this ReadOnlyMemory<TSource> source, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, Func<TKey, IEnumerable<TElement>, TResult> resultSelector, IEqualityComparer<TKey> comparer = null)
+            => new(NodeImpl.GroupBy(new MemoryNode<TSource>(source), keySelector, elementSelector, resultSelector, comparer));
     }
 }

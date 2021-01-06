@@ -615,9 +615,7 @@ namespace Linqs.Tests
 
             long[] expected = { 150, 420 };
 
-            Assert.Equal(expected, source.GroupBy(e => e.Name, (k, es) => k.Length * es.Sum(e => (long)e.Score), null)
-                    .OrderBy(x => x) // Cister.ValueLinq outputs in different order...
-                );
+            Assert.Equal(expected, source.GroupBy(e => e.Name, (k, es) => k.Length * es.Sum(e => (long)e.Score), null));
         }
 
         [Fact]

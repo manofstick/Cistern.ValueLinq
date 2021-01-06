@@ -429,5 +429,8 @@ namespace Cistern.ValueLinq
         public static ValueEnumerable<TResult, GroupByResultNode<TSource, TKey, TResult, InnerNode>> GroupBy<TSource, TKey, TResult, InnerNode>(in this ValueEnumerable<TSource, InnerNode> node, Func<TSource, TKey> keySelector, Func<TKey, IEnumerable<TSource>, TResult> resultSelector, IEqualityComparer<TKey> comparer = null)
             where InnerNode : INode<TSource>
             => new(NodeImpl.GroupBy(node.Node, keySelector, resultSelector, comparer));
+        public static ValueEnumerable<TResult, GroupByResultNode<TSource, TKey, TElement, TResult, InnerNode>> GroupBy<TSource, TKey, TElement, TResult, InnerNode>(in this ValueEnumerable<TSource, InnerNode> node, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, Func<TKey, IEnumerable<TElement>, TResult> resultSelector, IEqualityComparer<TKey> comparer = null)
+            where InnerNode : INode<TSource>
+            => new(NodeImpl.GroupBy(node.Node, keySelector, elementSelector, resultSelector, comparer));
     }
 }

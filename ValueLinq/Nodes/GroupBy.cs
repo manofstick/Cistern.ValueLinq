@@ -3,8 +3,6 @@ using Cistern.ValueLinq.ValueEnumerable;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
-using System.Threading;
 
 namespace Cistern.ValueLinq.Nodes
 {
@@ -258,251 +256,6 @@ namespace Cistern.ValueLinq.Nodes
         }
     }
 
-    /*
-        sealed partial class Lookup<TKey, TValue, V>
-            : Consumable<IGrouping<TKey, TValue>, V>
-            , Optimizations.IConsumableFastCount
-        {
-            private readonly Grouping<TKey, TValue> _lastGrouping;
-            private readonly int _count;
-
-            public Lookup(Grouping<TKey, TValue> lastGrouping, int count, ILink<IGrouping<TKey, TValue>, V> first) : base(first) =>
-                (_lastGrouping, _count) = (lastGrouping, count);
-
-            public override IConsumable<V> Create(ILink<IGrouping<TKey, TValue>, V> first) =>
-                new Lookup<TKey, TValue, V>(_lastGrouping, _count, first);
-            public override IConsumable<W> Create<W>(ILink<IGrouping<TKey, TValue>, W> first) =>
-                new Lookup<TKey, TValue, W>(_lastGrouping, _count, first);
-
-            public override IEnumerator<V> GetEnumerator() =>
-                Cistern.Linq.GetEnumerator.Lookup.Get(_lastGrouping, Link);
-
-            public override void Consume(Consumer<V> consumer) =>
-                Cistern.Linq.Consume.Lookup.Invoke(_lastGrouping, _count, Link, consumer);
-
-            int? Optimizations.IConsumableFastCount.TryFastCount(bool asCountConsumer) =>
-                Optimizations.Count.TryGetCount(this, LinkOrNull, asCountConsumer);
-
-            int? Optimizations.IConsumableFastCount.TryRawCount(bool asCountConsumer) =>
-                _count;
-        }
-
-        class LookupResultsSelector<TKey, TElement, TResult>
-            : IConsumable<TResult>
-            , Optimizations.IConsumableFastCount
-        {
-            private readonly Grouping<TKey, TElement> _lastGrouping;
-            private readonly Func<TKey, IEnumerable<TElement>, TResult> _resultSelector;
-            private readonly int _count;
-
-            public LookupResultsSelector(Grouping<TKey, TElement> lastGrouping, int count, Func<TKey, IEnumerable<TElement>, TResult> resultSelector) =>
-                (_lastGrouping, _count, _resultSelector) = (lastGrouping, count, resultSelector);
-
-            public IConsumable<TResult> AddTail(ILink<TResult, TResult> first) =>
-                new LookupResultsSelector<TKey, TElement, TResult, TResult>(_lastGrouping, _count, _resultSelector, first);
-
-            public IConsumable<W> AddTail<W>(ILink<TResult, W> first) =>
-                new LookupResultsSelector<TKey, TElement, TResult, W>(_lastGrouping, _count, _resultSelector, first);
-
-            public IEnumerator<TResult> GetEnumerator() =>
-                Cistern.Linq.GetEnumerator.Lookup.Get(_lastGrouping, _resultSelector, Links.Identity<TResult>.Instance);
-            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-            public void Consume(Consumer<TResult> consumer) =>
-                Cistern.Linq.Consume.Lookup.Invoke(_lastGrouping, _resultSelector, consumer);
-
-            int? Optimizations.IConsumableFastCount.TryFastCount(bool asCountConsumer) =>
-                _count;
-
-            int? Optimizations.IConsumableFastCount.TryRawCount(bool asCountConsumer) =>
-                _count;
-        }
-
-        sealed partial class LookupResultsSelector<TKey, TElement, TResult, V>
-            : Consumable<TResult, V>
-            , Optimizations.IConsumableFastCount
-        {
-            private readonly Grouping<TKey, TElement> _lastGrouping;
-            private readonly int _count;
-            private readonly Func<TKey, IEnumerable<TElement>, TResult> _resultSelector;
-
-            public LookupResultsSelector(Grouping<TKey, TElement> lastGrouping, int count, Func<TKey, IEnumerable<TElement>, TResult> resultSelector, ILink<TResult, V> first) : base(first) =>
-                (_lastGrouping, _count, _resultSelector) = (lastGrouping, count, resultSelector);
-
-            public override IConsumable<V> Create(ILink<TResult, V> first) =>
-                new LookupResultsSelector<TKey, TElement, TResult, V>(_lastGrouping, _count, _resultSelector, first);
-            public override IConsumable<W> Create<W>(ILink<TResult, W> first) =>
-                new LookupResultsSelector<TKey, TElement, TResult, W>(_lastGrouping, _count, _resultSelector, first);
-
-            public override IEnumerator<V> GetEnumerator() =>
-                Cistern.Linq.GetEnumerator.Lookup.Get(_lastGrouping, _resultSelector, Link);
-
-            public override void Consume(Consumer<V> consumer) =>
-                Cistern.Linq.Consume.Lookup.Invoke(_lastGrouping, _resultSelector, Link, consumer);
-
-            int? Optimizations.IConsumableFastCount.TryFastCount(bool asCountConsumer) =>
-                Optimizations.Count.TryGetCount(this, LinkOrNull, asCountConsumer);
-            int? Optimizations.IConsumableFastCount.TryRawCount(bool asCountConsumer) =>
-                _count;
-        }
-
-        internal partial class GroupedEnumerable<TSource, TKey, TElement, V>
-            : Consumable<IGrouping<TKey, TElement>, V>
-            , Optimizations.IDelayed<V>
-        {
-            protected readonly IEnumerable<TSource> _source;
-            protected readonly Func<TSource, TKey> _keySelector;
-            protected readonly IEqualityComparer<TKey> _comparer;
-            protected readonly bool _delaySourceException;
-            private readonly Func<TSource, TElement> _elementSelector;
-            private readonly bool _noElementSelector;
-
-            public GroupedEnumerable(IEnumerable<TSource> source, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, IEqualityComparer<TKey> comparer, ILink<IGrouping<TKey, TElement>, V> link, bool delaySourceException)
-                : this(source, keySelector, elementSelector, false, comparer, link, delaySourceException) { }
-
-            protected GroupedEnumerable(IEnumerable<TSource> source, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, bool noElementSelector, IEqualityComparer<TKey> comparer, ILink<IGrouping<TKey, TElement>, V> link, bool delaySourceException) : base(link)
-            {
-                if (!delaySourceException && source == null)
-                {
-                    ThrowHelper.ThrowArgumentNullException(ExceptionArgument.source);
-                }
-
-                if (keySelector == null)
-                {
-                    ThrowHelper.ThrowArgumentNullException(ExceptionArgument.keySelector);
-                }
-
-                if (!noElementSelector && elementSelector == null)
-                {
-                    ThrowHelper.ThrowArgumentNullException(ExceptionArgument.elementSelector);
-                }
-
-                (_noElementSelector, _delaySourceException, _source, _keySelector, _elementSelector, _comparer) =
-                (noElementSelector, delaySourceException, source, keySelector, elementSelector, comparer);
-            }
-
-            public override IConsumable<V> Create(ILink<IGrouping<TKey, TElement>, V> first) =>
-                new GroupedEnumerable<TSource, TKey, TElement, V>(_source, _keySelector, _elementSelector, _noElementSelector, _comparer, first, _delaySourceException);
-
-            public override IConsumable<W> Create<W>(ILink<IGrouping<TKey, TElement>, W> first) =>
-                new GroupedEnumerable<TSource, TKey, TElement, W>(_source, _keySelector, _elementSelector, _noElementSelector, _comparer, first, _delaySourceException);
-
-            protected virtual IConsumable<V> ToConsumable()
-            {
-                if (_source == null)
-                    ThrowHelper.ThrowArgumentNullException(ExceptionArgument.source);
-
-                var lookup = Consumer.Lookup.Consume(_source, _keySelector, _elementSelector, _comparer);
-
-                return IsIdentity ? (IConsumable<V>)lookup : lookup.AddTail(Link);
-            }
-
-            public override IEnumerator<V> GetEnumerator() =>
-                ToConsumable().GetEnumerator();
-
-            public override void Consume(Consumer<V> consumer) =>
-                ToConsumable().Consume(consumer);
-
-            public IConsumable<V> Force() => ToConsumable();
-        }
-
-        class GroupedEnumerable<TSource, TKey, V>
-            : GroupedEnumerable<TSource, TKey, TSource, V>
-        {
-            public GroupedEnumerable(IEnumerable<TSource> source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer, ILink<IGrouping<TKey, TSource>, V> link, bool delaySourceException)
-                : base(source, keySelector, null, true, comparer, link, delaySourceException)
-            { }
-
-            public override IConsumable<V> Create(ILink<IGrouping<TKey, TSource>, V> first) =>
-                new GroupedEnumerable<TSource, TKey, V>(_source, _keySelector, _comparer, first, _delaySourceException);
-
-            public override IConsumable<W> Create<W>(ILink<IGrouping<TKey, TSource>, W> first) =>
-                new GroupedEnumerable<TSource, TKey, W>(_source, _keySelector, _comparer, first, _delaySourceException);
-
-
-            protected override IConsumable<V> ToConsumable()
-            {
-                if (_source == null)
-                    ThrowHelper.ThrowArgumentNullException(ExceptionArgument.source);
-
-                var lookup = Consumer.Lookup.Consume(_source, _keySelector, _comparer);
-
-                return lookup.AddTail(Link);
-            }
-        }
-        class GroupedEnumerable<TSource, TKey>
-            : GroupedEnumerable<TSource, TKey, IGrouping<TKey, TSource>>
-        {
-            public GroupedEnumerable(IEnumerable<TSource> source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer, bool delaySourceException)
-                : base(source, keySelector, comparer, null, delaySourceException)
-            { }
-
-            protected override IConsumable<IGrouping<TKey, TSource>> ToConsumable()
-            {
-                if (_source == null)
-                    ThrowHelper.ThrowArgumentNullException(ExceptionArgument.source);
-
-                return Consumer.Lookup.Consume(_source, _keySelector, _comparer);
-            }
-        }
-
-        internal sealed partial class GroupedResultEnumerable<TSource, TKey, TElement, TResult, V>
-            : Consumable<TResult, V>
-            , Optimizations.IDelayed<V>
-        {
-            private readonly IEnumerable<TSource> _source;
-            private readonly Func<TSource, TKey> _keySelector;
-            private readonly Func<TSource, TElement> _elementSelector;
-            private readonly IEqualityComparer<TKey> _comparer;
-            private readonly Func<TKey, IEnumerable<TElement>, TResult> _resultSelector;
-
-            public GroupedResultEnumerable(IEnumerable<TSource> source, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, Func<TKey, IEnumerable<TElement>, TResult> resultSelector, IEqualityComparer<TKey> comparer, ILink<TResult, V> link) : base(link)
-            {
-                if (source == null)
-                {
-                    ThrowHelper.ThrowArgumentNullException(ExceptionArgument.source);
-                }
-
-                if (keySelector == null)
-                {
-                    ThrowHelper.ThrowArgumentNullException(ExceptionArgument.keySelector);
-                }
-
-                if (elementSelector == null)
-                {
-                    ThrowHelper.ThrowArgumentNullException(ExceptionArgument.elementSelector);
-                }
-
-                if (resultSelector == null)
-                {
-                    ThrowHelper.ThrowArgumentNullException(ExceptionArgument.resultSelector);
-                }
-
-                (_source, _keySelector, _elementSelector, _resultSelector, _comparer) = (source, keySelector, elementSelector, resultSelector, comparer);
-            }
-
-            public override IConsumable<V> Create(ILink<TResult, V> first) =>
-                new GroupedResultEnumerable<TSource, TKey, TElement, TResult, V>(_source, _keySelector, _elementSelector, _resultSelector, _comparer, first);
-            public override IConsumable<W> Create<W>(ILink<TResult, W> first) =>
-                new GroupedResultEnumerable<TSource, TKey, TElement, TResult, W>(_source, _keySelector, _elementSelector, _resultSelector, _comparer, first);
-
-            private IConsumable<V> ToConsumable()
-            {
-                Lookup<TKey, TElement> lookup = Consumer.Lookup.Consume(_source, _keySelector, _elementSelector, _comparer);
-                IConsumable<TResult> appliedSelector = lookup.ApplyResultSelector(_resultSelector);
-                return appliedSelector.AddTail(Link);
-            }
-
-            public override IEnumerator<V> GetEnumerator() =>
-                ToConsumable().GetEnumerator();
-
-            public override void Consume(Consumer<V> consumer) =>
-                ToConsumable().Consume(consumer);
-
-            public IConsumable<V> Force() => ToConsumable();
-        }
-    */
-
     // Grouping is a publically exposed class, so we provide this class get the Consumable
     [DebuggerDisplay("Key = {Key}")]
     //    [DebuggerTypeProxy(typeof(SystemLinq_GroupingDebugView<,>))]
@@ -544,14 +297,6 @@ namespace Cistern.ValueLinq.Nodes
                 var count => MemoryNode.TryPushOptimization<TElement, TRequest, TResult>(_elementsOrNull.AsMemory(0, count), in request, out result)
             };
     }
-
-
-    /*
-    public interface IGrouping<out TKey, out TElement> : IEnumerable<TElement>
-    {
-        TKey Key { get; }
-    }
-    */
 
     // It is (unfortunately) common to databind directly to Grouping.Key.
     // Because of this, we have to declare this internal type public so that we
@@ -733,8 +478,6 @@ namespace Cistern.ValueLinq.Nodes
             }
         }
     }
-
-
     internal sealed class GroupingArrayPool<TElement>
     {
         const int MinLength = 4; // relates to MinShift
@@ -941,7 +684,7 @@ namespace Cistern.ValueLinq.Nodes
         CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
         {
             var lookup = _nodeT.CreateViaPush<Lookup<TKey, TSource>, LookupFoward<TSource, TKey>>(new LookupFoward<TSource, TKey>(_comparer, _keySelector));
-            var enumerator = new LookupResultEnumerator<TKey, TSource, TResult>(_resultSelector, lookup._lastGrouping); // why start with _next? to get same result as System.Linq...
+            var enumerator = new LookupResultEnumerator<TKey, TSource, TResult>(_resultSelector, lookup._lastGrouping?._next); // why start with _next? to get same result as System.Linq...
             return nodes.CreateObject<CreationType, TResult, LookupResultEnumerator<TKey, TSource, TResult>>(ref enumerator);
         }
 
@@ -964,6 +707,59 @@ namespace Cistern.ValueLinq.Nodes
         {
             var lookup = _nodeT.CreateViaPush<Lookup<TKey, TSource>, LookupFoward<TSource, TKey>>(new LookupFoward<TSource, TKey>(_comparer, _keySelector));
             return GroupByResultNode.FastEnumerate<TKey, TSource, TResult, TPushResult, FEnumerator>(lookup, _resultSelector, fenum);
+        }
+    }
+
+    public struct GroupByResultNode<TSource, TKey, TElement, TResult, NodeT>
+        : INode<TResult>
+        where NodeT : INode<TSource>
+    {
+        private NodeT _nodeT;
+        private Func<TSource, TKey> _keySelector;
+        private Func<TSource, TElement> _elementSelector;
+        private Func<TKey, IEnumerable<TElement>, TResult> _resultSelector;
+        private IEqualityComparer<TKey> _comparer;
+
+        public void GetCountInformation(out CountInformation info) => info = new CountInformation();
+
+        public GroupByResultNode(in NodeT nodeT, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, Func<TKey, IEnumerable<TElement>, TResult> resultSelector, IEqualityComparer<TKey> comparer)
+        {
+            if (keySelector == null)
+                throw new ArgumentNullException(nameof(keySelector));
+            if (elementSelector == null)
+                throw new ArgumentNullException(nameof(elementSelector));
+            if (resultSelector == null)
+                throw new ArgumentNullException(nameof(resultSelector));
+
+            (_nodeT, _keySelector, _elementSelector, _resultSelector, _comparer) = (nodeT, keySelector, elementSelector, resultSelector, comparer);
+        }
+
+        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+        {
+            var lookup = _nodeT.CreateViaPush<Lookup<TKey, TElement>, LookupFoward<TSource, TKey, TElement>>(new LookupFoward<TSource, TKey, TElement>(_comparer, _keySelector, _elementSelector));
+            var enumerator = new LookupResultEnumerator<TKey, TElement, TResult>(_resultSelector, lookup._lastGrouping?._next); // why start with _next? to get same result as System.Linq...
+            return nodes.CreateObject<CreationType, TResult, LookupResultEnumerator<TKey, TElement, TResult>>(ref enumerator);
+        }
+
+        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
+            => throw new InvalidOperationException();
+
+        bool INode.TryPullOptimization<TRequest, CreationType, Tail>(in TRequest request, ref Tail tail, out CreationType creation)
+        {
+            creation = default;
+            return false;
+        }
+
+        bool INode.TryPushOptimization<TRequest, TPushResult>(in TRequest request, out TPushResult result)
+        {
+            result = default;
+            return false;
+        }
+
+        TPushResult INode<TResult>.CreateViaPush<TPushResult, FEnumerator>(in FEnumerator fenum)
+        {
+            var lookup = _nodeT.CreateViaPush<Lookup<TKey, TElement>, LookupFoward<TSource, TKey, TElement>>(new LookupFoward<TSource, TKey, TElement>(_comparer, _keySelector, _elementSelector));
+            return GroupByResultNode.FastEnumerate<TKey, TElement, TResult, TPushResult, FEnumerator>(lookup, _resultSelector, fenum);
         }
     }
 
@@ -1024,7 +820,7 @@ namespace Cistern.ValueLinq.Nodes
         private static void Loop<TKey, TElement, TResult, FEnumerator>(Lookup<TKey, TElement> lookup, Func<TKey, IEnumerable<TElement>, TResult> resultSelector, ref FEnumerator fenum)
             where FEnumerator : IForwardEnumerator<TResult>
         {
-            var last = lookup._lastGrouping;
+            var last = lookup._lastGrouping?._next;
             var current = last;
             if (current != null)
             {

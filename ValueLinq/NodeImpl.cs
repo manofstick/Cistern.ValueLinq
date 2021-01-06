@@ -695,5 +695,10 @@ namespace Cistern.ValueLinq
         {
             return new(prior, keySelector, resultSelector, comparer);
         }
+        public static GroupByResultNode<TSource, TKey, TElement, TResult, TPrior> GroupBy<TSource, TKey, TElement, TResult, TPrior>(in TPrior prior, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, Func<TKey, IEnumerable<TElement>, TResult> resultSelector, IEqualityComparer<TKey> comparer)
+            where TPrior : INode<TSource>
+        {
+            return new(prior, keySelector, elementSelector, resultSelector, comparer);
+        }
     }
 }
