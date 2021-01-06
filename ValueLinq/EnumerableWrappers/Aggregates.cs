@@ -9,6 +9,12 @@ namespace Cistern.ValueLinq
 {
     public static partial class Enumerable
     {
+        public static System.Linq.ILookup<TKey, TSource> ToLookup<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer = null) =>
+            EnumerableNode.FastEnumerateSwitch<TSource, System.Linq.ILookup<TKey, TSource>, ToLookup<TSource, TKey>>(source, new ToLookup<TSource, TKey>(comparer, keySelector)); 
+
+        public static System.Linq.ILookup<TKey, TElement> ToLookup<TSource, TKey, TElement>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, IEqualityComparer<TKey> comparer = null) =>
+            EnumerableNode.FastEnumerateSwitch<TSource, System.Linq.ILookup<TKey, TElement>, ToLookup<TSource, TKey, TElement>>(source, new ToLookup<TSource, TKey, TElement>(comparer, keySelector, elementSelector)); 
+
         public static Dictionary<TKey, TSource> ToDictionary<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer = null) =>
             EnumerableNode.FastEnumerateSwitch<TSource, Dictionary<TKey, TSource>, ToDictionary<TSource, TKey>>(source, new ToDictionary<TSource, TKey>(keySelector, comparer)); 
 
@@ -72,6 +78,20 @@ namespace Cistern.ValueLinq
     }
     public static partial class ValueLinqArray
     {
+        public static System.Linq.ILookup<TKey, TSource> ToLookup<TSource, TKey>(this TSource[] source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer = null)
+        {
+            var aggregate = new ToLookup<TSource, TKey>(comparer, keySelector);
+            ArrayNode.ProcessArray(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        public static System.Linq.ILookup<TKey, TElement> ToLookup<TSource, TKey, TElement>(this TSource[] source, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, IEqualityComparer<TKey> comparer = null)
+        {
+            var aggregate = new ToLookup<TSource, TKey, TElement>(comparer, keySelector, elementSelector);
+            ArrayNode.ProcessArray(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
         public static Dictionary<TKey, TSource> ToDictionary<TSource, TKey>(this TSource[] source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer = null)
         {
             var aggregate = new ToDictionary<TSource, TKey>(keySelector, comparer);
@@ -215,6 +235,20 @@ namespace Cistern.ValueLinq
     }
     public static partial class ValueLinqList
     {
+        public static System.Linq.ILookup<TKey, TSource> ToLookup<TSource, TKey>(this List<TSource> source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer = null)
+        {
+            var aggregate = new ToLookup<TSource, TKey>(comparer, keySelector);
+            ListSegmentNode.ProcessList(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        public static System.Linq.ILookup<TKey, TElement> ToLookup<TSource, TKey, TElement>(this List<TSource> source, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, IEqualityComparer<TKey> comparer = null)
+        {
+            var aggregate = new ToLookup<TSource, TKey, TElement>(comparer, keySelector, elementSelector);
+            ListSegmentNode.ProcessList(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
         public static Dictionary<TKey, TSource> ToDictionary<TSource, TKey>(this List<TSource> source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer = null)
         {
             var aggregate = new ToDictionary<TSource, TKey>(keySelector, comparer);
@@ -358,6 +392,20 @@ namespace Cistern.ValueLinq
     }
     public static partial class ValueLinqMemory
     {
+        public static System.Linq.ILookup<TKey, TSource> ToLookup<TSource, TKey>(this ReadOnlyMemory<TSource> source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer = null)
+        {
+            var aggregate = new ToLookup<TSource, TKey>(comparer, keySelector);
+            MemoryNode.ProcessMemory(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
+        public static System.Linq.ILookup<TKey, TElement> ToLookup<TSource, TKey, TElement>(this ReadOnlyMemory<TSource> source, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, IEqualityComparer<TKey> comparer = null)
+        {
+            var aggregate = new ToLookup<TSource, TKey, TElement>(comparer, keySelector, elementSelector);
+            MemoryNode.ProcessMemory(source, ref aggregate);
+            return aggregate.GetResult();
+        }
+
         public static Dictionary<TKey, TSource> ToDictionary<TSource, TKey>(this ReadOnlyMemory<TSource> source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer = null)
         {
             var aggregate = new ToDictionary<TSource, TKey>(keySelector, comparer);

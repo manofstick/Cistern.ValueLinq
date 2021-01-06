@@ -1,4 +1,5 @@
-﻿using Cistern.ValueLinq.Containers;
+﻿using Cistern.ValueLinq.Aggregation;
+using Cistern.ValueLinq.Containers;
 using Cistern.ValueLinq.ValueEnumerable;
 using System;
 using System.Collections.Generic;
@@ -583,7 +584,7 @@ namespace Cistern.ValueLinq.Nodes
 
         CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
         {
-            var lookup = _nodeT.CreateViaPush<Lookup<TKey, TSource>, LookupFoward<TSource, TKey>>(new LookupFoward<TSource, TKey>(_comparer, _keySelector));
+            var lookup = _nodeT.CreateViaPush<Lookup<TKey, TSource>, ToLookup<TSource, TKey>>(new ToLookup<TSource, TKey>(_comparer, _keySelector));
             var enumerator = new LookupEnumerator<TKey, TSource>(lookup._lastGrouping);
             return nodes.CreateObject<CreationType, System.Linq.IGrouping<TKey, TSource>, LookupEnumerator<TKey, TSource>>(ref enumerator);
         }
@@ -605,7 +606,7 @@ namespace Cistern.ValueLinq.Nodes
 
         TResult INode<System.Linq.IGrouping<TKey, TSource>>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
         {
-            var lookup = _nodeT.CreateViaPush<Lookup<TKey, TSource>, LookupFoward<TSource, TKey>>(new LookupFoward<TSource, TKey>(_comparer, _keySelector));
+            var lookup = _nodeT.CreateViaPush<Lookup<TKey, TSource>, ToLookup<TSource, TKey>>(new ToLookup<TSource, TKey>(_comparer, _keySelector));
             return GroupByNode.FastEnumerate<TKey, TSource, TResult, FEnumerator>(lookup, fenum);
         }
     }
@@ -633,7 +634,7 @@ namespace Cistern.ValueLinq.Nodes
 
         CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
         {
-            var lookup = _nodeT.CreateViaPush<Lookup<TKey, TElement>, LookupFoward<TSource, TKey, TElement>>(new LookupFoward<TSource, TKey, TElement>(_comparer, _keySelector, _elementSelector));
+            var lookup = _nodeT.CreateViaPush<Lookup<TKey, TElement>, ToLookup<TSource, TKey, TElement>>(new ToLookup<TSource, TKey, TElement>(_comparer, _keySelector, _elementSelector));
             var enumerator = new LookupEnumerator<TKey, TElement>(lookup._lastGrouping);
             return nodes.CreateObject<CreationType, System.Linq.IGrouping<TKey, TElement>, LookupEnumerator<TKey, TElement>>(ref enumerator);
         }
@@ -655,7 +656,7 @@ namespace Cistern.ValueLinq.Nodes
 
         TResult INode<System.Linq.IGrouping<TKey, TElement>>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
         {
-            var lookup = _nodeT.CreateViaPush<Lookup<TKey, TElement>, LookupFoward<TSource, TKey, TElement>>(new LookupFoward<TSource, TKey, TElement>(_comparer, _keySelector, _elementSelector));
+            var lookup = _nodeT.CreateViaPush<Lookup<TKey, TElement>, ToLookup<TSource, TKey, TElement>>(new ToLookup<TSource, TKey, TElement>(_comparer, _keySelector, _elementSelector));
             return GroupByNode.FastEnumerate<TKey, TElement, TResult, FEnumerator>(lookup, fenum);
         }
     }
@@ -683,7 +684,7 @@ namespace Cistern.ValueLinq.Nodes
 
         CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
         {
-            var lookup = _nodeT.CreateViaPush<Lookup<TKey, TSource>, LookupFoward<TSource, TKey>>(new LookupFoward<TSource, TKey>(_comparer, _keySelector));
+            var lookup = _nodeT.CreateViaPush<Lookup<TKey, TSource>, ToLookup<TSource, TKey>>(new ToLookup<TSource, TKey>(_comparer, _keySelector));
             var enumerator = new LookupResultEnumerator<TKey, TSource, TResult>(_resultSelector, lookup._lastGrouping?._next); // why start with _next? to get same result as System.Linq...
             return nodes.CreateObject<CreationType, TResult, LookupResultEnumerator<TKey, TSource, TResult>>(ref enumerator);
         }
@@ -705,7 +706,7 @@ namespace Cistern.ValueLinq.Nodes
 
         TPushResult INode<TResult>.CreateViaPush<TPushResult, FEnumerator>(in FEnumerator fenum)
         {
-            var lookup = _nodeT.CreateViaPush<Lookup<TKey, TSource>, LookupFoward<TSource, TKey>>(new LookupFoward<TSource, TKey>(_comparer, _keySelector));
+            var lookup = _nodeT.CreateViaPush<Lookup<TKey, TSource>, ToLookup<TSource, TKey>>(new ToLookup<TSource, TKey>(_comparer, _keySelector));
             return GroupByResultNode.FastEnumerate<TKey, TSource, TResult, TPushResult, FEnumerator>(lookup, _resultSelector, fenum);
         }
     }
@@ -736,7 +737,7 @@ namespace Cistern.ValueLinq.Nodes
 
         CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
         {
-            var lookup = _nodeT.CreateViaPush<Lookup<TKey, TElement>, LookupFoward<TSource, TKey, TElement>>(new LookupFoward<TSource, TKey, TElement>(_comparer, _keySelector, _elementSelector));
+            var lookup = _nodeT.CreateViaPush<Lookup<TKey, TElement>, ToLookup<TSource, TKey, TElement>>(new ToLookup<TSource, TKey, TElement>(_comparer, _keySelector, _elementSelector));
             var enumerator = new LookupResultEnumerator<TKey, TElement, TResult>(_resultSelector, lookup._lastGrouping?._next); // why start with _next? to get same result as System.Linq...
             return nodes.CreateObject<CreationType, TResult, LookupResultEnumerator<TKey, TElement, TResult>>(ref enumerator);
         }
@@ -758,7 +759,7 @@ namespace Cistern.ValueLinq.Nodes
 
         TPushResult INode<TResult>.CreateViaPush<TPushResult, FEnumerator>(in FEnumerator fenum)
         {
-            var lookup = _nodeT.CreateViaPush<Lookup<TKey, TElement>, LookupFoward<TSource, TKey, TElement>>(new LookupFoward<TSource, TKey, TElement>(_comparer, _keySelector, _elementSelector));
+            var lookup = _nodeT.CreateViaPush<Lookup<TKey, TElement>, ToLookup<TSource, TKey, TElement>>(new ToLookup<TSource, TKey, TElement>(_comparer, _keySelector, _elementSelector));
             return GroupByResultNode.FastEnumerate<TKey, TElement, TResult, TPushResult, FEnumerator>(lookup, _resultSelector, fenum);
         }
     }
@@ -831,62 +832,6 @@ namespace Cistern.ValueLinq.Nodes
                     current = current._next;
                 } while (current != last);
             }
-        }
-    }
-
-
-    struct LookupFoward<TSource, TKey>
-        : IForwardEnumerator<TSource>
-    {
-        Lookup<TKey, TSource> _lookup;
-        Func<TSource, TKey> _keySelector;
-
-        public LookupFoward(IEqualityComparer<TKey> comparer, Func<TSource, TKey> keySelector)
-        {
-            if (keySelector == null)
-                throw new ArgumentNullException(nameof(keySelector));
-
-            (_keySelector, _lookup) = (keySelector, GroupByNode.CreateLookup<TSource, TKey>(comparer));
-        }
-
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
-        public void Dispose() { }
-
-        public TResult GetResult<TResult>() => (TResult)(object)GetResult();
-        public Lookup<TKey, TSource> GetResult() => _lookup;
-
-        public bool ProcessNext(TSource input)
-        {
-            _lookup.GetGrouping(_keySelector(input), true).Add(input);
-            return true;
-        }
-    }
-
-    struct LookupFoward<TSource, TKey, TElement>
-            : IForwardEnumerator<TSource>
-    {
-        Lookup<TKey, TElement> _lookup;
-        Func<TSource, TKey> _keySelector;
-        Func<TSource, TElement> _elementSelector;
-
-        public LookupFoward(IEqualityComparer<TKey> comparer, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector)
-        {
-            if (keySelector == null)
-                throw new ArgumentNullException(nameof(keySelector));
-
-            (_keySelector, _elementSelector, _lookup) = (keySelector, elementSelector, GroupByNode.CreateLookup<TElement, TKey>(comparer));
-        }
-
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
-        public void Dispose() { }
-
-        public TResult GetResult<TResult>() => (TResult)(object)GetResult();
-        public Lookup<TKey, TElement> GetResult() => _lookup;
-
-        public bool ProcessNext(TSource input)
-        {
-            _lookup.GetGrouping(_keySelector(input), true).Add(_elementSelector(input));
-            return true;
         }
     }
 }

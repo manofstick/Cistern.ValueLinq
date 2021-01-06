@@ -700,5 +700,16 @@ namespace Cistern.ValueLinq
         {
             return new(prior, keySelector, elementSelector, resultSelector, comparer);
         }
+
+        public static System.Linq.ILookup<TKey, TSource> ToLookup<TSource, TKey, TPrior>(in TPrior source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer)
+            where TPrior : INode<TSource>
+        {
+            return source.CreateViaPush<Lookup<TKey, TSource>, ToLookup<TSource, TKey>>(new ToLookup<TSource, TKey>(comparer, keySelector));
+        }
+        public static System.Linq.ILookup<TKey, TElement> ToLookup<TSource, TKey, TElement, TPrior>(in TPrior source, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, IEqualityComparer<TKey> comparer)
+            where TPrior : INode<TSource>
+        {
+            return source.CreateViaPush<Lookup<TKey, TElement>, ToLookup<TSource, TKey, TElement>>(new ToLookup<TSource, TKey, TElement>(comparer, keySelector, elementSelector));
+        }
     }
 }

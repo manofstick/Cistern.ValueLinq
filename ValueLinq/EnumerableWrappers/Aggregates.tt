@@ -9,6 +9,22 @@
     var aggregateTypes = new []
     {
         (
+            Signature: new Func<string, string>(collection => $"ToLookup<TSource, TKey>(this {collection} source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer = null)"),
+            Class: "ToLookup<TSource, TKey>",
+            Args: "comparer, keySelector",
+            AggregateReturns: "System.Linq.ILookup<TKey, TSource>",
+            FunctionReturns: "System.Linq.ILookup<TKey, TSource>",
+            WrapReturn: new Func<string, string>(s => s)
+        ),
+        (
+            Signature: new Func<string, string>(collection => $"ToLookup<TSource, TKey, TElement>(this {collection} source, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, IEqualityComparer<TKey> comparer = null)"),
+            Class: "ToLookup<TSource, TKey, TElement>",
+            Args: "comparer, keySelector, elementSelector",
+            AggregateReturns: "System.Linq.ILookup<TKey, TElement>",
+            FunctionReturns: "System.Linq.ILookup<TKey, TElement>",
+            WrapReturn: new Func<string, string>(s => s)
+        ),
+        (
             Signature: new Func<string, string>(collection => $"ToDictionary<TSource, TKey>(this {collection} source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer = null)"),
             Class: "ToDictionary<TSource, TKey>",
             Args: "keySelector, comparer",

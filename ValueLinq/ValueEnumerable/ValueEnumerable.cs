@@ -432,5 +432,13 @@ namespace Cistern.ValueLinq
         public static ValueEnumerable<TResult, GroupByResultNode<TSource, TKey, TElement, TResult, InnerNode>> GroupBy<TSource, TKey, TElement, TResult, InnerNode>(in this ValueEnumerable<TSource, InnerNode> node, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, Func<TKey, IEnumerable<TElement>, TResult> resultSelector, IEqualityComparer<TKey> comparer = null)
             where InnerNode : INode<TSource>
             => new(NodeImpl.GroupBy(node.Node, keySelector, elementSelector, resultSelector, comparer));
+
+        public static System.Linq.ILookup<TKey, TSource> ToLookup<TSource, TKey, InnerNode>(in this ValueEnumerable<TSource, InnerNode> node, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer = null)
+            where InnerNode : INode<TSource>
+            => NodeImpl.ToLookup(node.Node, keySelector, comparer);
+        public static System.Linq.ILookup<TKey, TElement> ToLookup<TSource, TKey, TElement, InnerNode>(in this ValueEnumerable<TSource, InnerNode> node, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, IEqualityComparer<TKey> comparer = null)
+            where InnerNode : INode<TSource>
+            => NodeImpl.ToLookup(node.Node, keySelector, elementSelector, comparer);
+
     }
 }
