@@ -330,5 +330,63 @@ namespace Linqs.Tests
 
             public override int GetHashCode() => Role.GetHashCode() * 31 + CountA + CountrB;
         }
+
+        [Fact]
+        public static void ToLookup_CreateViaPull()
+        {
+            var counts = new[] { 2, 10, 1000 };
+
+            foreach (var count in counts)
+            {
+                var z =
+                    Enumerable
+                    .Range(1, count)
+                    .Select(x => -x)
+                    .ToLookup(x => x % 2 == 0);
+
+                foreach (var zz in z.Select(x => x))
+                {
+                    var max = int.MinValue;
+
+                    foreach (var n in zz)
+                    {
+                        max = Math.Max(max, n);
+                    }
+
+                    Assert.Equal(zz.Key ? -2 : -1, max);
+                }
+
+            }
+        }
+
+        [Fact]
+        public static void ToLookup_CreateViaPush()
+        {
+            var counts = new[] { 2, 10, 1000 };
+
+            foreach (var count in counts)
+            {
+                var z =
+                    Enumerable
+                    .Range(1, count)
+                    .Select(x => -x)
+                    .ToLookup(x => x % 2 == 0)
+                    .ToList();
+
+                foreach (var zz in z.Select(x => x))
+                {
+                    var max = int.MinValue;
+
+                    foreach (var n in zz)
+                    {
+                        max = Math.Max(max, n);
+                    }
+
+                    Assert.Equal(zz.Key ? -2 : -1, max);
+                }
+
+            }
+        }
+
     }
 }

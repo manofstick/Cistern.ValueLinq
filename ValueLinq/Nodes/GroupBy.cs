@@ -149,31 +149,25 @@ namespace Cistern.ValueLinq.Nodes
         public TResult CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<System.Linq.IGrouping<TKey, TElement>> =>
             GroupByNode.FastEnumerate<TKey, TElement, TResult, FEnumerator>(this, fenum);
 
-        public void GetCountInformation(out CountInformation info) => info = new CountInformation();
+        public void GetCountInformation(out CountInformation info)
+            => info = new CountInformation(Count, Count > 0);
 
-        public CreationType CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
-            where Head : INode
-            where Tail : INodes
+        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
         {
-            // TODO
-            throw new NotImplementedException();
+            var enumerator = new LookupEnumerator<TKey, TElement>(_lastGrouping);
+            return nodes.CreateObject<CreationType, System.Linq.IGrouping<TKey, TElement>, LookupEnumerator<TKey, TElement>>(ref enumerator);
         }
 
-        public CreationType CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Nodes>(ref Nodes nodes, ref Enumerator enumerator)
-            where Enumerator : IFastEnumerator<EnumeratorElement>
-            where Nodes : INodes
-        {
-            // TODO:
-            throw new NotImplementedException();
-        }
+        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Nodes>(ref Nodes nodes, ref Enumerator enumerator)
+            => throw new NotSupportedException();
 
-        public bool TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) where Nodes : INodes
+        bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation)
         {
             creation = default;
             return false;
         }
 
-        public bool TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+        bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
             result = default;
             return false;
