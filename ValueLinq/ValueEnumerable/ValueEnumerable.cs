@@ -412,12 +412,12 @@ namespace Cistern.ValueLinq
             where InnerNode : INode<T>
             => NodeImpl.Fork<T, U, V, W, InnerNode>(in node.Node, t2u, t2v, t2w);
 
-        public static ExceptNode<TSource, InnerNode> Except<TSource, InnerNode>(in this ValueEnumerable<TSource, InnerNode> node, IEnumerable<TSource> second, IEqualityComparer<TSource> comparer = null)
+        public static ValueEnumerable<TSource, ExceptNode<TSource, InnerNode>> Except<TSource, InnerNode>(in this ValueEnumerable<TSource, InnerNode> node, IEnumerable<TSource> second, IEqualityComparer<TSource> comparer = null)
             where InnerNode : INode<TSource>
-            => NodeImpl.Except<TSource, InnerNode>(in node.Node, second, comparer);
-        public static ExceptNode<TSource, InnerNode> Distinct<TSource, InnerNode>(in this ValueEnumerable<TSource, InnerNode> node, IEqualityComparer<TSource> comparer = null)
+            => new (NodeImpl.Except<TSource, InnerNode>(in node.Node, second, comparer));
+        public static ValueEnumerable<TSource, ExceptNode<TSource, InnerNode>> Distinct<TSource, InnerNode>(in this ValueEnumerable<TSource, InnerNode> node, IEqualityComparer<TSource> comparer = null)
             where InnerNode : INode<TSource>
-            => NodeImpl.Except<TSource, InnerNode>(in node.Node, Array.Empty<TSource>(), comparer);
+            => ne w(NodeImpl.Except<TSource, InnerNode>(in node.Node, Array.Empty<TSource>(), comparer));
 
         public static ValueEnumerable<System.Linq.IGrouping<TKey, TSource>, GroupByNode<TSource, TKey, InnerNode>> GroupBy<TSource, TKey, InnerNode>(in this ValueEnumerable<TSource, InnerNode> node, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer = null)
             where InnerNode : INode<TSource>
