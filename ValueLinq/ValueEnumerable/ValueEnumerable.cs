@@ -417,7 +417,7 @@ namespace Cistern.ValueLinq
             => new (NodeImpl.Except<TSource, InnerNode>(in node.Node, second, comparer));
         public static ValueEnumerable<TSource, ExceptNode<TSource, InnerNode>> Distinct<TSource, InnerNode>(in this ValueEnumerable<TSource, InnerNode> node, IEqualityComparer<TSource> comparer = null)
             where InnerNode : INode<TSource>
-            => ne w(NodeImpl.Except<TSource, InnerNode>(in node.Node, Array.Empty<TSource>(), comparer));
+            => new (NodeImpl.Except<TSource, InnerNode>(in node.Node, Array.Empty<TSource>(), comparer));
 
         public static ValueEnumerable<System.Linq.IGrouping<TKey, TSource>, GroupByNode<TSource, TKey, InnerNode>> GroupBy<TSource, TKey, InnerNode>(in this ValueEnumerable<TSource, InnerNode> node, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer = null)
             where InnerNode : INode<TSource>

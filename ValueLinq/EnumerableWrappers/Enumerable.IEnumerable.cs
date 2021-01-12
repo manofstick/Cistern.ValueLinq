@@ -174,11 +174,11 @@ namespace Cistern.ValueLinq
             if (first == null)
                 throw new ArgumentNullException("first");
 
-            return new(first.OfEnumerable().Except(second, comparer));
+            return first.OfEnumerable().Except(second, comparer);
         }
 
         public static ValueEnumerable<TSource, ExceptNode<TSource, EnumerableNode<TSource>>> Distinct<TSource>(this IEnumerable<TSource> first, IEqualityComparer<TSource> comparer = null)
-            => new (first.OfEnumerable().Distinct(comparer));
+            => first.OfEnumerable().Distinct(comparer);
 
         public static ValueEnumerable<System.Linq.IGrouping<TKey, TSource>, GroupByNode<TSource, TKey, EnumerableNode<TSource>>> GroupBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer = null)
             => new (NodeImpl.GroupBy(ToNode(source), keySelector, comparer));
