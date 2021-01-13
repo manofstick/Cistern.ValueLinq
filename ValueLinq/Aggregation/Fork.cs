@@ -7,22 +7,21 @@ namespace Cistern.ValueLinq.Aggregation
         : INode<T>
     {
         public virtual CreationType CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Nodes>(ref Nodes nodes, ref Enumerator enumerator)
-            where Enumerator : IFastEnumerator<EnumeratorElement>
+            where Enumerator : struct, IPullEnumerator<EnumeratorElement>
             where Nodes : INodes
         {
             InvalidOperation();
             return default;
         }
 
-        public virtual CreationType CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
-            where Head : INode
-            where Tail : INodes
+        public virtual CreationType CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
+            where TNodes : INodes
         {
             InvalidOperation();
             return default;
         }
 
-        public abstract TResult CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<T>;
+        public abstract TResult CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum) where TPushEnumerator : IPushEnumerator<T>;
         public abstract void GetCountInformation(out CountInformation info);
 
         public virtual bool TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) where Nodes : INodes
@@ -46,8 +45,8 @@ namespace Cistern.ValueLinq.Aggregation
 
         public override void GetCountInformation(out CountInformation info) => inner.GetCountInformation(out info);
 
-        public override TResult CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
-            => inner.CreateViaPush<TResult, FEnumerator>(fenum);
+        public override TResult CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
+            => inner.CreateViaPush<TResult, TPushEnumerator>(fenum);
         public override bool TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
             => inner.TryPushOptimization<TRequest, TResult>(in request, out result);
     }
@@ -74,9 +73,9 @@ namespace Cistern.ValueLinq.Aggregation
         public Fork(in Inner inner, Func<ValueEnumerable<T, Fork<T>>, V> getSecondValue) : base(in inner) =>
             (_getSecondValue, _completeSucessfully) = (getSecondValue, false);
 
-        public override TResult CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
+        public override TResult CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
         {
-            var fork = new Fork<T, U, V, Inner, FEnumerator>(inner, fenum);
+            var fork = new Fork<T, U, V, Inner, TPushEnumerator>(inner, fenum);
             secondValue = _getSecondValue(new(fork));
             _completeSucessfully = true;
             return (TResult)(object)fork.FirstValue;
@@ -95,20 +94,20 @@ namespace Cistern.ValueLinq.Aggregation
         }
     }
 
-    sealed class Fork<T, U, V, Inner, FEnumerator1>
+    sealed class Fork<T, U, V, Inner, TPushEnumerator1>
         : Fork<T, Inner>
         where Inner : INode<T>
-        where FEnumerator1 : IForwardEnumerator<T>
+        where TPushEnumerator1 : IPushEnumerator<T>
     {
-        private FEnumerator1 FirstValueEnumerator;
+        private TPushEnumerator1 FirstValueEnumerator;
 
         public U FirstValue { get; private set; }
 
-        public Fork(in Inner inner, in FEnumerator1 fEnumerator1) : base(in inner) => (this.inner, this.FirstValueEnumerator) = (inner, fEnumerator1);
+        public Fork(in Inner inner, in TPushEnumerator1 fEnumerator1) : base(in inner) => (this.inner, this.FirstValueEnumerator) = (inner, fEnumerator1);
 
-        public override TResult CreateViaPush<TResult, FEnumerator2>(in FEnumerator2 fenum)
+        public override TResult CreateViaPush<TResult, TPushEnumerator2>(in TPushEnumerator2 fenum)
         {
-            var (firstValue, secondValue) = inner.CreateViaPush<(U, V), ForkForward<T, U, V, FEnumerator1, FEnumerator2>>(new ForkForward<T, U, V, FEnumerator1, FEnumerator2>(this.FirstValueEnumerator, fenum));
+            var (firstValue, secondValue) = inner.CreateViaPush<(U, V), ForkForward<T, U, V, TPushEnumerator1, TPushEnumerator2>>(new ForkForward<T, U, V, TPushEnumerator1, TPushEnumerator2>(this.FirstValueEnumerator, fenum));
             FirstValue = firstValue;
             return (TResult)(object)secondValue;
         }
@@ -117,7 +116,7 @@ namespace Cistern.ValueLinq.Aggregation
         {
             if (inner.TryPushOptimization<TRequest, TResult>(in request, out result))
             {
-                FirstValue = inner.CreateViaPush<U, FEnumerator1>(FirstValueEnumerator);
+                FirstValue = inner.CreateViaPush<U, TPushEnumerator1>(FirstValueEnumerator);
                 return true;
             }
             return false;
@@ -126,8 +125,8 @@ namespace Cistern.ValueLinq.Aggregation
 
     static class ForkImpl
     {
-        internal static bool ProcessSpan<T, ForwardEnumerator>(ReadOnlySpan<T> span, ref ForwardEnumerator e)
-            where ForwardEnumerator : IForwardEnumerator<T>
+        internal static bool ProcessSpan<TElement, TPushEnumerator>(ReadOnlySpan<TElement> span, ref TPushEnumerator e)
+            where TPushEnumerator : IPushEnumerator<TElement>
         {
             foreach (var item in span)
             {
@@ -137,12 +136,12 @@ namespace Cistern.ValueLinq.Aggregation
             return true;
         }
 
-        internal static BatchProcessResult ProcessBatch<T, TObject, T2U, T2V>(TObject obj, Containers.GetSpan<TObject, T> getSpan, ref T2U t2u, ref bool t2uMoreData, ref T2V t2v, ref bool t2vMoreData)
-            where T2U : IForwardEnumerator<T>
-            where T2V : IForwardEnumerator<T>
+        internal static BatchProcessResult ProcessBatch<TElement, TObject, TPushEnumerator1, TPushEnumerator2>(TObject obj, Containers.GetSpan<TObject, TElement> getSpan, ref TPushEnumerator1 t2u, ref bool t2uMoreData, ref TPushEnumerator2 t2v, ref bool t2vMoreData)
+            where TPushEnumerator1 : IPushEnumerator<TElement>
+            where TPushEnumerator2 : IPushEnumerator<TElement>
         {
-            var uResult = TryProcessBatch<T, TObject, T2U>(obj, getSpan, ref t2u, ref t2uMoreData);
-            var vResult = TryProcessBatch<T, TObject, T2V>(obj, getSpan, ref t2v, ref t2vMoreData);
+            var uResult = TryProcessBatch<TElement, TObject, TPushEnumerator1>(obj, getSpan, ref t2u, ref t2uMoreData);
+            var vResult = TryProcessBatch<TElement, TObject, TPushEnumerator2>(obj, getSpan, ref t2v, ref t2vMoreData);
 
             if (!t2uMoreData && !t2vMoreData)
                 return BatchProcessResult.SuccessAndHalt;
@@ -162,7 +161,7 @@ namespace Cistern.ValueLinq.Aggregation
         }
 
         private static BatchProcessResult TryProcessBatch<T, TObject, T2U>(TObject obj, Containers.GetSpan<TObject, T> getSpan, ref T2U forwardEnumerator, ref bool moreData)
-            where T2U : IForwardEnumerator<T>
+            where T2U : IPushEnumerator<T>
         {
             if (!moreData)
                 return BatchProcessResult.SuccessAndHalt;
@@ -175,9 +174,9 @@ namespace Cistern.ValueLinq.Aggregation
     }
 
     struct ForkForward<T, U, V, T2U, T2V>
-        : IForwardEnumerator<T>
-        where T2U : IForwardEnumerator<T>
-        where T2V : IForwardEnumerator<T>
+        : IPushEnumerator<T>
+        where T2U : IPushEnumerator<T>
+        where T2V : IPushEnumerator<T>
     {
         private T2U _t2u;
         private bool _t2u_more_data;
@@ -197,12 +196,12 @@ namespace Cistern.ValueLinq.Aggregation
         }
 
         public void Dispose() { try { _t2u.Dispose(); } finally { _t2v.Dispose(); } }
-        TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
+        TResult IPushEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
 
         public (U, V) GetResult() => (_t2u.GetResult<U>(), _t2v.GetResult<V>());
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        bool IForwardEnumerator<T>.ProcessNext(T input)
+        bool IPushEnumerator<T>.ProcessNext(T input)
         {
             if (_t2u_more_data) _t2u_more_data = _t2u.ProcessNext(input);
             if (_t2v_more_data) _t2v_more_data = _t2v.ProcessNext(input);

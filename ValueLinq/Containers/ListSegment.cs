@@ -3,14 +3,14 @@ using System.Collections.Generic;
 
 namespace Cistern.ValueLinq.Containers
 {
-    struct ListSegmentFastEnumerator<T>
-        : IFastEnumerator<T>
+    struct ListSegmentPullEnumerator<T>
+        : IPullEnumerator<T>
     {
         private readonly List<T> _list;
         private readonly int _lastIdx;
         private int _currentIdx;
 
-        public ListSegmentFastEnumerator(in ListSegment<T> list) => (_list, _currentIdx, _lastIdx) = (list.List, list.Start-1, list.Start+list.Count-1);
+        public ListSegmentPullEnumerator(in ListSegment<T> list) => (_list, _currentIdx, _lastIdx) = (list.List, list.Start-1, list.Start+list.Count-1);
 
         public void Dispose() { }
 
@@ -46,7 +46,7 @@ namespace Cistern.ValueLinq.Containers
 
         #region "This node is only used in forward context, so most of interface is not supported"
         public void GetCountInformation(out CountInformation info) => throw new NotSupportedException();
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => throw new NotSupportedException();
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes) => throw new NotSupportedException();
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
         #endregion
 
@@ -98,22 +98,22 @@ namespace Cistern.ValueLinq.Containers
             return false;
         }
 
-        public TResult CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<T>
-            => ListSegmentNode.FastReverseEnumerate<T, TResult, FEnumerator>(in _list, fenum);
+        public TResult CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum) where TPushEnumerator : IPushEnumerator<T>
+            => ListSegmentNode.FastReverseEnumerate<T, TResult, TPushEnumerator>(in _list, fenum);
     }
 
-    public struct ListSegmentNode<T>
-        : INode<T>
+    public struct ListSegmentNode<TSource>
+        : INode<TSource>
     {
-        private readonly ListSegment<T> _list;
+        private readonly ListSegment<TSource> _list;
 
         public void GetCountInformation(out CountInformation info) =>
             info = new CountInformation(_list.Count, false);
 
-        public ListSegmentNode(List<T> list, int start, int count) => _list = new ListSegment<T>(list, start, count);
+        public ListSegmentNode(List<TSource> list, int start, int count) => _list = new ListSegment<TSource>(list, start, count);
 
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) =>
-            ListSegmentNode.Create<T, Head, Tail, CreationType>(in _list, ref nodes);
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes) =>
+            ListSegmentNode.Create<TSource, TNodes, CreationType>(in _list, ref nodes);
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __)
             => throw new InvalidOperationException();
@@ -122,11 +122,11 @@ namespace Cistern.ValueLinq.Containers
             => throw new InvalidOperationException();
 
         public bool TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
-            => ListSegmentNode.CheckForOptimization<T, TRequest, TResult>(in _list, in request, out result);
+            => ListSegmentNode.CheckForOptimization<TSource, TRequest, TResult>(in _list, in request, out result);
 
-        public TResult CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<T>
-            => ListSegmentNode.FastEnumerate<T, TResult, FEnumerator>(in _list, fenum);
+        public TResult CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
+            where TPushEnumerator : IPushEnumerator<TSource>
+            => ListSegmentNode.ExecutePush<TSource, TResult, TPushEnumerator>(in _list, fenum);
     }
 
     static class ListSegmentNode
@@ -239,16 +239,15 @@ namespace Cistern.ValueLinq.Containers
             }
         }
 
-        public static CreationType Create<T, Head, Tail, CreationType>(in ListSegment<T> list, ref Nodes<Head, Tail> nodes)
-            where Head : INode
-            where Tail : INodes
+        public static CreationType Create<T, TNodes, CreationType>(in ListSegment<T> list, ref TNodes nodes)
+            where TNodes : INodes
         {
-            var enumerator = new ListSegmentFastEnumerator<T>(in list);
-            return nodes.CreateObject<CreationType, T, ListSegmentFastEnumerator<T>>(ref enumerator);
+            var enumerator = new ListSegmentPullEnumerator<T>(in list);
+            return nodes.CreateObject<CreationType, T, ListSegmentPullEnumerator<T>>(ref enumerator);
         }
 
-        internal static TResult FastEnumerate<TIn, TResult, FEnumerator>(in ListSegment<TIn> list, FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<TIn>
+        internal static TResult ExecutePush<TSource, TResult, TPushEnumerator>(in ListSegment<TSource> list, TPushEnumerator fenum)
+            where TPushEnumerator : IPushEnumerator<TSource>
         {
             try
             {
@@ -261,30 +260,30 @@ namespace Cistern.ValueLinq.Containers
             }
         }
 
-        internal static void ProcessList<TIn, FEnumerator>(List<TIn> list, ref FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<TIn>
+        internal static void ProcessList<TSource, TPushEnumerator>(List<TSource> list, ref TPushEnumerator fenum)
+            where TPushEnumerator : IPushEnumerator<TSource>
         {
             if (list == null)
                 throw new ArgumentNullException("source"); // name used to match System.Linq's exceptions
 
-            ProcessList<TIn, FEnumerator>(new ListSegment<TIn>(list, 0, list.Count), ref fenum);
+            ProcessList<TSource, TPushEnumerator>(new ListSegment<TSource>(list, 0, list.Count), ref fenum);
         }
 
-        internal static void ProcessList<TIn, FEnumerator>(in ListSegment<TIn> list, ref FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<TIn>
+        internal static void ProcessList<TSource, TPushEnumerator>(in ListSegment<TSource> list, ref TPushEnumerator fenum)
+            where TPushEnumerator : IPushEnumerator<TSource>
         {
             if (list.Count < 20) // thumb in the air # from some random testing; depends on multiple things, so impossible to get 'perfect'
             {
-                DoLoop<TIn, FEnumerator>(in list, ref fenum);
+                DoLoop<TSource, TPushEnumerator>(in list, ref fenum);
             }
-            else if (BatchProcessResult.Unavailable == fenum.TryProcessBatch<ListSegment<TIn>, GetSpan<ListSegment<TIn>, TIn>>(list, in Optimizations.UseSpan<TIn>.FromList))
+            else if (BatchProcessResult.Unavailable == fenum.TryProcessBatch<ListSegment<TSource>, GetSpan<ListSegment<TSource>, TSource>>(list, in Optimizations.UseSpan<TSource>.FromList))
             {
-                SpanNode.Loop<TIn, FEnumerator>(System.Runtime.InteropServices.CollectionsMarshal.AsSpan(list.List).Slice(list.Start, list.Count), ref fenum);
+                SpanNode.Loop<TSource, TPushEnumerator>(System.Runtime.InteropServices.CollectionsMarshal.AsSpan(list.List).Slice(list.Start, list.Count), ref fenum);
             }
         }
 
-        private static void DoLoop<TIn, FEnumerator>(in ListSegment<TIn> listInfo, ref FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<TIn>
+        private static void DoLoop<TElement, TPushEnumerator>(in ListSegment<TElement> listInfo, ref TPushEnumerator pushee)
+            where TPushEnumerator : IPushEnumerator<TElement>
         {
             var list  = listInfo.List;
             var start = listInfo.Start;
@@ -292,27 +291,27 @@ namespace Cistern.ValueLinq.Containers
 
             for (var i = start; i <= end; ++i)
             {
-                if (!fenum.ProcessNext(list[i]))
+                if (!pushee.ProcessNext(list[i]))
                     break;
             }
         }
 
-        internal static TResult FastReverseEnumerate<TIn, TResult, FEnumerator>(in ListSegment<TIn> list, FEnumerator fenum)
-        where FEnumerator : IForwardEnumerator<TIn>
+        internal static TResult FastReverseEnumerate<TElement, TResult, FEnumerator>(in ListSegment<TElement> list, FEnumerator pushee)
+            where FEnumerator : IPushEnumerator<TElement>
         {
             try
             {
-                ReverseLoop<TIn, FEnumerator>(in list, ref fenum);
-                return fenum.GetResult<TResult>();
+                ReverseLoop<TElement, FEnumerator>(in list, ref pushee);
+                return pushee.GetResult<TResult>();
             }
             finally
             {
-                fenum.Dispose();
+                pushee.Dispose();
             }
         }
 
-        internal static void ReverseLoop<TIn, FEnumerator>(in ListSegment<TIn> listInfo, ref FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<TIn>
+        internal static void ReverseLoop<TElement, TPushEnumerator>(in ListSegment<TElement> listInfo, ref TPushEnumerator pushee)
+            where TPushEnumerator : IPushEnumerator<TElement>
         {
             var list  = listInfo.List;
             var start = listInfo.Start;
@@ -320,7 +319,7 @@ namespace Cistern.ValueLinq.Containers
 
             for (var i = end; i >= start; --i)
             {
-                if (!fenum.ProcessNext(list[i]))
+                if (!pushee.ProcessNext(list[i]))
                     break;
             }
         }

@@ -3,14 +3,14 @@ using System.Collections.Generic;
 
 namespace Cistern.ValueLinq.Containers
 {
-    struct IReadOnlyListFastEnumerator<T, List>
-        : IFastEnumerator<T>
+    struct IReadOnlyListPullEnumerator<T, List>
+        : IPullEnumerator<T>
         where List : IReadOnlyList<T>
     {
         private readonly List _list;
         private int _idx;
 
-        public IReadOnlyListFastEnumerator(List list) => (_list, _idx) = (list, -1);
+        public IReadOnlyListPullEnumerator(List list) => (_list, _idx) = (list, -1);
 
         public void Dispose() { }
 
@@ -39,7 +39,8 @@ namespace Cistern.ValueLinq.Containers
 
         public IReadOnlyListNode(List list) => _list = list;
 
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => IReadOnlyListNode.Create<T, Head, Tail, CreationType, List>(_list, ref nodes);
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
+            => IReadOnlyListNode.Create<T, TNodes, CreationType, List>(_list, ref nodes);
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __)
             => throw new InvalidOperationException();
@@ -59,28 +60,27 @@ namespace Cistern.ValueLinq.Containers
             return false;
         }
 
-        TResult INode<T>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum) 
-            => IReadOnlyListNode.FastEnumerate<T, TResult, FEnumerator, List>(_list, fenum);
+        TResult INode<T>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum) 
+            => IReadOnlyListNode.ExecutePush<T, TResult, TPushEnumerator, List>(_list, fenum);
     }
 
     static class IReadOnlyListNode
     {
-        public static CreationType Create<T, Head, Tail, CreationType, List>(List list, ref Nodes<Head, Tail> nodes)
-            where Head : INode
-            where Tail : INodes
+        public static CreationType Create<T, TNodes, CreationType, List>(List list, ref TNodes nodes)
+            where TNodes : INodes
             where List : IReadOnlyList<T>
         {
-            var enumerator = new IReadOnlyListFastEnumerator<T, List>(list);
-            return nodes.CreateObject<CreationType, T, IReadOnlyListFastEnumerator<T, List>>(ref enumerator);
+            var enumerator = new IReadOnlyListPullEnumerator<T, List>(list);
+            return nodes.CreateObject<CreationType, T, IReadOnlyListPullEnumerator<T, List>>(ref enumerator);
         }
 
-        internal static TResult FastEnumerate<T, TResult, FEnumerator, List>(List list, FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<T>
+        internal static TResult ExecutePush<T, TResult, TPushEnumerator, List>(List list, TPushEnumerator fenum)
+            where TPushEnumerator : IPushEnumerator<T>
             where List : IReadOnlyList<T>
         {
             try
             { 
-                DoLoop<T, FEnumerator, List>(list, ref fenum);
+                DoLoop<T, TPushEnumerator, List>(list, ref fenum);
                 return fenum.GetResult<TResult>();
             }
             finally
@@ -89,8 +89,8 @@ namespace Cistern.ValueLinq.Containers
             }
         }
 
-        internal static void DoLoop<T, FEnumerator, List>(List list, ref FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<T>
+        internal static void DoLoop<T, TPushEnumerator, List>(List list, ref TPushEnumerator fenum)
+            where TPushEnumerator : IPushEnumerator<T>
             where List : IReadOnlyList<T>
         {
             var count = list.Count;

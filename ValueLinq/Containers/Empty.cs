@@ -22,11 +22,11 @@ namespace Cistern.ValueLinq.Containers
         public IEnumerator<T> GetEnumerator() => this;
     }
 
-    class InstanceOfEmptyFastEnumerator<T>
-        : FastEnumerator<T>
+    class InstanceOfEmptyPullEnumerator<T>
+        : PullEnumerator<T>
     {
-        public static readonly FastEnumerator<T> Instance = new InstanceOfEmptyFastEnumerator<T>();
-        private InstanceOfEmptyFastEnumerator() { }
+        public static readonly PullEnumerator<T> Instance = new InstanceOfEmptyPullEnumerator<T>();
+        private InstanceOfEmptyPullEnumerator() { }
 
         public override void Dispose() { }
 
@@ -37,12 +37,16 @@ namespace Cistern.ValueLinq.Containers
         }
     }
 
-    struct EmptyFastEnumerator<T>
-        : IFastEnumerator<T>
+    struct EmptyPullEnumerator<T>
+        : IPullEnumerator<T>
     {
         public void Dispose() { }
 
-        public bool TryGetNext(out T current) { current = default; return false; }
+        public bool TryGetNext(out T current)
+        { 
+            current = default;
+            return false;
+        }
     }
 
     public struct EmptyNode<T>
@@ -53,8 +57,8 @@ namespace Cistern.ValueLinq.Containers
         public void GetCountInformation(out CountInformation info) => 
             info = new CountInformation(0, true);
 
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
-            => EmptyNode.Create<T, Nodes<Head, Tail>, CreationType>(ref nodes);
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
+            => EmptyNode.Create<T, TNodes, CreationType>(ref nodes);
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __)
             => throw new InvalidOperationException();
@@ -65,8 +69,8 @@ namespace Cistern.ValueLinq.Containers
         bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
             => EmptyNode.TryPushOptimization<T, TRequest, TResult>(in request, out result);
 
-        TResult INode<T>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
-            => EmptyNode.FastEnumerate<T, TResult, FEnumerator>(fenum);
+        TResult INode<T>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
+            => EmptyNode.ExecutePush<T, TResult, TPushEnumerator>(fenum);
     }
 
     static class EmptyNode
@@ -110,11 +114,12 @@ namespace Cistern.ValueLinq.Containers
         public static CreationType Create<T, Nodes, CreationType>(ref Nodes nodes)
             where Nodes : INodes
         {
-            var enumerator = new EmptyFastEnumerator<T>();
-            return nodes.CreateObject<CreationType, T, EmptyFastEnumerator<T>>(ref enumerator);
+            var enumerator = new EmptyPullEnumerator<T>();
+            return nodes.CreateObject<CreationType, T, EmptyPullEnumerator<T>>(ref enumerator);
         }
 
-        internal static TResult FastEnumerate<TIn, TResult, FEnumerator>(FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
+        internal static TResult ExecutePush<TElement, TResult, TPushEnumerator>(TPushEnumerator fenum)
+            where TPushEnumerator : IPushEnumerator<TElement>
         {
             try
             {

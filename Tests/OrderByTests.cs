@@ -354,11 +354,7 @@ namespace Linqs.Tests
             var covariantOrdered = covariantOrderedTmp.ThenBy(i => i);
             string[] expected =
                 Enumerable.Range(0, 100).Select(i => i.ToString()).OrderBy<string, int>(i => i.Length)
-#if CISTERN_VALUELINQ
                 .ThenBy(i => i)
-#else
-                .ThenBy((object i) => i)
-#endif
                 .ToArray();
             Assert.Equal(expected, covariantOrdered);
         }
@@ -367,19 +363,11 @@ namespace Linqs.Tests
         public void OrderByIsCovariantTestWithAssignToArgument()
         {
             var ordered = Enumerable.Range(0, 100).Select(i => i.ToString()).OrderBy<string, int>(i => i.Length);
-#if CISTERN_VALUELINQ
             var covariantOrdered = ordered.ThenByDescending(i => i);
-#else
-            var covariantOrdered = ordered.ThenByDescending<IComparable, IComparable>(i => i);
-#endif
             string[] expected = Enumerable.Range(0, 100)
                 .Select(i => i.ToString())
                 .OrderBy<string, int>(i => i.Length)
-#if CISTERN_VALUELINQ
                 .ThenByDescending(i => i)
-#else
-                .ThenByDescending((object i) => i)
-#endif
                 .ToArray();
             Assert.Equal(expected, covariantOrdered);
         }
@@ -403,11 +391,7 @@ namespace Linqs.Tests
             ordered = System.Linq.Queryable.ThenBy(ordered, i => i);
             string[] expected =
                 Enumerable.Range(0, 100).Select(i => i.ToString()).OrderBy<string, int>(i => i.Length)
-#if CISTERN_VALUELINQ
                 .ThenBy(i => i)
-#else
-                .ThenBy((object i) => i)
-#endif
                 .ToArray();
             Assert.Equal(expected, ordered);
         }

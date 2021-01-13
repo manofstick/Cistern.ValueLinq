@@ -238,7 +238,7 @@ namespace Cistern.ValueLinq.Utils
 
 
         internal void Populate<Enumerator>(ref Enumerator enumerator)
-            where Enumerator : IFastEnumerator<T>
+            where Enumerator : IPullEnumerator<T>
         {
             for (; ; )
             {

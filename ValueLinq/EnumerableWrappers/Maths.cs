@@ -51,256 +51,256 @@ namespace Cistern.ValueLinq
     public static partial class Enumerable
     {
         public static decimal Average(this IEnumerable<decimal> source) =>
-            EnumerableNode.FastEnumerateSwitch<decimal, decimal, AverageDecimal>(source, new AverageDecimal(SIMDOptions.OnlyIfSame));
+            EnumerableNode.ExecutePush<decimal, decimal, AverageDecimal>(source, new AverageDecimal(SIMDOptions.OnlyIfSame));
 
         public static decimal Average<TSource>(this IEnumerable<TSource> source, Func<TSource, decimal> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, decimal, SelectFoward<TSource, decimal, AverageDecimal>>(source, new SelectFoward<TSource, decimal, AverageDecimal>(new AverageDecimal(SIMDOptions.OnlyIfSame), selector));
+            EnumerableNode.ExecutePush<TSource, decimal, SelectFoward<TSource, decimal, AverageDecimal>>(source, new SelectFoward<TSource, decimal, AverageDecimal>(new AverageDecimal(SIMDOptions.OnlyIfSame), selector));
 
         public static decimal? Average(this IEnumerable<decimal?> source) =>
-            EnumerableNode.FastEnumerateSwitch<decimal?, decimal?, AverageDecimalNullable>(source, new AverageDecimalNullable(true));
+            EnumerableNode.ExecutePush<decimal?, decimal?, AverageDecimalNullable>(source, new AverageDecimalNullable(true));
 
         public static decimal? Average<TSource>(this IEnumerable<TSource> source, Func<TSource, decimal?> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, decimal?, SelectFoward<TSource, decimal?, AverageDecimalNullable>>(source, new SelectFoward<TSource, decimal?, AverageDecimalNullable>(new AverageDecimalNullable(true), selector));
+            EnumerableNode.ExecutePush<TSource, decimal?, SelectFoward<TSource, decimal?, AverageDecimalNullable>>(source, new SelectFoward<TSource, decimal?, AverageDecimalNullable>(new AverageDecimalNullable(true), selector));
 
         public static double Average(this IEnumerable<double> source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame) =>
-            EnumerableNode.FastEnumerateSwitch<double, double, AverageDouble>(source, new AverageDouble(simdOptions));
+            EnumerableNode.ExecutePush<double, double, AverageDouble>(source, new AverageDouble(simdOptions));
 
         public static double Average<TSource>(this IEnumerable<TSource> source, Func<TSource, double> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, double, SelectFoward<TSource, double, AverageDouble>>(source, new SelectFoward<TSource, double, AverageDouble>(new AverageDouble(SIMDOptions.OnlyIfSame), selector));
+            EnumerableNode.ExecutePush<TSource, double, SelectFoward<TSource, double, AverageDouble>>(source, new SelectFoward<TSource, double, AverageDouble>(new AverageDouble(SIMDOptions.OnlyIfSame), selector));
 
         public static double? Average(this IEnumerable<double?> source) =>
-            EnumerableNode.FastEnumerateSwitch<double?, double?, AverageDoubleNullable>(source, new AverageDoubleNullable(true));
+            EnumerableNode.ExecutePush<double?, double?, AverageDoubleNullable>(source, new AverageDoubleNullable(true));
 
         public static double? Average<TSource>(this IEnumerable<TSource> source, Func<TSource, double?> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, double?, SelectFoward<TSource, double?, AverageDoubleNullable>>(source, new SelectFoward<TSource, double?, AverageDoubleNullable>(new AverageDoubleNullable(true), selector));
+            EnumerableNode.ExecutePush<TSource, double?, SelectFoward<TSource, double?, AverageDoubleNullable>>(source, new SelectFoward<TSource, double?, AverageDoubleNullable>(new AverageDoubleNullable(true), selector));
 
         public static float Average(this IEnumerable<float> source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame) =>
-            EnumerableNode.FastEnumerateSwitch<float, float, AverageFloat>(source, new AverageFloat(simdOptions));
+            EnumerableNode.ExecutePush<float, float, AverageFloat>(source, new AverageFloat(simdOptions));
 
         public static float Average<TSource>(this IEnumerable<TSource> source, Func<TSource, float> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, float, SelectFoward<TSource, float, AverageFloat>>(source, new SelectFoward<TSource, float, AverageFloat>(new AverageFloat(SIMDOptions.OnlyIfSame), selector));
+            EnumerableNode.ExecutePush<TSource, float, SelectFoward<TSource, float, AverageFloat>>(source, new SelectFoward<TSource, float, AverageFloat>(new AverageFloat(SIMDOptions.OnlyIfSame), selector));
 
         public static float? Average(this IEnumerable<float?> source) =>
-            EnumerableNode.FastEnumerateSwitch<float?, float?, AverageFloatNullable>(source, new AverageFloatNullable(true));
+            EnumerableNode.ExecutePush<float?, float?, AverageFloatNullable>(source, new AverageFloatNullable(true));
 
         public static float? Average<TSource>(this IEnumerable<TSource> source, Func<TSource, float?> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, float?, SelectFoward<TSource, float?, AverageFloatNullable>>(source, new SelectFoward<TSource, float?, AverageFloatNullable>(new AverageFloatNullable(true), selector));
+            EnumerableNode.ExecutePush<TSource, float?, SelectFoward<TSource, float?, AverageFloatNullable>>(source, new SelectFoward<TSource, float?, AverageFloatNullable>(new AverageFloatNullable(true), selector));
 
         public static double Average(this IEnumerable<int> source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame) =>
-            EnumerableNode.FastEnumerateSwitch<int, double, AverageInt>(source, new AverageInt(simdOptions));
+            EnumerableNode.ExecutePush<int, double, AverageInt>(source, new AverageInt(simdOptions));
 
         public static double Average<TSource>(this IEnumerable<TSource> source, Func<TSource, int> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, double, SelectFoward<TSource, int, AverageInt>>(source, new SelectFoward<TSource, int, AverageInt>(new AverageInt(SIMDOptions.OnlyIfSame), selector));
+            EnumerableNode.ExecutePush<TSource, double, SelectFoward<TSource, int, AverageInt>>(source, new SelectFoward<TSource, int, AverageInt>(new AverageInt(SIMDOptions.OnlyIfSame), selector));
 
         public static double? Average(this IEnumerable<int?> source) =>
-            EnumerableNode.FastEnumerateSwitch<int?, double?, AverageIntNullable>(source, new AverageIntNullable(true));
+            EnumerableNode.ExecutePush<int?, double?, AverageIntNullable>(source, new AverageIntNullable(true));
 
         public static double? Average<TSource>(this IEnumerable<TSource> source, Func<TSource, int?> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, double?, SelectFoward<TSource, int?, AverageIntNullable>>(source, new SelectFoward<TSource, int?, AverageIntNullable>(new AverageIntNullable(true), selector));
+            EnumerableNode.ExecutePush<TSource, double?, SelectFoward<TSource, int?, AverageIntNullable>>(source, new SelectFoward<TSource, int?, AverageIntNullable>(new AverageIntNullable(true), selector));
 
         public static double Average(this IEnumerable<long> source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame) =>
-            EnumerableNode.FastEnumerateSwitch<long, double, AverageLong>(source, new AverageLong(simdOptions));
+            EnumerableNode.ExecutePush<long, double, AverageLong>(source, new AverageLong(simdOptions));
 
         public static double Average<TSource>(this IEnumerable<TSource> source, Func<TSource, long> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, double, SelectFoward<TSource, long, AverageLong>>(source, new SelectFoward<TSource, long, AverageLong>(new AverageLong(SIMDOptions.OnlyIfSame), selector));
+            EnumerableNode.ExecutePush<TSource, double, SelectFoward<TSource, long, AverageLong>>(source, new SelectFoward<TSource, long, AverageLong>(new AverageLong(SIMDOptions.OnlyIfSame), selector));
 
         public static double? Average(this IEnumerable<long?> source) =>
-            EnumerableNode.FastEnumerateSwitch<long?, double?, AverageLongNullable>(source, new AverageLongNullable(true));
+            EnumerableNode.ExecutePush<long?, double?, AverageLongNullable>(source, new AverageLongNullable(true));
 
         public static double? Average<TSource>(this IEnumerable<TSource> source, Func<TSource, long?> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, double?, SelectFoward<TSource, long?, AverageLongNullable>>(source, new SelectFoward<TSource, long?, AverageLongNullable>(new AverageLongNullable(true), selector));
+            EnumerableNode.ExecutePush<TSource, double?, SelectFoward<TSource, long?, AverageLongNullable>>(source, new SelectFoward<TSource, long?, AverageLongNullable>(new AverageLongNullable(true), selector));
 
         public static decimal Min(this IEnumerable<decimal> source) =>
-            EnumerableNode.FastEnumerateSwitch<decimal, decimal, MinDecimal>(source, new MinDecimal(true));
+            EnumerableNode.ExecutePush<decimal, decimal, MinDecimal>(source, new MinDecimal(true));
 
         public static decimal Min<TSource>(this IEnumerable<TSource> source, Func<TSource, decimal> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, decimal, SelectFoward<TSource, decimal, MinDecimal>>(source, new SelectFoward<TSource, decimal, MinDecimal>(new MinDecimal(true), selector));
+            EnumerableNode.ExecutePush<TSource, decimal, SelectFoward<TSource, decimal, MinDecimal>>(source, new SelectFoward<TSource, decimal, MinDecimal>(new MinDecimal(true), selector));
 
         public static decimal? Min(this IEnumerable<decimal?> source) =>
-            EnumerableNode.FastEnumerateSwitch<decimal?, decimal?, MinDecimalNullable>(source, new MinDecimalNullable(true));
+            EnumerableNode.ExecutePush<decimal?, decimal?, MinDecimalNullable>(source, new MinDecimalNullable(true));
 
         public static decimal? Min<TSource>(this IEnumerable<TSource> source, Func<TSource, decimal?> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, decimal?, SelectFoward<TSource, decimal?, MinDecimalNullable>>(source, new SelectFoward<TSource, decimal?, MinDecimalNullable>(new MinDecimalNullable(true), selector));
+            EnumerableNode.ExecutePush<TSource, decimal?, SelectFoward<TSource, decimal?, MinDecimalNullable>>(source, new SelectFoward<TSource, decimal?, MinDecimalNullable>(new MinDecimalNullable(true), selector));
 
         public static double Min(this IEnumerable<double> source) =>
-            EnumerableNode.FastEnumerateSwitch<double, double, MinDouble>(source, new MinDouble(true));
+            EnumerableNode.ExecutePush<double, double, MinDouble>(source, new MinDouble(true));
 
         public static double Min<TSource>(this IEnumerable<TSource> source, Func<TSource, double> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, double, SelectFoward<TSource, double, MinDouble>>(source, new SelectFoward<TSource, double, MinDouble>(new MinDouble(true), selector));
+            EnumerableNode.ExecutePush<TSource, double, SelectFoward<TSource, double, MinDouble>>(source, new SelectFoward<TSource, double, MinDouble>(new MinDouble(true), selector));
 
         public static double? Min(this IEnumerable<double?> source) =>
-            EnumerableNode.FastEnumerateSwitch<double?, double?, MinDoubleNullable>(source, new MinDoubleNullable(true));
+            EnumerableNode.ExecutePush<double?, double?, MinDoubleNullable>(source, new MinDoubleNullable(true));
 
         public static double? Min<TSource>(this IEnumerable<TSource> source, Func<TSource, double?> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, double?, SelectFoward<TSource, double?, MinDoubleNullable>>(source, new SelectFoward<TSource, double?, MinDoubleNullable>(new MinDoubleNullable(true), selector));
+            EnumerableNode.ExecutePush<TSource, double?, SelectFoward<TSource, double?, MinDoubleNullable>>(source, new SelectFoward<TSource, double?, MinDoubleNullable>(new MinDoubleNullable(true), selector));
 
         public static float Min(this IEnumerable<float> source) =>
-            EnumerableNode.FastEnumerateSwitch<float, float, MinFloat>(source, new MinFloat(true));
+            EnumerableNode.ExecutePush<float, float, MinFloat>(source, new MinFloat(true));
 
         public static float Min<TSource>(this IEnumerable<TSource> source, Func<TSource, float> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, float, SelectFoward<TSource, float, MinFloat>>(source, new SelectFoward<TSource, float, MinFloat>(new MinFloat(true), selector));
+            EnumerableNode.ExecutePush<TSource, float, SelectFoward<TSource, float, MinFloat>>(source, new SelectFoward<TSource, float, MinFloat>(new MinFloat(true), selector));
 
         public static float? Min(this IEnumerable<float?> source) =>
-            EnumerableNode.FastEnumerateSwitch<float?, float?, MinFloatNullable>(source, new MinFloatNullable(true));
+            EnumerableNode.ExecutePush<float?, float?, MinFloatNullable>(source, new MinFloatNullable(true));
 
         public static float? Min<TSource>(this IEnumerable<TSource> source, Func<TSource, float?> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, float?, SelectFoward<TSource, float?, MinFloatNullable>>(source, new SelectFoward<TSource, float?, MinFloatNullable>(new MinFloatNullable(true), selector));
+            EnumerableNode.ExecutePush<TSource, float?, SelectFoward<TSource, float?, MinFloatNullable>>(source, new SelectFoward<TSource, float?, MinFloatNullable>(new MinFloatNullable(true), selector));
 
         public static int Min(this IEnumerable<int> source) =>
-            EnumerableNode.FastEnumerateSwitch<int, int, MinInt>(source, new MinInt(true));
+            EnumerableNode.ExecutePush<int, int, MinInt>(source, new MinInt(true));
 
         public static int Min<TSource>(this IEnumerable<TSource> source, Func<TSource, int> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, int, SelectFoward<TSource, int, MinInt>>(source, new SelectFoward<TSource, int, MinInt>(new MinInt(true), selector));
+            EnumerableNode.ExecutePush<TSource, int, SelectFoward<TSource, int, MinInt>>(source, new SelectFoward<TSource, int, MinInt>(new MinInt(true), selector));
 
         public static int? Min(this IEnumerable<int?> source) =>
-            EnumerableNode.FastEnumerateSwitch<int?, int?, MinIntNullable>(source, new MinIntNullable(true));
+            EnumerableNode.ExecutePush<int?, int?, MinIntNullable>(source, new MinIntNullable(true));
 
         public static int? Min<TSource>(this IEnumerable<TSource> source, Func<TSource, int?> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, int?, SelectFoward<TSource, int?, MinIntNullable>>(source, new SelectFoward<TSource, int?, MinIntNullable>(new MinIntNullable(true), selector));
+            EnumerableNode.ExecutePush<TSource, int?, SelectFoward<TSource, int?, MinIntNullable>>(source, new SelectFoward<TSource, int?, MinIntNullable>(new MinIntNullable(true), selector));
 
         public static long Min(this IEnumerable<long> source) =>
-            EnumerableNode.FastEnumerateSwitch<long, long, MinLong>(source, new MinLong(true));
+            EnumerableNode.ExecutePush<long, long, MinLong>(source, new MinLong(true));
 
         public static long Min<TSource>(this IEnumerable<TSource> source, Func<TSource, long> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, long, SelectFoward<TSource, long, MinLong>>(source, new SelectFoward<TSource, long, MinLong>(new MinLong(true), selector));
+            EnumerableNode.ExecutePush<TSource, long, SelectFoward<TSource, long, MinLong>>(source, new SelectFoward<TSource, long, MinLong>(new MinLong(true), selector));
 
         public static long? Min(this IEnumerable<long?> source) =>
-            EnumerableNode.FastEnumerateSwitch<long?, long?, MinLongNullable>(source, new MinLongNullable(true));
+            EnumerableNode.ExecutePush<long?, long?, MinLongNullable>(source, new MinLongNullable(true));
 
         public static long? Min<TSource>(this IEnumerable<TSource> source, Func<TSource, long?> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, long?, SelectFoward<TSource, long?, MinLongNullable>>(source, new SelectFoward<TSource, long?, MinLongNullable>(new MinLongNullable(true), selector));
+            EnumerableNode.ExecutePush<TSource, long?, SelectFoward<TSource, long?, MinLongNullable>>(source, new SelectFoward<TSource, long?, MinLongNullable>(new MinLongNullable(true), selector));
 
         public static TSource Min<TSource>(this IEnumerable<TSource> source) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, TSource, Min<TSource>>(source, new Min<TSource>(true));
+            EnumerableNode.ExecutePush<TSource, TSource, Min<TSource>>(source, new Min<TSource>(true));
 
         public static T Min<TSource, T>(this IEnumerable<TSource> source, Func<TSource, T> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, T, SelectFoward<TSource, T, Min<T>>>(source, new SelectFoward<TSource, T, Min<T>>(new Min<T>(true), selector));
+            EnumerableNode.ExecutePush<TSource, T, SelectFoward<TSource, T, Min<T>>>(source, new SelectFoward<TSource, T, Min<T>>(new Min<T>(true), selector));
 
         public static decimal Max(this IEnumerable<decimal> source) =>
-            EnumerableNode.FastEnumerateSwitch<decimal, decimal, MaxDecimal>(source, new MaxDecimal(true));
+            EnumerableNode.ExecutePush<decimal, decimal, MaxDecimal>(source, new MaxDecimal(true));
 
         public static decimal Max<TSource>(this IEnumerable<TSource> source, Func<TSource, decimal> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, decimal, SelectFoward<TSource, decimal, MaxDecimal>>(source, new SelectFoward<TSource, decimal, MaxDecimal>(new MaxDecimal(true), selector));
+            EnumerableNode.ExecutePush<TSource, decimal, SelectFoward<TSource, decimal, MaxDecimal>>(source, new SelectFoward<TSource, decimal, MaxDecimal>(new MaxDecimal(true), selector));
 
         public static decimal? Max(this IEnumerable<decimal?> source) =>
-            EnumerableNode.FastEnumerateSwitch<decimal?, decimal?, MaxDecimalNullable>(source, new MaxDecimalNullable(true));
+            EnumerableNode.ExecutePush<decimal?, decimal?, MaxDecimalNullable>(source, new MaxDecimalNullable(true));
 
         public static decimal? Max<TSource>(this IEnumerable<TSource> source, Func<TSource, decimal?> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, decimal?, SelectFoward<TSource, decimal?, MaxDecimalNullable>>(source, new SelectFoward<TSource, decimal?, MaxDecimalNullable>(new MaxDecimalNullable(true), selector));
+            EnumerableNode.ExecutePush<TSource, decimal?, SelectFoward<TSource, decimal?, MaxDecimalNullable>>(source, new SelectFoward<TSource, decimal?, MaxDecimalNullable>(new MaxDecimalNullable(true), selector));
 
         public static double Max(this IEnumerable<double> source) =>
-            EnumerableNode.FastEnumerateSwitch<double, double, MaxDouble>(source, new MaxDouble(true));
+            EnumerableNode.ExecutePush<double, double, MaxDouble>(source, new MaxDouble(true));
 
         public static double Max<TSource>(this IEnumerable<TSource> source, Func<TSource, double> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, double, SelectFoward<TSource, double, MaxDouble>>(source, new SelectFoward<TSource, double, MaxDouble>(new MaxDouble(true), selector));
+            EnumerableNode.ExecutePush<TSource, double, SelectFoward<TSource, double, MaxDouble>>(source, new SelectFoward<TSource, double, MaxDouble>(new MaxDouble(true), selector));
 
         public static double? Max(this IEnumerable<double?> source) =>
-            EnumerableNode.FastEnumerateSwitch<double?, double?, MaxDoubleNullable>(source, new MaxDoubleNullable(true));
+            EnumerableNode.ExecutePush<double?, double?, MaxDoubleNullable>(source, new MaxDoubleNullable(true));
 
         public static double? Max<TSource>(this IEnumerable<TSource> source, Func<TSource, double?> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, double?, SelectFoward<TSource, double?, MaxDoubleNullable>>(source, new SelectFoward<TSource, double?, MaxDoubleNullable>(new MaxDoubleNullable(true), selector));
+            EnumerableNode.ExecutePush<TSource, double?, SelectFoward<TSource, double?, MaxDoubleNullable>>(source, new SelectFoward<TSource, double?, MaxDoubleNullable>(new MaxDoubleNullable(true), selector));
 
         public static float Max(this IEnumerable<float> source) =>
-            EnumerableNode.FastEnumerateSwitch<float, float, MaxFloat>(source, new MaxFloat(true));
+            EnumerableNode.ExecutePush<float, float, MaxFloat>(source, new MaxFloat(true));
 
         public static float Max<TSource>(this IEnumerable<TSource> source, Func<TSource, float> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, float, SelectFoward<TSource, float, MaxFloat>>(source, new SelectFoward<TSource, float, MaxFloat>(new MaxFloat(true), selector));
+            EnumerableNode.ExecutePush<TSource, float, SelectFoward<TSource, float, MaxFloat>>(source, new SelectFoward<TSource, float, MaxFloat>(new MaxFloat(true), selector));
 
         public static float? Max(this IEnumerable<float?> source) =>
-            EnumerableNode.FastEnumerateSwitch<float?, float?, MaxFloatNullable>(source, new MaxFloatNullable(true));
+            EnumerableNode.ExecutePush<float?, float?, MaxFloatNullable>(source, new MaxFloatNullable(true));
 
         public static float? Max<TSource>(this IEnumerable<TSource> source, Func<TSource, float?> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, float?, SelectFoward<TSource, float?, MaxFloatNullable>>(source, new SelectFoward<TSource, float?, MaxFloatNullable>(new MaxFloatNullable(true), selector));
+            EnumerableNode.ExecutePush<TSource, float?, SelectFoward<TSource, float?, MaxFloatNullable>>(source, new SelectFoward<TSource, float?, MaxFloatNullable>(new MaxFloatNullable(true), selector));
 
         public static int Max(this IEnumerable<int> source) =>
-            EnumerableNode.FastEnumerateSwitch<int, int, MaxInt>(source, new MaxInt(true));
+            EnumerableNode.ExecutePush<int, int, MaxInt>(source, new MaxInt(true));
 
         public static int Max<TSource>(this IEnumerable<TSource> source, Func<TSource, int> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, int, SelectFoward<TSource, int, MaxInt>>(source, new SelectFoward<TSource, int, MaxInt>(new MaxInt(true), selector));
+            EnumerableNode.ExecutePush<TSource, int, SelectFoward<TSource, int, MaxInt>>(source, new SelectFoward<TSource, int, MaxInt>(new MaxInt(true), selector));
 
         public static int? Max(this IEnumerable<int?> source) =>
-            EnumerableNode.FastEnumerateSwitch<int?, int?, MaxIntNullable>(source, new MaxIntNullable(true));
+            EnumerableNode.ExecutePush<int?, int?, MaxIntNullable>(source, new MaxIntNullable(true));
 
         public static int? Max<TSource>(this IEnumerable<TSource> source, Func<TSource, int?> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, int?, SelectFoward<TSource, int?, MaxIntNullable>>(source, new SelectFoward<TSource, int?, MaxIntNullable>(new MaxIntNullable(true), selector));
+            EnumerableNode.ExecutePush<TSource, int?, SelectFoward<TSource, int?, MaxIntNullable>>(source, new SelectFoward<TSource, int?, MaxIntNullable>(new MaxIntNullable(true), selector));
 
         public static long Max(this IEnumerable<long> source) =>
-            EnumerableNode.FastEnumerateSwitch<long, long, MaxLong>(source, new MaxLong(true));
+            EnumerableNode.ExecutePush<long, long, MaxLong>(source, new MaxLong(true));
 
         public static long Max<TSource>(this IEnumerable<TSource> source, Func<TSource, long> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, long, SelectFoward<TSource, long, MaxLong>>(source, new SelectFoward<TSource, long, MaxLong>(new MaxLong(true), selector));
+            EnumerableNode.ExecutePush<TSource, long, SelectFoward<TSource, long, MaxLong>>(source, new SelectFoward<TSource, long, MaxLong>(new MaxLong(true), selector));
 
         public static long? Max(this IEnumerable<long?> source) =>
-            EnumerableNode.FastEnumerateSwitch<long?, long?, MaxLongNullable>(source, new MaxLongNullable(true));
+            EnumerableNode.ExecutePush<long?, long?, MaxLongNullable>(source, new MaxLongNullable(true));
 
         public static long? Max<TSource>(this IEnumerable<TSource> source, Func<TSource, long?> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, long?, SelectFoward<TSource, long?, MaxLongNullable>>(source, new SelectFoward<TSource, long?, MaxLongNullable>(new MaxLongNullable(true), selector));
+            EnumerableNode.ExecutePush<TSource, long?, SelectFoward<TSource, long?, MaxLongNullable>>(source, new SelectFoward<TSource, long?, MaxLongNullable>(new MaxLongNullable(true), selector));
 
         public static TSource Max<TSource>(this IEnumerable<TSource> source) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, TSource, Max<TSource>>(source, new Max<TSource>(true));
+            EnumerableNode.ExecutePush<TSource, TSource, Max<TSource>>(source, new Max<TSource>(true));
 
         public static T Max<TSource, T>(this IEnumerable<TSource> source, Func<TSource, T> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, T, SelectFoward<TSource, T, Max<T>>>(source, new SelectFoward<TSource, T, Max<T>>(new Max<T>(true), selector));
+            EnumerableNode.ExecutePush<TSource, T, SelectFoward<TSource, T, Max<T>>>(source, new SelectFoward<TSource, T, Max<T>>(new Max<T>(true), selector));
 
         public static decimal Sum(this IEnumerable<decimal> source) =>
-            EnumerableNode.FastEnumerateSwitch<decimal, decimal, SumDecimal>(source, new SumDecimal(SIMDOptions.OnlyIfSame));
+            EnumerableNode.ExecutePush<decimal, decimal, SumDecimal>(source, new SumDecimal(SIMDOptions.OnlyIfSame));
 
         public static decimal Sum<TSource>(this IEnumerable<TSource> source, Func<TSource, decimal> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, decimal, SelectFoward<TSource, decimal, SumDecimal>>(source, new SelectFoward<TSource, decimal, SumDecimal>(new SumDecimal(SIMDOptions.OnlyIfSame), selector));
+            EnumerableNode.ExecutePush<TSource, decimal, SelectFoward<TSource, decimal, SumDecimal>>(source, new SelectFoward<TSource, decimal, SumDecimal>(new SumDecimal(SIMDOptions.OnlyIfSame), selector));
 
         public static decimal? Sum(this IEnumerable<decimal?> source) =>
-            EnumerableNode.FastEnumerateSwitch<decimal?, decimal?, SumDecimalNullable>(source, new SumDecimalNullable(true));
+            EnumerableNode.ExecutePush<decimal?, decimal?, SumDecimalNullable>(source, new SumDecimalNullable(true));
 
         public static decimal? Sum<TSource>(this IEnumerable<TSource> source, Func<TSource, decimal?> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, decimal?, SelectFoward<TSource, decimal?, SumDecimalNullable>>(source, new SelectFoward<TSource, decimal?, SumDecimalNullable>(new SumDecimalNullable(true), selector));
+            EnumerableNode.ExecutePush<TSource, decimal?, SelectFoward<TSource, decimal?, SumDecimalNullable>>(source, new SelectFoward<TSource, decimal?, SumDecimalNullable>(new SumDecimalNullable(true), selector));
 
         public static double Sum(this IEnumerable<double> source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame) =>
-            EnumerableNode.FastEnumerateSwitch<double, double, SumDouble>(source, new SumDouble(simdOptions));
+            EnumerableNode.ExecutePush<double, double, SumDouble>(source, new SumDouble(simdOptions));
 
         public static double Sum<TSource>(this IEnumerable<TSource> source, Func<TSource, double> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, double, SelectFoward<TSource, double, SumDouble>>(source, new SelectFoward<TSource, double, SumDouble>(new SumDouble(SIMDOptions.OnlyIfSame), selector));
+            EnumerableNode.ExecutePush<TSource, double, SelectFoward<TSource, double, SumDouble>>(source, new SelectFoward<TSource, double, SumDouble>(new SumDouble(SIMDOptions.OnlyIfSame), selector));
 
         public static double? Sum(this IEnumerable<double?> source) =>
-            EnumerableNode.FastEnumerateSwitch<double?, double?, SumDoubleNullable>(source, new SumDoubleNullable(true));
+            EnumerableNode.ExecutePush<double?, double?, SumDoubleNullable>(source, new SumDoubleNullable(true));
 
         public static double? Sum<TSource>(this IEnumerable<TSource> source, Func<TSource, double?> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, double?, SelectFoward<TSource, double?, SumDoubleNullable>>(source, new SelectFoward<TSource, double?, SumDoubleNullable>(new SumDoubleNullable(true), selector));
+            EnumerableNode.ExecutePush<TSource, double?, SelectFoward<TSource, double?, SumDoubleNullable>>(source, new SelectFoward<TSource, double?, SumDoubleNullable>(new SumDoubleNullable(true), selector));
 
         public static float Sum(this IEnumerable<float> source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame) =>
-            EnumerableNode.FastEnumerateSwitch<float, float, SumFloat>(source, new SumFloat(simdOptions));
+            EnumerableNode.ExecutePush<float, float, SumFloat>(source, new SumFloat(simdOptions));
 
         public static float Sum<TSource>(this IEnumerable<TSource> source, Func<TSource, float> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, float, SelectFoward<TSource, float, SumFloat>>(source, new SelectFoward<TSource, float, SumFloat>(new SumFloat(SIMDOptions.OnlyIfSame), selector));
+            EnumerableNode.ExecutePush<TSource, float, SelectFoward<TSource, float, SumFloat>>(source, new SelectFoward<TSource, float, SumFloat>(new SumFloat(SIMDOptions.OnlyIfSame), selector));
 
         public static float? Sum(this IEnumerable<float?> source) =>
-            EnumerableNode.FastEnumerateSwitch<float?, float?, SumFloatNullable>(source, new SumFloatNullable(true));
+            EnumerableNode.ExecutePush<float?, float?, SumFloatNullable>(source, new SumFloatNullable(true));
 
         public static float? Sum<TSource>(this IEnumerable<TSource> source, Func<TSource, float?> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, float?, SelectFoward<TSource, float?, SumFloatNullable>>(source, new SelectFoward<TSource, float?, SumFloatNullable>(new SumFloatNullable(true), selector));
+            EnumerableNode.ExecutePush<TSource, float?, SelectFoward<TSource, float?, SumFloatNullable>>(source, new SelectFoward<TSource, float?, SumFloatNullable>(new SumFloatNullable(true), selector));
 
         public static int Sum(this IEnumerable<int> source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame) =>
-            EnumerableNode.FastEnumerateSwitch<int, int, SumInt>(source, new SumInt(simdOptions));
+            EnumerableNode.ExecutePush<int, int, SumInt>(source, new SumInt(simdOptions));
 
         public static int Sum<TSource>(this IEnumerable<TSource> source, Func<TSource, int> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, int, SelectFoward<TSource, int, SumInt>>(source, new SelectFoward<TSource, int, SumInt>(new SumInt(SIMDOptions.OnlyIfSame), selector));
+            EnumerableNode.ExecutePush<TSource, int, SelectFoward<TSource, int, SumInt>>(source, new SelectFoward<TSource, int, SumInt>(new SumInt(SIMDOptions.OnlyIfSame), selector));
 
         public static int? Sum(this IEnumerable<int?> source) =>
-            EnumerableNode.FastEnumerateSwitch<int?, int?, SumIntNullable>(source, new SumIntNullable(true));
+            EnumerableNode.ExecutePush<int?, int?, SumIntNullable>(source, new SumIntNullable(true));
 
         public static int? Sum<TSource>(this IEnumerable<TSource> source, Func<TSource, int?> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, int?, SelectFoward<TSource, int?, SumIntNullable>>(source, new SelectFoward<TSource, int?, SumIntNullable>(new SumIntNullable(true), selector));
+            EnumerableNode.ExecutePush<TSource, int?, SelectFoward<TSource, int?, SumIntNullable>>(source, new SelectFoward<TSource, int?, SumIntNullable>(new SumIntNullable(true), selector));
 
         public static long Sum(this IEnumerable<long> source, SIMDOptions simdOptions = SIMDOptions.OnlyIfSame) =>
-            EnumerableNode.FastEnumerateSwitch<long, long, SumLong>(source, new SumLong(simdOptions));
+            EnumerableNode.ExecutePush<long, long, SumLong>(source, new SumLong(simdOptions));
 
         public static long Sum<TSource>(this IEnumerable<TSource> source, Func<TSource, long> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, long, SelectFoward<TSource, long, SumLong>>(source, new SelectFoward<TSource, long, SumLong>(new SumLong(SIMDOptions.OnlyIfSame), selector));
+            EnumerableNode.ExecutePush<TSource, long, SelectFoward<TSource, long, SumLong>>(source, new SelectFoward<TSource, long, SumLong>(new SumLong(SIMDOptions.OnlyIfSame), selector));
 
         public static long? Sum(this IEnumerable<long?> source) =>
-            EnumerableNode.FastEnumerateSwitch<long?, long?, SumLongNullable>(source, new SumLongNullable(true));
+            EnumerableNode.ExecutePush<long?, long?, SumLongNullable>(source, new SumLongNullable(true));
 
         public static long? Sum<TSource>(this IEnumerable<TSource> source, Func<TSource, long?> selector) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, long?, SelectFoward<TSource, long?, SumLongNullable>>(source, new SelectFoward<TSource, long?, SumLongNullable>(new SumLongNullable(true), selector));
+            EnumerableNode.ExecutePush<TSource, long?, SelectFoward<TSource, long?, SumLongNullable>>(source, new SelectFoward<TSource, long?, SumLongNullable>(new SumLongNullable(true), selector));
 
     }
 

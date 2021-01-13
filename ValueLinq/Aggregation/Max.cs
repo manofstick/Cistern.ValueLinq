@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 namespace Cistern.ValueLinq.Aggregation
 {
     struct Max<T>
-        : IForwardEnumerator<T>
+        : IPushEnumerator<T>
     {
         private static IComparer<T> comparer = 
             typeof(T) == typeof(string)
@@ -47,7 +47,7 @@ namespace Cistern.ValueLinq.Aggregation
     }
 
     struct Max<T, Accumulator, Quotient, Math>
-        : IForwardEnumerator<T>
+        : IPushEnumerator<T>
         where T : struct
         where Accumulator : struct
         where Quotient : struct
@@ -94,7 +94,7 @@ namespace Cistern.ValueLinq.Aggregation
     }
 
     struct MaxNullable<T, Accumulator, Quotient, Math>
-        : IForwardEnumerator<T?>
+        : IPushEnumerator<T?>
         where T : struct
         where Accumulator : struct
         where Quotient : struct

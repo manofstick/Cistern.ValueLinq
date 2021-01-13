@@ -6,8 +6,8 @@ using System.Runtime.CompilerServices;
 namespace Cistern.ValueLinq.Nodes
 {
     struct WhereNodeEnumerator<TIn, TInEnumerator>
-        : IFastEnumerator<TIn>
-        where TInEnumerator : IFastEnumerator<TIn>
+        : IPullEnumerator<TIn>
+        where TInEnumerator : IPullEnumerator<TIn>
     {
         private TInEnumerator _enumerator;
         private Func<TIn, bool> _filter;
@@ -43,7 +43,7 @@ namespace Cistern.ValueLinq.Nodes
 
         public WhereNode(in NodeT nodeT, Func<T, bool> predicate) => (_nodeT, _filter) = (nodeT, predicate);
 
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
             => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
@@ -83,8 +83,8 @@ namespace Cistern.ValueLinq.Nodes
         }
 
         bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
-        TResult INode<T>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum) =>
-            _nodeT.CreateViaPush<TResult, WhereFoward<T, FEnumerator>>(new WhereFoward<T, FEnumerator>(fenum, _filter));
+        TResult INode<T>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum) =>
+            _nodeT.CreateViaPush<TResult, WhereFoward<T, TPushEnumerator>>(new WhereFoward<T, TPushEnumerator>(fenum, _filter));
     }
 
     static class WhereNode
@@ -94,8 +94,8 @@ namespace Cistern.ValueLinq.Nodes
             if (tail.TryObjectAscentOptimization<Optimizations.SourceEnumerableWhere<T>, CreationType>(new Optimizations.SourceEnumerableWhere<T> { Enumerable = e, Predicate = _filter }, out creation))
                 return true;
 
-            var enumerator = new EnumerableFastWhereEnumerator<T>(e, _filter);
-            creation = tail.CreateObject<CreationType, T, EnumerableFastWhereEnumerator<T>>(ref enumerator);
+            var enumerator = new EnumerableWherePullEnumerator<T>(e, _filter);
+            creation = tail.CreateObject<CreationType, T, EnumerableWherePullEnumerator<T>>(ref enumerator);
             return true;
         }
 
@@ -104,8 +104,8 @@ namespace Cistern.ValueLinq.Nodes
             if (tail.TryObjectAscentOptimization<Optimizations.SourceListWhere<T>, CreationType>(new Optimizations.SourceListWhere<T> { List = l, Predicate = _filter }, out creation))
                 return true;
 
-            var enumerator = new ListFastWhereEnumerator<T>(l.GetEnumerator(), _filter); ;
-            creation = tail.CreateObject<CreationType, T, ListFastWhereEnumerator<T>>(ref enumerator);
+            var enumerator = new ListWherePullEnumerator<T>(l.GetEnumerator(), _filter); ;
+            creation = tail.CreateObject<CreationType, T, ListWherePullEnumerator<T>>(ref enumerator);
             return true;
         }
 
@@ -114,15 +114,15 @@ namespace Cistern.ValueLinq.Nodes
             if (tail.TryObjectAscentOptimization<Optimizations.SourceArrayWhere<T>, CreationType>(new Optimizations.SourceArrayWhere<T> { Array = src.Array, Start = src.Start, Count = src.Count, Predicate = _filter }, out creation))
                 return true;
 
-            var enumerator = new ArrayFastWhereEnumerator<T>(src.Array, src.Start, src.Count, _filter);
-            creation = tail.CreateObject<CreationType, T, ArrayFastWhereEnumerator<T>>(ref enumerator);
+            var enumerator = new ArrayWherePullEnumerator<T>(src.Array, src.Start, src.Count, _filter);
+            creation = tail.CreateObject<CreationType, T, ArrayWherePullEnumerator<T>>(ref enumerator);
             return true;
         }
     }
 
     struct WhereFoward<T, Next>
-        : IForwardEnumerator<T>
-        where Next : IForwardEnumerator<T>
+        : IPushEnumerator<T>
+        where Next : IPushEnumerator<T>
     {
         Next _next;
         Func<T, bool> _predicate;

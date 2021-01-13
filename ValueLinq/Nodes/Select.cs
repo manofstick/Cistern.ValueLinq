@@ -5,19 +5,19 @@ using System.Runtime.CompilerServices;
 
 namespace Cistern.ValueLinq.Nodes
 {
-    struct SelectNodeEnumerator<TIn, TOut, TInEnumerator>
-        : IFastEnumerator<TOut>
-        where TInEnumerator : IFastEnumerator<TIn>
+    struct SelectNodeEnumerator<TSource, TResult, TPullEnumerator>
+        : IPullEnumerator<TResult>
+        where TPullEnumerator : IPullEnumerator<TSource>
     {
-        private TInEnumerator _enumerator;
-        private Func<TIn, TOut> _map;
+        private TPullEnumerator _enumerator;
+        private Func<TSource, TResult> _map;
 
-        public SelectNodeEnumerator(in TInEnumerator enumerator, Func<TIn, TOut> map) => (_enumerator, _map) = (enumerator, map);
+        public SelectNodeEnumerator(in TPullEnumerator enumerator, Func<TSource, TResult> map) => (_enumerator, _map) = (enumerator, map);
 
         public void Dispose() => _enumerator.Dispose();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryGetNext(out TOut current)
+        public bool TryGetNext(out TResult current)
         {
             if (_enumerator.TryGetNext(out var currentIn))
             {
@@ -44,7 +44,7 @@ namespace Cistern.ValueLinq.Nodes
 
         public SelectNode(in NodeT nodeT, Func<T, U> selector) => (_nodeT, _map) = (nodeT, selector);
 
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
             => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
@@ -97,8 +97,8 @@ namespace Cistern.ValueLinq.Nodes
 
         bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
 
-        TResult INode<U>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum) =>
-            _nodeT.CreateViaPush<TResult, SelectFoward<T, U, FEnumerator>>(new SelectFoward<T, U, FEnumerator>(fenum, _map));
+        TResult INode<U>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum) =>
+            _nodeT.CreateViaPush<TResult, SelectFoward<T, U, TPushEnumerator>>(new SelectFoward<T, U, TPushEnumerator>(fenum, _map));
     }
 
     class SelectNode
@@ -106,55 +106,55 @@ namespace Cistern.ValueLinq.Nodes
         internal static bool CreateEnumerable<T, U, CreationType, Nodes>(IEnumerable<T> e, Func<T, U> _map, ref Nodes tail, out CreationType creation)
             where Nodes : INodes
         {
-            var enumerator = new EnumerableFastSelectEnumerator<T, U>(e, _map);
-            creation = tail.CreateObject<CreationType, U, EnumerableFastSelectEnumerator<T, U>>(ref enumerator);
+            var enumerator = new EnumerableSelectPullEnumerator<T, U>(e, _map);
+            creation = tail.CreateObject<CreationType, U, EnumerableSelectPullEnumerator<T, U>>(ref enumerator);
             return true;
         }
 
         internal static bool CreateEnumerable<T, U, CreationType, Nodes>(IEnumerable<T> e, Func<T, bool> predicate, Func<T, U> _map, ref Nodes tail, out CreationType creation)
             where Nodes : INodes
         {
-            var enumerator = new EnumerableFastWhereSelectEnumerator<T, U>(e, predicate, _map);
-            creation = tail.CreateObject<CreationType, U, EnumerableFastWhereSelectEnumerator<T, U>>(ref enumerator);
+            var enumerator = new EnumerableWhereSelectPullEnumerator<T, U>(e, predicate, _map);
+            creation = tail.CreateObject<CreationType, U, EnumerableWhereSelectPullEnumerator<T, U>>(ref enumerator);
             return true;
         }
 
         internal static bool CreateList<T, U, CreationType, Nodes>(List<T> l, Func<T, U> _map, ref Nodes tail, out CreationType creation)
             where Nodes : INodes
         {
-            var enumerator = new ListFastSelectEnumerator<T, U>(l.GetEnumerator(), _map); ;
-            creation = tail.CreateObject<CreationType, U, ListFastSelectEnumerator<T, U>>(ref enumerator);
+            var enumerator = new ListSelectPullEnumerator<T, U>(l.GetEnumerator(), _map); ;
+            creation = tail.CreateObject<CreationType, U, ListSelectPullEnumerator<T, U>>(ref enumerator);
             return true;
         }
 
         internal static bool CreateList<T, U, CreationType, Nodes>(List<T> l, Func<T, bool> predicate, Func<T, U> _map, ref Nodes tail, out CreationType creation)
             where Nodes : INodes
         {
-            var enumerator = new ListFastWhereSelectEnumerator<T, U>(l.GetEnumerator(), predicate, _map); ;
-            creation = tail.CreateObject<CreationType, U, ListFastWhereSelectEnumerator<T, U>>(ref enumerator);
+            var enumerator = new ListWhereSelectPullEnumerator<T, U>(l.GetEnumerator(), predicate, _map); ;
+            creation = tail.CreateObject<CreationType, U, ListWhereSelectPullEnumerator<T, U>>(ref enumerator);
             return true;
         }
 
         internal static bool CreateArray<T, U, CreationType, Nodes>(in Optimizations.SourceArray<T> src, Func<T, U> _map, ref Nodes tail, out CreationType creation)
             where Nodes : INodes
         {
-            var enumerator = new ArrayFastSelectEnumerator<T, U>(src.Array, src.Start, src.Count, _map);
-            creation = tail.CreateObject<CreationType, U, ArrayFastSelectEnumerator<T, U>>(ref enumerator);
+            var enumerator = new ArraySelectPullEnumerator<T, U>(src.Array, src.Start, src.Count, _map);
+            creation = tail.CreateObject<CreationType, U, ArraySelectPullEnumerator<T, U>>(ref enumerator);
             return true;
         }
 
         internal static bool CreateArray<T, U, CreationType, Nodes>(in Optimizations.SourceArrayWhere<T> src, Func<T, U> _map, ref Nodes tail, out CreationType creation)
             where Nodes : INodes
         {
-            var enumerator = new ArrayFastWhereSelectEnumerator<T, U>(src.Array, src.Start, src.Count, src.Predicate, _map);
-            creation = tail.CreateObject<CreationType, U, ArrayFastWhereSelectEnumerator<T, U>>(ref enumerator);
+            var enumerator = new ArrayWhereSelectPullEnumerator<T, U>(src.Array, src.Start, src.Count, src.Predicate, _map);
+            creation = tail.CreateObject<CreationType, U, ArrayWhereSelectPullEnumerator<T, U>>(ref enumerator);
             return true;
         }
     }
 
     struct SelectFoward<T, U, Next>
-        : IForwardEnumerator<T>
-        where Next : IForwardEnumerator<U>
+        : IPushEnumerator<T>
+        where Next : IPushEnumerator<U>
     {
         internal Next _next;
 

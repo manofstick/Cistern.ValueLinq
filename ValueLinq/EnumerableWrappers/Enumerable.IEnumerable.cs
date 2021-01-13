@@ -14,7 +14,7 @@ namespace Cistern.ValueLinq
             source switch
             {
                 ICollection<TSource> c => c.Contains(value),
-                _ => EnumerableNode.FastEnumerateSwitch<TSource, bool, Contains<TSource>>(source, new Contains<TSource>(value))
+                _ => EnumerableNode.ExecutePush<TSource, bool, Contains<TSource>>(source, new Contains<TSource>(value))
             };
 
 

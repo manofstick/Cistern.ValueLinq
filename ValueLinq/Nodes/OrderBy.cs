@@ -5,16 +5,16 @@ using System.Runtime.CompilerServices;
 
 namespace Cistern.ValueLinq.Nodes
 {
-    public interface IKeySelectors<T>
+    public interface IKeySelectors<TElement>
     {
-        void SortElements<Comparer>(Span<T> elements, in Comparer comparer)
+        void SortElements<Comparer>(Span<TElement> elements, in Comparer comparer)
             where Comparer : IComparer<int>;
     }
 
-    public struct KeySelectorsRoot<T>
-        : IKeySelectors<T>
+    public struct KeySelectorsRoot<TElement>
+        : IKeySelectors<TElement>
     {
-        public void SortElements<Comparer>(Span<T> elements, in Comparer comparer) 
+        public void SortElements<Comparer>(Span<TElement> elements, in Comparer comparer) 
             where Comparer : IComparer<int>
         {
             Span<int> indexes =
@@ -39,17 +39,17 @@ namespace Cistern.ValueLinq.Nodes
 
     static class OrderByImpl
     {
-        internal static TKey[] ExtractKeys<T, TKey>(Span<T> elements, Func<T, TKey> _keySelector)
+        internal static TKey[] ExtractKeys<TElement, TKey>(Span<TElement> elements, Func<TElement, TKey> keySelector)
         {
             TKey[] keys = new TKey[elements.Length]; // TODO: ArrayPool
             for (var i = 0; i < keys.Length; ++i)
-                keys[i] = _keySelector(elements[i]);
+                keys[i] = keySelector(elements[i]);
             return keys;
         }
 
-        internal static void DescendingDefaultComparer<T, TKey, PriorKeySelector, Comparer>(Span<T> elements, TKey[] keys, ref PriorKeySelector prior, in Comparer comparer)
+        internal static void DescendingDefaultComparer<TElement, TKey, PriorKeySelector, Comparer>(Span<TElement> elements, TKey[] keys, ref PriorKeySelector prior, in Comparer comparer)
             where Comparer : IComparer<int>
-            where PriorKeySelector : IKeySelectors<T>
+            where PriorKeySelector : IKeySelectors<TElement>
         {
                  if (typeof(TKey) == typeof(double))   prior.SortElements(elements, new GenericSortDescending<double,   Comparer>(comparer, (double[])  (object)keys));
             else if (typeof(TKey) == typeof(float))    prior.SortElements(elements, new GenericSortDescending<float,    Comparer>(comparer, (float[])   (object)keys));
@@ -61,9 +61,9 @@ namespace Cistern.ValueLinq.Nodes
             else                                       prior.SortElements(elements, new KeySortWithDefaultComparerDescending<TKey, Comparer>(comparer, keys));
         }
 
-        internal static void AscendingDefaultComparer<T, TKey, PriorKeySelector, Comparer>(Span<T> elements, TKey[] keys, ref PriorKeySelector prior, in Comparer comparer)
+        internal static void AscendingDefaultComparer<TElement, TKey, PriorKeySelector, Comparer>(Span<TElement> elements, TKey[] keys, ref PriorKeySelector prior, in Comparer comparer)
             where Comparer : IComparer<int>
-            where PriorKeySelector : IKeySelectors<T>
+            where PriorKeySelector : IKeySelectors<TElement>
         {
                  if (typeof(TKey) == typeof(double))   prior.SortElements(elements, new GenericSort<double,   Comparer>(comparer, (double[])  (object)keys));
             else if (typeof(TKey) == typeof(float))    prior.SortElements(elements, new GenericSort<float,    Comparer>(comparer, (float[])   (object)keys));
@@ -81,7 +81,7 @@ namespace Cistern.ValueLinq.Nodes
                 indexes[i] = i;
         }
 
-        internal static void OrderByIndex<T>(Span<T> elements, ReadOnlySpan<int> indexes)
+        internal static void OrderByIndex<TElement>(Span<TElement> elements, ReadOnlySpan<int> indexes)
         {
             // hmmm. I should work out O(upper bound) for this...
             for (var i = 0; i < indexes.Length; ++i)
@@ -101,20 +101,20 @@ namespace Cistern.ValueLinq.Nodes
         }
     }
 
-    public struct KeySelectors<T, TKey, PriorKeySelector>
-        : IKeySelectors<T>
-        where PriorKeySelector : IKeySelectors<T>
+    public struct KeySelectors<TElement, TKey, PriorKeySelector>
+        : IKeySelectors<TElement>
+        where PriorKeySelector : IKeySelectors<TElement>
     {
         PriorKeySelector _priorKeySelector;
 
-        Func<T, TKey> _keySelector;
+        Func<TElement, TKey> _keySelector;
         IComparer<TKey> _comparer;
         bool _descending;
 
-        public KeySelectors(PriorKeySelector priorKeySelector, Func<T, TKey> keySelector, IComparer<TKey> comparer, bool descending) =>
+        public KeySelectors(PriorKeySelector priorKeySelector, Func<TElement, TKey> keySelector, IComparer<TKey> comparer, bool descending) =>
             (_priorKeySelector, _keySelector, _comparer, _descending) = (priorKeySelector, keySelector, comparer, descending);
 
-        public void SortElements<Comparer>(Span<T> elements, in Comparer comparer)
+        public void SortElements<Comparer>(Span<TElement> elements, in Comparer comparer)
             where Comparer : IComparer<int>
         {
             TKey[] keys = OrderByImpl.ExtractKeys(elements, _keySelector);
@@ -122,14 +122,14 @@ namespace Cistern.ValueLinq.Nodes
             if (_descending)
             {
                 if (_comparer == Comparer<TKey>.Default)
-                    OrderByImpl.DescendingDefaultComparer<T, TKey, PriorKeySelector, Comparer>(elements, keys, ref _priorKeySelector, in comparer);
+                    OrderByImpl.DescendingDefaultComparer<TElement, TKey, PriorKeySelector, Comparer>(elements, keys, ref _priorKeySelector, in comparer);
                 else
                     _priorKeySelector.SortElements(elements, new KeySortWithComparerDescending<TKey, Comparer>(comparer, keys, _comparer));
             }
             else
             {
                 if (_comparer == Comparer<TKey>.Default)
-                    OrderByImpl.AscendingDefaultComparer<T, TKey, PriorKeySelector, Comparer>(elements, keys, ref _priorKeySelector, in comparer);
+                    OrderByImpl.AscendingDefaultComparer<TElement, TKey, PriorKeySelector, Comparer>(elements, keys, ref _priorKeySelector, in comparer);
                 else
                     _priorKeySelector.SortElements(elements, new KeySortWithComparer<TKey, Comparer>(comparer, keys, _comparer));
             }
@@ -158,17 +158,17 @@ namespace Cistern.ValueLinq.Nodes
             };
     }
 
-    struct StringSortDescending<Lower>
+    struct StringSortDescending<TLowerComparer>
         : IComparer<int>
-        where Lower : IComparer<int>
+        where TLowerComparer : IComparer<int>
     {
         private readonly StringComparer _comparer;
 
-        Lower _lower;
+        TLowerComparer _lower;
 
         string[] _keys;
 
-        public StringSortDescending(in Lower lower, string[] keys, StringComparer comparer)
+        public StringSortDescending(in TLowerComparer lower, string[] keys, StringComparer comparer)
             => (_lower, _keys, _comparer) = (lower, keys, comparer);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -180,16 +180,16 @@ namespace Cistern.ValueLinq.Nodes
             };
     }
 
-    struct GenericSort<Type, Lower>
+    struct GenericSort<TKey, TLowerComparer>
         : IComparer<int>
-        where Lower : IComparer<int>
-        where Type : IComparable<Type>
+        where TLowerComparer : IComparer<int>
+        where TKey : IComparable<TKey>
     {
-        Lower _lower;
+        TLowerComparer _lower;
 
-        Type[] _keys;
+        TKey[] _keys;
 
-        public GenericSort(in Lower lower, Type[] keys)
+        public GenericSort(in TLowerComparer lower, TKey[] keys)
             => (_lower, _keys) = (lower, keys);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -201,16 +201,16 @@ namespace Cistern.ValueLinq.Nodes
             };
     }
 
-    struct GenericSortDescending<Type, Lower>
+    struct GenericSortDescending<TKey, TLowerComparer>
         : IComparer<int>
-        where Lower : IComparer<int>
-        where Type : IComparable<Type>
+        where TLowerComparer : IComparer<int>
+        where TKey : IComparable<TKey>
     {
-        Lower _lower;
+        TLowerComparer _lower;
 
-        Type[] _keys;
+        TKey[] _keys;
 
-        public GenericSortDescending(in Lower lower, Type[] keys)
+        public GenericSortDescending(in TLowerComparer lower, TKey[] keys)
             => (_lower, _keys) = (lower, keys);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -222,16 +222,16 @@ namespace Cistern.ValueLinq.Nodes
             };
     }
 
-    struct KeySortWithComparer<TKey, Lower>
+    struct KeySortWithComparer<TKey, TLowerComparer>
         : IComparer<int>
-        where Lower : IComparer<int>
+        where TLowerComparer : IComparer<int>
     {
-        Lower _lower;
+        TLowerComparer _lower;
 
         TKey[] _keys;
         IComparer<TKey> _comparer;
 
-        public KeySortWithComparer(in Lower lower, TKey[] keys, IComparer<TKey> comparer)
+        public KeySortWithComparer(in TLowerComparer lower, TKey[] keys, IComparer<TKey> comparer)
             => (_lower, _keys, _comparer) = (lower, keys, comparer);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -243,15 +243,15 @@ namespace Cistern.ValueLinq.Nodes
             };
     }
 
-    struct KeySortWithDefaultComparer<TKey, Lower>
+    struct KeySortWithDefaultComparer<TKey, TLowerComparer>
         : IComparer<int>
-        where Lower : IComparer<int>
+        where TLowerComparer : IComparer<int>
     {
-        Lower _lower;
+        TLowerComparer _lower;
 
         TKey[] _keys;
 
-        public KeySortWithDefaultComparer(in Lower lower, TKey[] keys)
+        public KeySortWithDefaultComparer(in TLowerComparer lower, TKey[] keys)
             => (_lower, _keys) = (lower, keys);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -263,16 +263,16 @@ namespace Cistern.ValueLinq.Nodes
             };
     }
 
-    struct KeySortWithComparerDescending<TKey, Lower>
+    struct KeySortWithComparerDescending<TKey, TLowerComparer>
         : IComparer<int>
-        where Lower : IComparer<int>
+        where TLowerComparer : IComparer<int>
     {
-        Lower _lower;
+        TLowerComparer _lower;
 
         TKey[] _keys;
         IComparer<TKey> _comparer;
 
-        public KeySortWithComparerDescending(in Lower lower, TKey[] keys, IComparer<TKey> comparer)
+        public KeySortWithComparerDescending(in TLowerComparer lower, TKey[] keys, IComparer<TKey> comparer)
             => (_lower, _keys, _comparer) = (lower, keys, comparer);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -284,15 +284,15 @@ namespace Cistern.ValueLinq.Nodes
             };
     }
 
-    struct KeySortWithDefaultComparerDescending<TKey, Lower>
+    struct KeySortWithDefaultComparerDescending<TKey, TLowerComparer>
         : IComparer<int>
-        where Lower : IComparer<int>
+        where TLowerComparer : IComparer<int>
     {
-        Lower _lower;
+        TLowerComparer _lower;
 
         TKey[] _keys;
 
-        public KeySortWithDefaultComparerDescending(in Lower lower, TKey[] keys)
+        public KeySortWithDefaultComparerDescending(in TLowerComparer lower, TKey[] keys)
             => (_lower, _keys) = (lower, keys);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -311,10 +311,10 @@ namespace Cistern.ValueLinq.Nodes
         public int Compare(int x, int y) => x.CompareTo(y);
     }
 
-    public struct OrderByNode<T, KeySelectors, NodeT>
-        : INode<T>
-        where NodeT : INode<T>
-        where KeySelectors : IKeySelectors<T>
+    public struct OrderByNode<TElement, KeySelectors, NodeT>
+        : INode<TElement>
+        where NodeT : INode<TElement>
+        where KeySelectors : IKeySelectors<TElement>
     {
         internal NodeT _nodeT;
         internal KeySelectors _keySelectors;
@@ -327,16 +327,16 @@ namespace Cistern.ValueLinq.Nodes
         public OrderByNode(in NodeT nodeT, KeySelectors keySelectors) =>
             (_nodeT, _keySelectors) = (nodeT, keySelectors);
 
-        private T[] GetOrderedArray()
+        private TElement[] GetOrderedArray()
         {
-            var array = NodeImpl.ToArrayByRef<T, NodeT>(ref _nodeT, null, null); // TODO: ArrayPool
+            var array = NodeImpl.ToArrayByRef<TElement, NodeT>(ref _nodeT, null, null); // TODO: ArrayPool
             if (array.Length > 1)
                 _keySelectors.SortElements(array, new IntSort());
             return array;
         }
 
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
-            => ArrayNode.Create<T, Nodes<Head, Tail>, CreationType>(GetOrderedArray(), ref nodes);
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
+            => ArrayNode.Create<TElement, TNodes, CreationType>(GetOrderedArray(), ref nodes);
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
             => throw new InvalidOperationException();
@@ -347,8 +347,8 @@ namespace Cistern.ValueLinq.Nodes
         {
             if (typeof(TRequest) == typeof(Optimizations.Reverse))
             {
-                NodeContainer<T> container = default;
-                container.SetNode(new ReversedMemoryNode<T>(GetOrderedArray()));
+                NodeContainer<TElement> container = default;
+                container.SetNode(new ReversedMemoryNode<TElement>(GetOrderedArray()));
                 result = (TResult)(object)container;
                 return true;
             }
@@ -362,8 +362,8 @@ namespace Cistern.ValueLinq.Nodes
             if (typeof(TRequest) == typeof(Optimizations.Skip))
             {
                 var skip = (Optimizations.Skip)(object)request;
-                NodeContainer<T> container = default;
-                MemoryNode.Skip(new ReadOnlyMemory<T>(GetOrderedArray()), skip.Count, ref container);
+                NodeContainer<TElement> container = default;
+                MemoryNode.Skip(new ReadOnlyMemory<TElement>(GetOrderedArray()), skip.Count, ref container);
                 result = (TResult)(object)container;
                 return true;
             }
@@ -371,7 +371,7 @@ namespace Cistern.ValueLinq.Nodes
             if (typeof(TRequest) == typeof(Optimizations.Take))
             {
                 var skip = (Optimizations.Take)(object)request;
-                NodeContainer<T> container = default;
+                NodeContainer<TElement> container = default;
                 MemoryNode.Take(GetOrderedArray(), skip.Count, ref container);
                 result = (TResult)(object)container;
                 return true;
@@ -381,7 +381,7 @@ namespace Cistern.ValueLinq.Nodes
             return false;
         }
 
-        TResult INode<T>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
-            => ArrayNode.FastEnumerate<T, TResult, FEnumerator>(GetOrderedArray(), fenum);
+        TResult INode<TElement>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
+            => ArrayNode.ExecutePush<TElement, TResult, TPushEnumerator>(GetOrderedArray(), fenum);
     }
 }

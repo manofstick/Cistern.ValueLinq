@@ -5,13 +5,13 @@ using System.Runtime.CompilerServices;
 
 namespace Cistern.ValueLinq.Containers
 {
-    struct GenericEnumeratorFastEnumerator<T, Enumerator>
-        : IFastEnumerator<T>
+    struct GenericEnumeratorPullEnumerator<T, Enumerator>
+        : IPullEnumerator<T>
         where Enumerator : IEnumerator<T>
     {
         private Enumerator _enumerator;
 
-        public GenericEnumeratorFastEnumerator(Enumerator e) => (_enumerator) = (e);
+        public GenericEnumeratorPullEnumerator(Enumerator e) => (_enumerator) = (e);
 
         public void Dispose() =>_enumerator.Dispose();
 
@@ -48,8 +48,8 @@ namespace Cistern.ValueLinq.Containers
             (_e, _f, _count) = (e, f, count);
         }
 
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
-            => GenericEnumeratorNode.Create<T, Head, Tail, CreationType, Enumerator>(_f(_e), ref nodes);
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
+            => GenericEnumeratorNode.Create<T, TNodes, CreationType, Enumerator>(_f(_e), ref nodes);
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator_, Tail>(ref Tail _, ref Enumerator_ __)
             => throw new InvalidOperationException();
@@ -69,43 +69,42 @@ namespace Cistern.ValueLinq.Containers
             return false;
         }
 
-        TResult INode<T>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
-            => GenericEnumeratorNode.FastEnumerate<T, TResult, FEnumerator, Enumerator>(_f(_e), fenum);
+        TResult INode<T>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
+            => GenericEnumeratorNode.ExecutePush<T, TResult, TPushEnumerator, Enumerator>(_f(_e), fenum);
     }
 
     static class GenericEnumeratorNode
     {
-        public static CreationType Create<T, Head, Tail, CreationType, Enumerator>(Enumerator list, ref Nodes<Head, Tail> nodes)
-            where Head : INode
-            where Tail : INodes
+        public static CreationType Create<T, TNodes, CreationType, Enumerator>(Enumerator list, ref TNodes nodes)
+            where TNodes : INodes
             where Enumerator : IEnumerator<T>
         {
-            var enumerator = new GenericEnumeratorFastEnumerator<T, Enumerator>(list);
-            return nodes.CreateObject<CreationType, T, GenericEnumeratorFastEnumerator<T, Enumerator>>(ref enumerator);
+            var enumerator = new GenericEnumeratorPullEnumerator<T, Enumerator>(list);
+            return nodes.CreateObject<CreationType, T, GenericEnumeratorPullEnumerator<T, Enumerator>>(ref enumerator);
         }
 
-        internal static TResult FastEnumerate<T, TResult, FEnumerator, Enumerator>(Enumerator enumerator, FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<T>
-            where Enumerator : IEnumerator<T>
+        internal static TResult ExecutePush<TElement, TResult, TPushEnumerator, TEnumerator>(TEnumerator enumerator, TPushEnumerator pushee)
+            where TPushEnumerator : IPushEnumerator<TElement>
+            where TEnumerator : IEnumerator<TElement>
         {
             try
             {
-                InnerLoop<T, FEnumerator, Enumerator>(enumerator, ref fenum);
-                return fenum.GetResult<TResult>();
+                InnerLoop<TElement, TPushEnumerator, TEnumerator>(enumerator, ref pushee);
+                return pushee.GetResult<TResult>();
             }
             finally
             {
                 enumerator.Dispose();
-                fenum.Dispose();
+                pushee.Dispose();
             }
         }
 
-        private static void InnerLoop<T, FEnumerator, Enumerator>(Enumerator enumerator, ref FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<T>
-            where Enumerator : IEnumerator<T>
+        private static void InnerLoop<TElement, TPushEnumerator, TEnumerator>(TEnumerator enumerator, ref TPushEnumerator pushee)
+            where TPushEnumerator : IPushEnumerator<TElement>
+            where TEnumerator : IEnumerator<TElement>
         {
             while (enumerator.MoveNext())
-                fenum.ProcessNext(enumerator.Current);
+                pushee.ProcessNext(enumerator.Current);
         }
     }
 }

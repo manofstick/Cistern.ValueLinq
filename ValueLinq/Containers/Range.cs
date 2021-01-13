@@ -2,13 +2,13 @@
 
 namespace Cistern.ValueLinq.Containers
 {
-    struct RangeFastEnumerator
-        : IFastEnumerator<int>
+    struct RangePullEnumerator
+        : IPullEnumerator<int>
     {
         private int _current;
         private int _max;
 
-        public RangeFastEnumerator(int current, int max) => (_current, _max) = (current, max);
+        public RangePullEnumerator(int current, int max) => (_current, _max) = (current, max);
 
         public void Dispose() { }
 
@@ -42,10 +42,10 @@ namespace Cistern.ValueLinq.Containers
             (_start, _max) = (start, (int)max);
         }
 
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
         {
-            var enumerator = new RangeFastEnumerator(_start, _max);
-            return nodes.CreateObject<CreationType, int, RangeFastEnumerator>(ref enumerator);
+            var enumerator = new RangePullEnumerator(_start, _max);
+            return nodes.CreateObject<CreationType, int, RangePullEnumerator>(ref enumerator);
         }
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __)
@@ -91,15 +91,15 @@ namespace Cistern.ValueLinq.Containers
             return false;
         }
 
-        TResult INode<int>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
-                => RangeNode.FastEnumerate<TResult, FEnumerator>(_start, _max, fenum);
+        TResult INode<int>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
+                => RangeNode.ExecutePush<TResult, TPushEnumerator>(_start, _max, fenum);
 
-        private static TResult FastEnumerate<TResult, FEnumerator>(int start, int max, FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<int>
+        private static TResult ExecutePush<TResult, TPushEnumerator>(int start, int max, TPushEnumerator fenum)
+            where TPushEnumerator : IPushEnumerator<int>
         {
             try
             { 
-                Loop<FEnumerator>(start, max, ref fenum);
+                Loop<TPushEnumerator>(start, max, ref fenum);
                 return fenum.GetResult<TResult>();
             }
             finally
@@ -108,7 +108,8 @@ namespace Cistern.ValueLinq.Containers
             }
         }
 
-        private static void Loop<FEnumerator>(int start, int max, ref FEnumerator fenum) where FEnumerator : IForwardEnumerator<int>
+        private static void Loop<TPushEnumerator>(int start, int max, ref TPushEnumerator fenum)
+            where TPushEnumerator : IPushEnumerator<int>
         {
             var i = start - 1;
             while (i < max)

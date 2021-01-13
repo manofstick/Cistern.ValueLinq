@@ -2,13 +2,13 @@
 
 namespace Cistern.ValueLinq.Containers
 {
-    struct ReturnFastEnumerator<T>
-        : IFastEnumerator<T>
+    struct ReturnPullEnumerator<T>
+        : IPullEnumerator<T>
     {
         private T _element;
         private bool _iterated;
 
-        public ReturnFastEnumerator(T element) => (_element, _iterated) = (element, false);
+        public ReturnPullEnumerator(T element) => (_element, _iterated) = (element, false);
 
         public void Dispose() { }
 
@@ -35,8 +35,8 @@ namespace Cistern.ValueLinq.Containers
 
         public ReturnNode(T element) => _element = element;
 
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) =>
-            ReturnNode.Create<T, CreationType, Head, Tail>(_element, ref nodes);
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes) =>
+            ReturnNode.Create<T, CreationType, TNodes>(_element, ref nodes);
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __)
             => throw new InvalidOperationException();
@@ -47,27 +47,26 @@ namespace Cistern.ValueLinq.Containers
         bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result) =>
             ReturnNode.TryPushOptimization<T, TRequest, TResult>(_element, in request, out result);
 
-        TResult INode<T>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
-            => ReturnNode.FastEnumerate<T, TResult, FEnumerator>(_element, fenum);
+        TResult INode<T>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
+            => ReturnNode.ExecutePush<T, TResult, TPushEnumerator>(_element, fenum);
     }
 
     static class ReturnNode
     {
-        internal static bool TryPushOptimization<T, TRequest, TResult>(T element, in TRequest request, out TResult result)
+        internal static bool TryPushOptimization<TElement, TRequest, TResult>(TElement element, in TRequest request, out TResult result)
         {
             result = default;
             return false;
         }
 
-        internal static CreationType Create<T, CreationType, Head, Tail>(T _element, ref Nodes<Head, Tail> nodes)
-            where Head : INode
-            where Tail : INodes
+        internal static CreationType Create<T, CreationType, TNodes>(T _element, ref TNodes nodes)
+            where TNodes : INodes
         {
-            var enumerator = new ReturnFastEnumerator<T>(_element);
-            return nodes.CreateObject<CreationType, T, ReturnFastEnumerator<T>>(ref enumerator);
+            var enumerator = new ReturnPullEnumerator<T>(_element);
+            return nodes.CreateObject<CreationType, T, ReturnPullEnumerator<T>>(ref enumerator);
         }
 
-        internal static TResult FastEnumerate<TIn, TResult, FEnumerator>(TIn element, FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
+        internal static TResult ExecutePush<TElement, TResult, TPushEnumerator>(TElement element, TPushEnumerator fenum) where TPushEnumerator : IPushEnumerator<TElement>
         {
             try
             {

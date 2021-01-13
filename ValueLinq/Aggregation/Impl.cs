@@ -10,7 +10,7 @@ namespace Cistern.ValueLinq.Aggregation
         internal static CreationType CreateObjectDescent<CreationType>()
             => throw new InvalidOperationException("Aggregation objects shouldn't be descending any further");
 
-        public static bool CheckForOptimization<TResult>(out TResult _)
+        public static bool TryPushOptimization<TResult>(out TResult _)
             => throw new InvalidOperationException("Aggregation objects shouldn't be partipating in Optimization check");
     }
 }

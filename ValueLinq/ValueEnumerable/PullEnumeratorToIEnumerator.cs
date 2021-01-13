@@ -5,16 +5,16 @@ using System.Collections.Generic;
 
 namespace Cistern.ValueLinq.ValueEnumerable
 {
-    sealed class FastEnumeratorToEnumerator<T, TEnumerator>
-        : IEnumerator<T>
-        where TEnumerator : IFastEnumerator<T>
+    sealed class PullEnumeratorToIEnumerator<TElement, TEnumerator>
+        : IEnumerator<TElement>
+        where TEnumerator : struct, IPullEnumerator<TElement>
     {
         private TEnumerator _enumerator;
-        private T _current;
+        private TElement _current;
 
-        public FastEnumeratorToEnumerator(in TEnumerator enumerator) => (_enumerator, _current) = (enumerator, default);
+        public PullEnumeratorToIEnumerator(in TEnumerator enumerator) => (_enumerator, _current) = (enumerator, default);
 
-        public T Current => _current;
+        public TElement Current => _current;
 
         object System.Collections.IEnumerator.Current => _current;
 
@@ -30,15 +30,15 @@ namespace Cistern.ValueLinq.ValueEnumerable
     {
         public void GetCountInformation(out CountInformation info) => Impl.CountInfo(out info);
 
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> _) 
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes _) 
             => Impl.CreateObjectDescent<CreationType>();
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
         {
-            if (typeof(Enumerator) == typeof(Containers.EmptyFastEnumerator<EnumeratorElement>))
+            if (typeof(Enumerator) == typeof(Containers.EmptyPullEnumerator<EnumeratorElement>))
                 return (CreationType)(object)InstanceOfEmpty<EnumeratorElement>.AsEnumerator;
 
-            return (CreationType)(object)(new FastEnumeratorToEnumerator<EnumeratorElement, Enumerator>(in enumerator));
+            return (CreationType)(object)(new PullEnumeratorToIEnumerator<EnumeratorElement, Enumerator>(in enumerator));
         }
 
         bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }

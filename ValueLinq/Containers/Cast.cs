@@ -3,20 +3,20 @@ using System.Collections.Generic;
 
 namespace Cistern.ValueLinq.Containers
 {
-    struct CastEnumerableFastEnumerator<T>
-        : IFastEnumerator<T>
+    struct CastEnumerablePullEnumerator<TElement>
+        : IPullEnumerator<TElement>
     {
         private readonly System.Collections.IEnumerator _enumerator;
 
-        public CastEnumerableFastEnumerator(System.Collections.IEnumerable enumerable) => _enumerator = enumerable.GetEnumerator();
+        public CastEnumerablePullEnumerator(System.Collections.IEnumerable enumerable) => _enumerator = enumerable.GetEnumerator();
 
         public void Dispose() { if (_enumerator is IDisposable d) d.Dispose(); }
 
-        public bool TryGetNext(out T current)
+        public bool TryGetNext(out TElement current)
         {
             if (_enumerator.MoveNext())
             {
-                current = (T)_enumerator.Current;
+                current = (TElement)_enumerator.Current;
                 return true;
             }
             current = default;
@@ -24,20 +24,20 @@ namespace Cistern.ValueLinq.Containers
         }
     }
 
-    struct CastObjectEnumerableFastEnumerator<T>
-        : IFastEnumerator<T>
+    struct CastObjectEnumerablePullEnumerator<TElement>
+        : IPullEnumerator<TElement>
     {
         private readonly IEnumerator<object> _enumerator;
 
-        public CastObjectEnumerableFastEnumerator(IEnumerable<object> enumerable) => _enumerator = enumerable.GetEnumerator();
+        public CastObjectEnumerablePullEnumerator(IEnumerable<object> enumerable) => _enumerator = enumerable.GetEnumerator();
 
         public void Dispose() { _enumerator.Dispose(); }
 
-        public bool TryGetNext(out T current)
+        public bool TryGetNext(out TElement current)
         {
             if (_enumerator.MoveNext())
             {
-                current = (T)_enumerator.Current;
+                current = (TElement)_enumerator.Current;
                 return true;
             }
             current = default;
@@ -46,8 +46,8 @@ namespace Cistern.ValueLinq.Containers
     }
 
 
-    public struct CastNode<T>
-        : INode<T>
+    public struct CastNode<TElement>
+        : INode<TElement>
     {
         private readonly System.Collections.IEnumerable _enumerable;
 
@@ -56,11 +56,11 @@ namespace Cistern.ValueLinq.Containers
 
         public CastNode(System.Collections.IEnumerable source) => _enumerable = source;
 
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
         {
-            if (_enumerable is IEnumerable<T> e)
-                return EnumerableNode.CreateObjectDescent<T, CreationType, Head, Tail>(ref nodes, e);
-            return CastNode.CreateObjectDescent<T, CreationType, Head, Tail>(ref nodes, _enumerable);
+            if (_enumerable is IEnumerable<TElement> e)
+                return EnumerableNode.CreateObjectDescent<TElement, CreationType, TNodes>(ref nodes, e);
+            return CastNode.CreateObjectDescent<TElement, CreationType, TNodes>(ref nodes, _enumerable);
         }
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) =>
@@ -70,49 +70,48 @@ namespace Cistern.ValueLinq.Containers
             => throw new InvalidOperationException();
         readonly bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
         {
-            if (_enumerable is IEnumerable<T> e)
-                return EnumerableNode.CheckForOptimization<T, TRequest, TResult>(e, in request, out result);
+            if (_enumerable is IEnumerable<TElement> e)
+                return EnumerableNode.TryPushOptimization<TElement, TRequest, TResult>(e, in request, out result);
 
             result = default;
             return false;
         }
 
-        TResult INode<T>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
+        TResult INode<TElement>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
         {
-            if (_enumerable is IEnumerable<T> e)
-                return EnumerableNode.FastEnumerateSwitch<T, TResult, FEnumerator>(e, in fenum);
+            if (_enumerable is IEnumerable<TElement> e)
+                return EnumerableNode.ExecutePush<TElement, TResult, TPushEnumerator>(e, in fenum);
 
-            return CastNode.CreateViaPush<T, TResult, FEnumerator>(_enumerable, fenum);
+            return CastNode.CreateViaPush<TElement, TResult, TPushEnumerator>(_enumerable, fenum);
         }
     }
 
     static class CastNode
     {
-        public static CreationType CreateObjectDescent<T, CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes, System.Collections.IEnumerable enumerable)
-            where Head : INode
-            where Tail : INodes
+        public static CreationType CreateObjectDescent<T, CreationType, TNodes>(ref TNodes nodes, System.Collections.IEnumerable enumerable)
+            where TNodes : INodes
         {
             if (enumerable is IEnumerable<object> eo)
             {
-                var e = new CastObjectEnumerableFastEnumerator<T>(eo);
-                return nodes.CreateObject<CreationType, T, CastObjectEnumerableFastEnumerator<T>>(ref e);
+                var e = new CastObjectEnumerablePullEnumerator<T>(eo);
+                return nodes.CreateObject<CreationType, T, CastObjectEnumerablePullEnumerator<T>>(ref e);
             }
             else
             {
-                var e = new CastEnumerableFastEnumerator<T>(enumerable);
-                return nodes.CreateObject<CreationType, T, CastEnumerableFastEnumerator<T>>(ref e);
+                var e = new CastEnumerablePullEnumerator<T>(enumerable);
+                return nodes.CreateObject<CreationType, T, CastEnumerablePullEnumerator<T>>(ref e);
             }
         }
 
-        internal static TResult CreateViaPush<T, TResult, FEnumerator>(System.Collections.IEnumerable _enumerable, FEnumerator fenum)
-             where FEnumerator : IForwardEnumerator<T>
+        internal static TResult CreateViaPush<T, TResult, TPushEnumerator>(System.Collections.IEnumerable _enumerable, TPushEnumerator fenum)
+             where TPushEnumerator : IPushEnumerator<T>
         {
             try
             {
                 if (_enumerable is IEnumerable<object> eo)
-                    Loop<FEnumerator, T>(eo, ref fenum);
+                    Loop<TPushEnumerator, T>(eo, ref fenum);
                 else
-                    Loop<FEnumerator, T>(_enumerable, ref fenum);
+                    Loop<TPushEnumerator, T>(_enumerable, ref fenum);
 
                 return fenum.GetResult<TResult>();
             }
@@ -122,7 +121,8 @@ namespace Cistern.ValueLinq.Containers
             }
         }
 
-        private static void Loop<FEnumerator, T>(IEnumerable<object> e, ref FEnumerator fenum) where FEnumerator : IForwardEnumerator<T>
+        private static void Loop<TPushEnumerator, T>(IEnumerable<object> e, ref TPushEnumerator fenum)
+            where TPushEnumerator : IPushEnumerator<T>
         {
             foreach (var item in e)
             {
@@ -131,7 +131,8 @@ namespace Cistern.ValueLinq.Containers
             }
         }
 
-        private static void Loop<FEnumerator, T>(System.Collections.IEnumerable e, ref FEnumerator fenum) where FEnumerator : IForwardEnumerator<T>
+        private static void Loop<TPushEnumerator, T>(System.Collections.IEnumerable e, ref TPushEnumerator fenum)
+            where TPushEnumerator : IPushEnumerator<T>
         {
             foreach (var item in e)
             {

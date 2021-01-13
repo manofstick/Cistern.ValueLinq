@@ -1,19 +1,17 @@
-﻿using Cistern.ValueLinq.Aggregation;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Threading;
 
 namespace Cistern.ValueLinq.Containers
 {
-    struct ConcatFastEnumerator<T, Finish>
-        : IFastEnumerator<T>
+    struct ConcatPullEnumerator<T, Finish>
+        : IPullEnumerator<T>
         where Finish : INode
     {
-        private FastEnumerator<T> _current;
+        private PullEnumerator<T> _current;
         private Finish _finish;
         int _state;
 
-        public ConcatFastEnumerator(FastEnumerator<T> start, in Finish finish) => (_current, _finish, _state) = (start, finish, 0);
+        public ConcatPullEnumerator(PullEnumerator<T> start, in Finish finish) => (_current, _finish, _state) = (start, finish, 0);
 
         public void Dispose()
         {
@@ -39,7 +37,7 @@ namespace Cistern.ValueLinq.Containers
             {
                 case 0:
                     _current.Dispose();
-                    _current = Nodes<T>.CreateFastEnumerator(_finish);
+                    _current = Nodes<T>.CreatePullEnumerator(_finish);
                     _state = 1;
                     return true;
 
@@ -54,14 +52,14 @@ namespace Cistern.ValueLinq.Containers
         }
     }
 
-    struct ConcatFastListEnumerator<T>
-        : IFastEnumerator<T>
+    struct ConcatListPullEnumerator<T>
+        : IPullEnumerator<T>
     {
-        private FastEnumerator<T> _current;
+        private PullEnumerator<T> _current;
         private List<EnumerableNode<T>> _remaining;
         int _idx;
 
-        public ConcatFastListEnumerator(List<EnumerableNode<T>> nodes) => (_current, _remaining, _idx) = (InstanceOfEmptyFastEnumerator<T>.Instance, nodes, 0);
+        public ConcatListPullEnumerator(List<EnumerableNode<T>> nodes) => (_current, _remaining, _idx) = (InstanceOfEmptyPullEnumerator<T>.Instance, nodes, 0);
 
         public void Dispose()
         {
@@ -87,12 +85,12 @@ namespace Cistern.ValueLinq.Containers
 
             if (_idx >= _remaining.Count)
             {
-                _current = InstanceOfEmptyFastEnumerator<T>.Instance;
+                _current = InstanceOfEmptyPullEnumerator<T>.Instance;
                 return false;
             }
             else
             {
-                _current = Nodes<T>.CreateFastEnumerator(_remaining[_idx++]);
+                _current = Nodes<T>.CreatePullEnumerator(_remaining[_idx++]);
                 return true;
             }
         }
@@ -183,20 +181,20 @@ namespace Cistern.ValueLinq.Containers
             }
         }
 
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
         {
             var components = TryCollectNodes();
             if (components != null)
             {
                 return components.Count switch
                 {
-                    0 => EmptyNode.Create<T, Nodes<Head, Tail>, CreationType>(ref nodes),
-                    1 => Helper.CreateObjectDescent<EnumerableNode<T>, CreationType, Head, Tail>(components[0], ref nodes),
-                    2 => ConcatNode.Create<T, EnumerableNode<T>, EnumerableNode<T>, Head, Tail, CreationType>(components[0], components[1], ref nodes),
-                    _ => ConcatNode.Create<T, Head, Tail, CreationType>(components, ref nodes)
+                    0 => EmptyNode.Create<T, TNodes, CreationType>(ref nodes),
+                    1 => Helper.CreateViaPullDescend<EnumerableNode<T>, CreationType, TNodes>(components[0], ref nodes),
+                    2 => ConcatNode.Create<T, EnumerableNode<T>, EnumerableNode<T>, TNodes, CreationType>(components[0], components[1], ref nodes),
+                    _ => ConcatNode.Create<T, TNodes, CreationType>(components, ref nodes)
                 };
             }
-            return ConcatNode.Create<T, Start, Finish, Head, Tail, CreationType>(in _start, in _finish, ref nodes);
+            return ConcatNode.Create<T, Start, Finish, TNodes, CreationType>(in _start, in _finish, ref nodes);
         }
 
         bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation)
@@ -244,50 +242,48 @@ namespace Cistern.ValueLinq.Containers
             }
         }
 
-        TResult INode<T>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
+        TResult INode<T>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
         {
             var components = TryCollectNodes();
             if (components != null)
             {
                 return components.Count switch
                 {
-                    0 => Helper.CreateObjectViaFastEnumerator<EmptyNode<T>, T, TResult, FEnumerator>(new EmptyNode<T>(), in fenum),
-                    1 => Helper.CreateObjectViaFastEnumerator<EnumerableNode<T>, T, TResult, FEnumerator>(components[0], in fenum),
-                    2 => Helper.CreateObjectViaFastEnumerator<EnumerableNode<T>, T, TResult, ConcatStartFoward<T, EnumerableNode<T>, FEnumerator>>(components[0], new ConcatStartFoward<T, EnumerableNode<T>, FEnumerator>(fenum, components[1])),
-                    _ => Helper.CreateObjectViaFastEnumerator<EnumerableNode<T>, T, TResult, ConcatListFoward<T, FEnumerator>>(components[0], new ConcatListFoward<T, FEnumerator>(fenum, components))
+                    0 => Helper.CreateViaPush<EmptyNode<T>, T, TResult, TPushEnumerator>(new EmptyNode<T>(), in fenum),
+                    1 => Helper.CreateViaPush<EnumerableNode<T>, T, TResult, TPushEnumerator>(components[0], in fenum),
+                    2 => Helper.CreateViaPush<EnumerableNode<T>, T, TResult, ConcatStartFoward<T, EnumerableNode<T>, TPushEnumerator>>(components[0], new ConcatStartFoward<T, EnumerableNode<T>, TPushEnumerator>(fenum, components[1])),
+                    _ => Helper.CreateViaPush<EnumerableNode<T>, T, TResult, ConcatListFoward<T, TPushEnumerator>>(components[0], new ConcatListFoward<T, TPushEnumerator>(fenum, components))
                 };
             }
 
-            return _start.CreateViaPush<TResult, ConcatStartFoward<T, Finish, FEnumerator>>(new ConcatStartFoward<T, Finish, FEnumerator>(fenum, _finish));
+            return _start.CreateViaPush<TResult, ConcatStartFoward<T, Finish, TPushEnumerator>>(new ConcatStartFoward<T, Finish, TPushEnumerator>(fenum, _finish));
         }
     }
 
     static class ConcatNode
     {
-        public static CreationType Create<T, Start, Finish, Head, Tail, CreationType>(in Start start, in Finish finish, ref Nodes<Head, Tail> nodes)
-            where Head : INode
-            where Tail : INodes
+        public static CreationType Create<T, Start, Finish, TNodes, CreationType>(in Start start, in Finish finish, ref TNodes nodes)
+            where TNodes : INodes
             where Start : INode
             where Finish : INode
         {
-            var startEnumerator = Nodes<T>.CreateFastEnumerator(start);
+            var startEnumerator = Nodes<T>.CreatePullEnumerator(start);
 
-            var e = new ConcatFastEnumerator<T, Finish>(startEnumerator, finish);
-            return nodes.CreateObject<CreationType, T, ConcatFastEnumerator<T, Finish>>(ref e);
+            var e = new ConcatPullEnumerator<T, Finish>(startEnumerator, finish);
+            return nodes.CreateObject<CreationType, T, ConcatPullEnumerator<T, Finish>>(ref e);
         }
 
-        internal static CreationType Create<T, Head, Tail, CreationType>(List<EnumerableNode<T>> components, ref Nodes<Head, Tail> nodes)
-            where Head : INode
-            where Tail : INodes
+        internal static CreationType Create<T, TNodes, CreationType>(List<EnumerableNode<T>> components, ref TNodes nodes)
+            where TNodes : INodes
         {
-            var e = new ConcatFastListEnumerator<T>(components);
-            return nodes.CreateObject<CreationType, T, ConcatFastListEnumerator<T>>(ref e);
+            var e = new ConcatListPullEnumerator<T>(components);
+            return nodes.CreateObject<CreationType, T, ConcatListPullEnumerator<T>>(ref e);
         }
     }
 
     struct ConcatFinishFoward<T, Next>
-        : IForwardEnumerator<T>
-        where Next : IForwardEnumerator<T>
+        : IPushEnumerator<T>
+        where Next : IPushEnumerator<T>
     {
         Next _next;
 
@@ -304,8 +300,8 @@ namespace Cistern.ValueLinq.Containers
     }
 
     struct ConcatStartFoward<T, Finish, Next>
-        : IForwardEnumerator<T>
-        where Next : IForwardEnumerator<T>
+        : IPushEnumerator<T>
+        where Next : IPushEnumerator<T>
         where Finish : INode<T>
     {
         Next _next;
@@ -336,7 +332,7 @@ namespace Cistern.ValueLinq.Containers
     }
 
     sealed class ConcatCommonNext<T, Next>
-        where Next : IForwardEnumerator<T>
+        where Next : IPushEnumerator<T>
     {
         private Next _next;
 
@@ -344,14 +340,14 @@ namespace Cistern.ValueLinq.Containers
 
         public bool ProcessNext(T input) => _next.ProcessNext(input);
 
-        public BatchProcessResult CheckForOptimization<TObject, TRequest>(TObject obj, in TRequest request) => _next.TryProcessBatch(obj, in request);
+        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => _next.TryProcessBatch(obj, in request);
         public void Dispose() { }
         public TResult GetResult<TResult>() => _next.GetResult<TResult>();
     }
 
     struct ConcatNextForward<T, Next>
-        : IForwardEnumerator<T>
-        where Next : IForwardEnumerator<T>
+        : IPushEnumerator<T>
+        where Next : IPushEnumerator<T>
     {
         ConcatCommonNext<T, Next> _next;
         private bool _processNext;
@@ -360,21 +356,21 @@ namespace Cistern.ValueLinq.Containers
 
         public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request)
         {
-            var result = _next.CheckForOptimization(obj, in request);
+            var result = _next.TryProcessBatch(obj, in request);
             if (result == BatchProcessResult.SuccessAndHalt)
                 _processNext = false;
             return result;
         }
 
         public void Dispose() { }
-        TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_processNext;
+        TResult IPushEnumerator<T>.GetResult<TResult>() => (TResult)(object)_processNext;
 
-        bool IForwardEnumerator<T>.ProcessNext(T input) => _processNext = _next.ProcessNext(input);
+        bool IPushEnumerator<T>.ProcessNext(T input) => _processNext = _next.ProcessNext(input);
     }
 
     struct ConcatListFoward<T, Next>
-        : IForwardEnumerator<T>
-        where Next : IForwardEnumerator<T>
+        : IPushEnumerator<T>
+        where Next : IPushEnumerator<T>
     {
         List<EnumerableNode<T>> _nodes;
         ConcatCommonNext<T, Next> _common;
@@ -382,7 +378,7 @@ namespace Cistern.ValueLinq.Containers
         public ConcatListFoward(in Next prior, List<EnumerableNode<T>> nodes) => (_nodes, _common) = (nodes, _common = new ConcatCommonNext<T, Next>(prior));
 
         public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request)
-            => _common.CheckForOptimization(obj, in request);
+            => _common.TryProcessBatch(obj, in request);
 
         public void Dispose() => _common.Dispose();
 
@@ -390,7 +386,7 @@ namespace Cistern.ValueLinq.Containers
         {
             for (var i = 1; i < _nodes.Count; ++i)
             {
-                if (!Helper.CreateObjectViaFastEnumerator<EnumerableNode<T>, T, bool, ConcatNextForward<T, Next>>(_nodes[i], new ConcatNextForward<T, Next>(_common)))
+                if (!Helper.CreateViaPush<EnumerableNode<T>, T, bool, ConcatNextForward<T, Next>>(_nodes[i], new ConcatNextForward<T, Next>(_common)))
                     break;
             }
             return _common.GetResult<TResult>();

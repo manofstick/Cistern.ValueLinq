@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace Cistern.ValueLinq.Aggregation
 {
     struct ToLookup<TSource, TKey>
-        : IForwardEnumerator<TSource>
+        : IPushEnumerator<TSource>
     {
         Lookup<TKey, TSource> _lookup;
         Func<TSource, TKey> _keySelector;
@@ -32,7 +32,7 @@ namespace Cistern.ValueLinq.Aggregation
     }
 
     struct ToLookup<TSource, TKey, TElement>
-        : IForwardEnumerator<TSource>
+        : IPushEnumerator<TSource>
     {
         Lookup<TKey, TElement> _lookup;
         Func<TSource, TKey> _keySelector;

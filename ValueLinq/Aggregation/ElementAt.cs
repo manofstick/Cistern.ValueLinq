@@ -3,7 +3,7 @@
 namespace Cistern.ValueLinq.Aggregation
 {
     struct ElementAt<T>
-        : IForwardEnumerator<T>
+        : IPushEnumerator<T>
     {
         private readonly int _elementAtIndex;
 
@@ -21,7 +21,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() { }
-        TResult IForwardEnumerator<T>.GetResult<TResult>()
+        TResult IPushEnumerator<T>.GetResult<TResult>()
         {
             if (!_found)
                 throw new ArgumentOutOfRangeException("index");
@@ -29,7 +29,7 @@ namespace Cistern.ValueLinq.Aggregation
             return (TResult)(object)_elementAt;
         }
 
-        bool IForwardEnumerator<T>.ProcessNext(T input)
+        bool IPushEnumerator<T>.ProcessNext(T input)
         {
             if (_index >= _elementAtIndex-1)
             {
@@ -46,7 +46,7 @@ namespace Cistern.ValueLinq.Aggregation
     }
 
     struct ElementAtOrDefault<T>
-        : IForwardEnumerator<T>
+        : IPushEnumerator<T>
     {
         private readonly int _elementAtIndex;
 
@@ -57,9 +57,9 @@ namespace Cistern.ValueLinq.Aggregation
 
         public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() { }
-        TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_elementAt;
+        TResult IPushEnumerator<T>.GetResult<TResult>() => (TResult)(object)_elementAt;
 
-        bool IForwardEnumerator<T>.ProcessNext(T input)
+        bool IPushEnumerator<T>.ProcessNext(T input)
         {
             if (_index >= _elementAtIndex - 1)
             {

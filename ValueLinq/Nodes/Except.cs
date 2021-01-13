@@ -5,19 +5,19 @@ namespace Cistern.ValueLinq.Nodes
 {
     // TODo: Add the Default Equality version
 
-    struct ExceptNodeEnumerator<T, TInEnumerator>
-        : IFastEnumerator<T>
-        where TInEnumerator : IFastEnumerator<T>
+    struct ExceptNodeEnumerator<TElement, TEnumerator>
+        : IPullEnumerator<TElement>
+        where TEnumerator : IPullEnumerator<TElement>
     {
-        private TInEnumerator _enumerator;
-        private Set<T> _set;
+        private TEnumerator _enumerator;
+        private Set<TElement> _set;
 
-        public ExceptNodeEnumerator(in TInEnumerator enumerator, Set<T> set)
+        public ExceptNodeEnumerator(in TEnumerator enumerator, Set<TElement> set)
             => (_enumerator, _set) = (enumerator, set);
 
         public void Dispose() => _enumerator.Dispose();
 
-        public bool TryGetNext(out T current)
+        public bool TryGetNext(out TElement current)
         {
             for (;;)
             {
@@ -30,13 +30,13 @@ namespace Cistern.ValueLinq.Nodes
         }
     }
 
-    public struct ExceptNode<T, NodeT>
-        : INode<T>
-        where NodeT : INode<T>
+    public struct ExceptNode<TElement, NodeT>
+        : INode<TElement>
+        where NodeT : INode<TElement>
     {
         private NodeT _nodeT;
-        private IEnumerable<T> _second;
-        private IEqualityComparer<T> _comparer;
+        private IEnumerable<TElement> _second;
+        private IEqualityComparer<TElement> _comparer;
 
         public void GetCountInformation(out CountInformation info)
         {
@@ -44,7 +44,7 @@ namespace Cistern.ValueLinq.Nodes
             info.ActualLengthIsMaximumLength &= info.MaximumLength == 0;
         }
 
-        public ExceptNode(in NodeT nodeT, IEnumerable<T> second, IEqualityComparer<T> comparer)
+        public ExceptNode(in NodeT nodeT, IEnumerable<TElement> second, IEqualityComparer<TElement> comparer)
         {
             if (second == null)
                 throw new ArgumentNullException(nameof(second));
@@ -52,7 +52,7 @@ namespace Cistern.ValueLinq.Nodes
             (_nodeT, _second, _comparer) = (nodeT, second, comparer);
         }
 
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
             => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
@@ -71,11 +71,11 @@ namespace Cistern.ValueLinq.Nodes
 
         bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
 
-        TResult INode<T>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
+        TResult INode<TElement>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
         {
             var set = ExceptImpl.CreateSet(_comparer, _second);
 
-            return _nodeT.CreateViaPush<TResult, ExceptFoward<T, FEnumerator>>(new ExceptFoward<T, FEnumerator>(fenum, set));
+            return _nodeT.CreateViaPush<TResult, ExceptFoward<TElement, TPushEnumerator>>(new ExceptFoward<TElement, TPushEnumerator>(fenum, set));
         }
     }
 
@@ -93,8 +93,8 @@ namespace Cistern.ValueLinq.Nodes
     }
 
     struct ExceptFoward<T, Next>
-        : IForwardEnumerator<T>
-        where Next : IForwardEnumerator<T>
+        : IPushEnumerator<T>
+        where Next : IPushEnumerator<T>
     {
         internal Next _next;
 

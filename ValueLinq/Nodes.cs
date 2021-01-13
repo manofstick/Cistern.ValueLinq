@@ -115,11 +115,11 @@ namespace Cistern.ValueLinq
     {
         void GetCountInformation(out CountInformation info);
 
-        CreationType CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
-            where Head : INode
-            where Tail : INodes;
+        CreationType CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
+            where TNodes : INodes;
+
         CreationType CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Nodes>(ref Nodes nodes, ref Enumerator enumerator)
-            where Enumerator : IFastEnumerator<EnumeratorElement>
+            where Enumerator : struct, IPullEnumerator<EnumeratorElement>
             where Nodes : INodes;
 
         bool TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation)
@@ -129,13 +129,13 @@ namespace Cistern.ValueLinq
 
     public interface INode<T> : INode
     {
-        TResult CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<T>;
+        TResult CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum) where TPushEnumerator : IPushEnumerator<T>;
     }
 
     public interface INodes
     {
         CreationType CreateObject<CreationType, EnumeratorElement, Enumerator>(ref Enumerator enumerator)
-            where Enumerator : IFastEnumerator<EnumeratorElement>;
+            where Enumerator : struct, IPullEnumerator<EnumeratorElement>;
 
         bool TryObjectAscentOptimization<TRequest, CreationType>(in TRequest request, out CreationType creation) { creation = default; return false; }
     }
@@ -157,7 +157,7 @@ namespace Cistern.ValueLinq
         public Nodes(in Head head, in Tail tail) => (_head, _tail) = (head, tail);
 
         public CreationType CreateObject<CreationType, EnumeratorElement, Enumerator>(ref Enumerator enumerator)
-            where Enumerator : IFastEnumerator<EnumeratorElement> =>
+            where Enumerator : struct, IPullEnumerator<EnumeratorElement> =>
             _head.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref _tail, ref enumerator);
 
         public bool TryObjectAscentOptimization<TRequest, CreationType>(in TRequest request, out CreationType creation) =>
@@ -166,20 +166,19 @@ namespace Cistern.ValueLinq
 
     internal static class Helper
     {
-        public static bool CheckForOptimization<Node, TRequest, TResult>(in Node node, in TRequest request, out TResult result)
+        public static bool TryPushOptimization<Node, TRequest, TResult>(in Node node, in TRequest request, out TResult result)
             where Node : INode
             => node.TryPushOptimization(in request, out result);
 
-        public static CreationType CreateObjectDescent<Node, CreationType, Head, Tail>(in Node node, ref Nodes<Head, Tail> nodes)
-            where Head : INode
-            where Tail : INodes
+        public static CreationType CreateViaPullDescend<Node, CreationType, TNodes>(in Node node, ref TNodes nodes)
+            where TNodes: INodes
             where Node : INode
-            => node.CreateViaPullDescend<CreationType, Head, Tail>(ref nodes);
+            => node.CreateViaPullDescend<CreationType, TNodes>(ref nodes);
 
-        public static TResult CreateObjectViaFastEnumerator<Node, T, TResult, FEnumerator>(in Node node, in FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<T>
+        public static TResult CreateViaPush<Node, T, TResult, TPushEnumerator>(in Node node, in TPushEnumerator fenum)
+            where TPushEnumerator : IPushEnumerator<T>
             where Node : INode<T>
-            => node.CreateViaPush<TResult, FEnumerator>(in fenum);
+            => node.CreateViaPush<TResult, TPushEnumerator>(in fenum);
     }
 
     enum NodeType : byte
@@ -193,29 +192,29 @@ namespace Cistern.ValueLinq
         ReversedListSegment,
     }
 
-    struct NodeContainer<T>
+    struct NodeContainer<TElement>
     {
         public NodeType Type;
 
-        private INode<T> Node;
-        private ArrayNode<T> ArrayNode;
-        private MemoryNode<T> MemoryNode;
-        private ListSegmentNode<T> ListSegmentNode;
-        private ReversedMemoryNode<T> ReversedMemoryNode;
-        private ReversedListSegmentNode<T> ReversedListNode;
+        private INode<TElement> Node;
+        private ArrayNode<TElement> ArrayNode;
+        private MemoryNode<TElement> MemoryNode;
+        private ListSegmentNode<TElement> ListSegmentNode;
+        private ReversedMemoryNode<TElement> ReversedMemoryNode;
+        private ReversedListSegmentNode<TElement> ReversedListNode;
 
         public void SetEmpty()                          => Type                       = NodeType.Empty;
-        public void SetNode(INode<T> node)              => (Type, Node)               = (NodeType.Reference, node);
-        public void SetNode(ArrayNode<T> node)          => (Type, ArrayNode)          = (NodeType.Array, node);
-        public void SetNode(MemoryNode<T> node)         => (Type, MemoryNode)         = (NodeType.Memory, node);
-        public void SetNode(ListSegmentNode<T> node)    => (Type, ListSegmentNode)    = (NodeType.ListSegment, node);
-        public void SetNode(ReversedMemoryNode<T> node) => (Type, ReversedMemoryNode) = (NodeType.ReversedMemory, node);
-        public void SetNode(ReversedListSegmentNode<T> node)   => (Type, ReversedListNode)   = (NodeType.ReversedListSegment, node);
+        public void SetNode(INode<TElement> node)              => (Type, Node)               = (NodeType.Reference, node);
+        public void SetNode(ArrayNode<TElement> node)          => (Type, ArrayNode)          = (NodeType.Array, node);
+        public void SetNode(MemoryNode<TElement> node)         => (Type, MemoryNode)         = (NodeType.Memory, node);
+        public void SetNode(ListSegmentNode<TElement> node)    => (Type, ListSegmentNode)    = (NodeType.ListSegment, node);
+        public void SetNode(ReversedMemoryNode<TElement> node) => (Type, ReversedMemoryNode) = (NodeType.ReversedMemory, node);
+        public void SetNode(ReversedListSegmentNode<TElement> node)   => (Type, ReversedListNode)   = (NodeType.ReversedListSegment, node);
 
-        public bool CheckForOptimization<TRequest, TResult>(in TRequest request, out TResult result) =>
+        public bool TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result) =>
             Type switch
             {
-                NodeType.Empty          => EmptyNode<T>.Empty.TryPushOptimization<TRequest, TResult>(in request, out result),
+                NodeType.Empty          => EmptyNode<TElement>.Empty.TryPushOptimization<TRequest, TResult>(in request, out result),
                 NodeType.Reference      => Node.TryPushOptimization<TRequest, TResult>(in request, out result),
                 NodeType.Array          => ArrayNode.TryPushOptimization<TRequest, TResult>(in request, out result),
                 NodeType.Memory         => MemoryNode.TryPushOptimization<TRequest, TResult>(in request, out result),
@@ -225,17 +224,17 @@ namespace Cistern.ValueLinq
                 _ => throw new InvalidOperationException(),
             };
 
-        public TResult CreateObjectViaFastEnumerator<TResult, FEnumerator>(in FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<T> =>
+        public TResult CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
+            where TPushEnumerator : IPushEnumerator<TElement> =>
             Type switch
             {
-                NodeType.Empty          => EmptyNode<T>.Empty.CreateViaPush<TResult, FEnumerator>(in fenum),
-                NodeType.Reference      => Node.CreateViaPush<TResult, FEnumerator>(in fenum),
-                NodeType.Array          => ArrayNode.CreateViaPush<TResult, FEnumerator>(in fenum),
-                NodeType.Memory         => MemoryNode.CreateViaPush<TResult, FEnumerator>(in fenum),
-                NodeType.ListSegment    => ListSegmentNode.CreateViaPush<TResult, FEnumerator>(in fenum),
-                NodeType.ReversedMemory => ReversedMemoryNode.CreateViaPush<TResult, FEnumerator>(in fenum),
-                NodeType.ReversedListSegment => ReversedListNode.CreateViaPush<TResult, FEnumerator>(in fenum),
+                NodeType.Empty          => EmptyNode<TElement>.Empty.CreateViaPush<TResult, TPushEnumerator>(in fenum),
+                NodeType.Reference      => Node.CreateViaPush<TResult, TPushEnumerator>(in fenum),
+                NodeType.Array          => ArrayNode.CreateViaPush<TResult, TPushEnumerator>(in fenum),
+                NodeType.Memory         => MemoryNode.CreateViaPush<TResult, TPushEnumerator>(in fenum),
+                NodeType.ListSegment    => ListSegmentNode.CreateViaPush<TResult, TPushEnumerator>(in fenum),
+                NodeType.ReversedMemory => ReversedMemoryNode.CreateViaPush<TResult, TPushEnumerator>(in fenum),
+                NodeType.ReversedListSegment => ReversedListNode.CreateViaPush<TResult, TPushEnumerator>(in fenum),
                 _ => throw new InvalidOperationException(),
             };
     }
@@ -246,19 +245,19 @@ namespace Cistern.ValueLinq
             where Node : INode
         {
             var nodes = new Nodes<FastEnumeratorToIEnumeratorNode, NodesEnd>();
-            return node.CreateViaPullDescend<IEnumerator<T>, FastEnumeratorToIEnumeratorNode, NodesEnd>(ref nodes);
+            return node.CreateViaPullDescend<IEnumerator<T>, Nodes<FastEnumeratorToIEnumeratorNode, NodesEnd>>(ref nodes);
         }
 
-        public static FastEnumerator<T> CreateFastEnumerator<Node>(in Node node)
+        public static PullEnumerator<T> CreatePullEnumerator<Node>(in Node node)
             where Node : INode
         {
-            var nodes = new Nodes<FastEnumeratorToValueEnumeratorNode, NodesEnd>();
-            return node.CreateViaPullDescend<FastEnumerator<T>, FastEnumeratorToValueEnumeratorNode, NodesEnd>(ref nodes);
+            var nodes = new Nodes<PullEnumeratorToValueEnumeratorNode, NodesEnd>();
+            return node.CreateViaPullDescend<PullEnumerator<T>, Nodes<PullEnumeratorToValueEnumeratorNode, NodesEnd>>(ref nodes);
         }
 
         public static ValueEnumerator<T> CreateValueEnumerator<Node>(in Node node)
             where Node : INode
-            => new ValueEnumerator<T>(CreateFastEnumerator(node));
+            => new ValueEnumerator<T>(CreatePullEnumerator(node));
 
         public static T Descend<Head, Tail, Next>(ref Next next, in Head head, in Tail tail)
             where Next : INode
@@ -266,7 +265,7 @@ namespace Cistern.ValueLinq
             where Tail : INodes
         {
             var nodes = new Nodes<Head, Tail>(in head, in tail);
-            return next.CreateViaPullDescend<T, Head, Tail>(ref nodes);
+            return next.CreateViaPullDescend<T, Nodes<Head, Tail>>(ref nodes);
         }
 
         public static T Aggregation<Enumerable, Aggregator>(in Enumerable inner)
@@ -279,7 +278,7 @@ namespace Cistern.ValueLinq
             where Aggregator : INode
         {
             var nodes = new Nodes<Aggregator, NodesEnd>(aggregator, new NodesEnd());
-            return inner.CreateViaPullDescend<T, Aggregator, NodesEnd>(ref nodes);
+            return inner.CreateViaPullDescend<T, Nodes<Aggregator, NodesEnd>>(ref nodes);
         }
     }
 }

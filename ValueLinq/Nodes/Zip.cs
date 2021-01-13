@@ -6,13 +6,13 @@ using System.Runtime.CompilerServices;
 namespace Cistern.ValueLinq.Nodes
 {
     struct ZipNodeEnumerator<T, U, TEnumerator>
-        : IFastEnumerator<(T, U)>
-        where TEnumerator : IFastEnumerator<T>
+        : IPullEnumerator<(T, U)>
+        where TEnumerator : IPullEnumerator<T>
     {
         private TEnumerator _enumerator1;
-        private FastEnumerator<U> _enumerator2;
+        private PullEnumerator<U> _enumerator2;
 
-        public ZipNodeEnumerator(in TEnumerator enumerator1, in FastEnumerator<U> enumerator2) => (_enumerator1, _enumerator2) = (enumerator1, enumerator2);
+        public ZipNodeEnumerator(in TEnumerator enumerator1, in PullEnumerator<U> enumerator2) => (_enumerator1, _enumerator2) = (enumerator1, enumerator2);
 
         public void Dispose() { try { _enumerator1.Dispose(); } finally { _enumerator2.Dispose(); }; }
 
@@ -56,12 +56,12 @@ namespace Cistern.ValueLinq.Nodes
 
         public ZipNode(in NodeT nodeT, in NodeU nodeU) => (_nodeT, _nodeU) = (nodeT, nodeU);
 
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
             => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
         {
-            var eu = Nodes<U>.CreateFastEnumerator(_nodeU);
+            var eu = Nodes<U>.CreatePullEnumerator(_nodeU);
             var nextEnumerator = new ZipNodeEnumerator<EnumeratorElement, U, Enumerator>(in enumerator, eu);
             return tail.CreateObject<CreationType, (EnumeratorElement, U), ZipNodeEnumerator<EnumeratorElement, U, Enumerator>>(ref nextEnumerator);
         }
@@ -74,7 +74,7 @@ namespace Cistern.ValueLinq.Nodes
 
         bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
 
-        TResult INode<(T, U)>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
+        TResult INode<(T, U)>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
         {
             if (Optimizations.AsMemory.IsAvailable<T, NodeT>(ref _nodeT))
             {
@@ -83,23 +83,23 @@ namespace Cistern.ValueLinq.Nodes
                     if (!Optimizations.AsMemory.TryGet<T, NodeT>(ref _nodeT, out var memoryT))
                         throw new InvalidOperationException();
 
-                    return ZipNode.FastEnumerate<T, U, TResult, FEnumerator>(memoryT.Span, memoryU.Span, fenum);
+                    return ZipNode.FastEnumerate<T, U, TResult, TPushEnumerator>(memoryT.Span, memoryU.Span, fenum);
                 }
             }
 
-            return _nodeT.CreateViaPush<TResult, ZipFoward<T, U, FEnumerator>>(new ZipFoward<T, U, FEnumerator>(fenum, Nodes<U>.CreateFastEnumerator(_nodeU)));
+            return _nodeT.CreateViaPush<TResult, ZipFoward<T, U, TPushEnumerator>>(new ZipFoward<T, U, TPushEnumerator>(fenum, Nodes<U>.CreatePullEnumerator(_nodeU)));
         }
     }
 
     struct ZipFoward<T, U, Next>
-        : IForwardEnumerator<T>
-        where Next : IForwardEnumerator<(T, U)>
+        : IPushEnumerator<T>
+        where Next : IPushEnumerator<(T, U)>
     {
         internal Next _next;
 
-        FastEnumerator<U> _eu;
+        PullEnumerator<U> _eu;
 
-        public ZipFoward(in Next prior, FastEnumerator<U> eu) => (_next, _eu) = (prior, eu);
+        public ZipFoward(in Next prior, PullEnumerator<U> eu) => (_next, _eu) = (prior, eu);
 
         public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() => _next.Dispose();
@@ -115,12 +115,12 @@ namespace Cistern.ValueLinq.Nodes
 
     static class ZipNode
     {
-        internal static TResult FastEnumerate<T, U, TResult, FEnumerator>(ReadOnlySpan<T> ts, ReadOnlySpan<U> us, FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<(T, U)>
+        internal static TResult FastEnumerate<T, U, TResult, TPushEnumerator>(ReadOnlySpan<T> ts, ReadOnlySpan<U> us, TPushEnumerator fenum)
+            where TPushEnumerator : IPushEnumerator<(T, U)>
         {
             try
             {
-                ProcessSpans<T, U, FEnumerator>(ts, us, ref fenum);
+                ProcessSpans<T, U, TPushEnumerator>(ts, us, ref fenum);
                 return fenum.GetResult<TResult>();
             }
             finally
@@ -129,8 +129,8 @@ namespace Cistern.ValueLinq.Nodes
             }
         }
 
-        internal static void ProcessSpans<T, U, FEnumerator>(ReadOnlySpan<T> ts, ReadOnlySpan<U> us, ref FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<(T, U)>
+        internal static void ProcessSpans<T, U, TPushEnumerator>(ReadOnlySpan<T> ts, ReadOnlySpan<U> us, ref TPushEnumerator fenum)
+            where TPushEnumerator : IPushEnumerator<(T, U)>
         {
             var len = Math.Min(ts.Length, us.Length);
             for (var i = 0; i < len; ++i)

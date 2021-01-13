@@ -6,7 +6,7 @@ using System.Collections.Generic;
 namespace Cistern.ValueLinq.Aggregation
 {
     struct Contains<T>
-        : IForwardEnumerator<T>
+        : IPushEnumerator<T>
     {
         private T _value;
         private bool _contains;
@@ -15,10 +15,10 @@ namespace Cistern.ValueLinq.Aggregation
 
         public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() { }
-        TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
+        TResult IPushEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
         public bool GetResult() => _contains;
 
-        bool IForwardEnumerator<T>.ProcessNext(T input)
+        bool IPushEnumerator<T>.ProcessNext(T input)
         {
             if (EqualityComparer<T>.Default.Equals(_value, input))
             {
@@ -30,7 +30,7 @@ namespace Cistern.ValueLinq.Aggregation
     }
 
     struct ContainsByComparer<T>
-        : IForwardEnumerator<T>
+        : IPushEnumerator<T>
     {
         private IEqualityComparer<T> _comparer;
         private T _value;
@@ -40,10 +40,10 @@ namespace Cistern.ValueLinq.Aggregation
 
         public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() { }
-        TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
+        TResult IPushEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
         public bool GetResult() => _contains;
 
-        bool IForwardEnumerator<T>.ProcessNext(T input)
+        bool IPushEnumerator<T>.ProcessNext(T input)
         {
             if (_comparer.Equals(_value, input))
             {

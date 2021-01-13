@@ -158,7 +158,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public void GetCountInformation(out CountInformation info) => Impl.CountInfo(out info);
 
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
             => Impl.CreateObjectDescent<CreationType>();
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator enumerator)
@@ -167,7 +167,7 @@ namespace Cistern.ValueLinq.Aggregation
         bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
 
         bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
-            => Impl.CheckForOptimization(out result);
+            => Impl.TryPushOptimization(out result);
     }
 
     struct ToListViaStackAndGarbage<T>
@@ -179,7 +179,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public void GetCountInformation(out CountInformation info) => Impl.CountInfo(out info);
 
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
             => Impl.CreateObjectDescent<CreationType>();
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator enumerator)
@@ -188,13 +188,13 @@ namespace Cistern.ValueLinq.Aggregation
         bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
 
         bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
-            => Impl.CheckForOptimization(out result);
+            => Impl.TryPushOptimization(out result);
     }
 
     static partial class Impl
     {
         internal static List<EnumeratorElement> ToListViaStack<EnumeratorElement, Enumerator, Allocator>(int maxStackItemCount, Allocator allocator, ref Enumerator enumerator)
-                where Enumerator : IFastEnumerator<EnumeratorElement>
+                where Enumerator : IPullEnumerator<EnumeratorElement>
                 where Allocator : IArrayAllocator<EnumeratorElement>
         {
             try
@@ -252,7 +252,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         private static List<EnumeratorElement> PopulateRemainingUsingAllocator<Allocator, EnumeratorElement, Enumerator>(ref Allocator allocator, ref Enumerator enumerator, int idx)
             where Allocator : IArrayAllocator<EnumeratorElement>
-            where Enumerator : IFastEnumerator<EnumeratorElement>
+            where Enumerator : IPullEnumerator<EnumeratorElement>
         {
             var creator = new ToListViaArrayPoolForward<EnumeratorElement, Allocator>(allocator, idx, null);
             try
@@ -267,7 +267,7 @@ namespace Cistern.ValueLinq.Aggregation
         }
 
         internal static List<T> ToListViaArrayPool<T, Enumerator>(ArrayPool<T> arrayPool, bool cleanBuffers, int? size, ref Enumerator enumerator)
-                where Enumerator : IFastEnumerator<T>
+                where Enumerator : IPullEnumerator<T>
         {
             try
             {
@@ -282,7 +282,7 @@ namespace Cistern.ValueLinq.Aggregation
     }
 
     struct ToListForward<T>
-        : IForwardEnumerator<T>
+        : IPushEnumerator<T>
     {
         private List<T> _list;
 
@@ -300,9 +300,9 @@ namespace Cistern.ValueLinq.Aggregation
             return BatchProcessResult.Unavailable;
         }
         public void Dispose() { }
-        TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_list;
+        TResult IPushEnumerator<T>.GetResult<TResult>() => (TResult)(object)_list;
 
-        bool IForwardEnumerator<T>.ProcessNext(T input)
+        bool IPushEnumerator<T>.ProcessNext(T input)
         {
             _list.Add(input);
             return true;
@@ -320,7 +320,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public void GetCountInformation(out CountInformation info) => Impl.CountInfo(out info);
 
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
             => Impl.CreateObjectDescent<CreationType>();
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator enumerator)
@@ -329,11 +329,11 @@ namespace Cistern.ValueLinq.Aggregation
         bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
 
         bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
-            => Impl.CheckForOptimization(out result);
+            => Impl.TryPushOptimization(out result);
     }
 
     struct ToListViaArrayPoolForward<T, Allocator>
-        : IForwardEnumerator<T>
+        : IPushEnumerator<T>
         where Allocator : IArrayAllocator<T>
     {
         ItemCollector<T, Allocator> collector;
@@ -343,7 +343,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() => collector.Dispose(); 
-        TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
+        TResult IPushEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
 
         public List<T> GetResult() =>
             collector.TryGetKnownSized(out var memory)
@@ -353,7 +353,7 @@ namespace Cistern.ValueLinq.Aggregation
         public bool ProcessNext(T input) => collector.Add(input);
 
         internal void Populate<Enumerator>(ref Enumerator enumerator)
-            where Enumerator : IFastEnumerator<T> => collector.Populate(ref enumerator);
+            where Enumerator : IPullEnumerator<T> => collector.Populate(ref enumerator);
 
         class CreateListFromArrayCollection
             : ToListImpl.ListPopulator<T>

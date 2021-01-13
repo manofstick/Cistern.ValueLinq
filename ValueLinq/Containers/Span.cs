@@ -4,14 +4,14 @@ namespace Cistern.ValueLinq.Containers
 {
     public delegate ReadOnlySpan<TElement> GetSpan<TObject, TElement>(TObject obj);
 
-    struct SpanFastEnumerator<TObject, TElement>
-        : IFastEnumerator<TElement>
+    struct SpanPullEnumerator<TObject, TElement>
+        : IPullEnumerator<TElement>
     {
         private TObject _obj;
         private readonly GetSpan<TObject, TElement> _getSpan;
         private int _idx;
 
-        public SpanFastEnumerator(TObject obj, GetSpan<TObject, TElement> getSpan) => (_obj, _getSpan, _idx) = (obj, getSpan, -1);
+        public SpanPullEnumerator(TObject obj, GetSpan<TObject, TElement> getSpan) => (_obj, _getSpan, _idx) = (obj, getSpan, -1);
 
         public void Dispose() { }
 
@@ -41,7 +41,7 @@ namespace Cistern.ValueLinq.Containers
 
 #region "This node is only used in forward context, so most of interface is not supported"
         public void GetCountInformation(out CountInformation info) => throw new NotSupportedException();
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => throw new NotSupportedException();
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes) => throw new NotSupportedException();
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
         #endregion
 
@@ -54,8 +54,8 @@ namespace Cistern.ValueLinq.Containers
             return false;
         }
 
-        TResult INode<T>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
-            => SpanNode.FastReverseEnumerate<T, TResult, FEnumerator>(_getSpan(_obj), fenum);
+        TResult INode<T>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
+            => SpanNode.ExecuteReversePush<T, TResult, TPushEnumerator>(_getSpan(_obj), fenum);
     }
 
 
@@ -70,7 +70,8 @@ namespace Cistern.ValueLinq.Containers
 
         public SpanNode(TObject obj, GetSpan<TObject, TElement> getSpan) => (_obj, _getSpan) = (obj, getSpan);
 
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => SpanNode.Create<TElement, Head, Tail, CreationType, TObject>(_obj, _getSpan, ref nodes);
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
+            => SpanNode.Create<TElement, TNodes, CreationType, TObject>(_obj, _getSpan, ref nodes);
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
 
@@ -124,8 +125,8 @@ namespace Cistern.ValueLinq.Containers
             return false;
         }
 
-        TResult INode<TElement>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
-            => SpanNode.FastEnumerate<TElement, TResult, FEnumerator, TObject>(_obj, _getSpan, fenum);
+        TResult INode<TElement>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
+            => SpanNode.ExecutePush<TElement, TResult, TPushEnumerator, TObject>(_obj, _getSpan, fenum);
     }
 
     static class SpanNode
@@ -138,20 +139,19 @@ namespace Cistern.ValueLinq.Containers
             return span.ToArray();
         }
 
-        public static CreationType Create<T, Head, Tail, CreationType, TObject>(TObject obj, GetSpan<TObject, T> getSpan, ref Nodes<Head, Tail> nodes)
-            where Head : INode
-            where Tail : INodes
+        public static CreationType Create<T, TNodes, CreationType, TObject>(TObject obj, GetSpan<TObject, T> getSpan, ref TNodes nodes)
+            where TNodes : INodes
         {
-            var enumerator = new SpanFastEnumerator<TObject, T>(obj, getSpan);
-            return nodes.CreateObject<CreationType, T, SpanFastEnumerator<TObject, T>>(ref enumerator);
+            var enumerator = new SpanPullEnumerator<TObject, T>(obj, getSpan);
+            return nodes.CreateObject<CreationType, T, SpanPullEnumerator<TObject, T>>(ref enumerator);
         }
 
-        internal static TResult FastEnumerate<TIn, TResult, FEnumerator, TObject>(TObject obj, GetSpan<TObject, TIn> getSpan, FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<TIn>
+        internal static TResult ExecutePush<TSource, TResult, TPushEnumerator, TObject>(TObject obj, GetSpan<TObject, TSource> getSpan, TPushEnumerator fenum)
+            where TPushEnumerator : IPushEnumerator<TSource>
         {
             try
             {
-                if (BatchProcessResult.Unavailable == fenum.TryProcessBatch<TObject, GetSpan<TObject, TIn>>(obj, getSpan))
+                if (BatchProcessResult.Unavailable == fenum.TryProcessBatch<TObject, GetSpan<TObject, TSource>>(obj, getSpan))
                     Loop(getSpan(obj), ref fenum);
 
                 return fenum.GetResult<TResult>();
@@ -162,8 +162,8 @@ namespace Cistern.ValueLinq.Containers
             }
         }
 
-        internal static void Loop<TIn, FEnumerator>(ReadOnlySpan<TIn> span, ref FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<TIn>
+        internal static void Loop<TSource, TPushEnumerator>(ReadOnlySpan<TSource> span, ref TPushEnumerator fenum)
+            where TPushEnumerator : IPushEnumerator<TSource>
         {
             for (var i = 0; i < span.Length; ++i)
             {
@@ -172,12 +172,12 @@ namespace Cistern.ValueLinq.Containers
             }
         }
 
-        internal static TResult FastReverseEnumerate<TIn, TResult, FEnumerator>(ReadOnlySpan<TIn> span, FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<TIn>
+        internal static TResult ExecuteReversePush<TSource, TResult, FEnumerator>(ReadOnlySpan<TSource> span, FEnumerator fenum)
+            where FEnumerator : IPushEnumerator<TSource>
         {
             try
             {
-                ReverseLoop<TIn, FEnumerator>(span, ref fenum);
+                ReverseLoop<TSource, FEnumerator>(span, ref fenum);
                 return fenum.GetResult<TResult>();
             }
             finally
@@ -186,8 +186,8 @@ namespace Cistern.ValueLinq.Containers
             }
         }
 
-        internal static void ReverseLoop<TIn, FEnumerator>(ReadOnlySpan<TIn> span, ref FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<TIn>
+        internal static void ReverseLoop<TSource, TPushEnumerator>(ReadOnlySpan<TSource> span, ref TPushEnumerator fenum)
+            where TPushEnumerator : IPushEnumerator<TSource>
         {
             for (var i = span.Length - 1; i >= 0; --i)
             {

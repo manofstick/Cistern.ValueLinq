@@ -3,8 +3,8 @@
 namespace Cistern.ValueLinq.Nodes
 {
     struct Where_InNodeEnumerator<TIn, TInEnumerator>
-        : IFastEnumerator<TIn>
-        where TInEnumerator : IFastEnumerator<TIn>
+        : IPullEnumerator<TIn>
+        where TInEnumerator : IPullEnumerator<TIn>
     {
         private TInEnumerator _enumerator;
         private InFunc<TIn, bool> _filter;
@@ -40,7 +40,7 @@ namespace Cistern.ValueLinq.Nodes
 
         public Where_InNode(in NodeT nodeT, InFunc<T, bool> filter) => (_nodeT, _filter) = (nodeT, filter);
 
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes) => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
         {
@@ -51,13 +51,13 @@ namespace Cistern.ValueLinq.Nodes
         bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
         bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
 
-        TResult INode<T>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum) =>
-            _nodeT.CreateViaPush<TResult, Where_InFoward<T, FEnumerator>>(new Where_InFoward<T, FEnumerator>(fenum, _filter));
+        TResult INode<T>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum) =>
+            _nodeT.CreateViaPush<TResult, Where_InFoward<T, TPushEnumerator>>(new Where_InFoward<T, TPushEnumerator>(fenum, _filter));
     }
 
     struct Where_InFoward<T, Next>
-        : IForwardEnumerator<T>
-        where Next : IForwardEnumerator<T>
+        : IPushEnumerator<T>
+        where Next : IPushEnumerator<T>
     {
         Next _next;
         InFunc<T, bool> _predicate;

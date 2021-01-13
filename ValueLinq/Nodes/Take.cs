@@ -5,8 +5,8 @@ using static System.Math;
 namespace Cistern.ValueLinq.Nodes
 {
     struct TakeNodeEnumerator<TIn, TInEnumerator>
-        : IFastEnumerator<TIn>
-        where TInEnumerator : IFastEnumerator<TIn>
+        : IPullEnumerator<TIn>
+        where TInEnumerator : IPullEnumerator<TIn>
     {
         private TInEnumerator _enumerator;
         private int _count;
@@ -53,12 +53,12 @@ namespace Cistern.ValueLinq.Nodes
 
         public TakeNode(in NodeT nodeT, int count) => (_nodeT, _count) = (nodeT, count);
 
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
         {
             if (_count <= 0)
             {
-                var empty = new Containers.EmptyFastEnumerator<T>();
-                return nodes.CreateObject<CreationType, T, Containers.EmptyFastEnumerator<T>>(ref empty);
+                var empty = new Containers.EmptyPullEnumerator<T>();
+                return nodes.CreateObject<CreationType, T, Containers.EmptyPullEnumerator<T>>(ref empty);
             }
 
             return Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
@@ -95,7 +95,7 @@ namespace Cistern.ValueLinq.Nodes
             }
 
             if (Optimizations.Take.Try<T, NodeT>(ref _nodeT, _count, out var node))
-                return node.CheckForOptimization<TRequest, TResult>(in request, out result);
+                return node.TryPushOptimization<TRequest, TResult>(in request, out result);
 
             result = default;
             return false;
@@ -114,15 +114,15 @@ namespace Cistern.ValueLinq.Nodes
             }
         }
 
-        TResult INode<T>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
+        TResult INode<T>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
         {
             if (_count <= 0)
-                return EmptyNode<T>.Empty.CreateViaPush<TResult, FEnumerator>(fenum);
+                return EmptyNode<T>.Empty.CreateViaPush<TResult, TPushEnumerator>(fenum);
 
             if (Optimizations.Take.Try<T, NodeT>(ref _nodeT, _count, out var node))
-                return node.CreateObjectViaFastEnumerator<TResult, FEnumerator>(in fenum);
+                return node.CreateViaPush<TResult, TPushEnumerator>(in fenum);
 
-            return _nodeT.CreateViaPush<TResult, TakeFoward<T, FEnumerator>>(new TakeFoward<T, FEnumerator>(fenum, _count));
+            return _nodeT.CreateViaPush<TResult, TakeFoward<T, TPushEnumerator>>(new TakeFoward<T, TPushEnumerator>(fenum, _count));
         }
     }
 
@@ -138,8 +138,8 @@ namespace Cistern.ValueLinq.Nodes
     }
 
     struct TakeFoward<T, Next>
-        : IForwardEnumerator<T>
-        where Next : IForwardEnumerator<T>
+        : IPushEnumerator<T>
+        where Next : IPushEnumerator<T>
     {
         Next _next;
         int _count;

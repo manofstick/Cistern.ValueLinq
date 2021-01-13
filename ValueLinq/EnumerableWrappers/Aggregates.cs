@@ -10,70 +10,70 @@ namespace Cistern.ValueLinq
     public static partial class Enumerable
     {
         public static System.Linq.ILookup<TKey, TSource> ToLookup<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer = null) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, System.Linq.ILookup<TKey, TSource>, ToLookup<TSource, TKey>>(source, new ToLookup<TSource, TKey>(comparer, keySelector)); 
+            EnumerableNode.ExecutePush<TSource, System.Linq.ILookup<TKey, TSource>, ToLookup<TSource, TKey>>(source, new ToLookup<TSource, TKey>(comparer, keySelector)); 
 
         public static System.Linq.ILookup<TKey, TElement> ToLookup<TSource, TKey, TElement>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, IEqualityComparer<TKey> comparer = null) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, System.Linq.ILookup<TKey, TElement>, ToLookup<TSource, TKey, TElement>>(source, new ToLookup<TSource, TKey, TElement>(comparer, keySelector, elementSelector)); 
+            EnumerableNode.ExecutePush<TSource, System.Linq.ILookup<TKey, TElement>, ToLookup<TSource, TKey, TElement>>(source, new ToLookup<TSource, TKey, TElement>(comparer, keySelector, elementSelector)); 
 
         public static Dictionary<TKey, TSource> ToDictionary<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer = null) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, Dictionary<TKey, TSource>, ToDictionary<TSource, TKey>>(source, new ToDictionary<TSource, TKey>(keySelector, comparer)); 
+            EnumerableNode.ExecutePush<TSource, Dictionary<TKey, TSource>, ToDictionary<TSource, TKey>>(source, new ToDictionary<TSource, TKey>(keySelector, comparer)); 
 
         public static Dictionary<TKey, TValue> ToDictionary<TSource, TKey, TValue>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, Func<TSource, TValue> elementSelector, IEqualityComparer<TKey> comparer = null) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, Dictionary<TKey, TValue>, ToDictionary<TSource, TKey, TValue>>(source, new ToDictionary<TSource, TKey, TValue>(keySelector, elementSelector, comparer)); 
+            EnumerableNode.ExecutePush<TSource, Dictionary<TKey, TValue>, ToDictionary<TSource, TKey, TValue>>(source, new ToDictionary<TSource, TKey, TValue>(keySelector, elementSelector, comparer)); 
 
         public static HashSet<TSource> ToHashSet<TSource>(this IEnumerable<TSource> source, IEqualityComparer<TSource> comparer = null) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, HashSet<TSource>, ToHashSet<TSource>>(source, new ToHashSet<TSource>(comparer)); 
+            EnumerableNode.ExecutePush<TSource, HashSet<TSource>, ToHashSet<TSource>>(source, new ToHashSet<TSource>(comparer)); 
 
         public static TSource Aggregate<TSource>(this IEnumerable<TSource> source, Func<TSource, TSource, TSource> func) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, TSource, ReduceForward<TSource>>(source, new ReduceForward<TSource>(func)); 
+            EnumerableNode.ExecutePush<TSource, TSource, ReduceForward<TSource>>(source, new ReduceForward<TSource>(func)); 
 
         public static TAccumulate Aggregate<TSource, TAccumulate>(this IEnumerable<TSource> source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, TAccumulate, FoldForward<TSource, TAccumulate>>(source, new FoldForward<TSource, TAccumulate>(func, seed)); 
+            EnumerableNode.ExecutePush<TSource, TAccumulate, FoldForward<TSource, TAccumulate>>(source, new FoldForward<TSource, TAccumulate>(func, seed)); 
 
         public static TResult Aggregate<TSource, TAccumulate, TResult>(this IEnumerable<TSource> source, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func, Func<TAccumulate, TResult> resultSelector) =>
-            resultSelector(EnumerableNode.FastEnumerateSwitch<TSource, TAccumulate, FoldForward<TSource, TAccumulate>>(source, new FoldForward<TSource, TAccumulate>(func, seed))); 
+            resultSelector(EnumerableNode.ExecutePush<TSource, TAccumulate, FoldForward<TSource, TAccumulate>>(source, new FoldForward<TSource, TAccumulate>(func, seed))); 
 
         public static bool All<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, bool, All<TSource, FuncToIFunc<TSource, bool>>>(source, new All<TSource, FuncToIFunc<TSource, bool>>(new FuncToIFunc<TSource, bool>(predicate))); 
+            EnumerableNode.ExecutePush<TSource, bool, All<TSource, FuncToIFunc<TSource, bool>>>(source, new All<TSource, FuncToIFunc<TSource, bool>>(new FuncToIFunc<TSource, bool>(predicate))); 
 
         public static bool Any<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, bool, Any<TSource>>(source, new Any<TSource>(predicate)); 
+            EnumerableNode.ExecutePush<TSource, bool, Any<TSource>>(source, new Any<TSource>(predicate)); 
 
         public static int Count<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, int, CountIf<TSource>>(source, new CountIf<TSource>(predicate)); 
+            EnumerableNode.ExecutePush<TSource, int, CountIf<TSource>>(source, new CountIf<TSource>(predicate)); 
 
         public static bool Contains<TSource>(this IEnumerable<TSource> source, TSource value, IEqualityComparer<TSource> comparer) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, bool, ContainsByComparer<TSource>>(source, new ContainsByComparer<TSource>(comparer, value)); 
+            EnumerableNode.ExecutePush<TSource, bool, ContainsByComparer<TSource>>(source, new ContainsByComparer<TSource>(comparer, value)); 
 
         public static TSource Last<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, TSource, LastPredicate<TSource>>(source, new LastPredicate<TSource>(predicate)); 
+            EnumerableNode.ExecutePush<TSource, TSource, LastPredicate<TSource>>(source, new LastPredicate<TSource>(predicate)); 
 
         public static TSource LastOrDefault<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, TSource, LastOrDefaultPredicate<TSource>>(source, new LastOrDefaultPredicate<TSource>(predicate)); 
+            EnumerableNode.ExecutePush<TSource, TSource, LastOrDefaultPredicate<TSource>>(source, new LastOrDefaultPredicate<TSource>(predicate)); 
 
         public static TSource First<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, TSource, FirstPredicate<TSource>>(source, new FirstPredicate<TSource>(predicate)); 
+            EnumerableNode.ExecutePush<TSource, TSource, FirstPredicate<TSource>>(source, new FirstPredicate<TSource>(predicate)); 
 
         public static TSource First<TSource>(this IEnumerable<TSource> source) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, TSource, First<TSource>>(source, new First<TSource>()); 
+            EnumerableNode.ExecutePush<TSource, TSource, First<TSource>>(source, new First<TSource>()); 
 
         public static TSource FirstOrDefault<TSource>(this IEnumerable<TSource> source) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, TSource, FirstOrDefault<TSource>>(source, new FirstOrDefault<TSource>()); 
+            EnumerableNode.ExecutePush<TSource, TSource, FirstOrDefault<TSource>>(source, new FirstOrDefault<TSource>()); 
 
         public static TSource FirstOrDefault<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, TSource, FirstOrDefaultPredicate<TSource>>(source, new FirstOrDefaultPredicate<TSource>(predicate)); 
+            EnumerableNode.ExecutePush<TSource, TSource, FirstOrDefaultPredicate<TSource>>(source, new FirstOrDefaultPredicate<TSource>(predicate)); 
 
         public static TSource Single<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, TSource, SinglePredicate<TSource>>(source, new SinglePredicate<TSource>(predicate)); 
+            EnumerableNode.ExecutePush<TSource, TSource, SinglePredicate<TSource>>(source, new SinglePredicate<TSource>(predicate)); 
 
         public static TSource Single<TSource>(this IEnumerable<TSource> source) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, TSource, Single<TSource>>(source, new Single<TSource>()); 
+            EnumerableNode.ExecutePush<TSource, TSource, Single<TSource>>(source, new Single<TSource>()); 
 
         public static TSource SingleOrDefault<TSource>(this IEnumerable<TSource> source) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, TSource, SingleOrDefault<TSource>>(source, new SingleOrDefault<TSource>()); 
+            EnumerableNode.ExecutePush<TSource, TSource, SingleOrDefault<TSource>>(source, new SingleOrDefault<TSource>()); 
 
         public static TSource SingleOrDefault<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) =>
-            EnumerableNode.FastEnumerateSwitch<TSource, TSource, SingleOrDefaultPredicate<TSource>>(source, new SingleOrDefaultPredicate<TSource>(predicate)); 
+            EnumerableNode.ExecutePush<TSource, TSource, SingleOrDefaultPredicate<TSource>>(source, new SingleOrDefaultPredicate<TSource>(predicate)); 
 
     }
     public static partial class ValueLinqArray

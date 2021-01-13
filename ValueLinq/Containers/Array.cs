@@ -3,19 +3,20 @@ using System.Runtime.CompilerServices;
 
 namespace Cistern.ValueLinq.Containers
 {
-    struct ArrayFastEnumerator<T>
-        : IFastEnumerator<T>
+    struct ArrayPullEnumerator<TSource>
+        : IPullEnumerator<TSource>
     {
-        private readonly T[] _array;
+        private readonly TSource[] _array;
         private int _idx;
         private int _end;
 
-        public ArrayFastEnumerator(T[] array, int start, int count) => (_array, _idx, _end) = (array, start-1, start+count);
+        public ArrayPullEnumerator(TSource[] array, int start, int count)
+            => (_array, _idx, _end) = (array, start-1, start+count);
 
         public void Dispose() { }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryGetNext(out T current)
+        public bool TryGetNext(out TSource current)
         {
             if (++_idx < _end)
             {
@@ -27,20 +28,20 @@ namespace Cistern.ValueLinq.Containers
         }
     }
 
-    struct ArrayFastWhereEnumerator<T>
-        : IFastEnumerator<T>
+    struct ArrayWherePullEnumerator<TSource>
+        : IPullEnumerator<TSource>
     {
-        private readonly T[] _array;
-        private readonly Func<T, bool> _predicate;
+        private readonly TSource[] _array;
+        private readonly Func<TSource, bool> _predicate;
         private int _idx;
         private int _end;
 
-        public ArrayFastWhereEnumerator(T[] array, int start, int count, Func<T, bool> predicate) => (_array, _predicate, _idx, _end) = (array, predicate, start-1, Math.Min(array.Length, start+count));
+        public ArrayWherePullEnumerator(TSource[] array, int start, int count, Func<TSource, bool> predicate) => (_array, _predicate, _idx, _end) = (array, predicate, start-1, Math.Min(array.Length, start+count));
 
         public void Dispose() { }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryGetNext(out T current)
+        public bool TryGetNext(out TSource current)
         {
             while (++_idx < _end)
             {
@@ -53,20 +54,21 @@ namespace Cistern.ValueLinq.Containers
         }
     }
 
-    struct ArrayFastSelectEnumerator<T, U>
-        : IFastEnumerator<U>
+    struct ArraySelectPullEnumerator<TSource, TResult>
+        : IPullEnumerator<TResult>
     {
-        private readonly T[] _array;
-        private readonly Func<T, U> _map;
+        private readonly TSource[] _array;
+        private readonly Func<TSource, TResult> _map;
         private int _idx;
         private int _end;
 
-        public ArrayFastSelectEnumerator(T[] array, int start, int count, Func<T, U> map) => (_array, _map, _idx, _end) = (array, map, start - 1, Math.Min(array.Length, start + count));
+        public ArraySelectPullEnumerator(TSource[] array, int start, int count, Func<TSource, TResult> map)
+            => (_array, _map, _idx, _end) = (array, map, start - 1, Math.Min(array.Length, start + count));
 
         public void Dispose() { }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryGetNext(out U current)
+        public bool TryGetNext(out TResult current)
         {
             if (++_idx < _end)
             {
@@ -78,21 +80,21 @@ namespace Cistern.ValueLinq.Containers
         }
     }
 
-    struct ArrayFastWhereSelectEnumerator<T, U>
-        : IFastEnumerator<U>
+    struct ArrayWhereSelectPullEnumerator<TSource, TResult>
+        : IPullEnumerator<TResult>
     {
-        private readonly T[] _array;
-        private readonly Func<T, bool> _predicate;
-        private readonly Func<T, U> _map;
+        private readonly TSource[] _array;
+        private readonly Func<TSource, bool> _predicate;
+        private readonly Func<TSource, TResult> _map;
         private int _idx;
         private int _end;
 
-        public ArrayFastWhereSelectEnumerator(T[] array, int start, int count, Func<T, bool> predicate, Func<T, U> map) => (_array, _predicate, _map, _idx, _end) = (array, predicate, map, start - 1, Math.Min(array.Length, start + count));
+        public ArrayWhereSelectPullEnumerator(TSource[] array, int start, int count, Func<TSource, bool> predicate, Func<TSource, TResult> map) => (_array, _predicate, _map, _idx, _end) = (array, predicate, map, start - 1, Math.Min(array.Length, start + count));
 
         public void Dispose() { }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryGetNext(out U current)
+        public bool TryGetNext(out TResult current)
         {
             while (++_idx < _end)
             {
@@ -107,15 +109,15 @@ namespace Cistern.ValueLinq.Containers
         }
     }
 
-    public struct ArrayNode<T>
-        : INode<T>
+    public struct ArrayNode<TSource>
+        : INode<TSource>
     {
-        private readonly T[] _array;
+        private readonly TSource[] _array;
 
         public void GetCountInformation(out CountInformation info) =>
             info = new CountInformation(_array.Length, true);
 
-        public ArrayNode(T[] array)
+        public ArrayNode(TSource[] array)
         {
             if (array == null)
                 throw new ArgumentNullException("source");
@@ -123,25 +125,25 @@ namespace Cistern.ValueLinq.Containers
             _array = array;
         }
 
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
         {
             if (_array.Length == 0)
-                return EmptyNode.Create<T, Nodes<Head, Tail>, CreationType>(ref nodes);
+                return EmptyNode.Create<TSource, TNodes, CreationType>(ref nodes);
 
-            return ArrayNode.Create<T, Nodes<Head, Tail>, CreationType>(_array, ref nodes);
+            return ArrayNode.Create<TSource, TNodes, CreationType>(_array, ref nodes);
         }
 
         bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation)
             => throw new InvalidOperationException();
 
         public bool TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result) =>
-            MemoryNode.TryPushOptimization<T, TRequest, TResult>(_array, in request, out result);
+            MemoryNode.TryPushOptimization<TSource, TRequest, TResult>(_array, in request, out result);
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __)
             => throw new InvalidOperationException();
 
-        public TResult CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<T>
-            => ArrayNode.FastEnumerate<T, TResult, FEnumerator>(_array, fenum);
+        public TResult CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum) where TPushEnumerator : IPushEnumerator<TSource>
+            => ArrayNode.ExecutePush<TSource, TResult, TPushEnumerator>(_array, fenum);
     }
 
     static class ArrayNode
@@ -157,16 +159,16 @@ namespace Cistern.ValueLinq.Containers
             if (nodes.TryObjectAscentOptimization<Optimizations.SourceArray<T>, CreationType>(in sa, out var creation))
                 return creation;
 
-            var enumerator = new ArrayFastEnumerator<T>(array, start, count);
-            return nodes.CreateObject<CreationType, T, ArrayFastEnumerator<T>>(ref enumerator);
+            var enumerator = new ArrayPullEnumerator<T>(array, start, count);
+            return nodes.CreateObject<CreationType, T, ArrayPullEnumerator<T>>(ref enumerator);
         }
 
-        internal static TResult FastEnumerate<TIn, TResult, FEnumerator>(TIn[] array, FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<TIn>
+        internal static TResult ExecutePush<TSource, TResult, TPushEnumerator>(TSource[] source, TPushEnumerator fenum)
+            where TPushEnumerator : IPushEnumerator<TSource>
         {
             try
             {
-                ProcessArray<TIn, FEnumerator>(array, ref fenum);
+                ProcessArray<TSource, TPushEnumerator>(source, ref fenum);
                 return fenum.GetResult<TResult>();
             }
             finally
@@ -175,26 +177,26 @@ namespace Cistern.ValueLinq.Containers
             }
         }
 
-        internal static void ProcessArray<TIn, FEnumerator>(TIn[] array, ref FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<TIn>
+        internal static void ProcessArray<TSource, TPushEnumerator>(TSource[] source, ref TPushEnumerator fenum)
+            where TPushEnumerator : IPushEnumerator<TSource>
         {
-            if (array == null)
+            if (source == null)
                 throw new ArgumentNullException("source"); // name used to match System.Linq's exceptions
 
-            if (array.Length < 20 // magic number! skip small, as cost of trying for batch outweighs benefit (and no "perfect" value)
-             || BatchProcessResult.Unavailable == fenum.TryProcessBatch<TIn[], GetSpan<TIn[], TIn>>(array, in Optimizations.UseSpan<TIn>.FromArray))
+            if (source.Length < 20 // magic number! skip small, as cost of trying for batch outweighs benefit (and no "perfect" value)
+             || BatchProcessResult.Unavailable == fenum.TryProcessBatch<TSource[], GetSpan<TSource[], TSource>>(source, in Optimizations.UseSpan<TSource>.FromArray))
             {
                 // Used to share Span version, but getting span isn't free (albeit cheap), and Loop logic is trivial anyway
-                Loop<TIn, FEnumerator>(array, ref fenum);
+                Loop<TSource, TPushEnumerator>(source, ref fenum);
             }
         }
 
-        internal static void Loop<TIn, FEnumerator>(TIn[] array, ref FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<TIn>
+        internal static void Loop<TSource, TPushEnumerator>(TSource[] source, ref TPushEnumerator fenum)
+            where TPushEnumerator : IPushEnumerator<TSource>
         {
-            for (var i = 0; i < array.Length; ++i)
+            for (var i = 0; i < source.Length; ++i)
             {
-                if (!fenum.ProcessNext(array[i]))
+                if (!fenum.ProcessNext(source[i]))
                     break;
             }
         }

@@ -3,7 +3,7 @@
 namespace Cistern.ValueLinq.Aggregation
 {
     struct ReduceForward<T>
-        : IForwardEnumerator<T>
+        : IPushEnumerator<T>
     {
         private bool _hasData;
         private T _accumulate;
@@ -13,7 +13,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() { }
-        TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
+        TResult IPushEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
 
         internal T GetResult()
         {
@@ -23,7 +23,7 @@ namespace Cistern.ValueLinq.Aggregation
             return _accumulate;
         }
 
-        bool IForwardEnumerator<T>.ProcessNext(T input)
+        bool IPushEnumerator<T>.ProcessNext(T input)
         {
             if (_hasData)
             {

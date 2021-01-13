@@ -28,10 +28,10 @@ namespace Cistern.ValueLinq.Nodes
             return array;
         }
 
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
         {
             var reversed = GetReversedArray();
-            return ArrayNode.Create<T, Nodes<Head, Tail>, CreationType>(reversed, ref nodes);
+            return ArrayNode.Create<T, TNodes, CreationType>(reversed, ref nodes);
         }
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
@@ -51,7 +51,7 @@ namespace Cistern.ValueLinq.Nodes
 
             if (Optimizations.Reverse.Try<T, NodeT>(ref _nodeT, out var node))
             {
-                if (node.CheckForOptimization<TRequest, TResult>(in request, out result))
+                if (node.TryPushOptimization<TRequest, TResult>(in request, out result))
                     return true; // we carry on with false, because can still do some other optimizations (TODO: Is this true?)
             }
 
@@ -87,13 +87,13 @@ namespace Cistern.ValueLinq.Nodes
             return false;
         }
 
-        TResult INode<T>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
+        TResult INode<T>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
         {
             if (Optimizations.Reverse.Try<T, NodeT>(ref _nodeT, out var node))
-                return node.CreateObjectViaFastEnumerator<TResult, FEnumerator>(fenum);
+                return node.CreateViaPush<TResult, TPushEnumerator>(fenum);
 
             var reversed = new ArrayNode<T>(GetReversedArray());
-            return reversed.CreateViaPush<TResult, FEnumerator>(fenum);
+            return reversed.CreateViaPush<TResult, TPushEnumerator>(fenum);
         }
     }
 }

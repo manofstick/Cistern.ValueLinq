@@ -3,14 +3,14 @@
 namespace Cistern.ValueLinq.Aggregation
 {
     struct First<T>
-        : IForwardEnumerator<T>
+        : IPushEnumerator<T>
     {
         private T _first;
         private bool _found;
 
         public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() { }
-        TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
+        TResult IPushEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
 
         public T GetResult()
         {
@@ -19,7 +19,7 @@ namespace Cistern.ValueLinq.Aggregation
             return _first;
         }
 
-        bool IForwardEnumerator<T>.ProcessNext(T input)
+        bool IPushEnumerator<T>.ProcessNext(T input)
         {
             _found = true;
             _first = input;
@@ -28,7 +28,7 @@ namespace Cistern.ValueLinq.Aggregation
     }
 
     struct FirstOrDefault<T>
-        : IForwardEnumerator<T>
+        : IPushEnumerator<T>
     {
         private T _First;
 
@@ -36,10 +36,10 @@ namespace Cistern.ValueLinq.Aggregation
 
         public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() { }
-        TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
+        TResult IPushEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
         public T GetResult() => _First;
 
-        bool IForwardEnumerator<T>.ProcessNext(T input)
+        bool IPushEnumerator<T>.ProcessNext(T input)
         {
             _First = input;
             return false;
@@ -47,7 +47,7 @@ namespace Cistern.ValueLinq.Aggregation
     }
 
     struct FirstPredicate<T>
-        : IForwardEnumerator<T>
+        : IPushEnumerator<T>
     {
         private T _first;
         private bool _found;
@@ -57,7 +57,7 @@ namespace Cistern.ValueLinq.Aggregation
 
         public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() { }
-        TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
+        TResult IPushEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
 
         public T GetResult()
         {
@@ -66,7 +66,7 @@ namespace Cistern.ValueLinq.Aggregation
             return _first;
         }
 
-        bool IForwardEnumerator<T>.ProcessNext(T input)
+        bool IPushEnumerator<T>.ProcessNext(T input)
         {
             if (!_predicate(input))
                 return true;
@@ -78,7 +78,7 @@ namespace Cistern.ValueLinq.Aggregation
     }
 
     struct FirstOrDefaultPredicate<T>
-        : IForwardEnumerator<T>
+        : IPushEnumerator<T>
     {
         private T _first;
         Func<T, bool> _predicate;
@@ -87,11 +87,11 @@ namespace Cistern.ValueLinq.Aggregation
 
         public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() { }
-        TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
+        TResult IPushEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
 
         public T GetResult() => _first;
 
-        bool IForwardEnumerator<T>.ProcessNext(T input)
+        bool IPushEnumerator<T>.ProcessNext(T input)
         {
             if (!_predicate(input))
                 return true;

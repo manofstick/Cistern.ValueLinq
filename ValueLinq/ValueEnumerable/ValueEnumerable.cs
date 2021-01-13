@@ -32,13 +32,13 @@ namespace Cistern.ValueLinq
             => Node.TryPullOptimization<TRequest, TResult, Nodes>(in request, ref nodes, out creation);
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
             => Node.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref tail, ref enumerator);
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
-            => Node.CreateViaPullDescend<CreationType, Head, Tail>(ref nodes);
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
+            => Node.CreateViaPullDescend<CreationType, TNodes>(ref nodes);
 
         bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
             => Node.TryPushOptimization<TRequest, TResult>(in request, out result);
-        TResult INode<TSource>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
-            => Node.CreateViaPush<TResult, FEnumerator>(fenum);
+        TResult INode<TSource>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
+            => Node.CreateViaPush<TResult, TPushEnumerator>(fenum);
     }
 
 

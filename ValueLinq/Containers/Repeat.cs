@@ -2,13 +2,13 @@
 
 namespace Cistern.ValueLinq.Containers
 {
-    struct RepeatFastEnumerator<T>
-        : IFastEnumerator<T>
+    struct RepeatPullEnumerator<T>
+        : IPullEnumerator<T>
     {
         private T _element;
         private int _count;
 
-        public RepeatFastEnumerator(T element, int count) => (_element, _count) = (element, count);
+        public RepeatPullEnumerator(T element, int count) => (_element, _count) = (element, count);
 
         public void Dispose() { }
 
@@ -42,10 +42,10 @@ namespace Cistern.ValueLinq.Containers
             (_element, _count) = (element, count);
         }
 
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
         {
-            var enumerator = new RepeatFastEnumerator<T>(_element, _count);
-            return nodes.CreateObject<CreationType, T, RepeatFastEnumerator<T>>(ref enumerator);
+            var enumerator = new RepeatPullEnumerator<T>(_element, _count);
+            return nodes.CreateObject<CreationType, T, RepeatPullEnumerator<T>>(ref enumerator);
         }
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __)
@@ -85,17 +85,17 @@ namespace Cistern.ValueLinq.Containers
             return false;
         }
 
-        TResult INode<T>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
-            => RepeatNode.FastEnumerate<T, TResult, FEnumerator>(_element, _count, fenum);
+        TResult INode<T>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
+            => RepeatNode.ExecutePush<T, TResult, TPushEnumerator>(_element, _count, fenum);
     }
 
     static class RepeatNode
     {
-        internal static TResult FastEnumerate<TIn, TResult, FEnumerator>(TIn element, int count, FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
+        internal static TResult ExecutePush<TElement, TResult, TPushEnumerator>(TElement element, int count, TPushEnumerator fenum) where TPushEnumerator : IPushEnumerator<TElement>
         {
             try
             {
-                Loop<TIn, FEnumerator>(element, count, ref fenum);
+                Loop<TElement, TPushEnumerator>(element, count, ref fenum);
                 return fenum.GetResult<TResult>();
             }
             finally
@@ -104,7 +104,7 @@ namespace Cistern.ValueLinq.Containers
             }
         }
 
-        private static void Loop<TIn, FEnumerator>(TIn element, int count, ref FEnumerator fenum) where FEnumerator : IForwardEnumerator<TIn>
+        private static void Loop<TElement, TPushEnumerator>(TElement element, int count, ref TPushEnumerator fenum) where TPushEnumerator : IPushEnumerator<TElement>
         {
             for(var i=0; i < count; ++i)
             {

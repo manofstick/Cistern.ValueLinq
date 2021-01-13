@@ -3,8 +3,8 @@
 namespace Cistern.ValueLinq.Nodes
 {
     struct SelectIdxNodeEnumerator<TIn, TOut, TInEnumerator>
-        : IFastEnumerator<TOut>
-        where TInEnumerator : IFastEnumerator<TIn>
+        : IPullEnumerator<TOut>
+        where TInEnumerator : IPullEnumerator<TIn>
     {
         private TInEnumerator _enumerator;
         private Func<TIn, int, TOut> _map;
@@ -41,7 +41,7 @@ namespace Cistern.ValueLinq.Nodes
 
         public SelectIdxNode(in NodeT nodeT, Func<T, int, U> selector) => (_nodeT, _map) = (nodeT, selector);
 
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes) => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
         {
@@ -52,13 +52,13 @@ namespace Cistern.ValueLinq.Nodes
         bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
         bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false;}
 
-        TResult INode<U>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
-            => _nodeT.CreateViaPush<TResult, SelectIdxFoward<T, U, FEnumerator>>(new SelectIdxFoward<T, U, FEnumerator>(fenum, _map));
+        TResult INode<U>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
+            => _nodeT.CreateViaPush<TResult, SelectIdxFoward<T, U, TPushEnumerator>>(new SelectIdxFoward<T, U, TPushEnumerator>(fenum, _map));
     }
 
     struct SelectIdxFoward<T, U, Next>
-        : IForwardEnumerator<T>
-        where Next : IForwardEnumerator<U>
+        : IPushEnumerator<T>
+        where Next : IPushEnumerator<U>
     {
         Next _next;
         Func<T, int, U> _selector;

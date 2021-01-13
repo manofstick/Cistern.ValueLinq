@@ -2,13 +2,13 @@
 
 namespace Cistern.ValueLinq.Containers
 {
-    struct MemoryFastEnumerator<T>
-        : IFastEnumerator<T>
+    struct MemoryPullEnumerator<T>
+        : IPullEnumerator<T>
     {
         private readonly ReadOnlyMemory<T> _memory;
         private int _idx;
 
-        public MemoryFastEnumerator(ReadOnlyMemory<T> memory) => (_memory, _idx) = (memory, -1);
+        public MemoryPullEnumerator(ReadOnlyMemory<T> memory) => (_memory, _idx) = (memory, -1);
 
         public void Dispose() { }
 
@@ -35,7 +35,7 @@ namespace Cistern.ValueLinq.Containers
 
 #region "This node is only used in forward context, so most of interface is not supported"
         public void GetCountInformation(out CountInformation info) => throw new NotSupportedException();
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => throw new NotSupportedException();
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes) => throw new NotSupportedException();
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) => throw new InvalidOperationException();
         #endregion
 
@@ -85,22 +85,23 @@ namespace Cistern.ValueLinq.Containers
             return false;
         }
 
-        public TResult CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<T>
-            => SpanNode.FastReverseEnumerate<T, TResult, FEnumerator>(_memory.Span, fenum);
+        public TResult CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
+            where TPushEnumerator : IPushEnumerator<T>
+            => SpanNode.ExecuteReversePush<T, TResult, TPushEnumerator>(_memory.Span, fenum);
     }
 
-    public struct MemoryNode<T>
-        : INode<T>
+    public struct MemoryNode<TSource>
+        : INode<TSource>
     {
-        private readonly ReadOnlyMemory<T> _memory;
+        private readonly ReadOnlyMemory<TSource> _memory;
 
         public void GetCountInformation(out CountInformation info) =>
             info = new CountInformation(_memory.Length, true);
 
-        public MemoryNode(ReadOnlyMemory<T> Memory) => _memory = Memory;
+        public MemoryNode(ReadOnlyMemory<TSource> Memory) => _memory = Memory;
 
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
-            => MemoryNode.Create<T, Head, Tail, CreationType>(_memory, ref nodes);
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
+            => MemoryNode.Create<TSource, TNodes, CreationType>(_memory, ref nodes);
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) 
             => throw new InvalidOperationException();
@@ -109,15 +110,16 @@ namespace Cistern.ValueLinq.Containers
             => throw new InvalidOperationException();
 
         public bool TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
-            => MemoryNode.TryPushOptimization<T, TRequest, TResult>(_memory, in request, out result);
+            => MemoryNode.TryPushOptimization<TSource, TRequest, TResult>(_memory, in request, out result);
 
-        public TResult CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum) where FEnumerator : IForwardEnumerator<T>
-            => MemoryNode.FastEnumerate<T, TResult, FEnumerator>(_memory, fenum);
+        public TResult CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
+            where TPushEnumerator : IPushEnumerator<TSource>
+            => MemoryNode.ExecutePush<TSource, TResult, TPushEnumerator>(_memory, fenum);
     }
 
     static class MemoryNode
     {
-        internal static bool TryPushOptimization<T, TRequest, TResult>(ReadOnlyMemory<T> memory, in TRequest request, out TResult result)
+        internal static bool TryPushOptimization<TSource, TRequest, TResult>(ReadOnlyMemory<TSource> memory, in TRequest request, out TResult result)
         {
             if (typeof(TRequest) == typeof(Optimizations.AsMemory))
             {
@@ -142,8 +144,8 @@ namespace Cistern.ValueLinq.Containers
 
             if (typeof(TRequest) == typeof(Optimizations.Reverse))
             {
-                NodeContainer<T> container = default;
-                container.SetNode(new ReversedMemoryNode<T>(memory));
+                NodeContainer<TSource> container = default;
+                container.SetNode(new ReversedMemoryNode<TSource>(memory));
                 result = (TResult)(object)container;
                 return true;
             }
@@ -151,7 +153,7 @@ namespace Cistern.ValueLinq.Containers
             if (typeof(TRequest) == typeof(Optimizations.Skip))
             {
                 var skip = (Optimizations.Skip)(object)request;
-                NodeContainer<T> container = default;
+                NodeContainer<TSource> container = default;
                 MemoryNode.Skip(memory, skip.Count, ref container);
                 result = (TResult)(object)container;
                 return true;
@@ -160,7 +162,7 @@ namespace Cistern.ValueLinq.Containers
             if (typeof(TRequest) == typeof(Optimizations.Take))
             {
                 var take = (Optimizations.Take)(object)request;
-                NodeContainer<T> container = default;
+                NodeContainer<TSource> container = default;
                 MemoryNode.Take(memory, take.Count, ref container);
                 result = (TResult)(object)container;
                 return true;
@@ -250,26 +252,25 @@ namespace Cistern.ValueLinq.Containers
             }
         }
 
-        public static CreationType Create<T, Head, Tail, CreationType>(ReadOnlyMemory<T> memory, ref Nodes<Head, Tail> nodes)
-            where Head : INode
-            where Tail : INodes
+        public static CreationType Create<T, TNodes, CreationType>(ReadOnlyMemory<T> memory, ref TNodes nodes)
+            where TNodes : INodes
         {
-            var enumerator = new MemoryFastEnumerator<T>(memory);
-            return nodes.CreateObject<CreationType, T, MemoryFastEnumerator<T>>(ref enumerator);
+            var enumerator = new MemoryPullEnumerator<T>(memory);
+            return nodes.CreateObject<CreationType, T, MemoryPullEnumerator<T>>(ref enumerator);
         }
 
-        internal static void ProcessMemory<TIn, FEnumerator>(ReadOnlyMemory<TIn> memory, ref FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<TIn>
+        internal static void ProcessMemory<TSource, TPushEnumerator>(ReadOnlyMemory<TSource> memory, ref TPushEnumerator fenum)
+            where TPushEnumerator : IPushEnumerator<TSource>
         {
             if (memory.Length < 20
-             || BatchProcessResult.Unavailable == fenum.TryProcessBatch<ReadOnlyMemory<TIn>, GetSpan<ReadOnlyMemory<TIn>, TIn>>(memory, in Optimizations.UseSpan<TIn>.FromMemory))
+             || BatchProcessResult.Unavailable == fenum.TryProcessBatch<ReadOnlyMemory<TSource>, GetSpan<ReadOnlyMemory<TSource>, TSource>>(memory, in Optimizations.UseSpan<TSource>.FromMemory))
             {
-                SpanNode.Loop<TIn, FEnumerator>(memory.Span, ref fenum);
+                SpanNode.Loop<TSource, TPushEnumerator>(memory.Span, ref fenum);
             }
         }
 
-        internal static TResult FastEnumerate<TIn, TResult, FEnumerator>(ReadOnlyMemory<TIn> memory, FEnumerator fenum)
-            where FEnumerator : IForwardEnumerator<TIn>
+        internal static TResult ExecutePush<TSource, TResult, TPushEnumerator>(ReadOnlyMemory<TSource> memory, TPushEnumerator fenum)
+            where TPushEnumerator : IPushEnumerator<TSource>
         {
             try
             {

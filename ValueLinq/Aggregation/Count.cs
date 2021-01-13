@@ -3,15 +3,15 @@
 namespace Cistern.ValueLinq.Aggregation
 {
     struct Count<T>
-        : IForwardEnumerator<T>
+        : IPushEnumerator<T>
     {
         private int _count;
 
         public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() { }
-        TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)_count;
+        TResult IPushEnumerator<T>.GetResult<TResult>() => (TResult)(object)_count;
 
-        bool IForwardEnumerator<T>.ProcessNext(T input)
+        bool IPushEnumerator<T>.ProcessNext(T input)
         {
             checked
             {
@@ -22,7 +22,7 @@ namespace Cistern.ValueLinq.Aggregation
     }
 
     struct CountIf<T>
-        : IForwardEnumerator<T>
+        : IPushEnumerator<T>
     {
         private Func<T, bool> _predicate;
         private int _count;
@@ -31,11 +31,11 @@ namespace Cistern.ValueLinq.Aggregation
 
         public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() { }
-        TResult IForwardEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
+        TResult IPushEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
 
         public int GetResult() => _count;
 
-        bool IForwardEnumerator<T>.ProcessNext(T input)
+        bool IPushEnumerator<T>.ProcessNext(T input)
         {
             if (_predicate(input))
             {

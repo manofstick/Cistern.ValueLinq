@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 namespace Cistern.ValueLinq.Aggregation
 {
     struct Sum<T, Accumulator, Quotient, Math>
-        : IForwardEnumerator<T>
+        : IPushEnumerator<T>
         where T : struct
         where Accumulator : struct
         where Quotient : struct
@@ -45,7 +45,7 @@ namespace Cistern.ValueLinq.Aggregation
     }
 
     struct SumNullable<T, Accumulator, Quotient, Math>
-        : IForwardEnumerator<T?>
+        : IPushEnumerator<T?>
         where T : struct
         where Accumulator : struct
         where Quotient : struct

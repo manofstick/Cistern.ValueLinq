@@ -4,8 +4,8 @@ using System.Runtime.CompilerServices;
 namespace Cistern.ValueLinq.Nodes
 {
     struct ValueWhereNodeEnumerator<T, TInEnumerator, AlsoT, Predicate>
-        : IFastEnumerator<T>
-        where TInEnumerator : IFastEnumerator<T>
+        : IPullEnumerator<T>
+        where TInEnumerator : IPullEnumerator<T>
         where Predicate : IFuncBase<AlsoT, bool>
     {
         private TInEnumerator _enumerator;
@@ -49,7 +49,7 @@ namespace Cistern.ValueLinq.Nodes
 
         public ValueWhereNode(in NodeT nodeT, Predicate predicate) => (_nodeT, _filter) = (nodeT, predicate);
 
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
             => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
@@ -66,13 +66,13 @@ namespace Cistern.ValueLinq.Nodes
             return false;
         }
 
-        TResult INode<T>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum) =>
-            _nodeT.CreateViaPush<TResult, ValueWhereFoward<T, FEnumerator, Predicate>>(new ValueWhereFoward<T, FEnumerator, Predicate>(fenum, _filter));
+        TResult INode<T>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum) =>
+            _nodeT.CreateViaPush<TResult, ValueWhereFoward<T, TPushEnumerator, Predicate>>(new ValueWhereFoward<T, TPushEnumerator, Predicate>(fenum, _filter));
     }
 
     struct ValueWhereFoward<T, Next, Predicate>
-        : IForwardEnumerator<T>
-        where Next : IForwardEnumerator<T>
+        : IPushEnumerator<T>
+        where Next : IPushEnumerator<T>
         where Predicate : IFuncBase<T, bool>
     {
         Next _next;

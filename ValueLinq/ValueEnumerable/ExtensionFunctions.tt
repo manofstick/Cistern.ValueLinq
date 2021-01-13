@@ -68,20 +68,20 @@ namespace Cistern.ValueLinq
             => Node.TryPullOptimization<TRequest, TResult, Nodes>(in request, ref nodes, out creation);
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
             => Node.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref tail, ref enumerator);
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
             => Node.CreateViaPullDescend<CreationType, Head, Tail>(ref nodes);
 
         bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
             => Node.TryPushOptimization<TRequest, TResult>(in request, out result);
-        TResult INode<TSource>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
-            => Node.CreateViaPush<TResult, FEnumerator>(fenum);
+        TResult INode<TSource>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
+            => Node.CreateViaPush<TResult, TPushEnumerator>(fenum);
 <#
         if (valueEnumerableType == "ValueOrderedEnumerable")
         {
 #>
 
-        TResult IOrderedNode<TSource>.CreateOrderedEnumerableViaPush<TKey, TResult, FEnumerator>(in FEnumerator fenum, Func<TSource, TKey> keySelector, IComparer<TKey> comparer, bool descending)
-            => Node.CreateOrderedEnumerableViaPush<TKey, TResult, FEnumerator>(in fenum, keySelector, comparer, descending);
+        TResult IOrderedNode<TSource>.CreateOrderedEnumerableViaPush<TKey, TResult, TPushEnumerator>(in TPushEnumerator fenum, Func<TSource, TKey> keySelector, IComparer<TKey> comparer, bool descending)
+            => Node.CreateOrderedEnumerableViaPush<TKey, TResult, TPushEnumerator>(in fenum, keySelector, comparer, descending);
         CreationType IOrderedNode<TSource>.CreateOrderedEnumerableViaPull<TKey, CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes, Func<TSource, TKey> keySelector, IComparer<TKey> comparer, bool descending)
             => Node.CreateOrderedEnumerableViaPull<TKey, CreationType, Head, Tail>(ref nodes, keySelector, comparer, descending);
 <#
@@ -279,7 +279,7 @@ namespace Cistern.ValueLinq
         public static float?   Average<Inner>(in this <#= valueEnumerableType #><float?,   Inner> inner) where Inner : <#= nodeFloatNullable #>   => NodeImpl.AverageNullableFloat(in inner.Node);
         public static double?  Average<Inner>(in this <#= valueEnumerableType #><int?,     Inner> inner) where Inner : <#= nodeIntNullable #>     => NodeImpl.AverageNullableInt(in inner.Node);
         public static double?  Average<Inner>(in this <#= valueEnumerableType #><long?,    Inner> inner) where Inner : <#= nodeLongNullable #>    => NodeImpl.AverageNullableLong(in inner.Node);
-
+        
         public static decimal? Average<TSource, Inner>(in this <#= valueEnumerableType #><TSource, Inner> inner, Func<TSource, decimal?> selector) where Inner : <#= nodeTSource #> => NodeImpl.AverageNullableDecimal(NodeImpl.Select(in inner.Node, selector));
         public static double?  Average<TSource, Inner>(in this <#= valueEnumerableType #><TSource, Inner> inner, Func<TSource, double?>  selector) where Inner : <#= nodeTSource #> => NodeImpl.AverageNullableDouble( NodeImpl.Select(in inner.Node, selector));
         public static float?   Average<TSource, Inner>(in this <#= valueEnumerableType #><TSource, Inner> inner, Func<TSource, float?>   selector) where Inner : <#= nodeTSource #> => NodeImpl.AverageNullableFloat(  NodeImpl.Select(in inner.Node, selector));

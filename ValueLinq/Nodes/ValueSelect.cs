@@ -4,8 +4,8 @@ using System.Runtime.CompilerServices;
 namespace Cistern.ValueLinq.Nodes
 {
     struct ValueSelectNodeEnumerator<T, U, TInEnumerator, AlsoT, Func>
-        : IFastEnumerator<U>
-        where TInEnumerator : IFastEnumerator<T>
+        : IPullEnumerator<U>
+        where TInEnumerator : IPullEnumerator<T>
         where Func : IFuncBase<AlsoT, U>
     {
         private TInEnumerator _enumerator;
@@ -48,7 +48,7 @@ namespace Cistern.ValueLinq.Nodes
 
         public ValueSelectNode(in NodeT nodeT, Func selector) => (_nodeT, _map) = (nodeT, selector);
 
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes) => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes) => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
         {
@@ -69,8 +69,8 @@ namespace Cistern.ValueLinq.Nodes
     }
 
     struct ValueSelectFoward<T, U, Next, Func>
-        : IForwardEnumerator<T>
-        where Next : IForwardEnumerator<U>
+        : IPushEnumerator<T>
+        where Next : IPushEnumerator<U>
         where Func : IFuncBase<T, U>
     {
         Next _next;

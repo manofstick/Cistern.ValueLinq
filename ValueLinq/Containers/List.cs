@@ -4,12 +4,12 @@ using System.Runtime.CompilerServices;
 
 namespace Cistern.ValueLinq.Containers
 {
-    struct ListFastEnumerator<T>
-        : IFastEnumerator<T>
+    struct ListPullEnumerator<T>
+        : IPullEnumerator<T>
     {
         private List<T>.Enumerator _enumerator;
         
-        public ListFastEnumerator(List<T>.Enumerator e) => (_enumerator) = (e);
+        public ListPullEnumerator(List<T>.Enumerator e) => (_enumerator) = (e);
 
         public void Dispose() =>_enumerator.Dispose();
 
@@ -26,13 +26,13 @@ namespace Cistern.ValueLinq.Containers
         }
     }
 
-    struct ListFastWhereEnumerator<T>
-        : IFastEnumerator<T>
+    struct ListWherePullEnumerator<T>
+        : IPullEnumerator<T>
     {
         private List<T>.Enumerator _enumerator;
         private Func<T, bool> _predicate;
 
-        public ListFastWhereEnumerator(List<T>.Enumerator e, Func<T, bool> predicate) => (_enumerator, _predicate) = (e, predicate);
+        public ListWherePullEnumerator(List<T>.Enumerator e, Func<T, bool> predicate) => (_enumerator, _predicate) = (e, predicate);
 
         public void Dispose() => _enumerator.Dispose();
 
@@ -49,13 +49,13 @@ namespace Cistern.ValueLinq.Containers
         }
     }
 
-    struct ListFastSelectEnumerator<T, U>
-        : IFastEnumerator<U>
+    struct ListSelectPullEnumerator<T, U>
+        : IPullEnumerator<U>
     {
         private List<T>.Enumerator _enumerator;
         private Func<T, U> _map;
 
-        public ListFastSelectEnumerator(List<T>.Enumerator e, Func<T, U> map) => (_enumerator, _map) = (e, map);
+        public ListSelectPullEnumerator(List<T>.Enumerator e, Func<T, U> map) => (_enumerator, _map) = (e, map);
 
         public void Dispose() => _enumerator.Dispose();
 
@@ -72,14 +72,14 @@ namespace Cistern.ValueLinq.Containers
         }
     }
 
-    struct ListFastWhereSelectEnumerator<T, U>
-        : IFastEnumerator<U>
+    struct ListWhereSelectPullEnumerator<T, U>
+        : IPullEnumerator<U>
     {
         private List<T>.Enumerator _enumerator;
         private Func<T, bool> _predicate;
         private Func<T, U> _map;
 
-        public ListFastWhereSelectEnumerator(List<T>.Enumerator e, Func<T, bool> predicate, Func<T, U> map) => (_enumerator, _predicate, _map) = (e, predicate, map);
+        public ListWhereSelectPullEnumerator(List<T>.Enumerator e, Func<T, bool> predicate, Func<T, U> map) => (_enumerator, _predicate, _map) = (e, predicate, map);
 
         public void Dispose() => _enumerator.Dispose();
 
@@ -100,18 +100,18 @@ namespace Cistern.ValueLinq.Containers
         }
     }
 
-    public struct ListNode<T>
-        : INode<T>
+    public struct ListNode<TSource>
+        : INode<TSource>
     {
-        private readonly List<T> _list;
+        private readonly List<TSource> _list;
 
         public void GetCountInformation(out CountInformation info) =>
             info = new CountInformation(_list.Count, false);
 
-        public ListNode(List<T> list) => _list = list;
+        public ListNode(List<TSource> list) => _list = list;
 
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
-            => ListNode.Create<T, Head, Tail, CreationType>(_list, ref nodes);
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
+            => ListNode.Create<TSource, TNodes, CreationType>(_list, ref nodes);
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator_, Tail>(ref Tail _, ref Enumerator_ __)
             => throw new InvalidOperationException();
@@ -120,23 +120,22 @@ namespace Cistern.ValueLinq.Containers
             => throw new InvalidOperationException();
 
         bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
-            => ListSegmentNode.CheckForOptimization<T, TRequest, TResult>(new ListSegment<T>(_list, 0, _list.Count), in request, out result);
+            => ListSegmentNode.CheckForOptimization<TSource, TRequest, TResult>(new ListSegment<TSource>(_list, 0, _list.Count), in request, out result);
 
-        TResult INode<T>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
-            => ListSegmentNode.FastEnumerate<T, TResult, FEnumerator>(new ListSegment<T>(_list, 0, _list.Count), fenum);
+        TResult INode<TSource>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
+            => ListSegmentNode.ExecutePush<TSource, TResult, TPushEnumerator>(new ListSegment<TSource>(_list, 0, _list.Count), fenum);
     }
 
     static class ListNode
     {
-        public static CreationType Create<T, Head, Tail, CreationType>(List<T> list, ref Nodes<Head, Tail> nodes)
-            where Head : INode
-            where Tail : INodes
+        public static CreationType Create<T, TNodes, CreationType>(List<T> list, ref TNodes nodes)
+            where TNodes : INodes
         {
             if (nodes.TryObjectAscentOptimization<Optimizations.SourceList<T>, CreationType>(new Optimizations.SourceList<T> { List = list }, out var creation))
                 return creation;
 
-            var enumerator = new ListFastEnumerator<T>(list.GetEnumerator());
-            return nodes.CreateObject<CreationType, T, ListFastEnumerator<T>>(ref enumerator);
+            var enumerator = new ListPullEnumerator<T>(list.GetEnumerator());
+            return nodes.CreateObject<CreationType, T, ListPullEnumerator<T>>(ref enumerator);
         }
     }
 }

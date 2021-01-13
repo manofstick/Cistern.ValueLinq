@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Cistern.ValueLinq.Containers
 {
     struct OfTypeFastEnumerator<T>
-        : IFastEnumerator<T>
+        : IPullEnumerator<T>
     {
         private readonly System.Collections.IEnumerator _enumerator;
 
@@ -28,7 +28,7 @@ namespace Cistern.ValueLinq.Containers
     }
 
     struct OfTypeEnumerableFastEnumerator<T>
-        : IFastEnumerator<T>
+        : IPullEnumerator<T>
     {
         private readonly IEnumerator<object> _enumerator;
 
@@ -62,8 +62,8 @@ namespace Cistern.ValueLinq.Containers
 
         public OfTypeNode(System.Collections.IEnumerable source) => _enumerable = source;
 
-        CreationType INode.CreateViaPullDescend<CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes)
-            => OfTypeNode.CreateObjectDescent<T, CreationType, Head, Tail>(ref nodes, _enumerable);
+        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
+            => OfTypeNode.CreateObjectDescent<T, CreationType, TNodes>(ref nodes, _enumerable);
 
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail _, ref Enumerator __) =>
             throw new InvalidOperationException();
@@ -77,15 +77,14 @@ namespace Cistern.ValueLinq.Containers
             return false;
         }
 
-        TResult INode<T>.CreateViaPush<TResult, FEnumerator>(in FEnumerator fenum)
-            => OfTypeNode.CreateViaPush<T, TResult, FEnumerator>(_enumerable, fenum);
+        TResult INode<T>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
+            => OfTypeNode.CreateViaPush<T, TResult, TPushEnumerator>(_enumerable, fenum);
     }
 
     static class OfTypeNode
     {
-        public static CreationType CreateObjectDescent<T, CreationType, Head, Tail>(ref Nodes<Head, Tail> nodes, System.Collections.IEnumerable enumerable)
-            where Head : INode
-            where Tail : INodes
+        public static CreationType CreateObjectDescent<T, CreationType, TNodes>(ref TNodes nodes, System.Collections.IEnumerable enumerable)
+            where TNodes : INodes
         {
             if (enumerable is IEnumerable<object> eo)
             {
@@ -99,15 +98,15 @@ namespace Cistern.ValueLinq.Containers
             }
         }
 
-        internal static TResult CreateViaPush<T, TResult, FEnumerator>(System.Collections.IEnumerable _enumerable, FEnumerator fenum)
-             where FEnumerator : IForwardEnumerator<T>
+        internal static TResult CreateViaPush<T, TResult, TPushEnumerator>(System.Collections.IEnumerable _enumerable, TPushEnumerator fenum)
+             where TPushEnumerator : IPushEnumerator<T>
         {
             try
             {
                 if (_enumerable is IEnumerable<object> eo)
-                    Loop<FEnumerator, T>(eo, ref fenum);
+                    Loop<TPushEnumerator, T>(eo, ref fenum);
                 else
-                    Loop<FEnumerator, T>(_enumerable, ref fenum);
+                    Loop<TPushEnumerator, T>(_enumerable, ref fenum);
 
                 return fenum.GetResult<TResult>();
             }
@@ -117,7 +116,7 @@ namespace Cistern.ValueLinq.Containers
             }
         }
 
-        private static void Loop<FEnumerator, T>(IEnumerable<object> e, ref FEnumerator fenum) where FEnumerator : IForwardEnumerator<T>
+        private static void Loop<TPushEnumerator, T>(IEnumerable<object> e, ref TPushEnumerator fenum) where TPushEnumerator : IPushEnumerator<T>
         {
             foreach (var item in e)
             {
@@ -126,7 +125,7 @@ namespace Cistern.ValueLinq.Containers
             }
         }
 
-        private static void Loop<FEnumerator, T>(System.Collections.IEnumerable e, ref FEnumerator fenum) where FEnumerator : IForwardEnumerator<T>
+        private static void Loop<TPushEnumerator, T>(System.Collections.IEnumerable e, ref TPushEnumerator fenum) where TPushEnumerator : IPushEnumerator<T>
         {
             foreach (var item in e)
             {

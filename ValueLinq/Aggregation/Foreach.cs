@@ -3,7 +3,7 @@
 namespace Cistern.ValueLinq.Aggregation
 {
     struct ForEachForward<T>
-        : IForwardEnumerator<T>
+        : IPushEnumerator<T>
     {
         private Action<T> _func;
 
@@ -11,9 +11,9 @@ namespace Cistern.ValueLinq.Aggregation
 
         public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() { }
-        TResult IForwardEnumerator<T>.GetResult<TResult>() => default;
+        TResult IPushEnumerator<T>.GetResult<TResult>() => default;
 
-        bool IForwardEnumerator<T>.ProcessNext(T input)
+        bool IPushEnumerator<T>.ProcessNext(T input)
         {
             _func(input);
             return true;
@@ -21,7 +21,7 @@ namespace Cistern.ValueLinq.Aggregation
     }
 
     struct ForEachForwardRef<T, U>
-        : IForwardEnumerator<U>
+        : IPushEnumerator<U>
     {
         private T _state;
         private RefAction<T, U> _func;
@@ -30,10 +30,10 @@ namespace Cistern.ValueLinq.Aggregation
 
         public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() { }
-        TResult IForwardEnumerator<U>.GetResult<TResult>() => (TResult)(object)GetResult();
+        TResult IPushEnumerator<U>.GetResult<TResult>() => (TResult)(object)GetResult();
         public T GetResult() => _state;
 
-        bool IForwardEnumerator<U>.ProcessNext(U input)
+        bool IPushEnumerator<U>.ProcessNext(U input)
         {
             _func(ref _state, input);
 
@@ -42,7 +42,7 @@ namespace Cistern.ValueLinq.Aggregation
     }
 
     struct ValueForeachForwardRef<T, U, RefAction>
-        : IForwardEnumerator<U>
+        : IPushEnumerator<U>
         where RefAction : IRefAction<T, U>
     {
         private T _state;
@@ -52,10 +52,10 @@ namespace Cistern.ValueLinq.Aggregation
 
         public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
         public void Dispose() { }
-        TResult IForwardEnumerator<U>.GetResult<TResult>() => (TResult)(object)GetResult();
+        TResult IPushEnumerator<U>.GetResult<TResult>() => (TResult)(object)GetResult();
         public T GetResult() => _state;
 
-        bool IForwardEnumerator<U>.ProcessNext(U input)
+        bool IPushEnumerator<U>.ProcessNext(U input)
         {
             _func.Invoke(ref _state, input);
             return true;
