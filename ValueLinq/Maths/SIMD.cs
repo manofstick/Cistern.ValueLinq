@@ -174,6 +174,7 @@ namespace Cistern.ValueLinq.Maths
         {
             return simdOptions switch
             {
+                SIMDOptions.OnlyIfSame when default(Math).SimdSumEqual => SumSimdChecked<T, Accumulator, Quotient, Math>(source, ref result),
                 SIMDOptions.OnlyIfSame => SumNoSimd<T, Accumulator, Quotient, Math>(source, ref result),
                 SIMDOptions.WithOverflowHandling => SumSimdChecked<T, Accumulator, Quotient, Math>(source, ref result),
                 SIMDOptions.Fastest => SumSimdUnchecked<T, Accumulator, Quotient, Math>(source, ref result),

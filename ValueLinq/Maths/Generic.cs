@@ -16,6 +16,7 @@ namespace Cistern.ValueLinq.Maths
         where Quotient : struct
     {
         bool SupportsVectorization { get; }
+        bool SimdSumEqual { get; }
         Vector<Accumulator> Add(Vector<Accumulator> lhs, Vector<T> rhs);
         Vector<Accumulator> AddUnchecked(Vector<Accumulator> lhs, Vector<T> rhs);
 
@@ -52,6 +53,7 @@ namespace Cistern.ValueLinq.Maths
     struct OpsDouble : IMathsOperations<double, double, double>
     {
         public bool SupportsVectorization => true;
+        public bool SimdSumEqual => false;
         public bool HasNaNs => true;
         public double NaN => double.NaN;
         public double Zero => 0.0;
@@ -81,6 +83,7 @@ namespace Cistern.ValueLinq.Maths
     struct OpsFloat : IMathsOperations<float, double, float>
     {
         public bool SupportsVectorization => true;
+        public bool SimdSumEqual => false;
         public bool HasNaNs => true;
         public float NaN => float.NaN;
         public double Zero => 0.0;
@@ -118,6 +121,7 @@ namespace Cistern.ValueLinq.Maths
     struct OpsInt : IMathsOperations<int, long, double>
     {
         public bool SupportsVectorization => true;
+        public bool SimdSumEqual => true;
 
         public long Zero => 0;
         public int One => 1;
@@ -182,6 +186,7 @@ namespace Cistern.ValueLinq.Maths
     struct OpsLong : IMathsOperations<long, long, double>
     {
         public bool SupportsVectorization => true;
+        public bool SimdSumEqual => true;
         public bool HasNaNs => false;
         public long NaN => default;
         public long Zero => 0;
@@ -219,6 +224,7 @@ namespace Cistern.ValueLinq.Maths
     struct OpsDecimal : IMathsOperations<decimal, decimal, decimal>
     {
         public bool SupportsVectorization => false;
+        public bool SimdSumEqual => false;
         public bool HasNaNs => false;
         public decimal NaN => default;
         public decimal Zero => 0M;

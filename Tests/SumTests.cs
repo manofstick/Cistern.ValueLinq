@@ -777,5 +777,40 @@ namespace Linqs.Tests
             Assert.Equal(23.5f, source.Sum(e => e.num));
         }
 
+        [Fact]
+        public void In64Simd()
+        {
+            var source = Enumerable.Repeat(1, 1000).Select(x => (long)x).ToArray();
+            Assert.Equal(1000L, source.Sum());
+        }
+
+        [Fact]
+        public void In64Simd_Overflow()
+        {
+            var source = Enumerable.Repeat(0, 1000).Select(x => (long)x).ToArray();
+            source[0] = long.MaxValue;
+            Assert.Equal(long.MaxValue, source.Sum());
+
+            source[1] = 1;
+            Assert.Throws<OverflowException>(() => source.Sum());
+        }
+
+        [Fact]
+        public void In32Simd()
+        {
+            var source = Enumerable.Repeat(1, 1000).ToArray();
+            Assert.Equal(1000, source.Sum());
+        }
+
+        [Fact]
+        public void In32Simd_Overflow()
+        {
+            var source = Enumerable.Repeat(0, 1000).ToArray();
+            source[0] = int.MaxValue;
+            Assert.Equal(int.MaxValue, source.Sum());
+
+            source[1] = 1;
+            Assert.Throws<OverflowException>(() => source.Sum());
+        }
     }
 }
