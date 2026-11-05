@@ -1,6 +1,5 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System;
 using System.Collections.Generic;
@@ -24,7 +23,7 @@ namespace Linqs.Tests
         [Fact]
         public void ToList_AlwaysCreateACopy()
         {
-            List<int> sourceList = new List<int>() { 1, 2, 3, 4, 5 };
+            List<int> sourceList = [1, 2, 3, 4, 5];
             List<int> resultList = sourceList.ToList();
 
             Assert.NotSame(sourceList, resultList);
@@ -56,7 +55,7 @@ namespace Linqs.Tests
         [Fact]
         public void ToList_ProduceCorrectList()
         {
-            int[] sourceArray = new int[] { 1, 2, 3, 4, 5, 6, 7 };
+            int[] sourceArray = [1, 2, 3, 4, 5, 6, 7];
             RunToListOnAllCollectionTypes(sourceArray,
                 resultList =>
                 {
@@ -64,7 +63,7 @@ namespace Linqs.Tests
                     Assert.Equal(sourceArray, resultList);
                 });
 
-            string[] sourceStringArray = new string[] { "1", "2", "3", "4", "5", "6", "7", "8" };
+            string[] sourceStringArray = ["1", "2", "3", "4", "5", "6", "7", "8"];
             RunToListOnAllCollectionTypes(sourceStringArray,
                 resultStringList =>
                 {
@@ -83,7 +82,7 @@ namespace Linqs.Tests
         [Fact]
         public void ToList_TouchCountWithICollection()
         {
-            TestCollection<int> source = new TestCollection<int>(new int[] { 1, 2, 3, 4 });
+            TestCollection<int> source = new TestCollection<int>([1, 2, 3, 4]);
             var resultList = source.ToList();
 
             Assert.Equal(source, resultList);
@@ -102,7 +101,7 @@ namespace Linqs.Tests
         [Fact]
         public void ToList_UseCopyToWithICollection()
         {
-            TestCollection<int> source = new TestCollection<int>(new int[] { 1, 2, 3, 4 });
+            TestCollection<int> source = new TestCollection<int>([1, 2, 3, 4]);
             var resultList = source.ToList();
 
             Assert.Equal(source, resultList);
@@ -129,8 +128,8 @@ namespace Linqs.Tests
             Assert.Equal(convertedList, sourceIntegers.Where(i => true).Select(i => i.ToString()).ToList());
             Assert.Equal(emptyStringsList, sourceIntegers.Where(i => false).Select(i => i.ToString()).ToList());
 
-            Assert.Equal(convertedList, sourceIntegers.Select(i => i.ToString()).Where(s => s != null).ToList());
-            Assert.Equal(emptyStringsList, sourceIntegers.Select(i => i.ToString()).Where(s => s == null).ToList());
+            Assert.Equal(convertedList, sourceIntegers.Select(i => i.ToString()).Where(s => s is not null).ToList());
+            Assert.Equal(emptyStringsList, sourceIntegers.Select(i => i.ToString()).Where(s => s is null).ToList());
         }
 
         [Theory]
@@ -153,8 +152,8 @@ namespace Linqs.Tests
             Assert.Equal(convertedList, sourceList.Where(i => true).Select(i => i.ToString()).ToList());
             Assert.Equal(emptyStringsList, sourceList.Where(i => false).Select(i => i.ToString()).ToList());
 
-            Assert.Equal(convertedList, sourceList.Select(i => i.ToString()).Where(s => s != null).ToList());
-            Assert.Equal(emptyStringsList, sourceList.Select(i => i.ToString()).Where(s => s == null).ToList());
+            Assert.Equal(convertedList, sourceList.Select(i => i.ToString()).Where(s => s is not null).ToList());
+            Assert.Equal(emptyStringsList, sourceList.Select(i => i.ToString()).Where(s => s is null).ToList());
         }
 
         [Theory]
@@ -166,19 +165,16 @@ namespace Linqs.Tests
             var sourceList = new ReadOnlyCollection<int>(sourceIntegers);
             var convertedList = new ReadOnlyCollection<string>(convertedStrings);
 
-            var emptyIntegersList = new ReadOnlyCollection<int>(Array.Empty<int>());
-            var emptyStringsList = new ReadOnlyCollection<string>(Array.Empty<string>());
-
             Assert.Equal(convertedList, sourceList.Select(i => i.ToString()).ToList());
 
             Assert.Equal(sourceList, sourceList.Where(i => true).ToList());
-            Assert.Equal(emptyIntegersList, sourceList.Where(i => false).ToList());
+            Assert.Equal(ReadOnlyCollection<int>.Empty, sourceList.Where(i => false).ToList());
 
             Assert.Equal(convertedList, sourceList.Where(i => true).Select(i => i.ToString()).ToList());
-            Assert.Equal(emptyStringsList, sourceList.Where(i => false).Select(i => i.ToString()).ToList());
+            Assert.Equal(ReadOnlyCollection<string>.Empty, sourceList.Where(i => false).Select(i => i.ToString()).ToList());
 
-            Assert.Equal(convertedList, sourceList.Select(i => i.ToString()).Where(s => s != null).ToList());
-            Assert.Equal(emptyStringsList, sourceList.Select(i => i.ToString()).Where(s => s == null).ToList());
+            Assert.Equal(convertedList, sourceList.Select(i => i.ToString()).Where(s => s is not null).ToList());
+            Assert.Equal(ReadOnlyCollection<string>.Empty, sourceList.Select(i => i.ToString()).Where(s => s is null).ToList());
         }
 
         [Fact]
@@ -204,7 +200,7 @@ namespace Linqs.Tests
         [Fact]
         public void SourceIsEmptyICollectionT()
         {
-            int[] source = { };
+            int[] source = [];
 
             ICollection<int> collection = source as ICollection<int>;
 
@@ -215,8 +211,8 @@ namespace Linqs.Tests
         [Fact]
         public void SourceIsICollectionTWithFewElements()
         {
-            int?[] source = { -5, null, 0, 10, 3, -1, null, 4, 9 };
-            int?[] expected = { -5, null, 0, 10, 3, -1, null, 4, 9 };
+            int?[] source = [-5, null, 0, 10, 3, -1, null, 4, 9];
+            int?[] expected = [-5, null, 0, 10, 3, -1, null, 4, 9];
 
             ICollection<int?> collection = source as ICollection<int?>;
 
@@ -235,7 +231,7 @@ namespace Linqs.Tests
         public void SourceNotICollectionAndHasElements()
         {
             IEnumerable<int> source = NumberRangeGuaranteedNotCollectionType(-4, 10);
-            int[] expected = { -4, -3, -2, -1, 0, 1, 2, 3, 4, 5 };
+            int[] expected = [-4, -3, -2, -1, 0, 1, 2, 3, 4, 5];
 
             Assert.Null(source as ICollection<int>);
 
@@ -246,7 +242,7 @@ namespace Linqs.Tests
         public void SourceNotICollectionAndAllNull()
         {
             IEnumerable<int?> source = RepeatedNullableNumberGuaranteedNotCollectionType(null, 5);
-            int?[] expected = { null, null, null, null, null };
+            int?[] expected = [null, null, null, null, null];
 
             Assert.Null(source as ICollection<int>);
 

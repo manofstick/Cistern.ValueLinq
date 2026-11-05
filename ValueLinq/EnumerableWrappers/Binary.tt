@@ -1,0 +1,118 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ include file="Collections.tth" #>
+<#
+    // the operators over two sequences, for a collection paired with its own kind or with an IEnumerable<T>, so both
+    // parts keep their node types; IEnumerable<T> with IEnumerable<T> is hand-written in Enumerable.IEnumerable.cs
+    var enumerable = collections.Single(c => c.StaticClassName == "Enumerable");
+#>
+using Cistern.ValueLinq.Containers;
+using Cistern.ValueLinq.Nodes;
+using Cistern.ValueLinq.ValueEnumerable;
+using System;
+using System.Collections.Generic;
+
+namespace Cistern.ValueLinq
+{
+<#
+    foreach (var first in collections.Where(c => c.StaticClassName != "Enumerable"))
+    {
+#>
+    public static partial class <#= first.StaticClassName #>
+    {
+<#
+        foreach (var second in new[] { first, enumerable })
+        {
+            var checks = new StringBuilder();
+            if (first.IsNullable)
+                checks.Append("            if (first == null)" + System.Environment.NewLine + "                throw new ArgumentNullException(nameof(first));" + System.Environment.NewLine);
+            if (second.IsNullable)
+                checks.Append("            if (second == null)" + System.Environment.NewLine + "                throw new ArgumentNullException(nameof(second));" + System.Environment.NewLine);
+            if (checks.Length > 0)
+                checks.Append(System.Environment.NewLine);
+
+            var firstNode = first.NodeName("TSource");
+            var secondNode = second.NodeName("TSource");
+            var concatNode = $"CisternConcat.Node<TSource, {firstNode}, {secondNode}>";
+            var concatPull = $"CisternConcat.Pull<TSource, {firstNode}, {secondNode}, {first.EnumeratorName("TSource")}, {second.EnumeratorName("TSource")}>";
+            var unionType = $"ValueEnumerable<TSource, Nodes.Except.Node<TSource, TSource, {concatNode}, Nodes.Except.IdentityKey<TSource>>, Nodes.Except.Pull<TSource, TSource, {concatNode}, {concatPull}, Nodes.Except.IdentityKey<TSource>>>";
+            var unionByType = $"ValueEnumerable<TSource, Nodes.Except.Node<TSource, TKey, {concatNode}, FuncToIFunc<TSource, TKey>>, Nodes.Except.Pull<TSource, TKey, {concatNode}, {concatPull}, FuncToIFunc<TSource, TKey>>>";
+
+            var firstZipNode = first.NodeName("T");
+            var secondZipNode = second.NodeName("U");
+            var secondZipEnumerator = second.EnumeratorName("U");
+            var zipPairNode = $"Nodes.Zip.Node<T, U, (T, U), {firstZipNode}, {secondZipNode}, {secondZipEnumerator}, Nodes.Zip.PairSelector<T, U>>";
+            var zipPairPull = $"Nodes.Zip.Pull<T, U, (T, U), {firstZipNode}, {secondZipNode}, {secondZipEnumerator}, Nodes.Zip.PairSelector<T, U>, {first.EnumeratorName("T")}>";
+            var zipNode = $"Nodes.Zip.Node<T, U, TResult, {firstZipNode}, {secondZipNode}, {secondZipEnumerator}, Nodes.Zip.FuncSelector<T, U, TResult>>";
+            var zipPull = $"Nodes.Zip.Pull<T, U, TResult, {firstZipNode}, {secondZipNode}, {secondZipEnumerator}, Nodes.Zip.FuncSelector<T, U, TResult>, {first.EnumeratorName("T")}>";
+#>
+        public static ValueEnumerable<TSource, <#= concatNode #>, <#= concatPull #>> Concat<TSource>(this <#= first.CollectionType("TSource") #> first, <#= second.CollectionType("TSource") #> second)
+        {
+<#= checks #>            return new (NodeImpl.Concat<TSource, <#= firstNode #>, <#= secondNode #>>(Enumerable.ToNode(first), Enumerable.ToNode(second)));
+        }
+
+        public static <#= unionType #> Union<TSource>(this <#= first.CollectionType("TSource") #> first, <#= second.CollectionType("TSource") #> second, IEqualityComparer<TSource>? comparer = null)
+        {
+<#= checks #>            return new (NodeImpl.Union<TSource, <#= firstNode #>, <#= secondNode #>>(Enumerable.ToNode(first), Enumerable.ToNode(second), comparer));
+        }
+
+        public static <#= unionByType #> UnionBy<TSource, TKey>(this <#= first.CollectionType("TSource") #> first, <#= second.CollectionType("TSource") #> second, Func<TSource, TKey> keySelector, IEqualityComparer<TKey>? comparer = null)
+        {
+<#= checks #>            return new (NodeImpl.UnionBy<TSource, TKey, <#= firstNode #>, <#= secondNode #>>(Enumerable.ToNode(first), Enumerable.ToNode(second), keySelector, comparer));
+        }
+
+        public static ValueEnumerable<(T First, U Second), <#= zipPairNode #>, <#= zipPairPull #>> Zip<T, U>(this <#= first.CollectionType("T") #> first, <#= second.CollectionType("U") #> second)
+        {
+<#= checks #>            return new (NodeImpl.Zip<T, U, <#= firstZipNode #>, <#= secondZipNode #>, <#= secondZipEnumerator #>>(Enumerable.ToNode(first), Enumerable.ToNode(second)));
+        }
+
+        public static ValueEnumerable<TResult, <#= zipNode #>, <#= zipPull #>> Zip<T, U, TResult>(this <#= first.CollectionType("T") #> first, <#= second.CollectionType("U") #> second, Func<T, U, TResult> resultSelector)
+        {
+<#= checks #>            return new (NodeImpl.Zip<T, U, TResult, <#= firstZipNode #>, <#= secondZipNode #>, <#= secondZipEnumerator #>>(Enumerable.ToNode(first), Enumerable.ToNode(second), resultSelector));
+        }
+
+<#
+        }
+#>
+    }
+<#
+    }
+#>
+
+    public static partial class Enumerable
+    {
+        // a Union of a Union with typed parts reached as IEnumerable<T>, flattened as one of IEnumerable<T>s is; out of line,
+        // as its six arms would otherwise sit in the frame of every IEnumerable<T> Union
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        internal static bool TryUnionOfTypedUnion<TSource>(IEnumerable<TSource> first, IEnumerable<TSource> second, IEqualityComparer<TSource>? comparer, out ValueEnumerable<TSource, Nodes.Except.Node<TSource, TSource, CisternConcat.Node<TSource, SystemIEnumerable.Node<TSource>, SystemIEnumerable.Node<TSource>>, Nodes.Except.IdentityKey<TSource>>, Nodes.Except.Pull<TSource, TSource, CisternConcat.Node<TSource, SystemIEnumerable.Node<TSource>, SystemIEnumerable.Node<TSource>>, CisternConcat.Pull<TSource, SystemIEnumerable.Node<TSource>, SystemIEnumerable.Node<TSource>, ErasedEnumerator<TSource, SystemIEnumerable.Node<TSource>>, ErasedEnumerator<TSource, SystemIEnumerable.Node<TSource>>>, Nodes.Except.IdentityKey<TSource>>> union)
+        {
+            switch (first)
+            {
+<#
+    foreach (var first in collections.Where(c => c.StaticClassName != "Enumerable"))
+    {
+        foreach (var second in new[] { first, enumerable })
+        {
+            var firstNode = first.NodeName("TSource");
+            var secondNode = second.NodeName("TSource");
+            var concatNode = $"CisternConcat.Node<TSource, {firstNode}, {secondNode}>";
+            var concatPull = $"CisternConcat.Pull<TSource, {firstNode}, {secondNode}, {first.EnumeratorName("TSource")}, {second.EnumeratorName("TSource")}>";
+            var unionType = $"ValueEnumerable<TSource, Nodes.Except.Node<TSource, TSource, {concatNode}, Nodes.Except.IdentityKey<TSource>>, Nodes.Except.Pull<TSource, TSource, {concatNode}, {concatPull}, Nodes.Except.IdentityKey<TSource>>>";
+#>
+                case <#= unionType #> typed:
+                    union = new (NodeImpl.UnionOfUnion(in typed, second, comparer));
+                    return true;
+<#
+        }
+    }
+#>
+            }
+
+            union = default;
+            return false;
+        }
+    }
+}

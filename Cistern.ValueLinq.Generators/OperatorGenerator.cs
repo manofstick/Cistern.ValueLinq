@@ -1,0 +1,128 @@
+﻿namespace Cistern.ValueLinq.Generators;
+
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
+using System.Linq;
+using System.Threading;
+using static Cistern.ValueLinq.Generators.TextHelper;
+
+// writes the boilerplate of the library's nodes from the hand-written parts that an attribute on a partial struct selects
+[Generator(LanguageNames.CSharp)]
+public sealed class OperatorGenerator : IIncrementalGenerator
+{
+    public void Initialize(IncrementalGeneratorInitializationContext context)
+    {
+        Register(context, "Cistern.ValueLinq.OperatorAttribute",             Operator.Generate);
+        Register(context, "Cistern.ValueLinq.MaterializedAttribute",         Materialized.Generate);
+        Register(context, "Cistern.ValueLinq.ForwarderAttribute",            generateFiller);
+        Register(context, "Cistern.ValueLinq.AnswererAttribute",             Requests.Generate);
+        Register(context, "Cistern.ValueLinq.PullerAttribute",               Puller.Generate);
+        Register(context, "Cistern.ValueLinq.CreateAttribute",               generateCreate);
+        Register(context, "Cistern.ValueLinq.AggregatorAttribute",           generateAggregator);
+
+        static GeneratedSource generateFiller(INamedTypeSymbol type, Compilation compilation) => Filler.Generate(type);
+        static GeneratedSource generateCreate(INamedTypeSymbol type, Compilation compilation) => Create.Generate(type, aggregator: false);
+        static GeneratedSource generateAggregator(INamedTypeSymbol type, Compilation compilation) => Create.Generate(type, aggregator: true);
+    }
+
+    private static void Register(IncrementalGeneratorInitializationContext context, string attribute, Func<INamedTypeSymbol, Compilation, GeneratedSource> generate)
+    {
+        var sources =
+            context
+            .SyntaxProvider
+            .ForAttributeWithMetadataName(attribute, isStruct, createSource);
+
+        context.RegisterSourceOutput(sources, addSource);
+
+        GeneratedSource createSource(GeneratorAttributeSyntaxContext target, CancellationToken cancellationToken)
+        {
+            var symbol =
+                (INamedTypeSymbol)target.TargetSymbol;
+
+            var compilation =
+                target.SemanticModel.Compilation;
+
+            var source =
+                generate(symbol, compilation);
+
+            return source;
+        }
+
+        static bool isStruct(SyntaxNode node, CancellationToken cancellationToken) => node is StructDeclarationSyntax;
+
+        // a failure with source text beside it (a request interface not implemented) is reported and the source still
+        // added, so the error is not buried under the ones a missing node part would cause
+        static void addSource(SourceProductionContext output, GeneratedSource source)
+        {
+            if (source.Failure is {} failure)
+            {
+                var diagnostic =
+                    Diagnostic.Create(GeneratedSource.Shape, failure.At, failure.Message);
+
+                output.ReportDiagnostic(diagnostic);
+            }
+
+            if (source.Warning is {} warning)
+            {
+                var diagnostic =
+                    Diagnostic.Create(GeneratedSource.Advice, warning.At, warning.Message);
+
+                output.ReportDiagnostic(diagnostic);
+            }
+
+            if (source.Text is "")
+                return;
+
+            var text =
+                WithNewLines(source.Text);
+
+            output.AddSource(source.HintName, text);
+        }
+    }
+}
+
+sealed record GeneratedSource(string HintName, string Text, (string Message, Location At)? Failure = null, (string Message, Location At)? Warning = null)
+{
+    // a part whose hand-written half is not of the expected shape fails the build with the reason, at the declaration
+    public static readonly DiagnosticDescriptor Shape =
+        new(
+            id: "CVL0001",
+            title: "Operator shape",
+            messageFormat: "{0}",
+            category: "Cistern.ValueLinq.Generators",
+            defaultSeverity: DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
+
+    // a hand-written part that builds, but costs what the generated one would not
+    public static readonly DiagnosticDescriptor Advice =
+        new(
+            id: "CVL0002",
+            title: "Operator advice",
+            messageFormat: "{0}",
+            category: "Cistern.ValueLinq.Generators",
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+
+    public static GeneratedSource Error(string hintName, string message, ISymbol at)
+    {
+        var location =
+            at.Locations.FirstOrDefault() ?? Location.None;
+
+        var source =
+            new GeneratedSource(hintName, "", (message, location));
+
+        return source;
+    }
+}
+
+static class Generated
+{
+    public static string Header(string namespaceName)
+    {
+        var header =
+            $"// <auto-generated/> by Cistern.ValueLinq.Generators{NewLine}#nullable enable{NewLine}namespace {namespaceName};{NewLine}{NewLine}using Cistern.ValueLinq.Chain;{NewLine}using System;{NewLine}";
+
+        return header;
+    }
+}

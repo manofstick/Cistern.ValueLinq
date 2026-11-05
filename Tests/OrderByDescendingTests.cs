@@ -1,6 +1,5 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System;
 using System.Collections.Generic;
@@ -42,15 +41,15 @@ namespace Linqs.Tests
         [Fact]
         public void SourceEmpty()
         {
-            int[] source = { };
+            int[] source = [];
             Assert.Empty(source.OrderByDescending(e => e));
         }
 
         [Fact]
         public void KeySelectorReturnsNull()
         {
-            int?[] source = { null, null, null };
-            int?[] expected = { null, null, null };
+            int?[] source = [null, null, null];
+            int?[] expected = [null, null, null];
 
             Assert.Equal(expected, source.OrderByDescending(e => e));
         }
@@ -58,8 +57,8 @@ namespace Linqs.Tests
         [Fact]
         public void ElementsAllSameKey()
         {
-            int?[] source = { 9, 9, 9, 9, 9, 9 };
-            int?[] expected = { 9, 9, 9, 9, 9, 9 };
+            int?[] source = [9, 9, 9, 9, 9, 9];
+            int?[] expected = [9, 9, 9, 9, 9, 9];
 
             Assert.Equal(expected, source.OrderByDescending(e => e));
         }
@@ -89,8 +88,8 @@ namespace Linqs.Tests
         [Fact]
         public void FirstAndLastAreDuplicatesCustomComparer()
         {
-            string[] source = { "Prakash", "Alpha", "DAN", "dan", "Prakash" };
-            string[] expected = { "Prakash", "Prakash", "DAN", "dan", "Alpha" };
+            string[] source = ["Prakash", "Alpha", "DAN", "dan", "Prakash"];
+            string[] expected = ["Prakash", "Prakash", "DAN", "dan", "Alpha"];
 
             Assert.Equal(expected, source.OrderByDescending(e => e, StringComparer.OrdinalIgnoreCase));
         }
@@ -98,8 +97,8 @@ namespace Linqs.Tests
         [Fact]
         public void RunOnce()
         {
-            string[] source = { "Prakash", "Alpha", "DAN", "dan", "Prakash" };
-            string[] expected = { "Prakash", "Prakash", "DAN", "dan", "Alpha" };
+            string[] source = ["Prakash", "Alpha", "DAN", "dan", "Prakash"];
+            string[] expected = ["Prakash", "Prakash", "DAN", "dan", "Alpha"];
 
             Assert.Equal(expected, source.RunOnce().OrderByDescending(e => e, StringComparer.OrdinalIgnoreCase));
         }
@@ -107,8 +106,8 @@ namespace Linqs.Tests
         [Fact]
         public void FirstAndLastAreDuplicatesNullPassedAsComparer()
         {
-            int[] source = { 5, 1, 3, 2, 5 };
-            int[] expected = { 5, 5, 3, 2, 1 };
+            int[] source = [5, 1, 3, 2, 5];
+            int[] expected = [5, 5, 3, 2, 1];
 
             Assert.Equal(expected, source.OrderByDescending(e => e, null));
         }
@@ -116,8 +115,8 @@ namespace Linqs.Tests
         [Fact]
         public void SourceReverseOfResultNullPassedAsComparer()
         {
-            int[] source = { -75, -50, 0, 5, 9, 30, 100 };
-            int[] expected = { 100, 30, 9, 5, 0, -50, -75 };
+            int[] source = [-75, -50, 0, 5, 9, 30, 100];
+            int[] expected = [100, 30, 9, 5, 0, -50, -75];
 
             Assert.Equal(expected, source.OrderByDescending(e => e, null));
         }
@@ -153,9 +152,9 @@ namespace Linqs.Tests
         {
             public int Compare(int x, int y)
             {
-                if(x == y)
+                if (x == y)
                     return 0;
-                if(x < y)
+                if (x < y)
                     return int.MinValue;
                 return int.MaxValue;
             }
@@ -164,9 +163,9 @@ namespace Linqs.Tests
         [Fact]
         public void OrderByExtremeComparer()
         {
-            int[] outOfOrder = new[] { 7, 1, 0, 9, 3, 5, 4, 2, 8, 6 };
+            int[] outOfOrder = [7, 1, 0, 9, 3, 5, 4, 2, 8, 6];
 
-            // The full .NET Framework has a bug where the input is incorrectly ordered if the comparer
+            // The .NET Framework has a bug where the input is incorrectly ordered if the comparer
             // returns int.MaxValue or int.MinValue. See https://github.com/dotnet/corefx/pull/2240.
             IEnumerable<int> ordered = outOfOrder.OrderByDescending(i => i, new ExtremeComparer()).ToArray();
             Assert.Equal(Enumerable.Range(0, 10).Reverse(), ordered);
@@ -186,28 +185,32 @@ namespace Linqs.Tests
             AssertExtensions.Throws<ArgumentNullException>("keySelector", () => Enumerable.Empty<DateTime>().OrderByDescending(keySelector));
         }
 
-        [Fact]
+        [Fact(Skip = "CISTERN.VALUELINQ: Doesn't implement IOrderedEnumerable")]
         public void SortsLargeAscendingEnumerableCorrectly()
         {
+#if !CISTERN_VALUELINQ
             const int Items = 1_000_000;
             IEnumerable<int> expected = NumberRangeGuaranteedNotCollectionType(0, Items);
 
             IEnumerable<int> unordered = expected.Select(i => i);
-            var ordered = unordered.OrderByDescending(i => -i);
+            System.Linq.IOrderedEnumerable<int> ordered = unordered.OrderByDescending(i => -i);
 
             Assert.Equal(expected, ordered);
+#endif
         }
 
-        [Fact]
+        [Fact(Skip = "CISTERN.VALUELINQ: Doesn't implement IOrderedEnumerable")]
         public void SortsLargeDescendingEnumerableCorrectly()
         {
+#if !CISTERN_VALUELINQ
             const int Items = 1_000_000;
             IEnumerable<int> expected = NumberRangeGuaranteedNotCollectionType(0, Items);
 
             IEnumerable<int> unordered = expected.Select(i => Items - i - 1);
-            var ordered = unordered.OrderByDescending(i => -i);
+            System.Linq.IOrderedEnumerable<int> ordered = unordered.OrderByDescending(i => -i);
 
             Assert.Equal(expected, ordered);
+#endif
         }
 
         [Theory]
@@ -229,6 +232,25 @@ namespace Linqs.Tests
 
             Array.Sort(randomized, (a, b) => a - b);
             Assert.Equal(randomized, ordered);
+        }
+
+        [Fact]
+        public void OrderByDescending_FirstLast_MatchesArray()
+        {
+            object[][] arrays =
+            [
+                [1],
+                [1, 1],
+                [1, 2, 1],
+                [1, 2, 1, 3],
+                [2, 1, 3, 1, 4],
+            ];
+
+            foreach (object[] objects in arrays)
+            {
+                Assert.Same(objects.OrderByDescending(x => x).First(), objects.OrderByDescending(x => x).ToArray().First());
+                Assert.Same(objects.OrderByDescending(x => x).Last(), objects.OrderByDescending(x => x).ToArray().Last());
+            }
         }
     }
 }

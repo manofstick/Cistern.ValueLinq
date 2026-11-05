@@ -1,6 +1,5 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System;
 using System.Collections.Generic;
@@ -20,7 +19,7 @@ namespace Linqs.Tests
 {
     public partial class ToLookupTests : EnumerableTests
     {
-        [Theory]
+        [ConditionalTheory(typeof(PlatformDetection), nameof(PlatformDetection.IsDebuggerTypeProxyAttributeSupported))]
         [MemberData(nameof(DebuggerAttributesValid_Data))]
         public void DebuggerAttributesValid<TKey, TElement>(System.Linq.ILookup<TKey, TElement> lookup)
         {
@@ -51,13 +50,13 @@ namespace Linqs.Tests
 
         public static IEnumerable<object[]> DebuggerAttributesValid_Data()
         {
-            IEnumerable<int> source = new[] { 1 };
-            yield return new object[] { source.ToLookup(i => i) };
-            yield return new object[] { source.ToLookup(i => i.ToString(), i => i) };
-            yield return new object[] { source.ToLookup(i => TimeSpan.FromSeconds(i), i => i) };
+            IEnumerable<int> source = [1];
+            yield return [source.ToLookup(i => i)];
+            yield return [source.ToLookup(i => i.ToString(), i => i)];
+            yield return [source.ToLookup(i => TimeSpan.FromSeconds(i), i => i)];
 
-            yield return new object[] { new string[] { null }.ToLookup(x => x) };
-            yield return new object[] { new int?[] { null }.ToLookup(x => x) };
+            yield return [new string[] { null }.ToLookup(x => x)];
+            yield return [new int?[] { null }.ToLookup(x => x)];
         }
     }
 }

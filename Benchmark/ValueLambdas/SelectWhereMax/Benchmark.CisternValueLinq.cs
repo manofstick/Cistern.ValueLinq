@@ -5,13 +5,11 @@ namespace Cistern.Benchmarks.ValueLambdas
 {
     partial class SelectWhereMax
     {
-        struct HalveAnInt : IFunc<int, int> { public int Invoke(int t) => t / 2; } 
-        struct FilterEvenInts : IFunc<int, bool> { public bool Invoke(int t) => (t & 1) == 0; }
         [Benchmark]
         public int CisternValueLinq() =>
             _ints
-            .Select(new HalveAnInt(), default(int)) // ug, sugar please + better type inference...
-            .Where(new FilterEvenInts()) // ug, sugar please
+            .Select(x => x / 2)
+            .Where(x => (x & 1) == 0)
             .Max();
     }
 }

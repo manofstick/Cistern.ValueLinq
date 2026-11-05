@@ -1,6 +1,5 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System;
 using System.Collections;
@@ -39,7 +38,7 @@ namespace Linqs.Tests
             object debugView = CreateSystemCore_EnumerableDebugView(source);
             Exception exc = Assert.Throws<TargetInvocationException>(() => GetItems<object>(debugView));
             Assert.NotNull(exc.InnerException);
-            Assert.Equal("Cistern.ValueLinq.SystemCore_EnumerableDebugViewEmptyException", exc.InnerException.GetType().FullName);
+            Assert.Equal("System.Linq.SystemCore_EnumerableDebugViewEmptyException", exc.InnerException.GetType().FullName);
             Assert.False(string.IsNullOrEmpty(GetEmptyProperty(exc.InnerException)));
         }
 
@@ -66,7 +65,7 @@ namespace Linqs.Tests
             object debugView = CreateSystemCore_EnumerableDebugView(source);
             Exception exc = Assert.Throws<TargetInvocationException>(() => GetItems<int>(debugView));
             Assert.NotNull(exc.InnerException);
-            Assert.Equal("Cistern.ValueLinq.SystemCore_EnumerableDebugViewEmptyException", exc.InnerException.GetType().FullName);
+            Assert.Equal("System.Linq.SystemCore_EnumerableDebugViewEmptyException", exc.InnerException.GetType().FullName);
             Assert.False(string.IsNullOrEmpty(GetEmptyProperty(exc.InnerException)));
         }
 
@@ -80,17 +79,17 @@ namespace Linqs.Tests
 
         private static object CreateSystemCore_EnumerableDebugView(IEnumerable source)
         {
-            Type edvType = typeof(Enumerable).GetTypeInfo().Assembly.GetType("Cistern.ValueLinq.SystemCore_EnumerableDebugView");
+            Type edvType = typeof(Enumerable).GetTypeInfo().Assembly.GetType("System.Linq.SystemCore_EnumerableDebugView");
             ConstructorInfo ctor = edvType.GetTypeInfo().DeclaredConstructors.First();
-            return ctor.Invoke(new object[] { source });
+            return ctor.Invoke([source]);
         }
 
         private static object CreateSystemCore_EnumerableDebugView<T>(IEnumerable<T> source)
         {
-            Type edvOpenGenericType = typeof(Enumerable).GetTypeInfo().Assembly.GetType("Cistern.ValueLinq.SystemCore_EnumerableDebugView`1");
+            Type edvOpenGenericType = typeof(Enumerable).GetTypeInfo().Assembly.GetType("System.Linq.SystemCore_EnumerableDebugView`1");
             Type edvClosedGenericType = edvOpenGenericType.MakeGenericType(typeof(T));
             ConstructorInfo ctor = edvClosedGenericType.GetTypeInfo().DeclaredConstructors.First();
-            return ctor.Invoke(new object[] { source });
+            return ctor.Invoke([source]);
         }
 
         private static T[] GetItems<T>(object debugView)

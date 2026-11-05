@@ -8,114 +8,280 @@
     var transformTypes = new []
     {
         (
-            Signature  : new Func<string, string>(collection => $"OrderBy<TSource, TKey>(this {collection} source, Func<TSource, TKey> keySelector, IComparer<TKey> comparer = null)"),
-            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.OrderBy(Enumerable.ToNode(source), keySelector, comparer, false))"),
-            OutputType : "TSource",
-            NodeName   : new Func<string, string>(collectionNodeName => $"OrderByNode<TSource, KeySelectors<TSource, TKey, KeySelectorsRoot<TSource>>, {collectionNodeName}>")
+            Signature  : new Func<string, string>(collection => $"AggregateBy<TSource, TKey, TAccumulate>(this {collection} source, Func<TSource, TKey> keySelector, TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> func, IEqualityComparer<TKey>? keyComparer = null) where TKey : notnull"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.AggregateBy<TSource, TKey, TAccumulate, {collectionNodeName}>(Enumerable.ToNode(source), keySelector, seed, func, keyComparer))"),
+            OutputType : "KeyValuePair<TKey, TAccumulate>",
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.AggregateBy.Node<TSource, TKey, TAccumulate, {collectionNodeName}>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.AggregateBy.Pull<TSource, TKey, TAccumulate, {collectionNodeName}>")
         ),
         (
-            Signature  : new Func<string, string>(collection => $"OrderByDescending<TSource, TKey>(this {collection} source, Func<TSource, TKey> keySelector, IComparer<TKey> comparer = null)"),
+            Signature  : new Func<string, string>(collection => $"AggregateBy<TSource, TKey, TAccumulate>(this {collection} source, Func<TSource, TKey> keySelector, Func<TKey, TAccumulate> seedSelector, Func<TAccumulate, TSource, TAccumulate> func, IEqualityComparer<TKey>? keyComparer = null) where TKey : notnull"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.AggregateBy<TSource, TKey, TAccumulate, {collectionNodeName}>(Enumerable.ToNode(source), keySelector, seedSelector, func, keyComparer))"),
+            OutputType : "KeyValuePair<TKey, TAccumulate>",
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.AggregateBy.Node<TSource, TKey, TAccumulate, {collectionNodeName}>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.AggregateBy.Pull<TSource, TKey, TAccumulate, {collectionNodeName}>")
+        ),
+        (
+            Signature  : new Func<string, string>(collection => $"Chunk<TSource>(this {collection} source, int size)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Chunk<TSource, {collectionNodeName}>(Enumerable.ToNode(source), size))"),
+            OutputType : "TSource[]",
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.Chunk.Node<TSource, {collectionNodeName}>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.Chunk.Pull<TSource, {collectionNodeName}, {collectionEnumeratorName}>")
+        ),
+        (
+            Signature  : new Func<string, string>(collection => $"CountBy<TSource, TKey>(this {collection} source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey>? keyComparer = null) where TKey : notnull"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.CountBy<TSource, TKey, {collectionNodeName}>(Enumerable.ToNode(source), keySelector, keyComparer))"),
+            OutputType : "KeyValuePair<TKey, int>",
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.CountBy.Node<TSource, TKey, {collectionNodeName}>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.CountBy.Pull<TSource, TKey, {collectionNodeName}>")
+        ),
+        (
+            Signature  : new Func<string, string>(collection => $"DefaultIfEmpty<TSource>(this {collection} source)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.DefaultIfEmpty<TSource, {collectionNodeName}>(Enumerable.ToNode(source), default!))"),
+            OutputType : "TSource",
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.DefaultIfEmpty.Node<TSource, {collectionNodeName}>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.DefaultIfEmpty.Pull<TSource, {collectionNodeName}, {collectionEnumeratorName}>")
+        ),
+        (
+            Signature  : new Func<string, string>(collection => $"DefaultIfEmpty<TSource>(this {collection} source, TSource defaultValue)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.DefaultIfEmpty<TSource, {collectionNodeName}>(Enumerable.ToNode(source), defaultValue))"),
+            OutputType : "TSource",
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.DefaultIfEmpty.Node<TSource, {collectionNodeName}>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.DefaultIfEmpty.Pull<TSource, {collectionNodeName}, {collectionEnumeratorName}>")
+        ),
+        (
+            Signature  : new Func<string, string>(collection => $"DistinctBy<TSource, TKey>(this {collection} source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey>? comparer = null)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.DistinctBy<TSource, TKey, {collectionNodeName}>(Enumerable.ToNode(source), keySelector, comparer))"),
+            OutputType : "TSource",
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.Except.Node<TSource, TKey, {collectionNodeName}, FuncToIFunc<TSource, TKey>>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.Except.Pull<TSource, TKey, {collectionNodeName}, {collectionEnumeratorName}, FuncToIFunc<TSource, TKey>>")
+        ),
+        (
+            Signature  : new Func<string, string>(collection => $"Index<TSource>(this {collection} source)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Indexed<TSource, {collectionNodeName}>(Enumerable.ToNode(source)))"),
+            OutputType : "(int Index, TSource Item)",
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.Indexed.Node<TSource, {collectionNodeName}>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.Indexed.Pull<TSource, {collectionNodeName}, {collectionEnumeratorName}>")
+        ),
+        (
+            Signature  : new Func<string, string>(collection => $"OrderBy<TSource, TKey>(this {collection} source, Func<TSource, TKey> keySelector, IComparer<TKey>? comparer = null)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.OrderBy(Enumerable.ToNode(source), keySelector, comparer, false))"),
+            OutputType : "TSource",
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.OrderBy.Node<TSource, Nodes.OrderBy.KeySelectors<TSource, TKey, Nodes.OrderBy.KeySelectorsRoot<TSource>>, {collectionNodeName}>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.OrderBy.Pull<TSource, Nodes.OrderBy.KeySelectors<TSource, TKey, Nodes.OrderBy.KeySelectorsRoot<TSource>>, {collectionNodeName}>")
+        ),
+        (
+            Signature  : new Func<string, string>(collection => $"OrderByDescending<TSource, TKey>(this {collection} source, Func<TSource, TKey> keySelector, IComparer<TKey>? comparer = null)"),
             Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.OrderBy(Enumerable.ToNode(source), keySelector, comparer, true))"),
             OutputType : "TSource",
-            NodeName   : new Func<string, string>(collectionNodeName => $"OrderByNode<TSource, KeySelectors<TSource, TKey, KeySelectorsRoot<TSource>>, {collectionNodeName}>")
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.OrderBy.Node<TSource, Nodes.OrderBy.KeySelectors<TSource, TKey, Nodes.OrderBy.KeySelectorsRoot<TSource>>, {collectionNodeName}>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.OrderBy.Pull<TSource, Nodes.OrderBy.KeySelectors<TSource, TKey, Nodes.OrderBy.KeySelectorsRoot<TSource>>, {collectionNodeName}>")
+        ),
+        (
+            Signature  : new Func<string, string>(collection => $"Order<TSource>(this {collection} source, IComparer<TSource>? comparer = null)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Order(Enumerable.ToNode(source), comparer, false))"),
+            OutputType : "TSource",
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.OrderBy.Node<TSource, Nodes.OrderBy.KeySelectors<TSource, TSource, Nodes.OrderBy.KeySelectorsRoot<TSource>>, {collectionNodeName}>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.OrderBy.Pull<TSource, Nodes.OrderBy.KeySelectors<TSource, TSource, Nodes.OrderBy.KeySelectorsRoot<TSource>>, {collectionNodeName}>")
+        ),
+        (
+            Signature  : new Func<string, string>(collection => $"OrderDescending<TSource>(this {collection} source, IComparer<TSource>? comparer = null)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Order(Enumerable.ToNode(source), comparer, true))"),
+            OutputType : "TSource",
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.OrderBy.Node<TSource, Nodes.OrderBy.KeySelectors<TSource, TSource, Nodes.OrderBy.KeySelectorsRoot<TSource>>, {collectionNodeName}>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.OrderBy.Pull<TSource, Nodes.OrderBy.KeySelectors<TSource, TSource, Nodes.OrderBy.KeySelectorsRoot<TSource>>, {collectionNodeName}>")
         ),
         (
             Signature  : new Func<string, string>(collection => $"Reverse<TSource>(this {collection} source)"),
             Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Reverse<TSource, {collectionNodeName}>(Enumerable.ToNode(source)))"),
             OutputType : "TSource",
-            NodeName   : new Func<string, string>(collectionNodeName => $"ReverseNode<TSource, {collectionNodeName}>")
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.Reverse.Node<TSource, {collectionNodeName}>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.Reverse.Pull<TSource, {collectionNodeName}>")
+        ),
+        (
+            Signature  : new Func<string, string>(collection => $"Shuffle<TSource>(this {collection} source)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Shuffle<TSource, {collectionNodeName}>(Enumerable.ToNode(source)))"),
+            OutputType : "TSource",
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.Shuffle.Node<TSource, {collectionNodeName}>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.Shuffle.Pull<TSource, {collectionNodeName}>")
         ),
         (
             Signature  : new Func<string, string>(collection => $"Select<TSource, TResult>(this {collection} source, Func<TSource, TResult> selector)"),
             Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Select(Enumerable.ToNode(source), selector))"),
             OutputType : "TResult",
-            NodeName   : new Func<string, string>(collectionNodeName => $"SelectNode<TSource, TResult, {collectionNodeName}>")
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.Select.Node<TSource, TResult, {collectionNodeName}>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.Select.Pull<TSource, TResult, {collectionNodeName}, {collectionEnumeratorName}>")
         ),
         (
             Signature  : new Func<string, string>(collection => $"Select<TSource, TResult>(this {collection} source, InFunc<TSource, TResult> selector)"),
             Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Select(Enumerable.ToNode(source), selector))"),
             OutputType : "TResult",
-            NodeName   : new Func<string, string>(collectionNodeName => $"Select_InNode<TSource, TResult, {collectionNodeName}>")
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.Select_In.Node<TSource, TResult, {collectionNodeName}>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.Select_In.Pull<TSource, TResult, {collectionNodeName}, {collectionEnumeratorName}>")
         ),
         (
             Signature  : new Func<string, string>(collection => $"Select<TSource, TResult>(this {collection} source, Func<TSource, int, TResult> selector)"),
             Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Select(Enumerable.ToNode(source), selector))"),
             OutputType : "TResult",
-            NodeName   : new Func<string, string>(collectionNodeName => $"SelectIdxNode<TSource, TResult, {collectionNodeName}>")
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.SelectIdx.Node<TSource, TResult, {collectionNodeName}>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.SelectIdx.Pull<TSource, TResult, {collectionNodeName}, {collectionEnumeratorName}>")
         ),
         (
             Signature  : new Func<string, string>(collection => $"Select<TSource, TResult, IFunc>(this {collection} source, IFunc selector, TResult forTypeInference) where IFunc : IFunc<TSource, TResult>"),
             Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Select<TSource, TResult, {collectionNodeName}, IFunc>(Enumerable.ToNode(source), selector, forTypeInference))"),
             OutputType : "TResult",
-            NodeName   : new Func<string, string>(collectionNodeName => $"ValueSelectNode<TSource, TResult, {collectionNodeName}, IFunc>")
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.ValueSelect.Node<TSource, TResult, {collectionNodeName}, IFunc>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.ValueSelect.Pull<TSource, TResult, {collectionNodeName}, {collectionEnumeratorName}, IFunc>")
+        ),
+
+        (
+            Signature  : new Func<string, string>(collection => $"SelectMany<TSource, TResult>(this {collection} source, Func<TSource, IEnumerable<TResult>> selector)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.SelectManyEnumerable<TSource, TResult, {collectionNodeName}>(Enumerable.ToNode(source), selector))"),
+            OutputType : "TResult",
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.SelectMany.Node<TResult,SystemIEnumerable.Node<TResult>, Nodes.ValueSelect.Node<TSource, SystemIEnumerable.Node<TResult>, {collectionNodeName}, EnumerableNodeSelector<TSource, TResult>>>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.SelectMany.Pull<TResult,SystemIEnumerable.Node<TResult>, Nodes.ValueSelect.Node<TSource, SystemIEnumerable.Node<TResult>, {collectionNodeName}, EnumerableNodeSelector<TSource, TResult>>, Nodes.ValueSelect.Pull<TSource, SystemIEnumerable.Node<TResult>, {collectionNodeName}, {collectionEnumeratorName}, EnumerableNodeSelector<TSource, TResult>>, ErasedEnumerator<TResult, SystemIEnumerable.Node<TResult>>>")
+        ),
+        (
+            Signature  : new Func<string, string>(collection => $"SelectMany<TSource, TResult>(this {collection} source, Func<TSource, int, IEnumerable<TResult>> selector)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.SelectManyEnumerable<TSource, TResult, {collectionNodeName}>(Enumerable.ToNode(source), selector))"),
+            OutputType : "TResult",
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.SelectMany.Node<TResult,SystemIEnumerable.Node<TResult>, Nodes.SelectIdx.Node<TSource, SystemIEnumerable.Node<TResult>, {collectionNodeName}>>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.SelectMany.Pull<TResult,SystemIEnumerable.Node<TResult>, Nodes.SelectIdx.Node<TSource, SystemIEnumerable.Node<TResult>, {collectionNodeName}>, Nodes.SelectIdx.Pull<TSource, SystemIEnumerable.Node<TResult>, {collectionNodeName}, {collectionEnumeratorName}>, ErasedEnumerator<TResult, SystemIEnumerable.Node<TResult>>>")
+        ),
+        (
+            Signature  : new Func<string, string>(collection => $"SelectMany<TSource, TResult>(this {collection} source, Func<TSource, TResult[]> selector)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.SelectManyArray<TSource, TResult, {collectionNodeName}>(Enumerable.ToNode(source), selector))"),
+            OutputType : "TResult",
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.SelectMany.Node<TResult,SystemArray.Node<TResult>, Nodes.ValueSelect.Node<TSource, SystemArray.Node<TResult>, {collectionNodeName}, ArrayNodeSelector<TSource, TResult>>>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.SelectMany.Pull<TResult,SystemArray.Node<TResult>, Nodes.ValueSelect.Node<TSource, SystemArray.Node<TResult>, {collectionNodeName}, ArrayNodeSelector<TSource, TResult>>, Nodes.ValueSelect.Pull<TSource, SystemArray.Node<TResult>, {collectionNodeName}, {collectionEnumeratorName}, ArrayNodeSelector<TSource, TResult>>, SystemArray.Pull<TResult>>")
+        ),
+        (
+            Signature  : new Func<string, string>(collection => $"SelectMany<TSource, TResult, NodeU, NodeUEnumerator>(this {collection} source, Func<TSource, ValueEnumerable<TResult, NodeU, NodeUEnumerator>> selector) where NodeU : INode<TResult> where NodeUEnumerator : struct, IPullEnumerator<TResult>, INodeEnumerator<NodeU, NodeUEnumerator>"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.SelectMany<TSource, TResult, {collectionNodeName}, ValueEnumerable<TResult, NodeU, NodeUEnumerator>>(Enumerable.ToNode(source), selector))"),
+            OutputType : "TResult",
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.SelectMany.Node<TResult,ValueEnumerable<TResult, NodeU, NodeUEnumerator>, Nodes.Select.Node<TSource, ValueEnumerable<TResult, NodeU, NodeUEnumerator>, {collectionNodeName}>>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.SelectMany.Pull<TResult,ValueEnumerable<TResult, NodeU, NodeUEnumerator>, Nodes.Select.Node<TSource, ValueEnumerable<TResult, NodeU, NodeUEnumerator>, {collectionNodeName}>, Nodes.Select.Pull<TSource, ValueEnumerable<TResult, NodeU, NodeUEnumerator>, {collectionNodeName}, {collectionEnumeratorName}>, ValueEnumerableEnumerator<TResult, NodeU, NodeUEnumerator>>")
+        ),
+        (
+            Signature  : new Func<string, string>(collection => $"SelectMany<TSource, TCollection, TResult>(this {collection} source, Func<TSource, IEnumerable<TCollection>> collectionSelector, Func<TSource, TCollection, TResult> resultSelector)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.SelectManyEnumerable<TSource, TCollection, TResult, {collectionNodeName}>(Enumerable.ToNode(source), collectionSelector, resultSelector))"),
+            OutputType : "TResult",
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.SelectManyResult.Node<TSource, TCollection, TResult,SystemIEnumerable.Node<TCollection>, Nodes.Select.Node<TSource, (TSource, SystemIEnumerable.Node<TCollection>), {collectionNodeName}>>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.SelectManyResult.Pull<TSource, TCollection, TResult,SystemIEnumerable.Node<TCollection>, Nodes.Select.Node<TSource, (TSource, SystemIEnumerable.Node<TCollection>), {collectionNodeName}>, Nodes.Select.Pull<TSource, (TSource, SystemIEnumerable.Node<TCollection>), {collectionNodeName}, {collectionEnumeratorName}>, ErasedEnumerator<TCollection, SystemIEnumerable.Node<TCollection>>>")
+        ),
+        (
+            Signature  : new Func<string, string>(collection => $"SelectMany<TSource, TCollection, TResult>(this {collection} source, Func<TSource, int, IEnumerable<TCollection>> collectionSelector, Func<TSource, TCollection, TResult> resultSelector)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.SelectManyEnumerable<TSource, TCollection, TResult, {collectionNodeName}>(Enumerable.ToNode(source), collectionSelector, resultSelector))"),
+            OutputType : "TResult",
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.SelectManyResult.Node<TSource, TCollection, TResult,SystemIEnumerable.Node<TCollection>, Nodes.SelectIdx.Node<TSource, (TSource, SystemIEnumerable.Node<TCollection>), {collectionNodeName}>>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.SelectManyResult.Pull<TSource, TCollection, TResult,SystemIEnumerable.Node<TCollection>, Nodes.SelectIdx.Node<TSource, (TSource, SystemIEnumerable.Node<TCollection>), {collectionNodeName}>, Nodes.SelectIdx.Pull<TSource, (TSource, SystemIEnumerable.Node<TCollection>), {collectionNodeName}, {collectionEnumeratorName}>, ErasedEnumerator<TCollection, SystemIEnumerable.Node<TCollection>>>")
+        ),
+        (
+            Signature  : new Func<string, string>(collection => $"SelectMany<TSource, TCollection, TResult, NodeU, NodeUEnumerator>(this {collection} source, Func<TSource, ValueEnumerable<TCollection, NodeU, NodeUEnumerator>> collectionSelector, Func<TSource, TCollection, TResult> resultSelector) where NodeU : INode<TCollection> where NodeUEnumerator : struct, IPullEnumerator<TCollection>, INodeEnumerator<NodeU, NodeUEnumerator>"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.SelectMany<TSource, TCollection, TResult, {collectionNodeName}, NodeU, NodeUEnumerator>(Enumerable.ToNode(source), collectionSelector, resultSelector))"),
+            OutputType : "TResult",
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.SelectManyResult.Node<TSource, TCollection, TResult,ValueEnumerable<TCollection, NodeU, NodeUEnumerator>, Nodes.Select.Node<TSource, (TSource, ValueEnumerable<TCollection, NodeU, NodeUEnumerator>), {collectionNodeName}>>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.SelectManyResult.Pull<TSource, TCollection, TResult,ValueEnumerable<TCollection, NodeU, NodeUEnumerator>, Nodes.Select.Node<TSource, (TSource, ValueEnumerable<TCollection, NodeU, NodeUEnumerator>), {collectionNodeName}>, Nodes.Select.Pull<TSource, (TSource, ValueEnumerable<TCollection, NodeU, NodeUEnumerator>), {collectionNodeName}, {collectionEnumeratorName}>, ValueEnumerableEnumerator<TCollection, NodeU, NodeUEnumerator>>")
         ),
 
         (
             Signature  : new Func<string, string>(collection => $"Where<TSource>(this {collection} source, Func<TSource, bool> predicate)"),
             Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Where(Enumerable.ToNode(source), predicate))"),
             OutputType : "TSource",
-            NodeName   : new Func<string, string>(collectionNodeName => $"WhereNode<TSource, {collectionNodeName}>")
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.Where.Node<TSource, {collectionNodeName}>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.Where.Pull<TSource, {collectionNodeName}, {collectionEnumeratorName}>")
         ),
         (
             Signature  : new Func<string, string>(collection => $"Where<TSource>(this {collection} source, Func<TSource, int, bool> predicate)"),
             Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Where(Enumerable.ToNode(source), predicate))"),
             OutputType : "TSource",
-            NodeName   : new Func<string, string>(collectionNodeName => $"WhereIdxNode<TSource, {collectionNodeName}>")
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.WhereIdx.Node<TSource, {collectionNodeName}>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.WhereIdx.Pull<TSource, {collectionNodeName}, {collectionEnumeratorName}>")
         ),
         (
             Signature  : new Func<string, string>(collection => $"Where<TSource>(this {collection} source, InFunc<TSource, bool> predicate)"),
             Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Where(Enumerable.ToNode(source), predicate))"),
             OutputType : "TSource",
-            NodeName   : new Func<string, string>(collectionNodeName => $"Where_InNode<TSource, {collectionNodeName}>")
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.Where_In.Node<TSource, {collectionNodeName}>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.Where_In.Pull<TSource, {collectionNodeName}, {collectionEnumeratorName}>")
         ),
         (
             Signature  : new Func<string, string>(collection => $"Where<TSource, Predicate>(this {collection} source, Predicate predicate) where Predicate : IFunc<TSource, bool>"),
             Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Where<TSource, {collectionNodeName}, Predicate>(Enumerable.ToNode(source), predicate))"),
             OutputType : "TSource",
-            NodeName   : new Func<string, string>(collectionNodeName => $"ValueWhereNode<TSource, {collectionNodeName}, Predicate>")
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.ValueWhere.Node<TSource, {collectionNodeName}, Predicate>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.ValueWhere.Pull<TSource, {collectionNodeName}, {collectionEnumeratorName}, Predicate>")
         ),
 
         (
             Signature  : new Func<string, string>(collection => $"Take<TSource>(this {collection} source, int count)"),
             Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Take<TSource, {collectionNodeName}>(Enumerable.ToNode(source), count))"),
             OutputType : "TSource",
-            NodeName   : new Func<string, string>(collectionNodeName => $"TakeNode<TSource, {collectionNodeName}>")
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.Take.Node<TSource, {collectionNodeName}>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.Take.Pull<TSource, {collectionNodeName}, {collectionEnumeratorName}>")
+        ),
+        (
+            Signature  : new Func<string, string>(collection => $"Take<TSource>(this {collection} source, Range range)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Take<TSource, {collectionNodeName}>(Enumerable.ToNode(source), range))"),
+            OutputType : "TSource",
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.TakeRange.Node<TSource, {collectionNodeName}>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.TakeRange.Pull<TSource, {collectionNodeName}, {collectionEnumeratorName}>")
+        ),
+        (
+            Signature  : new Func<string, string>(collection => $"TakeLast<TSource>(this {collection} source, int count)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.TakeLast<TSource, {collectionNodeName}>(Enumerable.ToNode(source), count))"),
+            OutputType : "TSource",
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.TakeRange.Node<TSource, {collectionNodeName}>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.TakeRange.Pull<TSource, {collectionNodeName}, {collectionEnumeratorName}>")
         ),
         (
             Signature  : new Func<string, string>(collection => $"TakeWhile<TSource>(this {collection} source, Func<TSource, bool> predicate)"),
             Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.TakeWhile(Enumerable.ToNode(source), predicate))"),
             OutputType : "TSource",
-            NodeName   : new Func<string, string>(collectionNodeName => $"TakeWhileNode<TSource, {collectionNodeName}>")
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.TakeWhile.Node<TSource, {collectionNodeName}>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.TakeWhile.Pull<TSource, {collectionNodeName}, {collectionEnumeratorName}>")
         ),
         (
             Signature  : new Func<string, string>(collection => $"TakeWhile<TSource>(this {collection} source, Func<TSource, int, bool> predicate)"),
             Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.TakeWhile(Enumerable.ToNode(source), predicate))"),
             OutputType : "TSource",
-            NodeName   : new Func<string, string>(collectionNodeName => $"TakeWhileIdxNode<TSource, {collectionNodeName}>")
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.TakeWhileIdx.Node<TSource, {collectionNodeName}>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.TakeWhileIdx.Pull<TSource, {collectionNodeName}, {collectionEnumeratorName}>")
         ),
 
         (
             Signature  : new Func<string, string>(collection => $"Skip<TSource>(this {collection} source, int count)"),
             Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Skip<TSource, {collectionNodeName}>(Enumerable.ToNode(source), count))"),
             OutputType : "TSource",
-            NodeName   : new Func<string, string>(collectionNodeName => $"SkipNode<TSource, {collectionNodeName}>")
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.Skip.Node<TSource, {collectionNodeName}>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.Skip.Pull<TSource, {collectionNodeName}, {collectionEnumeratorName}>")
+        ),
+        (
+            Signature  : new Func<string, string>(collection => $"SkipLast<TSource>(this {collection} source, int count)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.SkipLast<TSource, {collectionNodeName}>(Enumerable.ToNode(source), count))"),
+            OutputType : "TSource",
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.TakeRange.Node<TSource, {collectionNodeName}>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.TakeRange.Pull<TSource, {collectionNodeName}, {collectionEnumeratorName}>")
         ),
         (
             Signature  : new Func<string, string>(collection => $"SkipWhile<TSource>(this {collection} source, Func<TSource, bool> predicate)"),
             Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.SkipWhile(Enumerable.ToNode(source), predicate))"),
             OutputType : "TSource",
-            NodeName   : new Func<string, string>(collectionNodeName => $"SkipWhileNode<TSource, {collectionNodeName}>")
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.SkipWhile.Node<TSource, {collectionNodeName}>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.SkipWhile.Pull<TSource, {collectionNodeName}, {collectionEnumeratorName}>")
         ),
         (
             Signature  : new Func<string, string>(collection => $"SkipWhile<TSource>(this {collection} source, Func<TSource, int, bool> predicate)"),
             Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.SkipWhile(Enumerable.ToNode(source), predicate))"),
             OutputType : "TSource",
-            NodeName   : new Func<string, string>(collectionNodeName => $"SkipWhileIdxNode<TSource, {collectionNodeName}>")
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.SkipWhileIdx.Node<TSource, {collectionNodeName}>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.SkipWhileIdx.Pull<TSource, {collectionNodeName}, {collectionEnumeratorName}>")
         ),
     };
 #>
 using Cistern.ValueLinq.Containers;
 using Cistern.ValueLinq.Nodes;
+using Cistern.ValueLinq.ValueEnumerable;
 using System;
 using System.Collections.Generic;
 
@@ -131,7 +297,9 @@ namespace Cistern.ValueLinq
 <#
         foreach(var transform in transformTypes)
         {
-            var signature = $"public static ValueEnumerable<{transform.OutputType}, {transform.NodeName(collection.NodeName("TSource"))}> {transform.Signature(genericCollectionType)}";
+            var nodeName = transform.NodeName(collection.NodeName("TSource"));
+            var enumeratorName = transform.EnumeratorName(collection.NodeName("TSource"), collection.EnumeratorName("TSource"));
+            var signature = $"public static ValueEnumerable<{transform.OutputType}, {nodeName}, {enumeratorName}> {transform.Signature(genericCollectionType)}";
             var code = transform.Code(collection.NodeName("TSource"));
 #>
         <#= signature #> =>

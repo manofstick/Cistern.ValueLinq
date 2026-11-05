@@ -2,15 +2,16 @@
 
 namespace Cistern.ValueLinq.Aggregation
 {
-    struct Last<T>
+    [Aggregator]
+    partial struct Last<T>
         : IPushEnumerator<T>
     {
-        private T _last;
+        [AllowNull] private T _last;
         private bool _found;
 
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
-        public void Dispose() { }
-        TResult IPushEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
+        public Last() { }
+
+        TPushResult IPushEnumerator<T>.GetResult<TPushResult>() => Impl.ResultCast<T, TPushResult>(GetResult());
 
         public T GetResult()
         {
@@ -27,16 +28,25 @@ namespace Cistern.ValueLinq.Aggregation
         }
     }
 
-    struct LastOrDefault<T>
+    [Aggregator]
+    partial struct LastOrDefault<T>
         : IPushEnumerator<T>
     {
-        private T _last;
+        [AllowNull] private T _last;
 
-        public LastOrDefault(bool _) => _last = default;
+        public LastOrDefault(T defaultValue) => _last = defaultValue;
 
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
-        public void Dispose() { }
-        TResult IPushEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
+        static BatchKinds IPushEnumerator<T>.AllowBatchesWhen => BatchKinds.Container | BatchKinds.Forwarder;
+        bool IPushEnumerator<T>.ProcessBatch(scoped ref Batch<T> batch)
+        {
+            var span = batch.GetSpan();
+            if (!span.IsEmpty)
+                _last = span[^1];
+
+            return true;
+        }
+
+        TPushResult IPushEnumerator<T>.GetResult<TPushResult>() => Impl.ResultCast<T, TPushResult>(GetResult());
         public T GetResult() => _last;
 
         bool IPushEnumerator<T>.ProcessNext(T input)
@@ -46,18 +56,22 @@ namespace Cistern.ValueLinq.Aggregation
         }
     }
 
-    struct LastPredicate<T>
+    [Aggregator]
+    partial struct LastPredicate<T>
         : IPushEnumerator<T>
     {
-        private T _last;
+        [AllowNull] private T _last;
         private bool _found;
         Func<T, bool> _predicate;
 
-        public LastPredicate(Func<T, bool> predicate) => (_predicate, _last, _found) = (predicate, default, false);
+        public LastPredicate(Func<T, bool> predicate)
+        {
+            _predicate = predicate;
+            _last = default;
+            _found = false;
+        }
 
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
-        public void Dispose() { }
-        TResult IPushEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
+        TPushResult IPushEnumerator<T>.GetResult<TPushResult>() => Impl.ResultCast<T, TPushResult>(GetResult());
 
         public T GetResult()
         {
@@ -77,17 +91,36 @@ namespace Cistern.ValueLinq.Aggregation
         }
     }
 
-    struct LastOrDefaultPredicate<T>
+    [Aggregator]
+    partial struct LastOrDefaultPredicate<T>
         : IPushEnumerator<T>
     {
-        private T _last;
+        [AllowNull] private T _last;
         Func<T, bool> _predicate;
 
-        public LastOrDefaultPredicate(Func<T, bool> predicate) => (_predicate, _last) = (predicate, default);
+        // a null predicate must throw even over an empty source, so it is checked here rather than on first use
+        public LastOrDefaultPredicate(Func<T, bool> predicate, [AllowNull] T defaultValue = default)
+        {
+            _predicate = predicate ?? throw new ArgumentNullException(nameof(predicate));
+            _last = defaultValue;
+        }
 
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
-        public void Dispose() { }
-        TResult IPushEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
+        // the predicate runs on every element front to back, so it is not searched from the span's end
+        static BatchKinds IPushEnumerator<T>.AllowBatchesWhen => BatchKinds.Container | BatchKinds.Forwarder;
+        bool IPushEnumerator<T>.ProcessBatch(scoped ref Batch<T> batch)
+        {
+            var span = batch.GetSpan();
+            var predicate = _predicate;
+            foreach (var item in span)
+            {
+                if (predicate(item))
+                    _last = item;
+            }
+
+            return true;
+        }
+
+        TPushResult IPushEnumerator<T>.GetResult<TPushResult>() => Impl.ResultCast<T, TPushResult>(GetResult());
 
         public T GetResult() => _last;
 

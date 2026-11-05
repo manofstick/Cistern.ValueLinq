@@ -1,42 +1,75 @@
-﻿using System;
+﻿namespace Cistern.ValueLinq.Nodes;
+
+using Cistern.ValueLinq.Chain;
+using System;
 using System.Collections.Generic;
 
-namespace Cistern.ValueLinq.Nodes
+// TODo: Add the Default Equality version
+
+public static partial class Except
 {
-    // TODo: Add the Default Equality version
-
-    struct ExceptNodeEnumerator<TElement, TEnumerator>
-        : IPullEnumerator<TElement>
-        where TEnumerator : IPullEnumerator<TElement>
-    {
-        private TEnumerator _enumerator;
-        private Set<TElement> _set;
-
-        public ExceptNodeEnumerator(in TEnumerator enumerator, Set<TElement> set)
-            => (_enumerator, _set) = (enumerator, set);
-
-        public void Dispose() => _enumerator.Dispose();
-
-        public bool TryGetNext(out TElement current)
-        {
-            for (;;)
-            {
-                if (!_enumerator.TryGetNext(out current))
-                    return false;
-
-                if (_set.Add(current))
-                    return true;
-            }
-        }
-    }
-
-    public struct ExceptNode<TElement, NodeT>
+    [Operator]
+    public partial struct Node<TElement, TKey, NodeT, TKeySelector>
         : INode<TElement>
+        , Optimizations.IOptimizationElementAt<TElement>
+        , Optimizations.IOptimizationAny
+        , Optimizations.IOptimizationContains<TElement>
         where NodeT : INode<TElement>
+        where TKeySelector : struct, IFunc<TElement, TKey>
     {
-        private NodeT _nodeT;
-        private IEnumerable<TElement> _second;
-        private IEqualityComparer<TElement> _comparer;
+        internal NodeT _nodeT;
+        [Propagate] internal IEnumerable<TKey> _second;
+        [Propagate] internal IEqualityComparer<TKey>? _comparer;
+        [Propagate] internal TKeySelector _keySelector;
+
+        // Distinct, and Union over the Concat of its parts: each element its own key and nothing excluded. Such a node's
+        // first element is its source's first, and it holds an element, or a value, exactly when its source does, so
+        // these are answered by the source with no set built, as System.Linq's Distinct and Union answer them; DistinctBy
+        // is not, as System.Linq runs its key selector on the first element
+        private readonly bool ExcludesNothing =>
+            typeof(TKeySelector) == typeof(IdentityKey<TElement>)
+            && _second is TKey[] { Length: 0 };
+
+        private bool ElementAt(in Optimizations.ElementAt request, out (bool, TElement) response)
+        {
+            var index = request.Index;
+            if (!ExcludesNothing || index.IsFromEnd || index.Value != 0)
+            {
+                response = default;
+                return false;
+            }
+
+            if (!_nodeT.TryPushOptimization<Optimizations.ElementAt, (bool, TElement)>(in request, out response))
+                response = _nodeT.CreateViaPush<(bool, TElement), Aggregation.FoundElementAt<TElement>, Construct<Aggregation.FoundElementAt<TElement>, Aggregation.FoundElementAt<TElement>.Args>>(default(ChainOptions), new Construct<Aggregation.FoundElementAt<TElement>, Aggregation.FoundElementAt<TElement>.Args>(new Aggregation.FoundElementAt<TElement>.Args(index)));
+            return true;
+        }
+
+        private bool Any(in Optimizations.Any request, out bool response)
+        {
+            if (!ExcludesNothing)
+            {
+                response = default;
+                return false;
+            }
+
+            response = NodeImpl.Any<TElement, NodeT>(_nodeT);
+            return true;
+        }
+
+        // only with no comparer given, as System.Linq's: an explicit comparer, even the default one, keeps the set
+        private bool Contains(in Optimizations.Contains<TElement> request, out bool response)
+        {
+            if (!ExcludesNothing || _comparer is not null)
+            {
+                response = default;
+                return false;
+            }
+
+            response = NodeImpl.Contains<TElement, NodeT>(_nodeT, request.Value);
+            return true;
+        }
+
+        // POTENTIAL OPTIMIZATION: ToArray (and CopyTo) for the identity key (Distinct, Union), the push's set copied out at its exact size by HashSet<T>.CopyTo, which keeps first-seen order as nothing is removed from it; System.Linq's Distinct and Union build their arrays from the set so
 
         public void GetCountInformation(out CountInformation info)
         {
@@ -44,74 +77,74 @@ namespace Cistern.ValueLinq.Nodes
             info.ActualLengthIsMaximumLength &= info.MaximumLength == 0;
         }
 
-        public ExceptNode(in NodeT nodeT, IEnumerable<TElement> second, IEqualityComparer<TElement> comparer)
+        // the source by value: taken by in, it is left unpromoted, so the node is built in a temp and copied whole with
+        // one wide load over the narrower stores that built it
+        public Node(NodeT nodeT, IEnumerable<TKey> second, IEqualityComparer<TKey>? comparer, TKeySelector keySelector)
         {
             if (second == null)
                 throw new ArgumentNullException(nameof(second));
 
-            (_nodeT, _second, _comparer) = (nodeT, second, comparer);
+            _nodeT = nodeT;
+            _second = second;
+            _comparer = comparer;
+            _keySelector = keySelector;
+        }
+    }
+
+    partial struct Push<TElement, TKey, Next, TKeySelector>
+    {
+        HashSet<TKey> _set;
+
+        // the set is built when the chain is initialised, before its source is opened; once, as a chain handed on already
+        // initialised is initialised again
+        private void Begin()
+        {
+            if (_set is null)
+                _set = new HashSet<TKey>(_second, _comparer);
         }
 
-        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
-            => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
-
-        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
+        // POTENTIAL OPTIMIZATION: a ProcessBatch running the span against a local copy of the downstream, as Where.Push.ProcessElements does
+        public bool ProcessNext(TElement input)
         {
-            var set = ExceptImpl.CreateSet(_comparer, _second);
-                
-            var nextEnumerator = new ExceptNodeEnumerator<EnumeratorElement, Enumerator>(in enumerator, (Set<EnumeratorElement>)(object)set);
-            return tail.CreateObject<CreationType, EnumeratorElement, ExceptNodeEnumerator<EnumeratorElement, Enumerator>>(ref nextEnumerator);
+            var key = _keySelector.Invoke(input);
+
+            var proceed =
+                _set.Add(key)
+                    ? _next.ProcessNext(input)
+                    : true;
+
+            return proceed;
         }
+    }
 
-        bool INode.TryPullOptimization<TRequest, CreationType, Tail>(in TRequest request, ref Tail tail, out CreationType creation)
+    public partial struct Pull<TElement, TKey, NodeT, TEnumerator, TKeySelector>
+    {
+        private HashSet<TKey>? _set;
+        [AllowNull] private TElement _current;
+
+        public bool MoveNext()
         {
-            creation = default;
+            // second is read on the first MoveNext, before the source is pulled, as System.Linq reads it
+            _set ??= new HashSet<TKey>(_second, _comparer);
+
+            while (_enumerator.MoveNext())
+            {
+                var current = _enumerator.Current;
+                if (_set.Add(_keySelector.Invoke(current)))
+                {
+                    _current = current;
+                    return true;
+                }
+            }
             return false;
         }
 
-        bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
-
-        TResult INode<TElement>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
-        {
-            var set = ExceptImpl.CreateSet(_comparer, _second);
-
-            return _nodeT.CreateViaPush<TResult, ExceptFoward<TElement, TPushEnumerator>>(new ExceptFoward<TElement, TPushEnumerator>(fenum, set));
-        }
+        public TElement Current => _current;
     }
 
-    static class ExceptImpl
+    public readonly struct IdentityKey<T>
+        : IFunc<T, T>
     {
-        internal static Set<T> CreateSet<T>(IEqualityComparer<T> comparer, IEnumerable<T> items)
-        {
-            var set = new Set<T>(comparer);
-
-            foreach (var item in items)
-                set.Add(item);
-
-            return set;
-        }
-    }
-
-    struct ExceptFoward<T, Next>
-        : IPushEnumerator<T>
-        where Next : IPushEnumerator<T>
-    {
-        internal Next _next;
-
-        Set<T> _set;
-
-        public ExceptFoward(in Next prior, Set<T> set)
-            => (_next, _set) = (prior, set);
-
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
-        public void Dispose() => _next.Dispose();
-        public TResult GetResult<TResult>() => _next.GetResult<TResult>();
-        public bool ProcessNext(T input)
-        {
-            if (_set.Add(input))
-                _next.ProcessNext(input);
-
-            return true;
-        }
+        public T Invoke(T t) => t;
     }
 }

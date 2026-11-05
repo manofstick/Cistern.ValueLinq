@@ -1,4 +1,13 @@
-Cistern.ValueLinq uses MIT licenced code from Microsoft's [corefx](https://github.com/dotnet/corefx) repository.
+Cistern.ValueLinq uses MIT licenced code from Microsoft's [corefx](https://github.com/dotnet/corefx) and
+[runtime](https://github.com/dotnet/runtime) repositories. From runtime: the System.Linq test suite under `Tests/`
+(`src/libraries/System.Linq/tests` and the files it links from `src/libraries/Common/tests`, at commit
+281b6ea21a54509f3368b79ae87e6d85adbe710c), and the partial quicksort in `ValueLinq/Nodes/OrderBy.cs`
+(`OrderByImpl.PartialQuickSort`, ported from System.Linq's `EnumerableSorter.PartialQuickSort` in
+`src/libraries/System.Linq/src/System/Linq/OrderedEnumerable.cs`, at commit 8a389ed7a82600652cce0a49d48d82cb562d2d8b).
+
+It also uses MIT licenced code from Cysharp's [ZLinq](https://github.com/Cysharp/ZLinq): `ValueLinq/Utils/InsertionMap.cs`
+is based on ZLinq's `DictionarySlim` (`src/ZLinq/Internal/DictionarySlim.cs`, at commit
+e262466f419f6587e2bdf7dd4bb1cb4c535f56f5).
 
 Licence for Microsoft's corefx
 [LICENSE.TXT](https://github.com/dotnet/corefx/blob/fab6ae579aff17cb9b464b2b167b7dfd8fcea175/LICENSE.TXT)
@@ -8,6 +17,59 @@ The MIT License (MIT)
 Copyright (c) .NET Foundation and Contributors
 
 All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+Licence for Microsoft's runtime
+[LICENSE.TXT](https://github.com/dotnet/runtime/blob/8a389ed7a82600652cce0a49d48d82cb562d2d8b/LICENSE.TXT)
+-------------------------------
+The MIT License (MIT)
+
+Copyright (c) .NET Foundation and Contributors
+
+All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+Licence for Cysharp's ZLinq
+[LICENSE](https://github.com/Cysharp/ZLinq/blob/e262466f419f6587e2bdf7dd4bb1cb4c535f56f5/LICENSE)
+-------------------------------
+MIT License
+
+Copyright (c) Yoshifumi Kawai
+Copyright (c) Cysharp, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

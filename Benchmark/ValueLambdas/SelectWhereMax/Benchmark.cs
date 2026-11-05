@@ -58,10 +58,11 @@ namespace Cistern.Benchmarks.ValueLambdas
             var cisternvaluelinq = check.CisternValueLinq();
             if (baseline != cisternvaluelinq) throw new Exception();
 
-#if STRUCTLINQ
-            var structlinq = check.StructLinq();
-            if (structlinq != baseline) throw new Exception();
-#endif
+            var linq = check.Linq();
+            if (linq != baseline) throw new Exception();
+
+            var zlinq = check.ZLinq();
+            if (zlinq != baseline) throw new Exception();
         }
     }
 }

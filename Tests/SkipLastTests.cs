@@ -1,6 +1,5 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System;
 using System.Collections.Generic;
@@ -19,29 +18,36 @@ namespace Linqs.Tests
 {
     public class SkipLastTests : EnumerableTests
     {
+        [Fact]
+        public void SkipLastThrowsOnNull()
+        {
+            AssertExtensions.Throws<ArgumentNullException>("source", () => ((IEnumerable<int>)null).SkipLast(10));
+        }
+
         [Theory]
         [MemberData(nameof(EnumerableData), MemberType = typeof(SkipTakeData))]
         public void SkipLast(IEnumerable<int> source, int count)
         {
-            Assert.All(IdentityTransforms<int>(), transform =>
-            {
-                IEnumerable<int> equivalent = transform(source);
+            int[] expected = source.Reverse().Skip(count).Reverse().ToArray();
 
-                IEnumerable<int> expected = equivalent.Reverse().Skip(count).Reverse();
-                IEnumerable<int> actual = equivalent.SkipLast(count);
+            Assert.All(CreateSources(source), source =>
+            {
+                IEnumerable<int> actual = source.SkipLast(count);
 
                 Assert.Equal(expected, actual);
-                Assert.Equal(expected.Count(), actual.Count());
+
+                Assert.Equal(expected.Length, actual.Count());
                 Assert.Equal(expected, actual.ToArray());
                 Assert.Equal(expected, actual.ToList());
-
                 Assert.Equal(expected.FirstOrDefault(), actual.FirstOrDefault());
                 Assert.Equal(expected.LastOrDefault(), actual.LastOrDefault());
 
-                Assert.All(Enumerable.Range(0, expected.Count()), index =>
+                if (expected.Length > 0)
                 {
-                    Assert.Equal(expected.ElementAt(index), actual.ElementAt(index));
-                });
+                    Assert.Equal(expected[0], actual.ElementAt(0));
+                    Assert.Equal(expected[^1], actual.ElementAt(expected.Length - 1));
+                    Assert.Equal(expected[expected.Length / 2], actual.ElementAt(expected.Length / 2));
+                }
 
                 Assert.Equal(0, actual.ElementAtOrDefault(-1));
                 Assert.Equal(0, actual.ElementAtOrDefault(actual.Count()));
@@ -63,7 +69,11 @@ namespace Linqs.Tests
                 current: () => index, // Yield from 1 up to the limit, inclusive.
                 dispose: () => index ^= int.MinValue);
 
-            IEnumerator<int> iterator = source.SkipLast(count).GetEnumerator();
+#if CISTERN_VALUELINQ
+            using IEnumerator<int> iterator = ((IEnumerable<int>)source.SkipLast(count)).GetEnumerator();
+#else
+            using IEnumerator<int> iterator = source.SkipLast(count).GetEnumerator();
+#endif
             Assert.Equal(0, index); // Nothing should be done before MoveNext is called.
 
             for (int i = 1; i <= count; i++)
@@ -83,6 +93,31 @@ namespace Linqs.Tests
         {
             IEnumerable<int> expected = source.SkipLast(count);
             Assert.Equal(expected, source.SkipLast(count).RunOnce());
+        }
+
+        [Fact]
+        public void List_ChangesAfterSkipLast_ChangesReflectedInResults()
+        {
+            var list = new List<int>() { 1, 2, 3, 4, 5 };
+
+            IEnumerable<int> e = list.SkipLast(2);
+
+            list.RemoveAt(4);
+            list.RemoveAt(3);
+
+            Assert.Equal(new[] { 1 }, e.ToArray());
+        }
+
+        [Fact]
+        public void List_Skip_ChangesAfterSkipLast_ChangesReflectedInResults()
+        {
+            var list = new List<int>() { 1, 2, 3, 4, 5 };
+
+            IEnumerable<int> e = list.Skip(1).SkipLast(2);
+
+            list.RemoveAt(4);
+
+            Assert.Equal(new[] { 2 }, e.ToArray());
         }
     }
 }

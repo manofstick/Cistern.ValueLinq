@@ -9,7 +9,7 @@
     var aggregateTypes = new []
     {
         (
-            Signature: new Func<string, string>(collection => $"ToLookup<TSource, TKey>(this {collection} source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer = null)"),
+            Signature: new Func<string, string>(collection => $"ToLookup<TSource, TKey>(this {collection} source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey>? comparer = null)"),
             Class: "ToLookup<TSource, TKey>",
             Args: "comparer, keySelector",
             AggregateReturns: "System.Linq.ILookup<TKey, TSource>",
@@ -17,7 +17,7 @@
             WrapReturn: new Func<string, string>(s => s)
         ),
         (
-            Signature: new Func<string, string>(collection => $"ToLookup<TSource, TKey, TElement>(this {collection} source, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, IEqualityComparer<TKey> comparer = null)"),
+            Signature: new Func<string, string>(collection => $"ToLookup<TSource, TKey, TElement>(this {collection} source, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, IEqualityComparer<TKey>? comparer = null)"),
             Class: "ToLookup<TSource, TKey, TElement>",
             Args: "comparer, keySelector, elementSelector",
             AggregateReturns: "System.Linq.ILookup<TKey, TElement>",
@@ -25,23 +25,23 @@
             WrapReturn: new Func<string, string>(s => s)
         ),
         (
-            Signature: new Func<string, string>(collection => $"ToDictionary<TSource, TKey>(this {collection} source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer = null)"),
+            Signature: new Func<string, string>(collection => $"ToDictionary<TSource, TKey>(this {collection} source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey>? comparer = null) where TKey : notnull"),
             Class: "ToDictionary<TSource, TKey>",
-            Args: "keySelector, comparer",
+            Args: "keySelector, comparer, {capacity}",
             AggregateReturns: "Dictionary<TKey, TSource>",
             FunctionReturns: "Dictionary<TKey, TSource>",
             WrapReturn: new Func<string, string>(s => s)
         ),
         (
-            Signature: new Func<string, string>(collection => $"ToDictionary<TSource, TKey, TValue>(this {collection} source, Func<TSource, TKey> keySelector, Func<TSource, TValue> elementSelector, IEqualityComparer<TKey> comparer = null)"),
+            Signature: new Func<string, string>(collection => $"ToDictionary<TSource, TKey, TValue>(this {collection} source, Func<TSource, TKey> keySelector, Func<TSource, TValue> elementSelector, IEqualityComparer<TKey>? comparer = null) where TKey : notnull"),
             Class: "ToDictionary<TSource, TKey, TValue>",
-            Args: "keySelector, elementSelector, comparer",
+            Args: "keySelector, elementSelector, comparer, {capacity}",
             AggregateReturns: "Dictionary<TKey, TValue>",
             FunctionReturns: "Dictionary<TKey, TValue>",
             WrapReturn: new Func<string, string>(s => s)
         ),
         (
-            Signature: new Func<string, string>(collection => $"ToHashSet<TSource>(this {collection} source, IEqualityComparer<TSource> comparer = null)"),
+            Signature: new Func<string, string>(collection => $"ToHashSet<TSource>(this {collection} source, IEqualityComparer<TSource>? comparer = null)"),
             Class: "ToHashSet<TSource>",
             Args: "comparer",
             AggregateReturns: "HashSet<TSource>",
@@ -74,8 +74,8 @@
         ),
         (
             Signature: new Func<string, string>(collection => $"All<TSource>(this {collection} source, Func<TSource, bool> predicate)"),
-            Class: "All<TSource, FuncToIFunc<TSource, bool>>",
-            Args: "new FuncToIFunc<TSource, bool>(predicate)",
+            Class: "All<TSource>",
+            Args: "predicate",
             AggregateReturns: "bool",
             FunctionReturns: "bool",
             WrapReturn: new Func<string, string>(s => s)
@@ -97,27 +97,19 @@
             WrapReturn: new Func<string, string>(s => s)
         ),
         (
+            Signature: new Func<string, string>(collection => $"LongCount<TSource>(this {collection} source, Func<TSource, bool> predicate)"),
+            Class: "LongCountIf<TSource>",
+            Args: "predicate",
+            AggregateReturns: "long",
+            FunctionReturns: "long",
+            WrapReturn: new Func<string, string>(s => s)
+        ),
+        (
             Signature: new Func<string, string>(collection => $"Contains<TSource>(this {collection} source, TSource value, IEqualityComparer<TSource> comparer)"),
             Class: "ContainsByComparer<TSource>",
             Args: "comparer, value",
             AggregateReturns: "bool",
             FunctionReturns: "bool",
-            WrapReturn: new Func<string, string>(s => s)
-        ),
-        (
-            Signature: new Func<string, string>(collection => $"Last<TSource>(this {collection} source, Func<TSource, bool> predicate)"),
-            Class: "LastPredicate<TSource>",
-            Args: "predicate",
-            AggregateReturns: "TSource",
-            FunctionReturns: "TSource",
-            WrapReturn: new Func<string, string>(s => s)
-        ),
-        (
-            Signature: new Func<string, string>(collection => $"LastOrDefault<TSource>(this {collection} source, Func<TSource, bool> predicate)"),
-            Class: "LastOrDefaultPredicate<TSource>",
-            Args: "predicate",
-            AggregateReturns: "TSource",
-            FunctionReturns: "TSource",
             WrapReturn: new Func<string, string>(s => s)
         ),
         (
@@ -140,14 +132,30 @@
             Signature: new Func<string, string>(collection => $"FirstOrDefault<TSource>(this {collection} source)"),
             Class: "FirstOrDefault<TSource>",
             Args: "",
-            AggregateReturns: "TSource",
-            FunctionReturns: "TSource",
+            AggregateReturns: "TSource?",
+            FunctionReturns: "TSource?",
             WrapReturn: new Func<string, string>(s => s)
         ),
         (
             Signature: new Func<string, string>(collection => $"FirstOrDefault<TSource>(this {collection} source, Func<TSource, bool> predicate)"),
             Class: "FirstOrDefaultPredicate<TSource>",
             Args: "predicate",
+            AggregateReturns: "TSource?",
+            FunctionReturns: "TSource?",
+            WrapReturn: new Func<string, string>(s => s)
+        ),
+        (
+            Signature: new Func<string, string>(collection => $"FirstOrDefault<TSource>(this {collection} source, TSource defaultValue)"),
+            Class: "FirstOrDefault<TSource>",
+            Args: "defaultValue",
+            AggregateReturns: "TSource",
+            FunctionReturns: "TSource",
+            WrapReturn: new Func<string, string>(s => s)
+        ),
+        (
+            Signature: new Func<string, string>(collection => $"FirstOrDefault<TSource>(this {collection} source, Func<TSource, bool> predicate, TSource defaultValue)"),
+            Class: "FirstOrDefaultPredicate<TSource>",
+            Args: "predicate, defaultValue",
             AggregateReturns: "TSource",
             FunctionReturns: "TSource",
             WrapReturn: new Func<string, string>(s => s)
@@ -172,19 +180,128 @@
             Signature: new Func<string, string>(collection => $"SingleOrDefault<TSource>(this {collection} source)"),
             Class: "SingleOrDefault<TSource>",
             Args: "",
-            AggregateReturns: "TSource",
-            FunctionReturns: "TSource",
+            AggregateReturns: "TSource?",
+            FunctionReturns: "TSource?",
             WrapReturn: new Func<string, string>(s => s)
         ),
         (
             Signature: new Func<string, string>(collection => $"SingleOrDefault<TSource>(this {collection} source, Func<TSource, bool> predicate)"),
             Class: "SingleOrDefaultPredicate<TSource>",
             Args: "predicate",
+            AggregateReturns: "TSource?",
+            FunctionReturns: "TSource?",
+            WrapReturn: new Func<string, string>(s => s)
+        ),
+        (
+            Signature: new Func<string, string>(collection => $"SingleOrDefault<TSource>(this {collection} source, TSource defaultValue)"),
+            Class: "SingleOrDefault<TSource>",
+            Args: "defaultValue",
             AggregateReturns: "TSource",
             FunctionReturns: "TSource",
             WrapReturn: new Func<string, string>(s => s)
         ),
+        (
+            Signature: new Func<string, string>(collection => $"SingleOrDefault<TSource>(this {collection} source, Func<TSource, bool> predicate, TSource defaultValue)"),
+            Class: "SingleOrDefaultPredicate<TSource>",
+            Args: "predicate, defaultValue",
+            AggregateReturns: "TSource",
+            FunctionReturns: "TSource",
+            WrapReturn: new Func<string, string>(s => s)
+        ),
+        (
+            Signature: new Func<string, string>(collection => $"Min<TSource>(this {collection} source, IComparer<TSource>? comparer)"),
+            Class: "MinComparer<TSource>",
+            Args: "comparer",
+            AggregateReturns: "TSource?",
+            FunctionReturns: "TSource?",
+            WrapReturn: new Func<string, string>(s => s)
+        ),
+        (
+            Signature: new Func<string, string>(collection => $"Max<TSource>(this {collection} source, IComparer<TSource>? comparer)"),
+            Class: "MaxComparer<TSource>",
+            Args: "comparer",
+            AggregateReturns: "TSource?",
+            FunctionReturns: "TSource?",
+            WrapReturn: new Func<string, string>(s => s)
+        ),
+        (
+            Signature: new Func<string, string>(collection => $"MinBy<TSource, TKey>(this {collection} source, Func<TSource, TKey> keySelector)"),
+            Class: "MinBy<TSource, TKey>",
+            Args: "keySelector, null",
+            AggregateReturns: "TSource?",
+            FunctionReturns: "TSource?",
+            WrapReturn: new Func<string, string>(s => s)
+        ),
+        (
+            Signature: new Func<string, string>(collection => $"MinBy<TSource, TKey>(this {collection} source, Func<TSource, TKey> keySelector, IComparer<TKey>? comparer)"),
+            Class: "MinBy<TSource, TKey>",
+            Args: "keySelector, comparer",
+            AggregateReturns: "TSource?",
+            FunctionReturns: "TSource?",
+            WrapReturn: new Func<string, string>(s => s)
+        ),
+        (
+            Signature: new Func<string, string>(collection => $"MaxBy<TSource, TKey>(this {collection} source, Func<TSource, TKey> keySelector)"),
+            Class: "MaxBy<TSource, TKey>",
+            Args: "keySelector, null",
+            AggregateReturns: "TSource?",
+            FunctionReturns: "TSource?",
+            WrapReturn: new Func<string, string>(s => s)
+        ),
+        (
+            Signature: new Func<string, string>(collection => $"MaxBy<TSource, TKey>(this {collection} source, Func<TSource, TKey> keySelector, IComparer<TKey>? comparer)"),
+            Class: "MaxBy<TSource, TKey>",
+            Args: "keySelector, comparer",
+            AggregateReturns: "TSource?",
+            FunctionReturns: "TSource?",
+            WrapReturn: new Func<string, string>(s => s)
+        ),
 
+    };
+
+    var elementAggregateTypes = new []
+    {
+        (
+            Element: "KeyValuePair<TKey, TValue>",
+            Signature: new Func<string, string>(collection => $"ToDictionary<TKey, TValue>(this {collection} source) where TKey : notnull"),
+            Class: "ToDictionaryFromKeyValuePairs<TKey, TValue>",
+            Args: "null, {capacity}",
+            Returns: "Dictionary<TKey, TValue>"
+        ),
+        (
+            Element: "KeyValuePair<TKey, TValue>",
+            Signature: new Func<string, string>(collection => $"ToDictionary<TKey, TValue>(this {collection} source, IEqualityComparer<TKey>? comparer) where TKey : notnull"),
+            Class: "ToDictionaryFromKeyValuePairs<TKey, TValue>",
+            Args: "comparer, {capacity}",
+            Returns: "Dictionary<TKey, TValue>"
+        ),
+        (
+            Element: "(TKey Key, TValue Value)",
+            Signature: new Func<string, string>(collection => $"ToDictionary<TKey, TValue>(this {collection} source) where TKey : notnull"),
+            Class: "ToDictionaryFromTuples<TKey, TValue>",
+            Args: "null, {capacity}",
+            Returns: "Dictionary<TKey, TValue>"
+        ),
+        (
+            Element: "(TKey Key, TValue Value)",
+            Signature: new Func<string, string>(collection => $"ToDictionary<TKey, TValue>(this {collection} source, IEqualityComparer<TKey>? comparer) where TKey : notnull"),
+            Class: "ToDictionaryFromTuples<TKey, TValue>",
+            Args: "comparer, {capacity}",
+            Returns: "Dictionary<TKey, TValue>"
+        ),
+    };
+
+    // written in the non-generated partial of their collection
+    var handWritten = new HashSet<string>
+    {
+        "public static TSource First<TSource>(this IEnumerable<TSource> source)",
+        "public static TSource? FirstOrDefault<TSource>(this IEnumerable<TSource> source)",
+        "public static TSource FirstOrDefault<TSource>(this IEnumerable<TSource> source, TSource defaultValue)",
+        "public static TSource Single<TSource>(this IEnumerable<TSource> source)",
+        "public static TSource? SingleOrDefault<TSource>(this IEnumerable<TSource> source)",
+        "public static TSource SingleOrDefault<TSource>(this IEnumerable<TSource> source, TSource defaultValue)",
+        "public static Dictionary<TKey, TSource> ToDictionary<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey>? comparer = null) where TKey : notnull",
+        "public static Dictionary<TKey, TValue> ToDictionary<TSource, TKey, TValue>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, Func<TSource, TValue> elementSelector, IEqualityComparer<TKey>? comparer = null) where TKey : notnull",
     };
 #>
 
@@ -199,6 +316,17 @@ namespace Cistern.ValueLinq
     foreach(var collection in collections)
     {
         var genericCollectionType = collection.CollectionType("TSource");
+
+        // the source is checked before the aggregator, whose constructor checks the other arguments, is built
+        var source = collection.IsNullable ? "source ?? throw new ArgumentNullException(nameof(source))" : "source";
+
+        // a count known without enumerating sizes a dictionary, as System.Linq sizes one; read once source is checked
+        var capacity =
+            collection.StaticClassName == "Enumerable"
+                ? "source.TryGetNonEnumeratedCount(out var count) ? count : 0"
+                : collection.StaticClassName == "ValueLinqList"
+                    ? "source.Count"
+                    : "source.Length";
 #>
     public static partial class <#= collection.StaticClassName #>
     {
@@ -206,13 +334,17 @@ namespace Cistern.ValueLinq
         foreach(var aggregate in aggregateTypes)
         {
             var signature = $"public static {aggregate.FunctionReturns} {aggregate.Signature(genericCollectionType)}";
+            if (handWritten.Contains(signature))
+                continue;
+
+            var args = aggregate.Args.Replace("{capacity}", capacity);
 
             if (collection.OptimizedCall != null)
             {
 #>
         <#= signature #>
         {
-            var aggregate = new <#= aggregate.Class #>(<#= aggregate.Args #>);
+            var aggregate = new <#= aggregate.Class #>(<#= args #>);
             <#= collection.OptimizedCall #>(source, ref aggregate);
             return <#= aggregate.WrapReturn("aggregate.GetResult()") #>;
         }
@@ -223,10 +355,19 @@ namespace Cistern.ValueLinq
             {
 #>
         <#= signature #> =>
-            <#= aggregate.WrapReturn($"{collection.FastEnumerate}<TSource, {aggregate.AggregateReturns}, {aggregate.Class}>(source, new {aggregate.Class}({aggregate.Args}))") #>; 
+            <#= aggregate.WrapReturn($"{collection.FastEnumerate}<TSource, {aggregate.AggregateReturns}, {aggregate.Class}>({source}, new {aggregate.Class}({args}))") #>;
 
 <#
             }
+        }
+
+        foreach(var aggregate in elementAggregateTypes)
+        {
+#>
+        public static <#= aggregate.Returns #> <#= aggregate.Signature(collection.CollectionType(aggregate.Element)) #> =>
+            <#= collection.FastEnumerate #><<#= aggregate.Element #>, <#= aggregate.Returns #>, <#= aggregate.Class #>>(<#= source #>, new <#= aggregate.Class #>(<#= aggregate.Args.Replace("{capacity}", capacity) #>));
+
+<#
         }
 #>
     }

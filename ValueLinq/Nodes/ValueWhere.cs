@@ -1,138 +1,75 @@
-﻿using System;
+﻿namespace Cistern.ValueLinq.Nodes;
+
+using System;
 using System.Runtime.CompilerServices;
 
-namespace Cistern.ValueLinq.Nodes
+public static partial class ValueWhere
 {
-    struct ValueWhereNodeEnumerator<T, TInEnumerator, AlsoT, Predicate>
-        : IPullEnumerator<T>
-        where TInEnumerator : IPullEnumerator<T>
-        where Predicate : IFuncBase<AlsoT, bool>
-    {
-        private TInEnumerator _enumerator;
-        private Predicate _filter;
-
-        public ValueWhereNodeEnumerator(in TInEnumerator enumerator, Predicate filter) => (_enumerator, _filter) = (enumerator, filter);
-
-        public void Dispose() => _enumerator.Dispose();
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryGetNext(out T current)
-        {
-            while (_enumerator.TryGetNext(out current))
-            {
-                bool filtered;
-
-                     if (_filter is IFunc<T, bool>)   filtered = ((IFunc<T, bool>)  _filter).Invoke(current);
-                else if (_filter is IInFunc<T, bool>) filtered = ((IInFunc<T, bool>)_filter).Invoke(in current);
-                else throw new NotImplementedException();
-
-                if (filtered)
-                    return true;
-            }
-            return false;
-        }
-    }
-
-    public struct ValueWhereNode<T, NodeT, Predicate>
+    [Operator]
+    public partial struct Node<T, NodeT, Predicate>
         : INode<T>
         where NodeT : INode<T>
-        where Predicate : IFuncBase<T, bool>
+        where Predicate : IFunc<T, bool>
     {
-        private NodeT _nodeT;
-        private Predicate _filter;
+        internal NodeT _nodeT;
+        [Propagate] internal Predicate _predicate;
 
         public void GetCountInformation(out CountInformation info)
         {
             _nodeT.GetCountInformation(out info);
             info.ActualLengthIsMaximumLength &= info.MaximumLength == 0;
         }
-
-        public ValueWhereNode(in NodeT nodeT, Predicate predicate) => (_nodeT, _filter) = (nodeT, predicate);
-
-        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
-            => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
-
-        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
-        {
-            var nextEnumerator = new ValueWhereNodeEnumerator<EnumeratorElement, Enumerator, T, Predicate>(in enumerator, _filter);
-            return tail.CreateObject<CreationType, EnumeratorElement, ValueWhereNodeEnumerator<EnumeratorElement, Enumerator, T, Predicate>>(ref nextEnumerator);
-        }
-
-        bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
-
-        bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
-        {
-            result = default;
-            return false;
-        }
-
-        TResult INode<T>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum) =>
-            _nodeT.CreateViaPush<TResult, ValueWhereFoward<T, TPushEnumerator, Predicate>>(new ValueWhereFoward<T, TPushEnumerator, Predicate>(fenum, _filter));
     }
 
-    struct ValueWhereFoward<T, Next, Predicate>
-        : IPushEnumerator<T>
-        where Next : IPushEnumerator<T>
-        where Predicate : IFuncBase<T, bool>
+    partial struct Push<T, Next, Predicate>
     {
-        Next _next;
-        Predicate _predicate;
-
-        public ValueWhereFoward(in Next prior, Predicate predicate) => (_next, _predicate) = (prior, predicate);
-
-        public void Dispose() => _next.Dispose();
-        public TResult GetResult<TResult>() => _next.GetResult<TResult>();
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ProcessNext(T input)
         {
-            bool filtered;
-
-                 if (_predicate is IFunc<T, bool>)   filtered = ((IFunc<T, bool>)  _predicate).Invoke(input);
-            else if (_predicate is IInFunc<T, bool>) filtered = ((IInFunc<T, bool>)_predicate).Invoke(in input);
-            else throw new NotImplementedException();
-
-            if (filtered)
+            if (_predicate.Invoke(input))
                 return _next.ProcessNext(input);
             return true;
         }
 
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request)
+        // a cold batch only over a downstream that reads every element, as one does that takes cold
+        static BatchKinds IPushEnumerator<T>.AllowBatchesWhen =>
+            BatchKinds.Container
+            | BatchKinds.Forwarder
+            | ((Next.AllowBatchesWhen & BatchKinds.Cold) != 0
+                ? BatchKinds.ColdSpan
+                : BatchKinds.None);
+
+        bool IPushEnumerator<T>.ProcessBatch(scoped ref Batch<T> batch)
         {
-            if (typeof(TRequest) == typeof(Containers.GetSpan<TObject, T>))
+            var span = batch.GetSpan();
+            for (var i=0; i < span.Length; ++i)
             {
-                var getSpan = (Containers.GetSpan<TObject, T>)(object)request;
-
-                var span = getSpan(obj);
-
-                if (_predicate is IFunc<T, bool>)   return ProcessBatch(span);
-                if (_predicate is IInFunc<T, bool>) return ProcessBatchRef(span);
-
-                throw new NotImplementedException();
+                if (_predicate.Invoke(span[i]))
+                    if (!_next.ProcessNext(span[i]))
+                        return false;
             }
-            return BatchProcessResult.Unavailable;
+            return true;
+        }
+    }
+
+    public partial struct Pull<T, NodeT, TInEnumerator, Predicate>
+    {
+        [AllowNull] private T _current;
+
+        public bool MoveNext()
+        {
+            while (_enumerator.MoveNext())
+            {
+                var current = _enumerator.Current;
+                if (_predicate.Invoke(current))
+                {
+                    _current = current;
+                    return true;
+                }
+            }
+            return false;
         }
 
-        private BatchProcessResult ProcessBatch(ReadOnlySpan<T> data)
-        {
-            for (var i=0; i < data.Length; ++i)
-            {
-                if (((IFunc<T, bool>)_predicate).Invoke(data[i]))
-                    if (!_next.ProcessNext(data[i]))
-                        return BatchProcessResult.SuccessAndHalt;
-            }
-            return BatchProcessResult.SuccessAndContinue;
-        }
-
-        private BatchProcessResult ProcessBatchRef(ReadOnlySpan<T> data)
-        {
-            for (var i = 0; i < data.Length; ++i)
-            {
-                if (((IInFunc<T, bool>)_predicate).Invoke(in data[i]))
-                    if (!_next.ProcessNext(data[i]))
-                        return BatchProcessResult.SuccessAndHalt;
-            }
-            return BatchProcessResult.SuccessAndContinue;
-        }
+        public T Current => _current;
     }
 }

@@ -1,302 +1,216 @@
-﻿using System;
+﻿namespace Cistern.ValueLinq.Nodes;
 
-namespace Cistern.ValueLinq.Nodes
+using Cistern.ValueLinq.Chain;
+using Cistern.ValueLinq.Containers;
+using System;
+
+public static partial class SelectMany
 {
-    struct SelectManyNodeEnumerator<NodeU_Alt, U, TInEnumerator, NodeU>
-        : IPullEnumerator<U>
-        where TInEnumerator : IPullEnumerator<NodeU_Alt>
+    [Operator]
+    public partial struct Node<U, NodeU, NodeEU>
+        : INode<U>
+        , Optimizations.IOptimizationCount
         where NodeU : INode<U>
+        where NodeEU : INode<NodeU>
     {
-        private TInEnumerator _outer;
-        private PullEnumerator<U> _inner;
+        internal NodeEU _nodeEU;
 
-        public SelectManyNodeEnumerator(in TInEnumerator enumerator) => (_outer, _inner) = (enumerator, PullEnumerator<U>.Empty);
+        public void GetCountInformation(out CountInformation info) =>
+            info = new CountInformation();
+
+        private bool Count(in Optimizations.Count request, out int response)
+        {
+            if (request.DryRun)
+            {
+                response = default;
+
+                return false;
+            }
+
+            response =
+                _nodeEU.CreateViaPush<int, CountPush<U, NodeU>, Construct<CountPush<U, NodeU>, CountPush<U, NodeU>.Args>>(default(ChainOptions), new Construct<CountPush<U, NodeU>, CountPush<U, NodeU>.Args>(default));
+
+            return true;
+        }
+    }
+
+    partial struct Push<U, NodeU, Next>
+    {
+        // The downstream chain is held by value for as long as every inner sequence can expose its elements as a
+        // span (arrays, memory, lists): each inner span is then offered to the chain as a batch (so a Select or
+        // Where directly above the aggregator can run it from a local copy, see Docs/BatchFromLocalCopy.md) or
+        // looped here. The first inner sequence that cannot moves the chain into _common, which owns it from then
+        // on: an inner node's push copies the enumerator it is given, so a shared reference is the only way to
+        // continue one chain across those pushes. Inner sequences are pushed into it as a Concat pushes its parts, so
+        // an inner Cistern chain met through IEnumerable<T> pushes into this sink rather than building one of its own.
+        private ErasedChain.PushSink<U, Next>? _common;
+        private ChainOptions _options;
+
+        // Once _common owns the chain, _next is a stale copy sharing its resources (a pooled collector's rented
+        // arrays), so only the live one is disposed.
+        public void Dispose()
+        {
+            if (_common != null)
+                _common.Dispose();
+            else
+                _next.Dispose();
+        }
+
+        public TPushResult GetResult<TPushResult>() => _common != null ? _common.GetResult<TPushResult>() : _next.GetResult<TPushResult>();
+
+        public bool ProcessNext(NodeU input)
+        {
+            if (Optimizations.AsSpanSource.TryGet<U, NodeU>(ref input, out var source))
+            {
+                ref Next next = ref (_common == null ? ref _next : ref _common.Chain);
+
+                var span = source.GetSpan();
+                if (Next.AllowBatchesWhen.Takes(BatchKinds.Container))
+                {
+                    var batch = new Batch<U>(span, BatchKinds.Container);
+                    return next.ProcessBatch(ref batch);
+                }
+
+                return ProcessSpan(span, ref next);
+            }
+
+            _common ??= new ErasedChain.PushSink<U, Next>(in _next);
+            input.CreateViaPush<bool, ErasedChain.PushForward<U>, Construct<ErasedChain.PushForward<U>, ErasedChain.PushForward<U>.Args>>(in _options, new Construct<ErasedChain.PushForward<U>, ErasedChain.PushForward<U>.Args>(new ErasedChain.PushForward<U>.Args(_common)));
+            return !_common.Halted;
+        }
+    }
+
+    // Each inner sequence is a node the outer chain yields, and is pulled through its own enumerator, created as the
+    // outer chain moves onto it and disposed as the next replaces it.
+    public partial struct Pull<U, NodeU, NodeEU, TOuterEnumerator, TInnerEnumerator>
+        where NodeU : INode<U>
+        where NodeEU : INode<NodeU>
+        where TOuterEnumerator : struct, IPullEnumerator<NodeU>, INodeEnumerator<NodeEU, TOuterEnumerator>
+        where TInnerEnumerator : struct, IPullEnumerator<U>, INodeEnumerator<NodeU, TInnerEnumerator>
+    {
+        private TInnerEnumerator _inner;
+        private bool _hasInner;
 
         public void Dispose()
         {
-            _inner.Dispose();
-            _outer.Dispose();
+            if (_hasInner)
+            {
+                _hasInner = false;
+                _inner.Dispose();
+            }
+            _enumerator.Dispose();
         }
 
-        public bool TryGetNext(out U current)
+        public bool MoveNext()
         {
             for (;;)
             {
-                if (_inner.TryGetNext(out current))
+                if (_hasInner && _inner.MoveNext())
                     return true;
 
-                if (!Next())
-                {
-                    current = default;
+                if (!MoveToNextInner())
                     return false;
-                }
             }
         }
 
-        public bool Next()
-        {
-            _inner.Dispose();
-            _inner = PullEnumerator<U>.Empty;
+        public U Current => _inner.Current;
 
-            if (!_outer.TryGetNext(out var next))
+        private bool MoveToNextInner()
+        {
+            if (_hasInner)
             {
-                return false;
+                _hasInner = false;
+                _inner.Dispose();
             }
 
-            _inner = Nodes<U>.CreatePullEnumerator((NodeU)(object)next);
+            if (!_enumerator.MoveNext())
+                return false;
+
+            var node = _enumerator.Current;
+            _inner = TInnerEnumerator.Create(in node);
+            _hasInner = true;
+
+            return true;
+        }
+
+        // the inner sequence already open is drained into the sink, and the ones not yet opened are pushed into it
+        // rather than opened, as a Concat's parts are
+        bool IPullEnumerator<U>.TryPushRest(ErasedChain.PushSink<U> sink)
+        {
+            if (_hasInner)
+                PullEnumerator.PushRest<U, TInnerEnumerator>(ref _inner, sink);
+
+            var forward = new ErasedChain.PushForward<U>(sink);
+            while (!sink.Halted)
+            {
+                if (_hasInner)
+                {
+                    _hasInner = false;
+                    _inner.Dispose();
+                }
+
+                if (!_enumerator.MoveNext())
+                    return true;
+
+                var node = _enumerator.Current;
+                node.CreateViaPush<bool, ErasedChain.PushForward<U>, Downstream<ErasedChain.PushForward<U>>>(default(ChainOptions), new Downstream<ErasedChain.PushForward<U>>(in forward));
+            }
 
             return true;
         }
     }
 
-    struct SelectManyNodeEnumerator<NodeU_Alt, TSource, TCollection, TResult, TSourceEnumerator, NodeCollection>
-        : IPullEnumerator<TResult>
-        where TSourceEnumerator : IPullEnumerator<NodeU_Alt>
-        where NodeCollection : INode<TCollection>
+    private static bool ProcessSpan<U, Next>(ReadOnlySpan<U> span, ref Next next)
+        where Next : IPushEnumerator<U>
     {
-        private TSourceEnumerator _outer;
-        private Func<TSource, TCollection, TResult> _resultSelector;
-        private TSource _source;
-        private PullEnumerator<TCollection> _inner;
-
-        public SelectManyNodeEnumerator(in TSourceEnumerator sourceEnumerator, Func<TSource, TCollection, TResult> resultSelector)
-            => (_outer, _resultSelector, _source, _inner) = (sourceEnumerator, resultSelector, default, PullEnumerator<TCollection>.Empty);
-
-        public void Dispose()
+        foreach (var item in span)
         {
-            _inner.Dispose();
-            _outer.Dispose();
-        }
-
-        public bool TryGetNext(out TResult current)
-        {
-            for (; ; )
-            {
-                if (_inner.TryGetNext(out var collectionItem))
-                {
-                    current = _resultSelector(_source, collectionItem);
-                    return true;
-                }
-
-                if (!Next())
-                {
-                    current = default;
-                    return false;
-                }
-            }
-        }
-
-        public bool Next()
-        {
-            _inner.Dispose();
-            _inner = PullEnumerator<TCollection>.Empty;
-
-            if (!_outer.TryGetNext(out var tmp))
-            {
+            if (!next.ProcessNext(item))
                 return false;
-            }
-
-            var correctlyTyped = ((TSource, NodeCollection))(object)tmp;
-            _source = correctlyTyped.Item1;
-            _inner = Nodes<TCollection>.CreatePullEnumerator(correctlyTyped.Item2);
-
-            return true;
         }
+        return true;
     }
 
-    public struct SelectManyNode<U, NodeU, NodeEU>
-        : INode<U>
-        where NodeU : INode<U>
-        where NodeEU : INode<NodeU>
+    // counts each inner sequence as NodeImpl.Count does, except that one which has to be pushed to be counted is
+    // pushed into a sink shared by the whole count, as a Concat's parts are, rather than given a chain of its own
+    internal struct InnerCounter<U>
     {
-        private NodeEU _nodeEU;
+        private int _count;
+        private ErasedChain.PushSink<U, Aggregation.Count<U>>? _pushed;
 
-        public void GetCountInformation(out CountInformation info) =>
-            info = new CountInformation();
-
-        public SelectManyNode(in NodeEU nodeEU) => (_nodeEU) = (nodeEU);
-
-        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
-            => Nodes<CreationType>.Descend(ref _nodeEU, in this, in nodes);
-
-        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
-        {
-            var nextEnumerator = new SelectManyNodeEnumerator<EnumeratorElement, U, Enumerator, NodeU>(in enumerator);
-            return tail.CreateObject<CreationType, U, SelectManyNodeEnumerator<EnumeratorElement, U, Enumerator, NodeU>>(ref nextEnumerator);
-        }
-
-        bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
-        bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
-        {
-            if (typeof(TRequest) == typeof(Optimizations.Count))
-            {
-                result = (TResult)(object)Count();
-                return true;
-            }
-
-            result = default;
-            return false;
-        }
-
-        private readonly int Count()
-        {
-            // TODO: change to forwards?
-            using var e = Nodes<NodeU>.CreatePullEnumerator(_nodeEU);
-            return SelectManyImpl.Count<U, NodeU>(e);
-        }
-
-        TResult INode<U>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
-            => _nodeEU.CreateViaPush<TResult, SelectManyFoward2<U, NodeU, TPushEnumerator, NodeEU>>(new SelectManyFoward2<U, NodeU, TPushEnumerator, NodeEU>(new SelectManyCommonNext<U, TPushEnumerator>(in fenum)));
-    }
-
-    public struct SelectManyNode<TSource, TCollection, TResult, NodeCollection, NodeSrcCol>
-        : INode<TResult>
-        where NodeCollection : INode<TCollection>
-        where NodeSrcCol : INode<(TSource, NodeCollection)>
-    {
-        private NodeSrcCol _nodeSource;
-        private Func<TSource, TCollection, TResult> _resultSelector;
-
-        public void GetCountInformation(out CountInformation info) =>
-            info = new CountInformation();
-
-        public SelectManyNode(in NodeSrcCol nodeSource, Func<TSource, TCollection, TResult> resultSelector)
-            => (_nodeSource, _resultSelector) = (nodeSource, resultSelector);
-
-        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
-            => Nodes<CreationType>.Descend(ref _nodeSource, in this, in nodes);
-
-        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
-        {
-            var nextEnumerator = new SelectManyNodeEnumerator<EnumeratorElement, TSource, TCollection, TResult, Enumerator, NodeCollection>(in enumerator, _resultSelector);
-            return tail.CreateObject<CreationType, TResult, SelectManyNodeEnumerator<EnumeratorElement, TSource, TCollection, TResult, Enumerator, NodeCollection>>(ref nextEnumerator);
-        }
-
-        bool INode.TryPullOptimization<TRequest, TObjResult, Nodes>(in TRequest request, ref Nodes nodes, out TObjResult creation) { creation = default; return false; }
-        bool INode.TryPushOptimization<TRequest, TResultLocal>(in TRequest request, out TResultLocal result)
-        {
-            if (typeof(TRequest) == typeof(Optimizations.Count))
-            {
-                result = (TResultLocal)(object)Count();
-                return true;
-            }
-
-            result = default;
-            return false;
-        }
-
-        private readonly int Count()
-        {
-            // TODO: change to forwards?
-            using var e = Nodes<NodeCollection>.CreatePullEnumerator(_nodeSource);
-            return SelectManyImpl.Count<TCollection, NodeCollection>(e);
-        }
-
-        TObjResult INode<TResult>.CreateViaPush<TObjResult, TPushEnumerator>(in TPushEnumerator fenum) =>
-            _nodeSource.CreateViaPush<TObjResult, SelectManyFoward<TSource, TCollection, TResult, NodeCollection, TPushEnumerator>>(new SelectManyFoward<TSource, TCollection, TResult, NodeCollection, TPushEnumerator>(new SelectManyCommonNext<TResult, TPushEnumerator>(in fenum), _resultSelector));
-    }
-
-    static class SelectManyImpl
-    {
-        public static int Count<U, NodeU>(PullEnumerator<NodeU> enumerator)
+        public void Add<NodeU>(ref NodeU node)
             where NodeU : INode<U>
         {
-            checked
+            if (NodeImpl.TryCountWithoutPush<U, NodeU>(in node, false, out var count))
             {
-                var count = 0;
-                while (enumerator.TryGetNext(out var item))
-                {
-                    count += NodeImpl.Count<U, NodeU>(item, false);
-                }
-                return count;
+                _count = checked(_count + count);
+                return;
             }
+
+            _pushed ??= new ErasedChain.PushSink<U, Aggregation.Count<U>>(new Aggregation.Count<U>());
+            node.CreateViaPush<bool, ErasedChain.PushForward<U>, Construct<ErasedChain.PushForward<U>, ErasedChain.PushForward<U>.Args>>(default(ChainOptions), new Construct<ErasedChain.PushForward<U>, ErasedChain.PushForward<U>.Args>(new ErasedChain.PushForward<U>.Args(_pushed)));
+        }
+
+        public readonly int Result => _pushed == null ? _count : checked(_count + _pushed.GetResult<int>());
+    }
+
+    // what a Count pushes the outer sequence into: each inner node counted, none of them run through the chain
+    [Create]
+    private partial struct CountPush<U, NodeU>
+        : IPushEnumerator<NodeU>
+        where NodeU : INode<U>
+    {
+        private InnerCounter<U> _counter;
+
+        public CountPush() { }
+
+        public void Dispose() { }
+        public TPushResult GetResult<TPushResult>() => (TPushResult)(object)_counter.Result;
+
+        public bool ProcessNext(NodeU input)
+        {
+            _counter.Add(ref input);
+            return true;
         }
     }
-
-    sealed class SelectManyCommonNext<T, Next>
-        where Next : IPushEnumerator<T>
-    {
-        private Next _next;
-
-        public SelectManyCommonNext(in Next next) => _next = next;
-
-        public bool ProcessNext(T input) => _next.ProcessNext(input);
-        public void Dispose() { }
-        public TResult GetResult<TResult>() => _next.GetResult<TResult>();
-    }
-
-    struct SelectManyProcessNextForward<T, Next>
-        : IPushEnumerator<T>
-        where Next : IPushEnumerator<T>
-    {
-        SelectManyCommonNext<T, Next> _next;
-        private bool _processNext;
-
-        public SelectManyProcessNextForward(SelectManyCommonNext<T, Next> next) => (_next, _processNext) = (next, true);
-
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
-        public void Dispose() { }
-        TResult IPushEnumerator<T>.GetResult<TResult>() => (TResult)(object)_processNext;
-
-        bool IPushEnumerator<T>.ProcessNext(T input) => _processNext = _next.ProcessNext(input);
-    }
-
-    struct SelectManyProcessNextForward<TSource, TCollection, TResult, Next>
-        : IPushEnumerator<TCollection>
-        where Next : IPushEnumerator<TResult>
-    {
-        private TSource _source;
-        private Func<TSource, TCollection, TResult> _resultSelector;
-        private SelectManyCommonNext<TResult, Next> _next;
-        private bool _processNext;
-
-        public SelectManyProcessNextForward(TSource source, Func<TSource, TCollection, TResult> resultSelector, SelectManyCommonNext<TResult, Next> next)
-            => (_source, _resultSelector, _next, _processNext) = (source, resultSelector, next, true);
-
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
-        public void Dispose() { }
-        TObjResult IPushEnumerator<TCollection>.GetResult<TObjResult>() => (TObjResult)(object)_processNext;
-
-        bool IPushEnumerator<TCollection>.ProcessNext(TCollection input) => _processNext = _next.ProcessNext(_resultSelector(_source, input));
-    }
-
-    struct SelectManyFoward2<U, NodeU, Next, NodeEU>
-        : IPushEnumerator<NodeU>
-        where Next : IPushEnumerator<U>
-        where NodeU : INode<U>
-        where NodeEU : INode<NodeU>
-    {
-        private SelectManyCommonNext<U, Next> _next;
-
-        public SelectManyFoward2(in SelectManyCommonNext<U, Next> next) => _next = next;
-
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
-        public void Dispose() => _next.Dispose();
-
-        public TResult GetResult<TResult>() => _next.GetResult<TResult>();
-
-        public bool ProcessNext(NodeU input) =>
-            input.CreateViaPush<bool, SelectManyProcessNextForward<U, Next>>(new SelectManyProcessNextForward<U, Next>(_next));
-    }
-
-    struct SelectManyFoward<TSource, TCollection, TResult, NodeCollection, Next>
-        : IPushEnumerator<(TSource, NodeCollection)>
-        where Next : IPushEnumerator<TResult>
-        where NodeCollection : INode<TCollection>
-    {
-        private SelectManyCommonNext<TResult, Next> _next;
-        private Func<TSource, TCollection, TResult> _resultSelector;
-
-        public SelectManyFoward(in SelectManyCommonNext<TResult, Next> next, Func<TSource, TCollection, TResult> resultSelector)
-            => (_next, _resultSelector) = (next, resultSelector);
-
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
-        public void Dispose() => _next.Dispose();
-
-        public TObjResult GetResult<TObjResult>() => _next.GetResult<TObjResult>();
-
-        public bool ProcessNext((TSource, NodeCollection) input) =>
-            input.Item2.CreateViaPush<bool, SelectManyProcessNextForward<TSource, TCollection, TResult, Next>>(new SelectManyProcessNextForward<TSource, TCollection, TResult, Next>(input.Item1, _resultSelector, _next));
-    }
-
 }

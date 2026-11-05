@@ -1,6 +1,5 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System;
 using System.Collections.Generic;
@@ -42,20 +41,20 @@ namespace Linqs.Tests
         public static IEnumerable<object[]> All_TestData()
         {
             Func<int, bool> isEvenFunc = IsEven;
-            yield return new object[] { new int[0], isEvenFunc, true };
-            yield return new object[] { new int[] { 3 }, isEvenFunc, false };
-            yield return new object[] { new int[] { 4 }, isEvenFunc, true };
-            yield return new object[] { new int[] { 3 }, isEvenFunc, false };
-            yield return new object[] { new int[] { 4, 8, 3, 5, 10, 20, 12 }, isEvenFunc, false };
-            yield return new object[] { new int[] { 4, 2, 10, 12, 8, 6, 3 }, isEvenFunc, false };
-            yield return new object[] { new int[] { 4, 2, 10, 12, 8, 6, 14 }, isEvenFunc, true };
+            yield return [new int[0], isEvenFunc, true];
+            yield return [new int[] { 3 }, isEvenFunc, false];
+            yield return [new int[] { 4 }, isEvenFunc, true];
+            yield return [new int[] { 3 }, isEvenFunc, false];
+            yield return [new int[] { 4, 8, 3, 5, 10, 20, 12 }, isEvenFunc, false];
+            yield return [new int[] { 4, 2, 10, 12, 8, 6, 3 }, isEvenFunc, false];
+            yield return [new int[] { 4, 2, 10, 12, 8, 6, 14 }, isEvenFunc, true];
 
             int[] range = Enumerable.Range(1, 10).ToArray();
-            yield return new object[] { range, (Func<int, bool>)(i => i > 0), true };
+            yield return [range, (Func<int, bool>)(i => i > 0), true];
             for (int j = 1; j <= 10; j++)
             {
                 int k = j; // Local copy for iterator
-                yield return new object[] { range, (Func<int, bool>)(i => i > k), false };
+                yield return [range, (Func<int, bool>)(i => i > k), false];
             }
         }
 
@@ -63,13 +62,19 @@ namespace Linqs.Tests
         [MemberData(nameof(All_TestData))]
         public void All(IEnumerable<int> source, Func<int, bool> predicate, bool expected)
         {
-            Assert.Equal(expected, source.All(predicate));
+            Assert.All(CreateSources(source), source =>
+            {
+                Assert.Equal(expected, source.All(predicate));
+            });
         }
 
         [Theory, MemberData(nameof(All_TestData))]
         public void AllRunOnce(IEnumerable<int> source, Func<int, bool> predicate, bool expected)
         {
-            Assert.Equal(expected, source.RunOnce().All(predicate));
+            Assert.All(CreateSources(source), source =>
+            {
+                Assert.Equal(expected, source.RunOnce().All(predicate));
+            });
         }
 
         [Fact]

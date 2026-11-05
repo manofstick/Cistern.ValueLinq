@@ -1,0 +1,20 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/Solution Items/">
+    <File Path=".gitignore" />
+    <File Path="LICENSE" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/ValueLinq/" />
+  <Project Path="Benchmark.StructLinq/Cistern.Benchmarks.StructLinq.csproj" />
+  <Project Path="Benchmark/Cistern.Benchmarks.csproj" />
+  <Project Path="Cistern.Profiling/Cistern.Profiling.csproj" />
+  <Project Path="Cistern.ValueLinq.Generators/Cistern.ValueLinq.Generators.csproj" />
+  <Project Path="Cistern.ValueLinq.Tests/Cistern.ValueLinq.Tests.csproj" />
+  <Project Path="Tests/Linqs.Tests.csproj" />
+  <Project Path="ValueLinq/Cistern.ValueLinq.csproj" />
+</Solution>

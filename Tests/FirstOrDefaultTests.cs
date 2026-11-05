@@ -1,6 +1,5 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System;
 using System.Collections.Generic;
@@ -40,12 +39,21 @@ namespace Linqs.Tests
 
         private static void TestEmptyIList<T>()
         {
-            T[] source = { };
+            T[] source = [];
             T expected = default(T);
 
             Assert.IsAssignableFrom<IList<T>>(source);
 
             Assert.Equal(expected, source.RunOnce().FirstOrDefault());
+        }
+
+        private static void TestEmptyIListDefault<T>(T defaultValue)
+        {
+            T[] source = [];
+
+            Assert.IsAssignableFrom<IList<T>>(source);
+
+            Assert.Equal(defaultValue, source.RunOnce().FirstOrDefault(defaultValue));
         }
 
         [Fact]
@@ -58,9 +66,17 @@ namespace Linqs.Tests
         }
 
         [Fact]
+        public void EmptyIListDefault()
+        {
+            TestEmptyIListDefault(5); // int
+            TestEmptyIListDefault("Hello"); // string
+            TestEmptyIListDefault(DateTime.UnixEpoch); //DateTime
+        }
+
+        [Fact]
         public void IListTOneElement()
         {
-            int[] source = { 5 };
+            int[] source = [5];
             int expected = 5;
 
             Assert.IsAssignableFrom<IList<int>>(source);
@@ -69,9 +85,20 @@ namespace Linqs.Tests
         }
 
         [Fact]
+        public void IListOneElementDefault()
+        {
+            int[] source = [5];
+            int expected = 5;
+
+            Assert.IsAssignableFrom<IList<int>>(source);
+
+            Assert.Equal(expected, source.FirstOrDefault(3));
+        }
+
+        [Fact]
         public void IListTManyElementsFirstIsDefault()
         {
-            int?[] source = { null, -10, 2, 4, 3, 0, 2 };
+            int?[] source = [null, -10, 2, 4, 3, 0, 2];
             int? expected = null;
 
             Assert.IsAssignableFrom<IList<int?>>(source);
@@ -82,7 +109,7 @@ namespace Linqs.Tests
         [Fact]
         public void IListTManyElementsFirstIsNotDefault()
         {
-            int?[] source = { 19, null, -10, 2, 4, 3, 0, 2 };
+            int?[] source = [19, null, -10, 2, 4, 3, 0, 2];
             int? expected = 19;
 
             Assert.IsAssignableFrom<IList<int?>>(source);
@@ -90,19 +117,33 @@ namespace Linqs.Tests
             Assert.Equal(expected, source.FirstOrDefault());
         }
 
-        private static IEnumerable<T> GenericEmptySource<T>()
-        {
-            yield break;
-        }
-
         private static void TestEmptyNotIList<T>()
         {
-            var source = GenericEmptySource<T>();
+            static IEnumerable<T1> EmptySource<T1>()
+            {
+                yield break;
+            }
+
+            var source = EmptySource<T>();
             T expected = default(T);
 
             Assert.Null(source as IList<T>);
 
             Assert.Equal(expected, source.RunOnce().FirstOrDefault());
+        }
+
+        private static void TestEmptyNotIListDefault<T>(T defaultValue)
+        {
+            static IEnumerable<T1> EmptySource<T1>()
+            {
+                yield break;
+            }
+
+            var source = EmptySource<T>();
+
+            Assert.Null(source as IList<T>);
+
+            Assert.Equal(defaultValue, source.RunOnce().FirstOrDefault(defaultValue));
         }
 
         [Fact]
@@ -139,72 +180,144 @@ namespace Linqs.Tests
         [Fact]
         public void EmptySource()
         {
-            int?[] source = { };
+            int?[] source = [];
 
-            Assert.Null(source.FirstOrDefault(x => true));
-            Assert.Null(source.FirstOrDefault(x => false));
+            Assert.All(CreateSources(source), source =>
+            {
+                Assert.Null(source.FirstOrDefault(x => true));
+                Assert.Null(source.FirstOrDefault(x => false));
+            });
         }
 
         [Fact]
         public void OneElementTruePredicate()
         {
-            int[] source = { 4 };
+            int[] source = [4];
             Func<int, bool> predicate = IsEven;
             int expected = 4;
 
-            Assert.Equal(expected, source.FirstOrDefault(predicate));
+            Assert.All(CreateSources(source), source =>
+            {
+                Assert.Equal(expected, source.FirstOrDefault(predicate));
+            });
+        }
+
+        [Fact]
+        public void OneElementTruePredicateDefault()
+        {
+            int[] source = [4];
+            Func<int, bool> predicate = IsEven;
+            int expected = 4;
+
+            Assert.All(CreateSources(source), source =>
+            {
+                Assert.Equal(expected, source.FirstOrDefault(predicate, 5));
+            });
         }
 
         [Fact]
         public void ManyElementsPredicateFalseForAll()
         {
-            int[] source = { 9, 5, 1, 3, 17, 21 };
+            int[] source = [9, 5, 1, 3, 17, 21];
             Func<int, bool> predicate = IsEven;
             int expected = default(int);
 
-            Assert.Equal(expected, source.FirstOrDefault(predicate));
+            Assert.All(CreateSources(source), source =>
+            {
+                Assert.Equal(expected, source.FirstOrDefault(predicate));
+            });
+        }
+
+        [Fact]
+        public void ManyElementsPredicateFalseForAllDefault()
+        {
+            int[] source = [9, 5, 1, 3, 17, 21];
+            Func<int, bool> predicate = IsEven;
+            int expected = 5;
+
+            Assert.All(CreateSources(source), source =>
+            {
+                Assert.Equal(expected, source.FirstOrDefault(predicate, 5));
+            });
         }
 
         [Fact]
         public void PredicateTrueOnlyForLast()
         {
-            int[] source = { 9, 5, 1, 3, 17, 21, 50 };
+            int[] source = [9, 5, 1, 3, 17, 21, 50];
             Func<int, bool> predicate = IsEven;
             int expected = 50;
 
-            Assert.Equal(expected, source.FirstOrDefault(predicate));
+            Assert.All(CreateSources(source), source =>
+            {
+                Assert.Equal(expected, source.FirstOrDefault(predicate));
+            });
+        }
+
+        [Fact]
+        public void PredicateTrueOnlyForLastDefault()
+        {
+            int[] source = [9, 5, 1, 3, 17, 21, 50];
+            Func<int, bool> predicate = IsEven;
+            int expected = 50;
+
+            Assert.All(CreateSources(source), source =>
+            {
+                Assert.Equal(expected, source.FirstOrDefault(predicate, 5));
+            });
         }
 
         [Fact]
         public void PredicateTrueForSome()
         {
-            int[] source = { 3, 7, 10, 7, 9, 2, 11, 17, 13, 8 };
+            int[] source = [3, 7, 10, 7, 9, 2, 11, 17, 13, 8];
             Func<int, bool> predicate = IsEven;
             int expected = 10;
 
-            Assert.Equal(expected, source.FirstOrDefault(predicate));
+            Assert.All(CreateSources(source), source =>
+            {
+                Assert.Equal(expected, source.FirstOrDefault(predicate));
+            });
+        }
+
+        [Fact]
+        public void PredicateTrueForSomeDefault()
+        {
+            int[] source = [3, 7, 10, 7, 9, 2, 11, 17, 13, 8];
+            Func<int, bool> predicate = IsEven;
+            int expected = 10;
+
+            Assert.All(CreateSources(source), source =>
+            {
+                Assert.Equal(expected, source.FirstOrDefault(predicate, 5));
+            });
         }
 
         [Fact]
         public void PredicateTrueForSomeRunOnce()
         {
-            int[] source = { 3, 7, 10, 7, 9, 2, 11, 17, 13, 8 };
+            int[] source = [3, 7, 10, 7, 9, 2, 11, 17, 13, 8];
             Func<int, bool> predicate = IsEven;
             int expected = 10;
 
-            Assert.Equal(expected, source.RunOnce().FirstOrDefault(predicate));
+            Assert.All(CreateSources(source), source =>
+            {
+                Assert.Equal(expected, source.RunOnce().FirstOrDefault(predicate));
+            });
         }
 
         [Fact]
         public void NullSource()
         {
             AssertExtensions.Throws<ArgumentNullException>("source", () => ((IEnumerable<int>)null).FirstOrDefault());
+            AssertExtensions.Throws<ArgumentNullException>("source", () => ((IEnumerable<int>)null).FirstOrDefault(5));
         }
 
         [Fact]
         public void NullSourcePredicateUsed()
         {
             AssertExtensions.Throws<ArgumentNullException>("source", () => ((IEnumerable<int>)null).FirstOrDefault(i => i != 2));
+            AssertExtensions.Throws<ArgumentNullException>("source", () => ((IEnumerable<int>)null).FirstOrDefault(i => i != 2, 5));
         }
 
         [Fact]
@@ -212,6 +325,7 @@ namespace Linqs.Tests
         {
             Func<int, bool> predicate = null;
             AssertExtensions.Throws<ArgumentNullException>("predicate", () => Enumerable.Range(0, 3).FirstOrDefault(predicate));
+            AssertExtensions.Throws<ArgumentNullException>("predicate", () => Enumerable.Range(0, 3).FirstOrDefault(predicate, 5));
         }
     }
 }

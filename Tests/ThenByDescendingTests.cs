@@ -1,6 +1,5 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System;
 using System.Collections.Generic;
@@ -48,7 +47,7 @@ namespace Linqs.Tests
         [Fact]
         public void SourceEmpty()
         {
-            int[] source = { };
+            int[] source = [];
             Assert.Empty(source.OrderBy(e => e).ThenByDescending(e => e));
         }
 
@@ -101,10 +100,10 @@ namespace Linqs.Tests
         [Fact]
         public void OrderIsStable()
         {
-            var source = @"Because I could not stop for Death —
-He kindly stopped for me —
-The Carriage held but just Ourselves —
-And Immortality.".Split(new []{ ' ', '\n', '\r', '—' }, StringSplitOptions.RemoveEmptyEntries);
+            var source = @"Because I could not stop for Death -
+He kindly stopped for me -
+The Carriage held but just Ourselves -
+And Immortality.".Split([' ', '\n', '\r', '-'], StringSplitOptions.RemoveEmptyEntries);
             var expected = new []
             {
                 "stopped", "kindly", "could", "stop", "held", "just", "not", "for", "for", "but", "me",
@@ -117,10 +116,10 @@ And Immortality.".Split(new []{ ' ', '\n', '\r', '—' }, StringSplitOptions.Rem
         [Fact]
         public void OrderIsStableCustomComparer()
         {
-            var source = @"Because I could not stop for Death —
-He kindly stopped for me —
-The Carriage held but just Ourselves —
-And Immortality.".Split(new[] { ' ', '\n', '\r', '—' }, StringSplitOptions.RemoveEmptyEntries);
+            var source = @"Because I could not stop for Death -
+He kindly stopped for me -
+The Carriage held but just Ourselves -
+And Immortality.".Split([' ', '\n', '\r', '-'], StringSplitOptions.RemoveEmptyEntries);
             var expected = new[]
             {
                 "me", "not", "for", "for", "but", "stop", "held", "just", "could", "kindly", "stopped",
@@ -133,10 +132,10 @@ And Immortality.".Split(new[] { ' ', '\n', '\r', '—' }, StringSplitOptions.Rem
         [Fact]
         public void RunOnce()
         {
-            var source = @"Because I could not stop for Death —
-He kindly stopped for me —
-The Carriage held but just Ourselves —
-And Immortality.".Split(new[] { ' ', '\n', '\r', '—' }, StringSplitOptions.RemoveEmptyEntries);
+            var source = @"Because I could not stop for Death -
+He kindly stopped for me -
+The Carriage held but just Ourselves -
+And Immortality.".Split([' ', '\n', '\r', '-'], StringSplitOptions.RemoveEmptyEntries);
             var expected = new[]
             {
                 "me", "not", "for", "for", "but", "stop", "held", "just", "could", "kindly", "stopped",
@@ -146,105 +145,104 @@ And Immortality.".Split(new[] { ' ', '\n', '\r', '—' }, StringSplitOptions.Rem
             Assert.Equal(expected, source.RunOnce().OrderBy(word => char.IsUpper(word[0])).ThenByDescending(word => word.Length, Comparer<int>.Create((w1, w2) => w2.CompareTo(w1))));
         }
 
-        [Fact(Skip ="CISTERN.VALUELINQ Doesn't implemenet IOrderedEnumerable")]
+        [Fact]
         public void NullSource()
         {
-#if !CISTERN_VALUELINQ
             System.Linq.IOrderedEnumerable<int> source = null;
             AssertExtensions.Throws<ArgumentNullException>("source", () => source.ThenByDescending(i => i));
-#endif
         }
 
         [Fact]
         public void NullKeySelector()
         {
             Func<DateTime, int> keySelector = null;
-            AssertExtensions.Throws<ArgumentNullException>("keySelector", () => Enumerable.Empty<DateTime>().OrderBy<DateTime, DateTime>(e => e).ThenByDescending(keySelector));
+            AssertExtensions.Throws<ArgumentNullException>("keySelector", () => Enumerable.Empty<DateTime>().OrderBy(e => e).ThenByDescending(keySelector));
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ Doesn't implemenet IOrderedEnumerable")]
+        [Fact]
         public void NullSourceComparer()
         {
-#if !CISTERN_VALUELINQ
             System.Linq.IOrderedEnumerable<int> source = null;
             AssertExtensions.Throws<ArgumentNullException>("source", () => source.ThenByDescending(i => i, null));
-#endif
         }
 
         [Fact]
         public void NullKeySelectorComparer()
         {
             Func<DateTime, int> keySelector = null;
-            AssertExtensions.Throws<ArgumentNullException>("keySelector", () => Enumerable.Empty<DateTime>().OrderBy<DateTime, DateTime>(e => e).ThenByDescending(keySelector, null));
+            AssertExtensions.Throws<ArgumentNullException>("keySelector", () => Enumerable.Empty<DateTime>().OrderBy(e => e).ThenByDescending(keySelector, null));
         }
 
-        [Theory]
+        [Theory(Skip = "CISTERN.VALUELINQ: Doesn't implement IOrderedEnumerable")]
         [InlineData(1)]
         [InlineData(2)]
         [InlineData(3)]
         public void SortsLargeAscendingEnumerableCorrectly(int thenBys)
         {
+#if !CISTERN_VALUELINQ
             const int Items = 100_000;
             IEnumerable<int> expected = NumberRangeGuaranteedNotCollectionType(0, Items);
 
             IEnumerable<int> unordered = expected.Select(i => i);
-            var orderedTmp = unordered.OrderBy(_ => 0);
-            IEnumerable<int> ordered = null;
+            System.Linq.IOrderedEnumerable<int> ordered = unordered.OrderBy(_ => 0);
             switch (thenBys)
             {
-                case 1: ordered = orderedTmp.ThenByDescending(i => -i); break;
-                case 2: ordered = orderedTmp.ThenByDescending(i => 0).ThenByDescending(i => -i); break;
-                case 3: ordered = orderedTmp.ThenByDescending(i => 0).ThenByDescending(i => 0).ThenByDescending(i => -i); break;
+                case 1: ordered = ordered.ThenByDescending(i => -i); break;
+                case 2: ordered = ordered.ThenByDescending(i => 0).ThenByDescending(i => -i); break;
+                case 3: ordered = ordered.ThenByDescending(i => 0).ThenByDescending(i => 0).ThenByDescending(i => -i); break;
             }
 
             Assert.Equal(expected, ordered);
+#endif
         }
 
-        [Theory]
+        [Theory(Skip = "CISTERN.VALUELINQ: Doesn't implement IOrderedEnumerable")]
         [InlineData(1)]
         [InlineData(2)]
         [InlineData(3)]
         public void SortsLargeDescendingEnumerableCorrectly(int thenBys)
         {
+#if !CISTERN_VALUELINQ
             const int Items = 100_000;
             IEnumerable<int> expected = NumberRangeGuaranteedNotCollectionType(0, Items);
 
             IEnumerable<int> unordered = expected.Select(i => Items - i - 1);
-            var orderedTmp = unordered.OrderBy(_ => 0);
-            IEnumerable<int> ordered = null;
+            System.Linq.IOrderedEnumerable<int> ordered = unordered.OrderBy(_ => 0);
             switch (thenBys)
             {
-                case 1: ordered = orderedTmp.ThenByDescending(i => -i); break;
-                case 2: ordered = orderedTmp.ThenByDescending(i => 0).ThenByDescending(i => -i); break;
-                case 3: ordered = orderedTmp.ThenByDescending(i => 0).ThenByDescending(i => 0).ThenByDescending(i => -i); break;
+                case 1: ordered = ordered.ThenByDescending(i => -i); break;
+                case 2: ordered = ordered.ThenByDescending(i => 0).ThenByDescending(i => -i); break;
+                case 3: ordered = ordered.ThenByDescending(i => 0).ThenByDescending(i => 0).ThenByDescending(i => -i); break;
             }
 
             Assert.Equal(expected, ordered);
+#endif
         }
 
-        [Theory]
+        [Theory(Skip = "CISTERN.VALUELINQ: Doesn't implement IOrderedEnumerable")]
         [InlineData(1)]
         [InlineData(2)]
         [InlineData(3)]
         public void SortsLargeRandomizedEnumerableCorrectly(int thenBys)
         {
+#if !CISTERN_VALUELINQ
             const int Items = 100_000;
             var r = new Random(42);
 
             int[] randomized = Enumerable.Range(0, Items).Select(i => r.Next()).ToArray();
 
-            var orderedTmp = randomized.OrderBy(_ => 0);
-            IEnumerable<int> orderedEnumerable = null;
+            System.Linq.IOrderedEnumerable<int> orderedEnumerable = randomized.OrderBy(_ => 0);
             switch (thenBys)
             {
-                case 1: orderedEnumerable = orderedTmp.ThenByDescending(i => -i); break;
-                case 2: orderedEnumerable = orderedTmp.ThenByDescending(i => 0).ThenByDescending(i => -i); break;
-                case 3: orderedEnumerable = orderedTmp.ThenByDescending(i => 0).ThenByDescending(i => 0).ThenByDescending(i => -i); break;
+                case 1: orderedEnumerable = orderedEnumerable.ThenByDescending(i => -i); break;
+                case 2: orderedEnumerable = orderedEnumerable.ThenByDescending(i => 0).ThenByDescending(i => -i); break;
+                case 3: orderedEnumerable = orderedEnumerable.ThenByDescending(i => 0).ThenByDescending(i => 0).ThenByDescending(i => -i); break;
             }
             int[] ordered = orderedEnumerable.ToArray();
 
             Array.Sort(randomized, (a, b) => a - b);
             Assert.Equal(randomized, orderedEnumerable);
+#endif
         }
     }
 }

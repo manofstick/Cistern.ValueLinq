@@ -1,37 +1,35 @@
-﻿using System;
+﻿using Cistern.ValueLinq.Chain;
+using Cistern.ValueLinq.ValueEnumerable;
+using System;
 using System.Runtime.CompilerServices;
 
 namespace Cistern.ValueLinq.Aggregation
 {
+    // a Fork is only ever pushed: the chains applied to it are aggregations
+    [Puller]
+    public partial struct ForkEnumerator<T>
+    {
+        private static ForkEnumerator<T> Create(in Fork<T> node)
+            => throw new InvalidOperationException("Unexpected usage of fork");
+
+        public bool MoveNext() => false;
+        public T Current => default!;
+    }
+
     public abstract class Fork<T>
         : INode<T>
     {
-        public virtual CreationType CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Nodes>(ref Nodes nodes, ref Enumerator enumerator)
-            where Enumerator : struct, IPullEnumerator<EnumeratorElement>
-            where Nodes : INodes
-        {
-            InvalidOperation();
-            return default;
-        }
-
-        public virtual CreationType CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
-            where TNodes : INodes
-        {
-            InvalidOperation();
-            return default;
-        }
-
-        public abstract TResult CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum) where TPushEnumerator : IPushEnumerator<T>;
+        internal abstract TPushResult CreateViaPush<TPushResult, TPushEnumerator, TPushFiller>(in ChainOptions options, in TPushFiller filler)
+            where TPushEnumerator : IPushEnumerator<T>
+            where TPushFiller : IPushFiller<TPushEnumerator>, allows ref struct;
+        TPushResult INode<T>.CreateViaPush<TPushResult, TPushEnumerator, TPushFiller>(in ChainOptions options, in TPushFiller filler)
+            => CreateViaPush<TPushResult, TPushEnumerator, TPushFiller>(in options, in filler);
         public abstract void GetCountInformation(out CountInformation info);
 
-        public virtual bool TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) where Nodes : INodes
-        {
-            creation = default;
-            return false;
-        }
+        public abstract bool TryPushOptimization<TRequest, TRequestResult>(in TRequest request, [MaybeNullWhen(false)] out TRequestResult result)
+            where TRequest : notnull;
 
-        public abstract bool TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result);
-
+        [DoesNotReturn]
         protected void InvalidOperation() => throw new InvalidOperationException("Unexpected usage of fork");
     }
 
@@ -45,10 +43,10 @@ namespace Cistern.ValueLinq.Aggregation
 
         public override void GetCountInformation(out CountInformation info) => inner.GetCountInformation(out info);
 
-        public override TResult CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
-            => inner.CreateViaPush<TResult, TPushEnumerator>(fenum);
-        public override bool TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
-            => inner.TryPushOptimization<TRequest, TResult>(in request, out result);
+        internal override TPushResult CreateViaPush<TPushResult, TPushEnumerator, TPushFiller>(in ChainOptions options, in TPushFiller filler)
+            => inner.CreateViaPush<TPushResult, TPushEnumerator, TPushFiller>(in options, in filler);
+        public override bool TryPushOptimization<TRequest, TRequestResult>(in TRequest request, [MaybeNullWhen(false)] out TRequestResult result)
+            => inner.TryPushOptimization<TRequest, TRequestResult>(in request, out result);
     }
 
     sealed class Fork<T, U, V, Inner>
@@ -56,8 +54,8 @@ namespace Cistern.ValueLinq.Aggregation
         where Inner : INode<T>
     {
         bool _completeSucessfully;
-        Func<ValueEnumerable<T, Fork<T>>, V> _getSecondValue;
-        private V secondValue;
+        Func<ValueEnumerable<T, Fork<T>, ForkEnumerator<T>>, V> _getSecondValue;
+        [AllowNull] private V secondValue;
 
         public V SecondValue
         {
@@ -70,20 +68,38 @@ namespace Cistern.ValueLinq.Aggregation
             }
         }
 
-        public Fork(in Inner inner, Func<ValueEnumerable<T, Fork<T>>, V> getSecondValue) : base(in inner) =>
-            (_getSecondValue, _completeSucessfully) = (getSecondValue, false);
-
-        public override TResult CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
+        public Fork(in Inner inner, Func<ValueEnumerable<T, Fork<T>, ForkEnumerator<T>>, V> getSecondValue) : base(in inner)
         {
-            var fork = new Fork<T, U, V, Inner, TPushEnumerator>(inner, fenum);
-            secondValue = _getSecondValue(new(fork));
-            _completeSucessfully = true;
-            return (TResult)(object)fork.FirstValue;
+            _getSecondValue = getSecondValue;
+            _completeSucessfully = false;
         }
 
-        public override bool TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+        // once complete (its second value found when a request was answered), a fork is its source: a fork nested over it
+        // pushes its own aggregation through it afterwards
+        internal override TPushResult CreateViaPush<TPushResult, TPushEnumerator, TPushFiller>(in ChainOptions options, in TPushFiller filler)
         {
-            if (this.inner.TryPushOptimization<TRequest, TResult>(in request, out result))
+            if (_completeSucessfully)
+                return inner.CreateViaPush<TPushResult, TPushEnumerator, TPushFiller>(in options, in filler);
+
+            var fork = new Fork<T, U, V, Inner, TPushEnumerator>(inner, PushFiller.Fill<TPushEnumerator, TPushFiller>(in filler));
+            try
+            {
+                secondValue = _getSecondValue(new(fork));
+            }
+            finally
+            {
+                fork.Release();
+            }
+            _completeSucessfully = true;
+            return Impl.ResultCast<U, TPushResult>(fork.FirstValue);
+        }
+
+        public override bool TryPushOptimization<TRequest, TRequestResult>(in TRequest request, [MaybeNullWhen(false)] out TRequestResult result)
+        {
+            if (_completeSucessfully)
+                return inner.TryPushOptimization<TRequest, TRequestResult>(in request, out result);
+
+            if (this.inner.TryPushOptimization<TRequest, TRequestResult>(in request, out result))
             {
                 secondValue = _getSecondValue(new (new Fork<T, Inner>(inner)));
                 _completeSucessfully = true;
@@ -94,29 +110,82 @@ namespace Cistern.ValueLinq.Aggregation
         }
     }
 
-    sealed class Fork<T, U, V, Inner, TPushEnumerator1>
+    sealed class Fork<T, U, V, Inner, TEnumerator1>
         : Fork<T, Inner>
         where Inner : INode<T>
-        where TPushEnumerator1 : IPushEnumerator<T>
+        where TEnumerator1 : IPushEnumerator<T>
     {
-        private TPushEnumerator1 FirstValueEnumerator;
+        private TEnumerator1 FirstValueEnumerator;
 
-        public U FirstValue { get; private set; }
+        [AllowNull] public U FirstValue { get; private set; }
 
-        public Fork(in Inner inner, in TPushEnumerator1 fEnumerator1) : base(in inner) => (this.inner, this.FirstValueEnumerator) = (inner, fEnumerator1);
+        // the first chain goes to the first push through the fork, which owns it from then on; a later push is the second
+        // aggregation's alone
+        private bool _handedOn;
 
-        public override TResult CreateViaPush<TResult, TPushEnumerator2>(in TPushEnumerator2 fenum)
+        public Fork(in Inner inner, in TEnumerator1 fEnumerator1) : base(in inner)
         {
-            var (firstValue, secondValue) = inner.CreateViaPush<(U, V), ForkForward<T, U, V, TPushEnumerator1, TPushEnumerator2>>(new ForkForward<T, U, V, TPushEnumerator1, TPushEnumerator2>(this.FirstValueEnumerator, fenum));
-            FirstValue = firstValue;
-            return (TResult)(object)secondValue;
+            this.inner = inner;
+            this.FirstValueEnumerator = fEnumerator1;
         }
 
-        public override bool TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+        // the first chain, when no push took it (the second aggregation threw first, or never pushed), is disposed
+        internal void Release()
         {
-            if (inner.TryPushOptimization<TRequest, TResult>(in request, out result))
+            if (_handedOn)
+                return;
+
+            _handedOn = true;
+            FirstValueEnumerator.Dispose();
+        }
+
+        internal override TPushResult CreateViaPush<TPushResult, TPushEnumerator, TPushFiller>(in ChainOptions options, in TPushFiller filler)
+        {
+            if (_handedOn)
+                return inner.CreateViaPush<TPushResult, TPushEnumerator, TPushFiller>(in options, in filler);
+
+            _handedOn = true;
+            var forward = new ForkForward<T, U, V, TEnumerator1, TPushEnumerator>(this.FirstValueEnumerator, PushFiller.Fill<TPushEnumerator, TPushFiller>(in filler));
+
+            // both chains are the inner push's once it has started them; disposed here when it fails first
+            var started = false;
+            try
             {
-                FirstValue = inner.CreateViaPush<U, TPushEnumerator1>(FirstValueEnumerator);
+                var downstream = new Downstream<ForkForward<T, U, V, TEnumerator1, TPushEnumerator>>(in forward);
+                var guard = new Guard<ForkForward<T, U, V, TEnumerator1, TPushEnumerator>, Downstream<ForkForward<T, U, V, TEnumerator1, TPushEnumerator>>>(ref started, in downstream);
+                var (firstValue, secondValue) = inner.CreateViaPush<(U, V), ForkForward<T, U, V, TEnumerator1, TPushEnumerator>, Guard<ForkForward<T, U, V, TEnumerator1, TPushEnumerator>, Downstream<ForkForward<T, U, V, TEnumerator1, TPushEnumerator>>>>(in options, in guard);
+                FirstValue = firstValue;
+                return Impl.ResultCast<V, TPushResult>(secondValue);
+            }
+            finally
+            {
+                if (!started)
+                    forward.Dispose();
+            }
+        }
+
+        public override bool TryPushOptimization<TRequest, TRequestResult>(in TRequest request, [MaybeNullWhen(false)] out TRequestResult result)
+        {
+            if (inner.TryPushOptimization<TRequest, TRequestResult>(in request, out result))
+            {
+                if (!_handedOn)
+                {
+                    _handedOn = true;
+
+                    var started = false;
+                    try
+                    {
+                        var downstream = new Downstream<TEnumerator1>(in FirstValueEnumerator);
+                        var guard = new Guard<TEnumerator1, Downstream<TEnumerator1>>(ref started, in downstream);
+                        FirstValue = inner.CreateViaPush<U, TEnumerator1, Guard<TEnumerator1, Downstream<TEnumerator1>>>(default(ChainOptions), in guard);
+                    }
+                    finally
+                    {
+                        if (!started)
+                            FirstValueEnumerator.Dispose();
+                    }
+                }
+
                 return true;
             }
             return false;
@@ -136,40 +205,27 @@ namespace Cistern.ValueLinq.Aggregation
             return true;
         }
 
-        internal static BatchProcessResult ProcessBatch<TElement, TObject, TPushEnumerator1, TPushEnumerator2>(TObject obj, Containers.GetSpan<TObject, TElement> getSpan, ref TPushEnumerator1 t2u, ref bool t2uMoreData, ref TPushEnumerator2 t2v, ref bool t2vMoreData)
+        internal static bool ProcessBatch<TElement, TPushEnumerator1, TPushEnumerator2>(scoped ref Batch<TElement> batch, ref TPushEnumerator1 t2u, ref bool t2uMoreData, ref TPushEnumerator2 t2v, ref bool t2vMoreData)
             where TPushEnumerator1 : IPushEnumerator<TElement>
             where TPushEnumerator2 : IPushEnumerator<TElement>
         {
-            var uResult = TryProcessBatch<TElement, TObject, TPushEnumerator1>(obj, getSpan, ref t2u, ref t2uMoreData);
-            var vResult = TryProcessBatch<TElement, TObject, TPushEnumerator2>(obj, getSpan, ref t2v, ref t2vMoreData);
+            ProcessBranch(ref batch, ref t2u, ref t2uMoreData);
+            ProcessBranch(ref batch, ref t2v, ref t2vMoreData);
 
-            if (!t2uMoreData && !t2vMoreData)
-                return BatchProcessResult.SuccessAndHalt;
-            else if (uResult != BatchProcessResult.Unavailable && vResult != BatchProcessResult.Unavailable)
-                return BatchProcessResult.SuccessAndContinue;
-
-            var span = getSpan(obj);
-
-            if (uResult == BatchProcessResult.Unavailable)
-                t2uMoreData = ProcessSpan(span, ref t2u);
-            if (vResult == BatchProcessResult.Unavailable)
-                t2vMoreData = ProcessSpan(span, ref t2v);
-            if (!t2uMoreData && !t2vMoreData)
-                return BatchProcessResult.SuccessAndHalt;
-
-            return BatchProcessResult.SuccessAndContinue;
+            return t2uMoreData || t2vMoreData;
         }
 
-        private static BatchProcessResult TryProcessBatch<T, TObject, T2U>(TObject obj, Containers.GetSpan<TObject, T> getSpan, ref T2U forwardEnumerator, ref bool moreData)
+        // the fork takes a batch either branch takes, so a branch that does not take it has its elements looped in
+        private static void ProcessBranch<T, T2U>(scoped ref Batch<T> batch, ref T2U forwardEnumerator, ref bool moreData)
             where T2U : IPushEnumerator<T>
         {
             if (!moreData)
-                return BatchProcessResult.SuccessAndHalt;
+                return;
 
-            var uResult = forwardEnumerator.TryProcessBatch<TObject, Containers.GetSpan<TObject, T>>(obj, getSpan);
-            if (uResult == BatchProcessResult.SuccessAndHalt)
-                moreData = false;
-            return uResult;
+            moreData =
+                T2U.AllowBatchesWhen.Takes(batch.Requires)
+                    ? forwardEnumerator.ProcessBatch(ref batch)
+                    : ProcessSpan(batch.GetSpan(), ref forwardEnumerator);
         }
     }
 
@@ -183,20 +239,35 @@ namespace Cistern.ValueLinq.Aggregation
         private T2V _t2v;
         private bool _t2v_more_data;
 
-        public ForkForward(T2U t2u, T2V t2v) => (_t2u, _t2u_more_data, _t2v, _t2v_more_data) = (t2u, true, t2v, true);
-
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request)
+        public ForkForward(T2U t2u, T2V t2v)
         {
-            if (typeof(TRequest) == typeof(Containers.GetSpan<TObject, T>))
-            {
-                var getSpan = (Containers.GetSpan<TObject, T>)(object)request;
-                return ForkImpl.ProcessBatch(obj, getSpan, ref _t2u, ref _t2u_more_data, ref _t2v, ref _t2v_more_data);
-            }
-            return BatchProcessResult.Unavailable;
+            _t2u = t2u;
+            _t2u_more_data = true;
+            _t2v = t2v;
+            _t2v_more_data = true;
+        }
+
+        // a span either branch takes, as the other has it looped in; a cold batch only both take, as looping it means
+        // copying it out
+        static BatchKinds IPushEnumerator<T>.AllowBatchesWhen =>
+            ((T2U.AllowBatchesWhen | T2V.AllowBatchesWhen) & ~BatchKinds.Cold)
+            | (T2U.AllowBatchesWhen & T2V.AllowBatchesWhen & BatchKinds.Cold);
+
+        bool IPushEnumerator<T>.ProcessBatch(scoped ref Batch<T> batch) =>
+            ForkImpl.ProcessBatch(ref batch, ref _t2u, ref _t2u_more_data, ref _t2v, ref _t2v_more_data);
+
+        public static bool AllowInitialise => T2U.AllowInitialise || T2V.AllowInitialise;
+
+        public void Initialise()
+        {
+            if (T2U.AllowInitialise)
+                _t2u.Initialise();
+            if (T2V.AllowInitialise)
+                _t2v.Initialise();
         }
 
         public void Dispose() { try { _t2u.Dispose(); } finally { _t2v.Dispose(); } }
-        TResult IPushEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
+        TPushResult IPushEnumerator<T>.GetResult<TPushResult>() => (TPushResult)(object)GetResult();
 
         public (U, V) GetResult() => (_t2u.GetResult<U>(), _t2v.GetResult<V>());
 

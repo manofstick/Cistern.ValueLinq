@@ -1,6 +1,5 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System;
 using System.Collections;
@@ -22,10 +21,36 @@ namespace Linqs.Tests
     public class SelectTests : EnumerableTests
     {
         [Fact]
+        public void SelectSideEffectsExecutedOnCount()
+        {
+            int i = 0;
+            // If we made no promises about side effects, i could be 0, but in practice users have
+            // taken a dependency on side effects executing on Count.
+            var count = Enumerable.Range(1, 10).Select(x => i++).Count();
+            Assert.Equal(10, count);
+            Assert.Equal(10, i);
+
+            i = 0;
+            count = Enumerable.Range(1, 10).Skip(5).Select(x => i++).Count();
+            Assert.Equal(5, count);
+            Assert.Equal(5, i);
+
+            i = 0;
+            count = Enumerable.Range(1, 10).Take(5).Select(x => i++).Count();
+            Assert.Equal(5, count);
+            Assert.Equal(5, i);
+
+            i = 0;
+            count = Enumerable.Range(1, 10).Skip(2).Take(3).Select(x => i++).Count();
+            Assert.Equal(3, count);
+            Assert.Equal(3, i);
+        }
+
+        [Fact]
         public void SameResultsRepeatCallsStringQuery()
         {
             var q1 = from x1 in new string[] { "Alen", "Felix", null, null, "X", "Have Space", "Clinton", "" }
-                     select x1; ;
+                     select x1;
 
             var q2 = from x2 in new int[] { 55, 49, 9, -100, 24, 25, -1, 0 }
                      select x2;
@@ -44,7 +69,7 @@ namespace Linqs.Tests
             {
                 new  { name = "Prakash", custID = 98088 }
             };
-            string[] expected = { "Prakash" };
+            string[] expected = ["Prakash"];
 
             Assert.Equal(expected, source.Select(e => e.name));
         }
@@ -59,7 +84,7 @@ namespace Linqs.Tests
                 new { name=(string)null, custID=30349 },
                 new { name="Prakash", custID=39030 }
             };
-            string[] expected = { "Prakash", "Bob", "Chris", null, "Prakash" };
+            string[] expected = ["Prakash", "Bob", "Chris", null, "Prakash"];
             Assert.Equal(expected, source.Select(e => e.name));
         }
 
@@ -73,7 +98,7 @@ namespace Linqs.Tests
                 new { name=(string)null, custID=30349 },
                 new { name="Prakash", custID=39030 }
             };
-            string[] expected = { "Prakash", "Bob", "Chris", null, "Prakash" };
+            string[] expected = ["Prakash", "Bob", "Chris", null, "Prakash"];
             Assert.Equal(expected, source.RunOnce().Select(e => e.name));
             Assert.Equal(expected, source.ToArray().RunOnce().Select(e => e.name));
             Assert.Equal(expected, source.ToList().RunOnce().Select(e => e.name));
@@ -82,10 +107,14 @@ namespace Linqs.Tests
         [Fact]
         public void EmptyWithIndexedSelector()
         {
-            Assert.Equal(Enumerable.Empty<int>(), Enumerable.Empty<string>().Select((s, i) => s.Length + i));
+#if CISTERN_VALUELINQ
+            Assert.Equal<int>([], Enumerable.Empty<string>().Select((s, i) => s.Length + i));
+#else
+            Assert.Equal([], Enumerable.Empty<string>().Select((s, i) => s.Length + i));
+#endif
         }
 
-        [Fact]
+        [ConditionalFact(typeof(PlatformDetection), nameof(PlatformDetection.IsMultithreadingSupported))]
         public void EnumerateFromDifferentThread()
         {
             var selected = Enumerable.Range(0, 100).Where(i => i > 3).Select(i => i.ToString());
@@ -102,7 +131,7 @@ namespace Linqs.Tests
             {
                 new  { name = "Prakash", custID = 98088 }
             };
-            string[] expected = { "Prakash" };
+            string[] expected = ["Prakash"];
 
             Assert.Equal(expected, source.Select((e, index) => e.name));
         }
@@ -117,7 +146,7 @@ namespace Linqs.Tests
                 new { name=(string)null, custID=30349 },
                 new { name="Prakash", custID=39030 }
             };
-            string[] expected = { "Prakash", "Bob", "Chris", null, "Prakash" };
+            string[] expected = ["Prakash", "Bob", "Chris", null, "Prakash"];
             Assert.Equal(expected, source.Select((e, i) => e.name));
         }
 
@@ -129,7 +158,7 @@ namespace Linqs.Tests
                 new { name="Bob", custID=29099 },
                 new { name="Chris", custID=39033 }
             };
-            string[] expected = { "Prakash", null, null };
+            string[] expected = ["Prakash", null, null];
             Assert.Equal(expected, source.Select((e, i) => i == 0 ? e.name : null));
         }
 
@@ -144,22 +173,22 @@ namespace Linqs.Tests
                 new { name="Allen", custID=39033 },
                 new { name="Chuck", custID=39033 }
             };
-            string[] expected = { null, null, null, null, null, "Chuck" };
+            string[] expected = [null, null, null, null, null, "Chuck"];
             Assert.Equal(expected, source.Select((e, i) => i == 5 ? e.name : null));
         }
 
-        [Fact(Skip = "Valid test but too intensive to enable even in OuterLoop")]
+        [ConditionalFact(typeof(TestEnvironment), nameof(TestEnvironment.IsStressModeEnabled))]
         public void Overflow()
         {
             var selected = new FastInfiniteEnumerator<int>().Select((e, i) => e);
-            using (var en = selected.GetEnumerator())
-                Assert.Throws<OverflowException>(() =>
+            using var en = selected.GetEnumerator();
+            Assert.Throws<OverflowException>(() =>
+            {
+                while (en.MoveNext())
                 {
-                    while (en.MoveNext())
-                    {
 
-                    }
-                });
+                }
+            });
         }
 
         [Fact]
@@ -201,7 +230,7 @@ namespace Linqs.Tests
         public void Select_SourceIsAnArray_ExecutionIsDeferred()
         {
             bool funcCalled = false;
-            Func<int>[] source = new Func<int>[] { () => { funcCalled = true; return 1; } };
+            Func<int>[] source = [() => { funcCalled = true; return 1; }];
 
             IEnumerable<int> query = source.Select(d => d());
             Assert.False(funcCalled);
@@ -211,7 +240,14 @@ namespace Linqs.Tests
         public void Select_SourceIsAList_ExecutionIsDeferred()
         {
             bool funcCalled = false;
-            List<Func<int>> source = new List<Func<int>>() { () => { funcCalled = true; return 1; } };
+            List<Func<int>> source =
+            [
+                () =>
+                {
+                    funcCalled = true;
+                    return 1;
+                }
+            ];
 
             IEnumerable<int> query = source.Select(d => d());
             Assert.False(funcCalled);
@@ -251,7 +287,7 @@ namespace Linqs.Tests
         public void SelectSelect_SourceIsAnArray_ExecutionIsDeferred()
         {
             bool funcCalled = false;
-            Func<int>[] source = new Func<int>[] { () => { funcCalled = true; return 1; } };
+            Func<int>[] source = [() => { funcCalled = true; return 1; }];
 
             IEnumerable<int> query = source.Select(d => d).Select(d => d());
             Assert.False(funcCalled);
@@ -261,7 +297,14 @@ namespace Linqs.Tests
         public void SelectSelect_SourceIsAList_ExecutionIsDeferred()
         {
             bool funcCalled = false;
-            List<Func<int>> source = new List<Func<int>>() { () => { funcCalled = true; return 1; } };
+            List<Func<int>> source =
+            [
+                () =>
+                {
+                    funcCalled = true;
+                    return 1;
+                }
+            ];
 
             IEnumerable<int> query = source.Select(d => d).Select(d => d());
             Assert.False(funcCalled);
@@ -300,7 +343,7 @@ namespace Linqs.Tests
         [Fact]
         public void Select_SourceIsAnArray_ReturnsExpectedValues()
         {
-            int[] source = new[] { 1, 2, 3, 4, 5 };
+            int[] source = [1, 2, 3, 4, 5];
             Func<int, int> selector = i => i + 1;
 
             IEnumerable<int> query = source.Select(selector);
@@ -319,7 +362,7 @@ namespace Linqs.Tests
         [Fact]
         public void Select_SourceIsAList_ReturnsExpectedValues()
         {
-            List<int> source = new List<int> { 1, 2, 3, 4, 5 };
+            List<int> source = [1, 2, 3, 4, 5];
             Func<int, int> selector = i => i + 1;
 
             IEnumerable<int> query = source.Select(selector);
@@ -396,12 +439,12 @@ namespace Linqs.Tests
         [Fact]
         public void Select_SourceIsAnArray_CurrentIsDefaultOfTAfterEnumeration()
         {
-            int[] source = new[] { 1 };
+            int[] source = [1];
             Func<int, int> selector = i => i + 1;
 
             IEnumerable<int> query = source.Select(selector);
 
-            var enumerator = query.GetEnumerator();
+            using var enumerator = query.GetEnumerator();
             while (enumerator.MoveNext()) ;
 
             Assert.Equal(default(int), enumerator.Current);
@@ -410,12 +453,12 @@ namespace Linqs.Tests
         [Fact]
         public void Select_SourceIsAList_CurrentIsDefaultOfTAfterEnumeration()
         {
-            List<int> source = new List<int>() { 1 };
+            List<int> source = [1];
             Func<int, int> selector = i => i + 1;
 
             IEnumerable<int> query = source.Select(selector);
 
-            var enumerator = query.GetEnumerator();
+            using var enumerator = query.GetEnumerator();
             while (enumerator.MoveNext()) ;
 
             Assert.Equal(default(int), enumerator.Current);
@@ -429,7 +472,7 @@ namespace Linqs.Tests
 
             IEnumerable<int> query = source.Select(selector);
 
-            var enumerator = query.GetEnumerator();
+            using var enumerator = query.GetEnumerator();
             while (enumerator.MoveNext()) ;
 
             Assert.Equal(default(int), enumerator.Current);
@@ -457,7 +500,7 @@ namespace Linqs.Tests
 
             IEnumerable<int> query = source.Select(selector);
 
-            var enumerator = query.GetEnumerator();
+            using var enumerator = query.GetEnumerator();
             while (enumerator.MoveNext()) ;
 
             Assert.Equal(default(int), enumerator.Current);
@@ -467,7 +510,7 @@ namespace Linqs.Tests
         public void SelectSelect_SourceIsAnArray_ReturnsExpectedValues()
         {
             Func<int, int> selector = i => i + 1;
-            int[] source = new[] { 1, 2, 3, 4, 5 };
+            int[] source = [1, 2, 3, 4, 5];
 
             IEnumerable<int> query = source.Select(selector).Select(selector);
 
@@ -485,7 +528,7 @@ namespace Linqs.Tests
         [Fact]
         public void SelectSelect_SourceIsAList_ReturnsExpectedValues()
         {
-            List<int> source = new List<int> { 1, 2, 3, 4, 5 };
+            List<int> source = [1, 2, 3, 4, 5];
             Func<int, int> selector = i => i + 1;
 
             IEnumerable<int> query = source.Select(selector).Select(selector);
@@ -562,7 +605,7 @@ namespace Linqs.Tests
         [Fact]
         public void Select_SourceIsEmptyEnumerable_ReturnedCollectionHasNoElements()
         {
-            IEnumerable<int> source = Enumerable.Empty<int>();
+            IEnumerable<int> source = [];
             bool wasSelectorCalled = false;
 
             IEnumerable<int> result = source.Select(i => { wasSelectorCalled = true; return i + 1; });
@@ -580,11 +623,11 @@ namespace Linqs.Tests
         [Fact]
         public void Select_ExceptionThrownFromSelector_ExceptionPropagatedToTheCaller()
         {
-            int[] source = new[] { 1, 2, 3, 4, 5 };
+            int[] source = [1, 2, 3, 4, 5];
             Func<int, int> selector = i => { throw new InvalidOperationException(); };
 
             var result = source.Select(selector);
-            var enumerator = result.GetEnumerator();
+            using var enumerator = result.GetEnumerator();
 
             Assert.Throws<InvalidOperationException>(() => enumerator.MoveNext());
         }
@@ -592,7 +635,7 @@ namespace Linqs.Tests
         [Fact]
         public void Select_ExceptionThrownFromSelector_IteratorCanBeUsedAfterExceptionIsCaught()
         {
-            int[] source = new[] { 1, 2, 3, 4, 5 };
+            int[] source = [1, 2, 3, 4, 5];
             Func<int, int> selector = i =>
             {
                 if (i == 1)
@@ -601,7 +644,7 @@ namespace Linqs.Tests
             };
 
             var result = source.Select(selector);
-            var enumerator = result.GetEnumerator();
+            using var enumerator = result.GetEnumerator();
 
             Assert.Throws<InvalidOperationException>(() => enumerator.MoveNext());
             enumerator.MoveNext();
@@ -615,7 +658,7 @@ namespace Linqs.Tests
             Func<int, int> selector = i => i + 1;
 
             var result = source.Select(selector);
-            var enumerator = result.GetEnumerator();
+            using var enumerator = result.GetEnumerator();
 
             Assert.Throws<InvalidOperationException>(() => enumerator.MoveNext());
         }
@@ -627,7 +670,7 @@ namespace Linqs.Tests
             Func<int, int> selector = i => i + 1;
 
             var result = source.Select(selector);
-            var enumerator = result.GetEnumerator();
+            using var enumerator = result.GetEnumerator();
 
             Assert.Throws<InvalidOperationException>(() => enumerator.MoveNext());
             enumerator.MoveNext();
@@ -658,7 +701,7 @@ namespace Linqs.Tests
             Func<int, int> selector = i => i + 1;
 
             var result = source.Select(selector);
-            var enumerator = result.GetEnumerator();
+            using var enumerator = result.GetEnumerator();
 
             Assert.Throws<InvalidOperationException>(() => enumerator.MoveNext());
         }
@@ -670,7 +713,7 @@ namespace Linqs.Tests
             Func<int, int> selector = i => i + 1;
 
             var result = source.Select(selector);
-            var enumerator = result.GetEnumerator();
+            using var enumerator = result.GetEnumerator();
 
             Assert.Throws<InvalidOperationException>(() => enumerator.MoveNext());
             enumerator.MoveNext();
@@ -684,7 +727,7 @@ namespace Linqs.Tests
             Func<int, int> selector = i => i + 1;
 
             var result = source.Select(selector);
-            var enumerator = result.GetEnumerator();
+            using var enumerator = result.GetEnumerator();
 
             Assert.Throws<InvalidOperationException>(() => enumerator.MoveNext());
         }
@@ -696,7 +739,7 @@ namespace Linqs.Tests
             Func<int, string> selector = i => i.ToString();
 
             var result = source.Select(selector);
-            var enumerator = result.GetEnumerator();
+            using var enumerator = result.GetEnumerator();
 
             Assert.Throws<InvalidOperationException>(() => enumerator.MoveNext());
             string currentValue = enumerator.Current;
@@ -709,11 +752,11 @@ namespace Linqs.Tests
         [Fact]
         public void Select_SourceListGetsModifiedDuringIteration_ExceptionIsPropagated()
         {
-            List<int> source = new List<int>() { 1, 2, 3, 4, 5 };
+            List<int> source = [1, 2, 3, 4, 5];
             Func<int, int> selector = i => i + 1;
 
             var result = source.Select(selector);
-            var enumerator = result.GetEnumerator();
+            using var enumerator = result.GetEnumerator();
 
             Assert.True(enumerator.MoveNext());
             Assert.Equal(2 /* 1 + 1 */, enumerator.Current);
@@ -725,7 +768,7 @@ namespace Linqs.Tests
         [Fact(Skip = "CISTERN.VALUELINQ: Invalid test in Cistern.ValueLinq")]
         public void Select_GetEnumeratorCalledTwice_DifferentInstancesReturned()
         {
-            int[] source = new[] { 1, 2, 3, 4, 5 };
+            int[] source = [1, 2, 3, 4, 5];
             var query = source.Select(i => i + 1);
 
             var enumerator1 = query.GetEnumerator();
@@ -741,69 +784,77 @@ namespace Linqs.Tests
         [Fact]
         public void Select_ResetCalledOnEnumerator_ThrowsException()
         {
-            int[] source = new[] { 1, 2, 3, 4, 5 };
+            int[] source = [1, 2, 3, 4, 5];
             Func<int, int> selector = i => i + 1;
 
             IEnumerable<int> result = source.Select(selector);
-            IEnumerator<int> enumerator = result.GetEnumerator();
+            using IEnumerator<int> enumerator = result.GetEnumerator();
 
-            // The.NET full framework throws a NotImplementedException.
-            // See https://github.com/dotnet/corefx/pull/2959.
             Assert.Throws<NotSupportedException>(() => enumerator.Reset());
         }
 
-#if CISTERN_VALUELINQ_NOT_VALID
-
-        [Fact]
+        [Fact(Skip = "CISTERN.VALUELINQ: Can't cast an enumerable to an enumerator")]
         public void ForcedToEnumeratorDoesntEnumerate()
         {
+#if !CISTERN_VALUELINQ
             var iterator = NumberRangeGuaranteedNotCollectionType(0, 3).Select(i => i);
             // Don't insist on this behaviour, but check it's correct if it happens
             var en = iterator as IEnumerator<int>;
-            Assert.False(en != null && en.MoveNext());
+            Assert.False(en is not null && en.MoveNext());
+#endif
         }
 
-        [Fact]
+        [Fact(Skip = "CISTERN.VALUELINQ: Can't cast an enumerable to an enumerator")]
         public void ForcedToEnumeratorDoesntEnumerateIndexed()
         {
+#if !CISTERN_VALUELINQ
             var iterator = NumberRangeGuaranteedNotCollectionType(0, 3).Select((e, i) => i);
             // Don't insist on this behaviour, but check it's correct if it happens
             var en = iterator as IEnumerator<int>;
-            Assert.False(en != null && en.MoveNext());
+            Assert.False(en is not null && en.MoveNext());
+#endif
         }
 
-        [Fact]
+        [Fact(Skip = "CISTERN.VALUELINQ: Can't cast an enumerable to an enumerator")]
         public void ForcedToEnumeratorDoesntEnumerateArray()
         {
+#if !CISTERN_VALUELINQ
             var iterator = NumberRangeGuaranteedNotCollectionType(0, 3).ToArray().Select(i => i);
             var en = iterator as IEnumerator<int>;
-            Assert.False(en != null && en.MoveNext());
+            Assert.False(en is not null && en.MoveNext());
+#endif
         }
 
-        [Fact]
+        [Fact(Skip = "CISTERN.VALUELINQ: Can't cast an enumerable to an enumerator")]
         public void ForcedToEnumeratorDoesntEnumerateList()
         {
+#if !CISTERN_VALUELINQ
             var iterator = NumberRangeGuaranteedNotCollectionType(0, 3).ToList().Select(i => i);
             var en = iterator as IEnumerator<int>;
-            Assert.False(en != null && en.MoveNext());
+            Assert.False(en is not null && en.MoveNext());
+#endif
         }
 
-        [Fact]
+        [Fact(Skip = "CISTERN.VALUELINQ: Can't cast an enumerable to an enumerator")]
         public void ForcedToEnumeratorDoesntEnumerateIList()
         {
+#if !CISTERN_VALUELINQ
             var iterator = NumberRangeGuaranteedNotCollectionType(0, 3).ToList().AsReadOnly().Select(i => i);
             var en = iterator as IEnumerator<int>;
-            Assert.False(en != null && en.MoveNext());
+            Assert.False(en is not null && en.MoveNext());
+#endif
         }
 
-        [Fact]
+        [Fact(Skip = "CISTERN.VALUELINQ: Can't cast an enumerable to an enumerator")]
         public void ForcedToEnumeratorDoesntEnumerateIPartition()
         {
+#if !CISTERN_VALUELINQ
             var iterator = NumberRangeGuaranteedNotCollectionType(0, 3).ToList().AsReadOnly().Select(i => i).Skip(1);
             var en = iterator as IEnumerator<int>;
-            Assert.False(en != null && en.MoveNext());
-        }
+            Assert.False(en is not null && en.MoveNext());
 #endif
+        }
+
         [Fact]
         public void Select_SourceIsArray_Count()
         {
@@ -821,18 +872,18 @@ namespace Linqs.Tests
         [Fact]
         public void Select_SourceIsAnIList_Count()
         {
-            var souce = new List<int> { 1, 2, 3, 4 }.AsReadOnly();
-            Assert.Equal(souce.Count, souce.Select(i => i * 2).Count());
+            var source = new List<int> { 1, 2, 3, 4 }.AsReadOnly();
+            Assert.Equal(source.Count, source.Select(i => i * 2).Count());
         }
 
         [Fact]
         public void Select_SourceIsArray_Skip()
         {
             var source = new[] { 1, 2, 3, 4 }.Select(i => i * 2);
-            Assert.Equal(new[] { 6, 8 }, source.Skip(2));
-            Assert.Equal(new[] { 6, 8 }, source.Skip(2).Skip(-1));
-            Assert.Equal(new[] { 6, 8 }, source.Skip(1).Skip(1));
-            Assert.Equal(new[] { 2, 4, 6, 8 }, source.Skip(-1));
+            Assert.Equal([6, 8], source.Skip(2));
+            Assert.Equal([6, 8], source.Skip(2).Skip(-1));
+            Assert.Equal([6, 8], source.Skip(1).Skip(1));
+            Assert.Equal([2, 4, 6, 8], source.Skip(-1));
             Assert.Empty(source.Skip(4));
             Assert.Empty(source.Skip(20));
         }
@@ -841,10 +892,10 @@ namespace Linqs.Tests
         public void Select_SourceIsList_Skip()
         {
             var source = new List<int> { 1, 2, 3, 4 }.Select(i => i * 2);
-            Assert.Equal(new[] { 6, 8 }, source.Skip(2));
-            Assert.Equal(new[] { 6, 8 }, source.Skip(2).Skip(-1));
-            Assert.Equal(new[] { 6, 8 }, source.Skip(1).Skip(1));
-            Assert.Equal(new[] { 2, 4, 6, 8 }, source.Skip(-1));
+            Assert.Equal([6, 8], source.Skip(2));
+            Assert.Equal([6, 8], source.Skip(2).Skip(-1));
+            Assert.Equal([6, 8], source.Skip(1).Skip(1));
+            Assert.Equal([2, 4, 6, 8], source.Skip(-1));
             Assert.Empty(source.Skip(4));
             Assert.Empty(source.Skip(20));
         }
@@ -853,10 +904,10 @@ namespace Linqs.Tests
         public void Select_SourceIsIList_Skip()
         {
             var source = new List<int> { 1, 2, 3, 4 }.AsReadOnly().Select(i => i * 2);
-            Assert.Equal(new[] { 6, 8 }, source.Skip(2));
-            Assert.Equal(new[] { 6, 8 }, source.Skip(2).Skip(-1));
-            Assert.Equal(new[] { 6, 8 }, source.Skip(1).Skip(1));
-            Assert.Equal(new[] { 2, 4, 6, 8 }, source.Skip(-1));
+            Assert.Equal([6, 8], source.Skip(2));
+            Assert.Equal([6, 8], source.Skip(2).Skip(-1));
+            Assert.Equal([6, 8], source.Skip(1).Skip(1));
+            Assert.Equal([2, 4, 6, 8], source.Skip(-1));
             Assert.Empty(source.Skip(4));
             Assert.Empty(source.Skip(20));
         }
@@ -865,45 +916,45 @@ namespace Linqs.Tests
         public void Select_SourceIsArray_Take()
         {
             var source = new[] { 1, 2, 3, 4 }.Select(i => i * 2);
-            Assert.Equal(new[] { 2, 4 }, source.Take(2));
-            Assert.Equal(new[] { 2, 4 }, source.Take(3).Take(2));
+            Assert.Equal([2, 4], source.Take(2));
+            Assert.Equal([2, 4], source.Take(3).Take(2));
             Assert.Empty(source.Take(-1));
-            Assert.Equal(new[] { 2, 4, 6, 8 }, source.Take(4));
-            Assert.Equal(new[] { 2, 4, 6, 8 }, source.Take(40));
-            Assert.Equal(new[] { 2 }, source.Take(1));
-            Assert.Equal(new[] { 4 }, source.Skip(1).Take(1));
-            Assert.Equal(new[] { 6 }, source.Take(3).Skip(2));
-            Assert.Equal(new[] { 2 }, source.Take(3).Take(1));
+            Assert.Equal([2, 4, 6, 8], source.Take(4));
+            Assert.Equal([2, 4, 6, 8], source.Take(40));
+            Assert.Equal([2], source.Take(1));
+            Assert.Equal([4], source.Skip(1).Take(1));
+            Assert.Equal([6], source.Take(3).Skip(2));
+            Assert.Equal([2], source.Take(3).Take(1));
         }
 
         [Fact]
         public void Select_SourceIsList_Take()
         {
             var source = new List<int> { 1, 2, 3, 4 }.Select(i => i * 2);
-            Assert.Equal(new[] { 2, 4 }, source.Take(2));
-            Assert.Equal(new[] { 2, 4 }, source.Take(3).Take(2));
+            Assert.Equal([2, 4], source.Take(2));
+            Assert.Equal([2, 4], source.Take(3).Take(2));
             Assert.Empty(source.Take(-1));
-            Assert.Equal(new[] { 2, 4, 6, 8 }, source.Take(4));
-            Assert.Equal(new[] { 2, 4, 6, 8 }, source.Take(40));
-            Assert.Equal(new[] { 2 }, source.Take(1));
-            Assert.Equal(new[] { 4 }, source.Skip(1).Take(1));
-            Assert.Equal(new[] { 6 }, source.Take(3).Skip(2));
-            Assert.Equal(new[] { 2 }, source.Take(3).Take(1));
+            Assert.Equal([2, 4, 6, 8], source.Take(4));
+            Assert.Equal([2, 4, 6, 8], source.Take(40));
+            Assert.Equal([2], source.Take(1));
+            Assert.Equal([4], source.Skip(1).Take(1));
+            Assert.Equal([6], source.Take(3).Skip(2));
+            Assert.Equal([2], source.Take(3).Take(1));
         }
 
         [Fact]
         public void Select_SourceIsIList_Take()
         {
             var source = new List<int> { 1, 2, 3, 4 }.AsReadOnly().Select(i => i * 2);
-            Assert.Equal(new[] { 2, 4 }, source.Take(2));
-            Assert.Equal(new[] { 2, 4 }, source.Take(3).Take(2));
+            Assert.Equal([2, 4], source.Take(2));
+            Assert.Equal([2, 4], source.Take(3).Take(2));
             Assert.Empty(source.Take(-1));
-            Assert.Equal(new[] { 2, 4, 6, 8 }, source.Take(4));
-            Assert.Equal(new[] { 2, 4, 6, 8 }, source.Take(40));
-            Assert.Equal(new[] { 2 }, source.Take(1));
-            Assert.Equal(new[] { 4 }, source.Skip(1).Take(1));
-            Assert.Equal(new[] { 6 }, source.Take(3).Skip(2));
-            Assert.Equal(new[] { 2 }, source.Take(3).Take(1));
+            Assert.Equal([2, 4, 6, 8], source.Take(4));
+            Assert.Equal([2, 4, 6, 8], source.Take(40));
+            Assert.Equal([2], source.Take(1));
+            Assert.Equal([4], source.Skip(1).Take(1));
+            Assert.Equal([6], source.Take(3).Skip(2));
+            Assert.Equal([2], source.Take(3).Take(1));
         }
 
         [Fact]
@@ -1109,15 +1160,22 @@ namespace Linqs.Tests
         public void Select_SourceIsArraySkipSelect()
         {
             var source = new[] { 1, 2, 3, 4 }.Select(i => i * 2).Skip(1).Select(i => i + 1);
-            Assert.Equal(new[] { 5, 7, 9 }, source);
+            Assert.Equal([5, 7, 9], source);
         }
 
         [Fact]
         public void Select_SourceIsArrayTakeTake()
         {
             var source = new[] { 1, 2, 3, 4 }.Select(i => i * 2).Take(2).Take(1);
-            Assert.Equal(new[] { 2 }, source);
-            Assert.Equal(new[] { 2 }, source.Take(10));
+            Assert.Equal([2], source);
+            Assert.Equal([2], source.Take(10));
+        }
+
+        [Fact]
+        public void Select_SourceIsIPartitionToArray()
+        {
+            Assert.Equal(Array.Empty<int>(), new List<int>().Order().Select(i => i * 2).ToArray());
+            Assert.Equal(new[] { 2, 4, 6, 8 }, new List<int> { 1, 2, 3, 4 }.Order().Select(i => i * 2).ToArray());
         }
 
         [Fact]
@@ -1147,6 +1205,13 @@ namespace Linqs.Tests
             Assert.Empty(new List<int> { 1, 2, 3, 4 }.Select(i => i * 2).Skip(8).ToList());
         }
 
+        [Fact]
+        public void Select_SourceIsIPartitionToList()
+        {
+            Assert.Equal(Array.Empty<int>(), new List<int>().Order().Select(i => i * 2).ToList());
+            Assert.Equal(new[] { 2, 4, 6, 8 }, new List<int> { 1, 2, 3, 4 }.Order().Select(i => i * 2).ToList());
+        }
+
         [Theory]
         [MemberData(nameof(MoveNextAfterDisposeData))]
         public void MoveNextAfterDispose(IEnumerable<int> source)
@@ -1166,22 +1231,20 @@ namespace Linqs.Tests
             foreach (IEnumerable<int> equivalentSource in identityTransforms.Select(t => t(source)))
             {
                 IEnumerable<int> result = equivalentSource.Select(i => i);
-                using (IEnumerator<int> e = result.GetEnumerator())
-                {
-                    while (e.MoveNext()) ; // Loop until we reach the end of the iterator, @ which pt it gets disposed.
-                    Assert.False(e.MoveNext()); // MoveNext should not throw an exception after Dispose.
-                }
+                using IEnumerator<int> e = result.GetEnumerator();
+                while (e.MoveNext()) ; // Loop until we reach the end of the iterator, @ which pt it gets disposed.
+                Assert.False(e.MoveNext()); // MoveNext should not throw an exception after Dispose.
             }
         }
 
         public static IEnumerable<object[]> MoveNextAfterDisposeData()
         {
-            yield return new object[] { Array.Empty<int>() };
-            yield return new object[] { new int[1] };
-            yield return new object[] { Enumerable.Range(1, 30) };
+            yield return [Array.Empty<int>()];
+            yield return [new int[1]];
+            yield return [Enumerable.Range(1, 30)];
         }
 
-        [Theory(Skip = "CISTERN.VALUELINQ: Decide if we want to actually count, causing this side effect")]
+        [Theory]
         [MemberData(nameof(RunSelectorDuringCountData))]
         public void RunSelectorDuringCount(IEnumerable<int> source)
         {
@@ -1210,7 +1273,7 @@ namespace Linqs.Tests
                 e => new LinkedList<int>(e) // Implements IList<T>.
             };
 
-            var r = new Random(unchecked((int)0x984bf1a3));
+            var r = new Random(42);
 
             for (int i = 0; i <= 5; i++)
             {
@@ -1218,9 +1281,34 @@ namespace Linqs.Tests
 
                 foreach (var transform in transforms)
                 {
-                    yield return new object[] { transform(enumerable) };
+                    yield return [transform(enumerable)];
                 }
             }
+        }
+
+        [Fact]
+        public void Select_SourceIsIList_EnumeratorDisposedOnComplete()
+        {
+            var source = new DisposeTrackingList<int>([1, 2, 3, 4, 5]);
+
+            foreach (int item in source.Select(i => i * 2))
+            {
+            }
+
+            Assert.Equal(1, source.DisposeCalls);
+        }
+
+        [Fact]
+        public void Select_SourceIsIList_EnumeratorDisposedOnExplicitDispose()
+        {
+            var source = new DisposeTrackingList<int>([1, 2, 3, 4, 5]);
+
+            using (var enumerator = source.Select(i => i * 2).GetEnumerator())
+            {
+                enumerator.MoveNext();
+            }
+
+            Assert.Equal(1, source.DisposeCalls);
         }
     }
 }

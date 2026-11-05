@@ -5,9 +5,10 @@
             StaticClassName:"Enumerable",
             IsNullable:true,
             CollectionType:new Func<string, string>((string type) => $"IEnumerable<{type}>"),
-            FastEnumerate:"EnumerableNode.FastEnumerateSwitch",
+            FastEnumerate:"SystemIEnumerable.ExecutePush",
             OptimizedCall:(string)null, // can't guarantee that ref object is the same
-            NodeName:new Func<string, string>((string type) => $"EnumerableNode<{type}>"),
+            NodeName:new Func<string, string>((string type) => $"SystemIEnumerable.Node<{type}>"),
+            EnumeratorName:new Func<string, string>((string type) => $"ErasedEnumerator<{type}, SystemIEnumerable.Node<{type}>>"),
             Of:"OfEnumerable"
         ),
 
@@ -15,9 +16,10 @@
             StaticClassName:"ValueLinqArray",
             IsNullable:true,
             CollectionType:new Func<string, string>((string type) => $"{type}[]"),
-            FastEnumerate:"ArrayNode.FastEnumerate",
-            OptimizedCall:"ArrayNode.ProcessArray",
-            NodeName:new Func<string, string>((string type) => $"ArrayNode<{type}>"),
+            FastEnumerate:"SystemArray.ExecutePush",
+            OptimizedCall:(string)null,
+            NodeName:new Func<string, string>((string type) => $"SystemArray.Node<{type}>"),
+            EnumeratorName:new Func<string, string>((string type) => $"SystemArray.Pull<{type}>"),
             Of:"OfArray"
         ),
 
@@ -25,9 +27,10 @@
             StaticClassName:"ValueLinqList",
             IsNullable:true,
             CollectionType:new Func<string, string>((string type) => $"List<{type}>"),
-            FastEnumerate:"ListSegmentNode.FastEnumerate",
-            OptimizedCall:"ListSegmentNode.ProcessList",
-            NodeName:new Func<string, string>((string type) => $"ListNode<{type}>"),
+            FastEnumerate:"SystemList.ExecutePush",
+            OptimizedCall:(string)null,
+            NodeName:new Func<string, string>((string type) => $"SystemList.Node<{type}>"),
+            EnumeratorName:new Func<string, string>((string type) => $"SystemList.Pull<{type}>"),
             Of:"OfList"
         ),
 
@@ -35,9 +38,10 @@
             StaticClassName:"ValueLinqMemory",
             IsNullable:false,
             CollectionType:new Func<string, string>(type => $"ReadOnlyMemory<{type}>"),
-            FastEnumerate:"MemoryNode.FastEnumerate",
-            OptimizedCall:"MemoryNode.ProcessMemory",
-            NodeName:new Func<string, string>((string type) => $"MemoryNode<{type}>"),
+            FastEnumerate:"SystemMemory.ExecutePush",
+            OptimizedCall:(string)null,
+            NodeName:new Func<string, string>((string type) => $"SystemMemory.Node<{type}>"),
+            EnumeratorName:new Func<string, string>((string type) => $"SystemMemory.Pull<{type}>"),
             Of:"OfMemory"
         ),
     };

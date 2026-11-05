@@ -2,18 +2,47 @@
 
 namespace Cistern.ValueLinq.Aggregation
 {
-    struct ReduceForward<T>
+    [Aggregator]
+    partial struct ReduceForward<T>
         : IPushEnumerator<T>
     {
         private bool _hasData;
-        private T _accumulate;
+        [AllowNull] private T _accumulate;
         private Func<T, T, T> _func;
 
-        public ReduceForward(Func<T, T, T> func) => (_func, _hasData, _accumulate) = (func, false, default);
+        public ReduceForward(Func<T, T, T> func)
+        {
+            _func = func;
+            _hasData = false;
+            _accumulate = default;
+        }
 
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
-        public void Dispose() { }
-        TResult IPushEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
+        static BatchKinds IPushEnumerator<T>.AllowBatchesWhen => BatchKinds.Container | BatchKinds.Forwarder | BatchKinds.ColdSpan;
+
+        bool IPushEnumerator<T>.ProcessBatch(scoped ref Batch<T> batch)
+        {
+            var span = batch.GetSpan();
+            if (span.IsEmpty)
+                return true;
+
+            var idx = 0;
+            var accumulate = _accumulate;
+            if (!_hasData)
+            {
+                _hasData = true;
+                accumulate = span[0];
+                idx = 1;
+            }
+
+            var func = _func;
+            for (; idx < span.Length; ++idx)
+                accumulate = func(accumulate, span[idx]);
+
+            _accumulate = accumulate;
+
+            return true;
+        }
+        TPushResult IPushEnumerator<T>.GetResult<TPushResult>() => Impl.ResultCast<T, TPushResult>(GetResult());
 
         internal T GetResult()
         {

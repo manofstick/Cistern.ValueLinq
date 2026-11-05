@@ -1,10 +1,10 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -22,44 +22,52 @@ namespace Linqs.Tests
 {
     public class ConsistencyTests
     {
-        [Fact(Skip = "CISTERN.VALUELINQ: Not really relevant")]
+        [Fact(Skip = "CISTERN.VALUELINQ: System.Linq.Queryable is not part of Cistern.ValueLinq")]
         public static void MatchSequencePattern()
         {
-            MethodInfo enumerableNotInQueryable = GetMissingExtensionMethod(typeof(Enumerable), typeof(System.Linq.Queryable), GetExcludedMethods());
+#if !CISTERN_VALUELINQ
+            MethodInfo enumerableNotInQueryable = GetMissingExtensionMethod(typeof(Enumerable), typeof(Queryable), GetExcludedMethods());
 
-            Assert.True(enumerableNotInQueryable == null, string.Format("Enumerable method {0} not defined by Queryable", enumerableNotInQueryable));
+            Assert.True(enumerableNotInQueryable is null, string.Format("Enumerable method {0} not defined by Queryable", enumerableNotInQueryable));
 
             MethodInfo queryableNotInEnumerable = GetMissingExtensionMethod(
-                typeof(System.Linq.Queryable),
+                typeof(Queryable),
                 typeof(Enumerable),
-                 new[] {
-                     nameof(System.Linq.Queryable.AsQueryable)
-                 }
-                );
+                [
+                    nameof(Queryable.AsQueryable)
+                ]
+            );
 
-            Assert.True(queryableNotInEnumerable == null, string.Format("Queryable method {0} not defined by Enumerable", queryableNotInEnumerable));
+            Assert.True(queryableNotInEnumerable is null, string.Format("Queryable method {0} not defined by Enumerable", queryableNotInEnumerable));
+#endif
         }
 
         // If a change to Enumerable has required a change to the exception list in this test
         // make the same change at src/System.Linq.Queryable/tests/Queryable.cs.
         private static IEnumerable<string> GetExcludedMethods()
         {
-            IEnumerable<string> result = new[]
-            {
+            IEnumerable<string> result =
+            [
                 nameof(Enumerable.ToLookup),
                 nameof(Enumerable.ToDictionary),
                 nameof(Enumerable.ToArray),
                 nameof(Enumerable.AsEnumerable),
                 nameof(Enumerable.ToList),
+                nameof(Enumerable.ToHashSet),
+                nameof(Enumerable.TryGetNonEnumeratedCount),
+                nameof(Enumerable.Reverse),
                 "Fold",
-                "LeftJoin",
-                "ToHashSet"
-            };
+                "LeftJoin"
+            ];
 
             return result;
         }
 
-        private static MethodInfo GetMissingExtensionMethod(Type a, Type b, IEnumerable<string> excludedMethods)
+#if !CISTERN_VALUELINQ
+        private static MethodInfo GetMissingExtensionMethod(
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)] Type a,
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)] Type b,
+            IEnumerable<string> excludedMethods)
         {
             var dex = new HashSet<string>(excludedMethods);
 
@@ -144,14 +152,14 @@ namespace Linqs.Tests
                     {
                         return t.GetGenericArguments()[0];
                     }
-                    if (g == typeof(System.Linq.IOrderedEnumerable<>) || g == typeof(System.Linq.IOrderedQueryable<>))
+                    if (g == typeof(System.Linq.IOrderedEnumerable<>) || g == typeof(IOrderedQueryable<>))
                     {
-                        return typeof(System.Linq.IOrderedQueryable);
+                        return typeof(IOrderedQueryable);
                     }
                 }
                 else
                 {
-                    if (t == typeof(System.Linq.IQueryable))
+                    if (t == typeof(IQueryable))
                     {
                         return typeof(IEnumerable);
                     }
@@ -160,5 +168,6 @@ namespace Linqs.Tests
                 return t;
             }
         }
+#endif
     }
 }

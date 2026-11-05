@@ -1,40 +1,30 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <RootNamespace>Cistern.ValueLinq</RootNamespace>
     <AssemblyName>Cistern.ValueLinq</AssemblyName>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Version>0.1.13</Version>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Update="EnumerableWrappers\Aggregates.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Aggregates.tt</DependentUpon>
-    </Compile>
-    <Compile Update="EnumerableWrappers\Maths.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Maths.tt</DependentUpon>
-    </Compile>
-    <Compile Update="EnumerableWrappers\Transforms.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Transforms.tt</DependentUpon>
-    </Compile>
+    <Using Include="System.Diagnostics.CodeAnalysis" />
+  </ItemGroup>
+
+  <!-- the generators that write each operator's boilerplate (see Operator.cs); their output is not checked in -->
+  <ItemGroup>
+    <ProjectReference Include="..\Cistern.ValueLinq.Generators\Cistern.ValueLinq.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Update="Properties\SR.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>SR.resx</DependentUpon>
-    </Compile>
-    <Compile Update="ValueEnumerable\ExtensionFunctions.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>ExtensionFunctions.tt</DependentUpon>
     </Compile>
   </ItemGroup>
 
@@ -50,52 +40,22 @@
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
-    <None Include="EnumerableWrappers\Aggregates.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Aggregates.tt</DependentUpon>
-    </None>
-    <None Include="EnumerableWrappers\Maths.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Maths.tt</DependentUpon>
-    </None>
-    <None Include="EnumerableWrappers\Transforms.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Transforms.tt</DependentUpon>
-    </None>
-    <None Include="ValueEnumerable\ExtensionFunctions.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>ExtensionFunctions.tt</DependentUpon>
-    </None>
   </ItemGroup>
 
   <ItemGroup>
-    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+    <TextTemplate Include="EnumerableWrappers\Aggregates.tt;EnumerableWrappers\Binary.tt;EnumerableWrappers\Maths.tt;EnumerableWrappers\Transforms.tt;ValueEnumerable\ExtensionFunctions.tt" />
+    <TextTemplateInclude Include="EnumerableWrappers\Collections.tth" />
+    <Compile Include="@(TextTemplate->'$(BaseIntermediateOutputPath)t4/%(Filename).cs')" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="EnumerableWrappers\Aggregates.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Aggregates.cs</LastGenOutput>
-    </None>
-    <None Update="EnumerableWrappers\Collections.tth">
-      <Generator></Generator>
-    </None>
-    <None Update="EnumerableWrappers\Maths.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Maths.cs</LastGenOutput>
-    </None>
-    <None Update="EnumerableWrappers\Transforms.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Transforms.cs</LastGenOutput>
-    </None>
-    <None Update="ValueEnumerable\ExtensionFunctions.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>ExtensionFunctions.cs</LastGenOutput>
-    </None>
-  </ItemGroup>
+  <Target Name="TransformTextTemplates"
+          BeforeTargets="CoreCompile"
+          Inputs="@(TextTemplate);@(TextTemplateInclude)"
+          Outputs="@(TextTemplate->'$(BaseIntermediateOutputPath)t4/%(Filename).cs')">
+    <Exec Command="dotnet tool restore" EnvironmentVariables="DOTNET_ROOT=" StandardOutputImportance="low" />
+    <MakeDir Directories="$(BaseIntermediateOutputPath)t4" />
+    <!-- dotnet-t4 finds its SDK through DOTNET_ROOT but launches that SDK's compiler with the default install's dotnet -->
+    <Exec Command="dotnet t4 &quot;%(TextTemplate.FullPath)&quot; -o &quot;$(BaseIntermediateOutputPath)t4/%(TextTemplate.Filename).cs&quot;" EnvironmentVariables="DOTNET_ROOT=" />
+  </Target>
 
 </Project>

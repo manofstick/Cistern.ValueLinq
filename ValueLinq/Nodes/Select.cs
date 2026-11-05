@@ -1,40 +1,22 @@
-﻿using Cistern.ValueLinq.Containers;
+﻿namespace Cistern.ValueLinq.Nodes;
+
+using Cistern.ValueLinq.Chain;
 using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 
-namespace Cistern.ValueLinq.Nodes
+public static partial class Select
 {
-    struct SelectNodeEnumerator<TSource, TResult, TPullEnumerator>
-        : IPullEnumerator<TResult>
-        where TPullEnumerator : IPullEnumerator<TSource>
-    {
-        private TPullEnumerator _enumerator;
-        private Func<TSource, TResult> _map;
-
-        public SelectNodeEnumerator(in TPullEnumerator enumerator, Func<TSource, TResult> map) => (_enumerator, _map) = (enumerator, map);
-
-        public void Dispose() => _enumerator.Dispose();
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryGetNext(out TResult current)
-        {
-            if (_enumerator.TryGetNext(out var currentIn))
-            {
-                current = _map(currentIn);
-                return true;
-            }
-            current = default;
-            return false;
-        }
-    }
-
-    public struct SelectNode<T, U, NodeT>
+    [Operator]
+    public partial struct Node<T, U, NodeT>
         : INode<U>
+        , Optimizations.IOptimizationCount
+        , Optimizations.IOptimizationElementAt<U>
+        , Optimizations.IOptimizationCopyTo<U>
+        , Optimizations.IOptimizationToArray<U>
+        , Optimizations.IOptimizationSkipTake<U>
         where NodeT : INode<T>
     {
-        private NodeT _nodeT;
-        private Func<T, U> _map;
+        internal NodeT _nodeT;
+        [Propagate] internal Func<T, U> _selector;
 
         public void GetCountInformation(out CountInformation info)
         {
@@ -42,136 +24,175 @@ namespace Cistern.ValueLinq.Nodes
             info.PotentialSideEffects = true;
         }
 
-        public SelectNode(in NodeT nodeT, Func<T, U> selector) => (_nodeT, _map) = (nodeT, selector);
-
-        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
-            => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
-
-        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
+        // only the dry run, which runs no selector; a count that enumerates runs the selector on every element, as
+        // System.Linq's does, so it is pushed
+        private bool Count(in Optimizations.Count request, out int response)
         {
-            var nextEnumerator = new SelectNodeEnumerator<EnumeratorElement, U, Enumerator>(in enumerator, (Func<EnumeratorElement, U>)(object)_map);
-            return tail.CreateObject<CreationType, U, SelectNodeEnumerator<EnumeratorElement, U, Enumerator>>(ref nextEnumerator);
+            if (!request.DryRun)
+            {
+                response = default;
+
+                return false;
+            }
+
+            return NodeImpl.TryGetNonEnumeratedCount<T, NodeT>(in _nodeT, out response);
         }
 
-        bool INode.TryPullOptimization<TRequest, CreationType, Tail>(in TRequest request, ref Tail tail, out CreationType creation)
+        // over a Where over a span, Where's two passes with the selector run on the survivors
+        private bool ToArray(in Optimizations.ToArray request, [MaybeNullWhen(false)] out U[] response)
         {
-            if (typeof(TRequest) == typeof(Optimizations.SourceArray<T>))
+            if (!Optimizations.FilteredSpanSource.TryGet<T, NodeT>(ref _nodeT, out var filtered))
             {
-                var src = (Optimizations.SourceArray<T>)(object)request;
-                return SelectNode.CreateArray<T, U, CreationType, Tail>(in src, _map, ref tail, out creation);
+                response = default;
+                return false;
             }
 
-            if (typeof(TRequest) == typeof(Optimizations.SourceArrayWhere<T>))
-            {
-                var src = (Optimizations.SourceArrayWhere<T>)(object)request;
-                return SelectNode.CreateArray<T, U, CreationType, Tail>(in src, _map, ref tail, out creation);
-            }
-
-            if (typeof(TRequest) == typeof(Optimizations.SourceList<T>))
-            {
-                var src = (Optimizations.SourceList<T>)(object)request;
-                return SelectNode.CreateList<T, U, CreationType, Tail>(src.List, _map, ref tail, out creation);
-            }
-
-            if (typeof(TRequest) == typeof(Optimizations.SourceListWhere<T>))
-            {
-                var src = (Optimizations.SourceListWhere<T>)(object)request;
-                return SelectNode.CreateList<T, U, CreationType, Tail>(src.List, src.Predicate, _map, ref tail, out creation);
-            }
-
-            if (typeof(TRequest) == typeof(Optimizations.SourceEnumerable<T>))
-            {
-                var src = ((Optimizations.SourceEnumerable<T>)(object)request);
-                return SelectNode.CreateEnumerable<T, U, CreationType, Tail>(src.Enumerable, _map, ref tail, out creation);
-            }
-
-            if (typeof(TRequest) == typeof(Optimizations.SourceEnumerableWhere<T>))
-            {
-                var src = (Optimizations.SourceEnumerableWhere<T>)(object)request;
-                return SelectNode.CreateEnumerable<T, U, CreationType, Tail>(src.Enumerable, src.Predicate, _map, ref tail, out creation);
-            }
-
-            creation = default;
-            return false;
+            response = Where.ToArray(filtered.Source.GetSpan(), filtered.Predicate, _selector);
+            return true;
         }
 
-        bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
+        // the source finds the element and only it is projected, as System.Linq's Select iterators answer First, Last
+        // and ElementAt (an ordering below selects rather than sorts); a source that declines an index from the start
+        // or the last is run to the element, the selector not run for the elements passed over
+        private bool ElementAt(in Optimizations.ElementAt request, out (bool, U) response)
+        {
+            if (!_nodeT.TryPushOptimization<Optimizations.ElementAt, (bool, T)>(in request, out var answer))
+            {
+                var index = request.Index;
+                if (index.IsFromEnd && index.Value != 1)
+                {
+                    response = default;
+                    return false;
+                }
 
-        TResult INode<U>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum) =>
-            _nodeT.CreateViaPush<TResult, SelectFoward<T, U, TPushEnumerator>>(new SelectFoward<T, U, TPushEnumerator>(fenum, _map));
+                answer = _nodeT.CreateViaPush<(bool, T), Aggregation.FoundElementAt<T>, Construct<Aggregation.FoundElementAt<T>, Aggregation.FoundElementAt<T>.Args>>(default(ChainOptions), new Construct<Aggregation.FoundElementAt<T>, Aggregation.FoundElementAt<T>.Args>(new Aggregation.FoundElementAt<T>.Args(index)));
+            }
+
+            response = answer.Item1 ? (true, _selector(answer.Item2)) : (false, default!);
+            return true;
+        }
+
+        // the slice of the source, projected, so the selector never runs for an element skipped, as System.Linq's
+        // Select iterators over a list or range slice their source; only the source itself answers, so one that cannot
+        // slice is pushed with its user code run
+        private bool SkipTake(in Optimizations.SkipTake request, out NodeContainer<U> response)
+        {
+            if (!Optimizations.SkipTake.Try<T, NodeT>(ref _nodeT, request.Skip, request.Take, out var sourceSlice))
+            {
+                response = default;
+
+                return false;
+            }
+
+            response = default;
+            if (sourceSlice.Type == NodeType.Empty)
+                response.SetEmpty();
+            else
+                response.SetNode(new Node<T, U, NodeContainerNode<T>>(new NodeContainerNode<T>(in sourceSlice), _selector));
+
+            return true;
+        }
+
+        // over a source with a span the copy projects straight into the destination, the selector run once per element
+        // in order, as the push would run it, and as System.Linq's Select fills an array or list of known size
+        private bool CopyTo(in Optimizations.CopyTo<U> request, out int response)
+        {
+            if (!Optimizations.AsSpanSource.TryGet<T, NodeT>(ref _nodeT, out var source))
+            {
+                if (typeof(T) == typeof(int))
+                    return CopyRangeTo(in request, out response);
+
+                response = default;
+                return false;
+            }
+
+            var span = source.GetSpan();
+            if (!request.IsDryRun)
+            {
+                var destination = request.Span.Slice(0, span.Length);
+                var selector = _selector;
+                for (var i = 0; i < span.Length; ++i)
+                    destination[i] = selector(span[i]);
+            }
+
+            response = span.Length;
+            return true;
+        }
+
+        // over a range its values are computed in one counted loop rather than pulled from it, as System.Linq's
+        // RangeSelectIterator fills its result
+        private bool CopyRangeTo(in Optimizations.CopyTo<U> request, out int response)
+        {
+            if (!Optimizations.AsRange.TryGet(ref _nodeT, out var range))
+            {
+                response = default;
+                return false;
+            }
+
+            if (!request.IsDryRun)
+            {
+                var destination = request.Span.Slice(0, range.Count);
+                var selector = (Func<int, U>)(object)_selector;
+                for (var i = 0; i < destination.Length; ++i)
+                    destination[i] = selector(range.Start + i);
+            }
+
+            response = range.Count;
+            return true;
+        }
     }
 
-    class SelectNode
-    {
-        internal static bool CreateEnumerable<T, U, CreationType, Nodes>(IEnumerable<T> e, Func<T, U> _map, ref Nodes tail, out CreationType creation)
-            where Nodes : INodes
-        {
-            var enumerator = new EnumerableSelectPullEnumerator<T, U>(e, _map);
-            creation = tail.CreateObject<CreationType, U, EnumerableSelectPullEnumerator<T, U>>(ref enumerator);
-            return true;
-        }
-
-        internal static bool CreateEnumerable<T, U, CreationType, Nodes>(IEnumerable<T> e, Func<T, bool> predicate, Func<T, U> _map, ref Nodes tail, out CreationType creation)
-            where Nodes : INodes
-        {
-            var enumerator = new EnumerableWhereSelectPullEnumerator<T, U>(e, predicate, _map);
-            creation = tail.CreateObject<CreationType, U, EnumerableWhereSelectPullEnumerator<T, U>>(ref enumerator);
-            return true;
-        }
-
-        internal static bool CreateList<T, U, CreationType, Nodes>(List<T> l, Func<T, U> _map, ref Nodes tail, out CreationType creation)
-            where Nodes : INodes
-        {
-            var enumerator = new ListSelectPullEnumerator<T, U>(l.GetEnumerator(), _map); ;
-            creation = tail.CreateObject<CreationType, U, ListSelectPullEnumerator<T, U>>(ref enumerator);
-            return true;
-        }
-
-        internal static bool CreateList<T, U, CreationType, Nodes>(List<T> l, Func<T, bool> predicate, Func<T, U> _map, ref Nodes tail, out CreationType creation)
-            where Nodes : INodes
-        {
-            var enumerator = new ListWhereSelectPullEnumerator<T, U>(l.GetEnumerator(), predicate, _map); ;
-            creation = tail.CreateObject<CreationType, U, ListWhereSelectPullEnumerator<T, U>>(ref enumerator);
-            return true;
-        }
-
-        internal static bool CreateArray<T, U, CreationType, Nodes>(in Optimizations.SourceArray<T> src, Func<T, U> _map, ref Nodes tail, out CreationType creation)
-            where Nodes : INodes
-        {
-            var enumerator = new ArraySelectPullEnumerator<T, U>(src.Array, src.Start, src.Count, _map);
-            creation = tail.CreateObject<CreationType, U, ArraySelectPullEnumerator<T, U>>(ref enumerator);
-            return true;
-        }
-
-        internal static bool CreateArray<T, U, CreationType, Nodes>(in Optimizations.SourceArrayWhere<T> src, Func<T, U> _map, ref Nodes tail, out CreationType creation)
-            where Nodes : INodes
-        {
-            var enumerator = new ArrayWhereSelectPullEnumerator<T, U>(src.Array, src.Start, src.Count, src.Predicate, _map);
-            creation = tail.CreateObject<CreationType, U, ArrayWhereSelectPullEnumerator<T, U>>(ref enumerator);
-            return true;
-        }
-    }
-
-    struct SelectFoward<T, U, Next>
-        : IPushEnumerator<T>
+    // a selector over an aggregator, as the selector overloads of the maths aggregations run it
+    internal static Push<T, U, Next> CreatePush<T, U, Next>(Func<T, U> selector, in Next next)
         where Next : IPushEnumerator<U>
     {
-        internal Next _next;
+        if (selector == null)
+            throw new ArgumentNullException(nameof(selector));
 
-        Func<T, U> _selector;
+        var push = default(Push<T, U, Next>);
+        push.Fill(selector) = next;
+        return push;
+    }
 
-        public SelectFoward(in Next prior, Func<T, U> selector)
+    internal partial struct Push<T, U, Next>
+    {
+        // a forwarder's batch only over a promoted leaf: Docs/BatchFromLocalCopy.md, "The fix"; a cold batch only over a
+        // downstream that reads every element, as one does that takes cold
+        static BatchKinds IPushEnumerator<T>.AllowBatchesWhen =>
+            (typeof(Next).IsAssignableTo(typeof(IInternal__Aggregator__NotForManualUse))
+                ? BatchKinds.Container | BatchKinds.Forwarder
+                : BatchKinds.Container)
+            | ((Next.AllowBatchesWhen & BatchKinds.Cold) != 0
+                ? BatchKinds.ColdSpan
+                : BatchKinds.None);
+
+        bool IPushEnumerator<T>.ProcessBatch(scoped ref Batch<T> batch) => ProcessSpan(batch.GetSpan());
+
+        private bool ProcessSpan(ReadOnlySpan<T> span)
         {
-            if (selector == null)
-                throw new ArgumentNullException(nameof(selector));
-
-            (_next, _selector) = (prior, selector);
+            // the downstream runs the span from a local copy: Docs/BatchFromLocalCopy.md, "The fix" and "Constraints"
+            var next = _next;
+            var selector = _selector;
+            var more = true;
+            foreach (var item in span)
+            {
+                if (!next.ProcessNext(selector(item)))
+                {
+                    more = false;
+                    break;
+                }
+            }
+            _next = next;
+            return more;
         }
 
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
-        public void Dispose() => _next.Dispose();
-        public TResult GetResult<TResult>() => _next.GetResult<TResult>();
         public bool ProcessNext(T input) => _next.ProcessNext(_selector(input));
     }
 
+    public partial struct Pull<T, U, NodeT, TInEnumerator>
+    {
+        public bool MoveNext() => _enumerator.MoveNext();
+
+        public U Current => _selector(_enumerator.Current);
+    }
 }

@@ -1,6 +1,5 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System;
 using System.Collections.Generic;
@@ -41,57 +40,103 @@ namespace Linqs.Tests
 
         public static IEnumerable<object[]> TestData()
         {
-            yield return new object[] { new int[0], null, false };
-            yield return new object[] { new int[] { 3 }, null, true };
-
-            Func<int, bool> isEvenFunc = IsEven;
-            yield return new object[] { new int[0], isEvenFunc, false };
-            yield return new object[] { new int[] { 4 }, isEvenFunc, true };
-            yield return new object[] { new int[] { 5 }, isEvenFunc, false };
-            yield return new object[] { new int[] { 5, 9, 3, 7, 4 }, isEvenFunc, true };
-            yield return new object[] { new int[] { 5, 8, 9, 3, 7, 11 }, isEvenFunc, true };
-
-            int[] range = Enumerable.Range(1, 10).ToArray();
-            yield return new object[] { range, (Func<int, bool>)(i => i > 10), false };
-            for (int j = 0; j <= 9; j++)
+            foreach (int count in new[] { 0, 1, 2 })
             {
-                int k = j; // Local copy for iterator
-                yield return new object[] { range, (Func<int, bool>)(i => i > k), true };
+                bool expected = count > 0;
+                foreach (IEnumerable<int> source in CreateSources(new int[count]))
+                {
+                    yield return [source, expected];
+                    yield return [source.Select(i => i), expected];
+                    yield return [source.Where(i => true), expected];
+
+                    yield return [source.Where(i => false), false];
+                }
             }
         }
 
         [Theory]
         [MemberData(nameof(TestData))]
-        public void Any(IEnumerable<int> source, Func<int, bool> predicate, bool expected)
+        public void Any(IEnumerable<int> source, bool expected)
         {
-            if (predicate == null)
+            Assert.Equal(expected, source.Any());
+        }
+
+        public static IEnumerable<object[]> TestDataForGroupBy()
+        {
+            yield return [Array.Empty<int>().GroupBy(num => num), false];
+            yield return [new int[2] { 1, 2 }.GroupBy(num => num), true];
+            yield return [new int[5] { 1, 2, 1, 3, 2 }.GroupBy(n => n, (k, v) => v), true];
+        }
+
+        [Theory, MemberData(nameof(TestDataForGroupBy))]
+        public void Any_GroupBy(IEnumerable<object> values, bool expectedValue)
+        {
+            // Provide test coverage for `Any` calls over nonempty `IListSource` implementations.
+            Assert.Equal(expectedValue, values.Any());
+        }
+
+        public static IEnumerable<object[]> TestDataWithPredicate()
+        {
+            yield return [new int[0], null, false];
+            yield return [new int[] { 3 }, null, true];
+
+            Func<int, bool> isEvenFunc = IsEven;
+            yield return [new int[0], isEvenFunc, false];
+            yield return [new int[] { 4 }, isEvenFunc, true];
+            yield return [new int[] { 5 }, isEvenFunc, false];
+            yield return [new int[] { 5, 9, 3, 7, 4 }, isEvenFunc, true];
+            yield return [new int[] { 5, 8, 9, 3, 7, 11 }, isEvenFunc, true];
+
+            int[] range = Enumerable.Range(1, 10).ToArray();
+            yield return [range, (Func<int, bool>)(i => i > 10), false];
+            for (int j = 0; j <= 9; j++)
             {
-                Assert.Equal(expected, source.Any());
-            }
-            else
-            {
-                Assert.Equal(expected, source.Any(predicate));
+                int k = j; // Local copy for iterator
+                yield return [range, (Func<int, bool>)(i => i > k), true];
             }
         }
 
-        [Theory, MemberData(nameof(TestData))]
+        [Theory]
+        [MemberData(nameof(TestDataWithPredicate))]
+        public void Any_Predicate(IEnumerable<int> source, Func<int, bool> predicate, bool expected)
+        {
+            Assert.All(CreateSources(source), source =>
+            {
+                if (predicate is null)
+                {
+                    Assert.Equal(expected, source.Any());
+                }
+                else
+                {
+                    Assert.Equal(expected, source.Any(predicate));
+                }
+            });
+        }
+
+        [Theory, MemberData(nameof(TestDataWithPredicate))]
         public void AnyRunOnce(IEnumerable<int> source, Func<int, bool> predicate, bool expected)
         {
-            if (predicate == null)
+            Assert.All(CreateSources(source), source =>
             {
-                Assert.Equal(expected, source.RunOnce().Any());
-            }
-            else
-            {
-                Assert.Equal(expected, source.RunOnce().Any(predicate));
-            }
+                if (predicate is null)
+                {
+                    Assert.Equal(expected, source.RunOnce().Any());
+                }
+                else
+                {
+                    Assert.Equal(expected, source.RunOnce().Any(predicate));
+                }
+            });
         }
 
         [Fact]
         public void NullObjectsInArray_Included()
         {
-            int?[] source = { null, null, null, null };
-            Assert.True(source.Any());
+            int?[] source = [null, null, null, null];
+            Assert.All(CreateSources(source), source =>
+            {
+                Assert.True(source.Any());
+            });
         }
 
         [Fact]

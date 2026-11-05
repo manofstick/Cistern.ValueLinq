@@ -1,44 +1,19 @@
-﻿using System;
+﻿namespace Cistern.ValueLinq.Nodes;
+
+using System;
 using System.Runtime.CompilerServices;
 
-namespace Cistern.ValueLinq.Nodes
+public static partial class ValueSelect
 {
-    struct ValueSelectNodeEnumerator<T, U, TInEnumerator, AlsoT, Func>
-        : IPullEnumerator<U>
-        where TInEnumerator : IPullEnumerator<T>
-        where Func : IFuncBase<AlsoT, U>
-    {
-        private TInEnumerator _enumerator;
-        private Func _map;
-
-        public ValueSelectNodeEnumerator(in TInEnumerator enumerator, Func map) => (_enumerator, _map) = (enumerator, map);
-
-        public void Dispose() => _enumerator.Dispose();
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryGetNext(out U current)
-        {
-            if (_enumerator.TryGetNext(out var currentIn))
-            {
-                     if (_map is IFunc<T, U>)   current = ((IFunc<T, U>)  _map).Invoke(currentIn);
-                else if (_map is IInFunc<T, U>) current = ((IInFunc<T, U>)_map).Invoke(in currentIn);
-                else throw new NotImplementedException();
-
-                return true;
-            }
-
-            current = default;
-            return false;
-        }
-    }
-
-    public struct ValueSelectNode<T, U, NodeT, Func>
+    [Operator]
+    public partial struct Node<T, U, NodeT, Func>
         : INode<U>
+        , Optimizations.IOptimizationCount
         where NodeT : INode<T>
-        where Func : IFuncBase<T, U>
+        where Func : IFunc<T, U>
     {
-        private NodeT _nodeT;
-        private Func _map;
+        internal NodeT _nodeT;
+        [Propagate] internal Func _selector;
 
         public void GetCountInformation(out CountInformation info)
         {
@@ -46,52 +21,30 @@ namespace Cistern.ValueLinq.Nodes
             info.PotentialSideEffects = true;
         }
 
-        public ValueSelectNode(in NodeT nodeT, Func selector) => (_nodeT, _map) = (nodeT, selector);
-
-        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes) => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
-
-        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
+        // only the dry run, as Select answers it
+        private bool Count(in Optimizations.Count request, out int response)
         {
-            var nextEnumerator = new ValueSelectNodeEnumerator<EnumeratorElement, U, Enumerator, T, Func>(in enumerator, _map);
-            return tail.CreateObject<CreationType, U, ValueSelectNodeEnumerator<EnumeratorElement, U, Enumerator, T, Func>>(ref nextEnumerator);
+            if (!request.DryRun)
+            {
+                response = default;
+
+                return false;
+            }
+
+            return NodeImpl.TryGetNonEnumeratedCount<T, NodeT>(in _nodeT, out response);
         }
-
-        bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
-
-        bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
-        {
-            result = default;
-            return false;
-        }
-
-        TResult INode<U>.CreateViaPush<TResult, Next>(in Next fenum) =>
-            _nodeT.CreateViaPush<TResult, ValueSelectFoward<T, U, Next, Func>>(new ValueSelectFoward<T, U, Next, Func>(fenum, _map));
     }
 
-    struct ValueSelectFoward<T, U, Next, Func>
-        : IPushEnumerator<T>
-        where Next : IPushEnumerator<U>
-        where Func : IFuncBase<T, U>
+    partial struct Push<T, U, Next, Func>
     {
-        Next _next;
-        Func _selector;
-
-        public ValueSelectFoward(in Next prior, Func predicate) => (_next, _selector) = (prior, predicate);
-
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
-        public void Dispose() => _next.Dispose();
-        public TResult GetResult<TResult>() => _next.GetResult<TResult>();
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool ProcessNext(T input)
-        {
-            U u;
+        public bool ProcessNext(T input) => _next.ProcessNext(_selector.Invoke(input));
+    }
 
-                 if (_selector is IFunc<T, U>)   u = ((IFunc<T, U>)  _selector).Invoke(input);
-            else if (_selector is IInFunc<T, U>) u = ((IInFunc<T, U>)_selector).Invoke(in input);
-            else throw new NotImplementedException();
+    public partial struct Pull<T, U, NodeT, TInEnumerator, Func>
+    {
+        public bool MoveNext() => _enumerator.MoveNext();
 
-            return _next.ProcessNext(u);
-        }
+        public U Current => _selector.Invoke(_enumerator.Current);
     }
 }

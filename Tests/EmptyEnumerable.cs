@@ -1,7 +1,8 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
+using System;
+using System.Collections.Generic;
 using Xunit;
 
 #if CISTERN_LINQ
@@ -21,10 +22,10 @@ namespace Linqs.Tests
             var enumerable1 = Enumerable.Empty<T>();
             var enumerable2 = Enumerable.Empty<T>();
 
-            Assert.Same(enumerable1, enumerable2); // Enumerable.Empty is not cached if not the same.
+            Assert.Same(enumerable1, enumerable2);
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: There rules are irrelevant")]
+        [Fact(Skip = "CISTERN.VALUELINQ: Empty is a ValueEnumerable struct, so there is no cached instance to compare")]
         public void EmptyEnumerableCachedTest()
         {
             TestEmptyCached<int>();
@@ -40,13 +41,42 @@ namespace Linqs.Tests
             Assert.Same(Enumerable.Empty<T>().GetEnumerator(), Enumerable.Empty<T>().GetEnumerator());
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: There rules are irrelevant")]
+        [Fact(Skip = "CISTERN.VALUELINQ: checks that Empty hands out one shared enumerator instance")]
         public void EmptyEnumerableIsIndeedEmpty()
         {
             TestEmptyEmpty<int>();
             TestEmptyEmpty<string>();
             TestEmptyEmpty<object>();
             TestEmptyEmpty<EmptyEnumerableTest>();
+        }
+
+        [Fact(Skip = "CISTERN.VALUELINQ: tests System.Linq's IList implementation on its Empty object")]
+        public void IListImplementationIsValid()
+        {
+            IList<int> list = Assert.IsAssignableFrom<IList<int>>(Enumerable.Empty<int>());
+            IReadOnlyList<int> roList = Assert.IsAssignableFrom<IReadOnlyList<int>>(Enumerable.Empty<int>());
+
+            Assert.Throws<NotSupportedException>(() => list.Add(42));
+            Assert.Throws<NotSupportedException>(() => list.Insert(0, 42));
+            Assert.Throws<NotSupportedException>(() => list.Clear());
+            Assert.Throws<NotSupportedException>(() => list.Remove(42));
+            Assert.Throws<NotSupportedException>(() => list.RemoveAt(0));
+            AssertExtensions.Throws<ArgumentOutOfRangeException>("index", () => list[0] = 42);
+            AssertExtensions.Throws<ArgumentOutOfRangeException>("index", () => list[0]);
+            AssertExtensions.Throws<ArgumentOutOfRangeException>("index", () => roList[0]);
+
+            Assert.True(list.IsReadOnly);
+            Assert.Equal(0, list.Count);
+            Assert.Equal(0, roList.Count);
+
+            Assert.False(list.Contains(42));
+            Assert.Equal(-1, list.IndexOf(42));
+
+            list.CopyTo([], 0);
+            AssertExtensions.Throws<ArgumentException>("destinationArray", () => list.CopyTo([], 1));
+            int[] array = [42];
+            list.CopyTo(array, 0);
+            Assert.Equal(42, array[0]);
         }
     }
 }

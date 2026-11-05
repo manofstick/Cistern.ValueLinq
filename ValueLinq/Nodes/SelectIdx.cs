@@ -1,37 +1,17 @@
-﻿using System;
+﻿namespace Cistern.ValueLinq.Nodes;
 
-namespace Cistern.ValueLinq.Nodes
+using System;
+
+public static partial class SelectIdx
 {
-    struct SelectIdxNodeEnumerator<TIn, TOut, TInEnumerator>
-        : IPullEnumerator<TOut>
-        where TInEnumerator : IPullEnumerator<TIn>
-    {
-        private TInEnumerator _enumerator;
-        private Func<TIn, int, TOut> _map;
-        private int _i;
-
-        public SelectIdxNodeEnumerator(in TInEnumerator enumerator, Func<TIn, int, TOut> map) => (_enumerator, _map, _i) = (enumerator, map, 0);
-
-        public void Dispose() => _enumerator.Dispose();
-
-        public bool TryGetNext(out TOut current)
-        {
-            if (_enumerator.TryGetNext(out var currentIn))
-            {
-                current = _map(currentIn, _i++);
-                return true;
-            }
-            current = default;
-            return false;
-        }
-    }
-
-    public struct SelectIdxNode<T, U, NodeT>
+    [Operator]
+    public partial struct Node<T, U, NodeT>
         : INode<U>
+        , Optimizations.IOptimizationCount
         where NodeT : INode<T>
     {
-        private NodeT _nodeT;
-        private Func<T, int, U> _map;
+        internal NodeT _nodeT;
+        [Propagate] internal Func<T, int, U> _selector;
 
         public void GetCountInformation(out CountInformation info)
         {
@@ -39,38 +19,43 @@ namespace Cistern.ValueLinq.Nodes
             info.PotentialSideEffects = true;
         }
 
-        public SelectIdxNode(in NodeT nodeT, Func<T, int, U> selector) => (_nodeT, _map) = (nodeT, selector);
-
-        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes) => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
-
-        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
+        // only the dry run, as Select answers it
+        private bool Count(in Optimizations.Count request, out int response)
         {
-            var nextEnumerator = new SelectIdxNodeEnumerator<EnumeratorElement, U, Enumerator>(in enumerator, (Func<EnumeratorElement, int, U>)(object)_map);
-            return tail.CreateObject<CreationType, U, SelectIdxNodeEnumerator<EnumeratorElement, U, Enumerator>>(ref nextEnumerator);
+            if (!request.DryRun)
+            {
+                response = default;
+
+                return false;
+            }
+
+            return NodeImpl.TryGetNonEnumeratedCount<T, NodeT>(in _nodeT, out response);
         }
-
-        bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
-        bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false;}
-
-        TResult INode<U>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
-            => _nodeT.CreateViaPush<TResult, SelectIdxFoward<T, U, TPushEnumerator>>(new SelectIdxFoward<T, U, TPushEnumerator>(fenum, _map));
     }
 
-    struct SelectIdxFoward<T, U, Next>
-        : IPushEnumerator<T>
-        where Next : IPushEnumerator<U>
+    partial struct Push<T, U, Next>
     {
-        Next _next;
-        Func<T, int, U> _selector;
-        int _idx;
-
-        public SelectIdxFoward(in Next prior, Func<T, int, U> predicate) => (_next, _selector, _idx) = (prior, predicate, 0);
-
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
-        public void Dispose() => _next.Dispose();
-        public TResult GetResult<TResult>() => _next.GetResult<TResult>();
+        private int _idx;
 
         public bool ProcessNext(T input) => _next.ProcessNext(_selector(input, _idx++));
     }
 
+    public partial struct Pull<T, U, NodeT, TInEnumerator>
+    {
+        private int _i;
+
+        partial void Start() => _i = -1;
+
+        public bool MoveNext()
+        {
+            if (_enumerator.MoveNext())
+            {
+                ++_i;
+                return true;
+            }
+            return false;
+        }
+
+        public U Current => _selector(_enumerator.Current, _i);
+    }
 }

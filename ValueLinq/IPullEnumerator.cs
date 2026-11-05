@@ -1,54 +1,26 @@
-﻿using Cistern.ValueLinq.Containers;
-using System;
+﻿namespace Cistern.ValueLinq;
 
-namespace Cistern.ValueLinq
+using Cistern.ValueLinq.Chain;
+using Cistern.ValueLinq.Containers;
+using System.Diagnostics.CodeAnalysis;
+
+public interface IPullEnumerator<TElement>
 {
-    public interface IPullEnumerator<TElement>
-    {
-        /// <summary>
-        /// Valid prior to iterating, undefined afterwards
-        /// </summary>
-        bool TryGetNext(out TElement current);
+    internal bool MoveNext();
+    internal TElement Current { get; }
+    internal void Dispose();
 
-        void Dispose();
-    }
 
-    public enum BatchProcessResult
-    {
-        Unavailable,
-        SuccessAndHalt,
-        SuccessAndContinue,
-    }
+    internal bool TryPushRest(ErasedChain.PushSink<TElement> sink);
 
-    public interface IPushEnumerator<TElement>
-    {
-        BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request);
-        public bool ProcessNext(TElement input);
-        TResult GetResult<TResult>();
-        void Dispose();
-    }
 
-    abstract class PullEnumerator<TElement>
-        : IDisposable
-    {
-        public abstract void Dispose();
-        public abstract bool TryGetNext(out TElement current);
+    internal static abstract bool RebuildChanges { get; }
+    internal static abstract bool PreferRebuilt { get; }
+    internal static abstract TBuilt Rebuild<TOwnNode, TBuilt, TBuilder>(in TOwnNode node, in TBuilder builder)
+        where TBuilder : IChainBuilder<TElement, TBuilt>, allows ref struct;
 
-        public static readonly PullEnumerator<TElement> Empty = new PullEnumerator<EmptyPullEnumerator<TElement>, TElement>(default);
-    }
 
-    sealed class PullEnumerator<TPullEnumerator, TElement>
-        : PullEnumerator<TElement>
-        where TPullEnumerator : struct, IPullEnumerator<TElement>
-    {
-        private TPullEnumerator enumerator;
-
-        public PullEnumerator(TPullEnumerator enumerator)
-            => this.enumerator = enumerator;
-
-        public override void Dispose() => enumerator.Dispose();
-
-        public override bool TryGetNext(out TElement current)
-            => enumerator.TryGetNext(out current);
-    }
+    internal static abstract bool TryPullOptimization<TRequest, TOwnNode, TBuilt, TBuilder>(in TRequest request, in TOwnNode node, in TBuilder builder, [MaybeNullWhen(false)] out TBuilt built)
+        where TRequest : notnull
+        where TBuilder : IChainBuilder<TElement, TBuilt>, allows ref struct;
 }

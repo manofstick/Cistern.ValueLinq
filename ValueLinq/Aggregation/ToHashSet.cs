@@ -1,17 +1,17 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Cistern.ValueLinq.Aggregation
 {
-    struct ToHashSet<T>
+    [Aggregator]
+    readonly partial struct ToHashSet<T>
         : IPushEnumerator<T>
     {
-        private HashSet<T> _hashSet;
+        private readonly HashSet<T> _hashSet;
 
-        public ToHashSet(IEqualityComparer<T> comparer) => _hashSet = new HashSet<T>(comparer);
+        public ToHashSet(IEqualityComparer<T>? comparer) => _hashSet = new HashSet<T>(comparer);
 
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
-        public void Dispose() { }
-        TResult IPushEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
+        TPushResult IPushEnumerator<T>.GetResult<TPushResult>() => (TPushResult)(object)GetResult();
 
         public HashSet<T> GetResult() => _hashSet;
 

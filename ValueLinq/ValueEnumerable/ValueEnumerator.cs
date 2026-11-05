@@ -1,41 +1,71 @@
-﻿using Cistern.ValueLinq.Aggregation;
-using Cistern.ValueLinq.Containers;
+﻿using Cistern.ValueLinq.Chain;
 using System;
 
 namespace Cistern.ValueLinq.ValueEnumerable
 {
-    public struct ValueEnumerator<T>
+    // what foreach holds: the chain by value; Current is read from it once per element and is default after the end,
+    // the chain is not pulled again after its end, and it is disposed by Dispose alone, not on reaching its end (see
+    // Docs/PullProtocol.md). A chain whose rebuild merges a Skip or Take into a buffering node's window is held as that
+    // rebuilt chain's heap enumerator instead, and _enumerator is left default
+    public struct ValueEnumerator<T, TEnumerator>
         : IDisposable
+        where TEnumerator : struct, IPullEnumerator<T>
     {
-        private PullEnumerator<T> _enumerator;
-        private T _current;
+        private TEnumerator _enumerator;
+        private readonly PullEnumerator<T>? _pull;
+        [AllowNull] private T _current;
+        private bool _finished;
+        private bool _disposed;
 
-        internal ValueEnumerator(PullEnumerator<T> enumerator) => (_enumerator, _current) = (enumerator, default);
-
-        public T Current => _current;
-
-        public void Dispose() => _enumerator.Dispose();
-
-        public bool MoveNext() => _enumerator.TryGetNext(out _current);
-    }
-
-    struct PullEnumeratorToValueEnumeratorNode
-        : INode
-    {
-        public void GetCountInformation(out CountInformation info) => Impl.CountInfo(out info);
-
-        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes _)
-            => Impl.CreateObjectDescent<CreationType>();
-
-        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
+        internal ValueEnumerator(in TEnumerator enumerator)
         {
-            if (typeof(Enumerator) == typeof(Containers.EmptyPullEnumerator<EnumeratorElement>))
-                return (CreationType)(object)InstanceOfEmptyPullEnumerator<EnumeratorElement>.Instance;
-
-            return (CreationType)(object)new PullEnumerator<Enumerator, EnumeratorElement>(enumerator);
+            _enumerator = enumerator;
+            _pull = null;
+            _current = default;
+            _finished = false;
+            _disposed = false;
         }
 
-        bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation) { creation = default; return false; }
-        bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
+        internal ValueEnumerator(PullEnumerator<T> pull)
+        {
+            _enumerator = default;
+            _pull = pull;
+            _current = default;
+            _finished = false;
+            _disposed = false;
+        }
+
+        public readonly T Current => _current;
+
+        public void Dispose()
+        {
+            if (TEnumerator.PreferRebuilt)
+            {
+                _pull!.Dispose();
+                return;
+            }
+
+            if (_disposed)
+                return;
+            _disposed = true;
+            _enumerator.Dispose();
+        }
+
+        public bool MoveNext()
+        {
+            if (TEnumerator.PreferRebuilt)
+                return _pull!.TryGetNext(out _current);
+
+            if (_finished)
+                return false;
+            if (_enumerator.MoveNext())
+            {
+                _current = _enumerator.Current;
+                return true;
+            }
+            _current = default;
+            _finished = true;
+            return false;
+        }
     }
 }

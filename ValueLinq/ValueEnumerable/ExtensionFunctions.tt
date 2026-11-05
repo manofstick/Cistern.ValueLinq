@@ -64,14 +64,12 @@ namespace Cistern.ValueLinq
         void INode.GetCountInformation(out CountInformation info)
             => Node.GetCountInformation(out info);
 
-        bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation)
-            => Node.TryPullOptimization<TRequest, TResult, Nodes>(in request, ref nodes, out creation);
         CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
             => Node.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref tail, ref enumerator);
         CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
             => Node.CreateViaPullDescend<CreationType, Head, Tail>(ref nodes);
 
-        bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+        bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, [MaybeNullWhen(false)] out TResult result)
             => Node.TryPushOptimization<TRequest, TResult>(in request, out result);
         TResult INode<TSource>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
             => Node.CreateViaPush<TResult, TPushEnumerator>(fenum);
@@ -388,7 +386,7 @@ namespace Cistern.ValueLinq
             where NodeU : INode<TCollection>
             => new (NodeImpl.SelectMany(in prior.Node, collectionSelector, resultSelector));
 
-        public static ValueEnumerable<TSource, ConcatNode<TSource, First, Second>> Concat<TSource, First, Second>(in this <#= valueEnumerableType #><TSource, First> first, in ValueEnumerable<TSource, Second> second)
+        public static ValueEnumerable<TSource, CisternConcat.Node<TSource, First, Second>> Concat<TSource, First, Second>(in this <#= valueEnumerableType #><TSource, First> first, in ValueEnumerable<TSource, Second> second)
             where First : <#= nodeTSource #>
             where Second : <#= nodeTSource #>
             => new (NodeImpl.Concat<TSource, First, Second>(in first.Node, in second.Node));
@@ -399,12 +397,12 @@ namespace Cistern.ValueLinq
 
         public static ValueEnumerable<U, ValueSelectNode<TSource, U, TPrior, IFunc>> Select<TSource, U, TPrior, IFunc>(in this <#= valueEnumerableType #><TSource, TPrior> prior, IFunc selector, U u = default)
             where TPrior : <#= nodeTSource #>
-            where IFunc : IFuncBase<TSource, U>
+            where IFunc : IFunc<TSource, U>
             => new (NodeImpl.Select<TSource, U, TPrior, IFunc>(in prior.Node, selector, u));
 
         public static ValueEnumerable<TSource, ValueWhereNode<TSource, TPrior, Predicate>> Where<TSource, TPrior, Predicate>(in this <#= valueEnumerableType #><TSource, TPrior> prior, Predicate predicate)
             where TPrior : <#= nodeTSource #>
-            where Predicate : IFuncBase<TSource, bool>
+            where Predicate : IFunc<TSource, bool>
             => new (NodeImpl.Where<TSource, TPrior, Predicate>(in prior.Node, predicate));
 
         public static ValueOrderedEnumerable<TSource, OrderByNode<TSource, TKey, TPrior>> OrderBy<TSource, TKey, TPrior>(in this <#= valueEnumerableType #><TSource, TPrior> prior, Func<TSource, TKey> keySelector, IComparer<TKey> comparer)

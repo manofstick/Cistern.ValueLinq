@@ -1,0 +1,50 @@
+﻿using System.Collections.Generic;
+using System.Linq;
+using BenchmarkDotNet.Attributes;
+using StructLinq;
+
+namespace Cistern.Benchmarks.StructLinq
+{
+    [MemoryDiagnoser]
+    public partial class HashSet
+    {
+
+        private HashSet<int> hashset;
+
+        [Params(2, 100, 1000)]
+        public int ItemCount { get; set; }
+        
+        [GlobalSetup]
+        public void GlobalSetup()
+        {
+            hashset = Enumerable
+                      .Range(0, ItemCount)
+                      .ToHashSet();
+        }
+
+        [Benchmark(Baseline = true)]
+        public int LINQ()
+        {
+            var sum = 0;
+            foreach (var i in hashset)
+            {
+                sum += i;
+            }
+
+            return sum;
+        }
+
+        [Benchmark]
+        public int StructLINQ()
+        {
+            var sum = 0;
+            foreach (var i in hashset.ToStructEnumerable())
+            {
+                sum += i;
+            }
+
+            return sum;
+        }
+
+    }
+}

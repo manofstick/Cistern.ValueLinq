@@ -1,57 +1,142 @@
-﻿using Cistern.ValueLinq.Aggregation;
+﻿namespace Cistern.ValueLinq.Nodes;
+
+using Cistern.ValueLinq.Aggregation;
+using Cistern.ValueLinq.Chain;
 using Cistern.ValueLinq.Containers;
 using Cistern.ValueLinq.ValueEnumerable;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace Cistern.ValueLinq.Nodes
+public static partial class GroupBy
 {
-    internal struct LookupEnumerator<TKey, TElement>
-        : IPullEnumerator<System.Linq.IGrouping<TKey, TElement>>
+    // a GroupBy builds its lookup when its enumerator is created or it is pushed through, and runs as the lookup from
+    // there
+    [Materialized]
+    public partial struct Node<TSource, TKey, NodeT>
+        : INode<System.Linq.IGrouping<TKey, TSource>>
+        where NodeT : INode<TSource>
     {
-        private Grouping<TKey, TElement> _lastGrouping;
-        private Grouping<TKey, TElement> _g;
+        internal NodeT _nodeT;
+        internal Func<TSource, TKey> _keySelector;
+        internal IEqualityComparer<TKey>? _comparer;
 
-        public LookupEnumerator(Grouping<TKey, TElement> lastGrouping) =>
-            (_lastGrouping, _g) = (lastGrouping, lastGrouping);
-
-        public bool TryGetNext(out System.Linq.IGrouping<TKey, TElement> current)
+        public Node(in NodeT nodeT, Func<TSource, TKey> keySelector, IEqualityComparer<TKey>? comparer)
         {
-            current = _g;
-            if (_g == null)
-                return false;
+            if (keySelector == null)
+                throw new ArgumentNullException(nameof(keySelector));
 
-            _g = _g._next;
-            if (_g == _lastGrouping)
-                _g = null;
-
-            return true;
+            _nodeT = nodeT;
+            _keySelector = keySelector;
+            _comparer = comparer;
         }
 
-        public void Dispose() => _g = _lastGrouping = null;
+        public void GetCountInformation(out CountInformation info) => info = new CountInformation();
+
+        internal Lookup<TKey, TSource> Materialize(in ChainOptions options) =>
+            _nodeT.CreateViaPush<Lookup<TKey, TSource>, ToLookup<TSource, TKey>, Construct<ToLookup<TSource, TKey>, ToLookup<TSource, TKey>.Args>>(in options, new Construct<ToLookup<TSource, TKey>, ToLookup<TSource, TKey>.Args>(new ToLookup<TSource, TKey>.Args(_comparer, _keySelector)));
     }
 
-    internal struct LookupResultEnumerator<TKey, TElement, TResult>
-        : IPullEnumerator<TResult>
+    public partial struct Pull<TSource, TKey, NodeT>
     {
-        Func<TKey, IEnumerable<TElement>, TResult> _resultSelector;
-        private Grouping<TKey, TElement> _lastGrouping;
-        private Grouping<TKey, TElement> _g;
+        private LookupEnumerator<TKey, TSource> _enumerator;
+    }
 
-        public LookupResultEnumerator(Func<TKey, IEnumerable<TElement>, TResult> resultSelector, Grouping<TKey, TElement> lastGrouping) =>
-            (_resultSelector, _lastGrouping, _g) = (resultSelector, lastGrouping, lastGrouping);
+    [Materialized]
+    public partial struct Node<TSource, TKey, TElement, NodeT>
+        : INode<System.Linq.IGrouping<TKey, TElement>>
+        where NodeT : INode<TSource>
+    {
+        internal NodeT _nodeT;
+        internal Func<TSource, TKey> _keySelector;
+        internal Func<TSource, TElement> _elementSelector;
+        internal IEqualityComparer<TKey>? _comparer;
 
-        public bool TryGetNext(out TResult current)
+        public Node(in NodeT nodeT, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, IEqualityComparer<TKey>? comparer)
         {
-            if (_g == null)
+            if (keySelector == null)
+                throw new ArgumentNullException(nameof(keySelector));
+            if (elementSelector == null)
+                throw new ArgumentNullException(nameof(elementSelector));
+
+            _nodeT = nodeT;
+            _keySelector = keySelector;
+            _elementSelector = elementSelector;
+            _comparer = comparer;
+        }
+
+        public void GetCountInformation(out CountInformation info) => info = new CountInformation();
+
+        internal Lookup<TKey, TElement> Materialize(in ChainOptions options) =>
+            _nodeT.CreateViaPush<Lookup<TKey, TElement>, ToLookup<TSource, TKey, TElement>, Construct<ToLookup<TSource, TKey, TElement>, ToLookup<TSource, TKey, TElement>.Args>>(in options, new Construct<ToLookup<TSource, TKey, TElement>, ToLookup<TSource, TKey, TElement>.Args>(new ToLookup<TSource, TKey, TElement>.Args(_comparer, _keySelector, _elementSelector)));
+    }
+
+    public partial struct Pull<TSource, TKey, TElement, NodeT>
+    {
+        private LookupEnumerator<TKey, TElement> _enumerator;
+    }
+
+    internal static Lookup<TKey, TElement> CreateLookup<TElement, TKey>(IEqualityComparer<TKey>? comparer)
+    {
+        var lookup = new LookupWithComparer<TKey, TElement>(comparer ?? EqualityComparer<TKey>.Default);
+        return lookup;
+    }
+
+    // a lookup's push: each grouping in turn, from the first added
+    private static TResult FastEnumerate<TKey, TElement, TResult, TPushEnumerator>(Lookup<TKey, TElement> lookup, TPushEnumerator fenum)
+        where TPushEnumerator : IPushEnumerator<System.Linq.IGrouping<TKey, TElement>>
+    {
+        try
+        {
+            Loop(lookup, ref fenum);
+            return fenum.GetResult<TResult>();
+        }
+        finally
+        {
+            fenum.Dispose();
+        }
+    }
+
+    private static void Loop<TKey, TElement, TPushEnumerator>(Lookup<TKey, TElement> lookup, ref TPushEnumerator fenum)
+        where TPushEnumerator : IPushEnumerator<System.Linq.IGrouping<TKey, TElement>>
+    {
+        var last = lookup._lastGrouping?._next;
+        var current = last;
+        if (current != null)
+        {
+            do
             {
-                current = default;
+                if (!fenum.ProcessNext(current))
+                    break;
+                current = current._next;
+            } while (current != last);
+        }
+    }
+
+    [Puller]
+    internal partial struct LookupEnumerator<TKey, TElement>
+    {
+        private Grouping<TKey, TElement>? _lastGrouping;
+        private Grouping<TKey, TElement>? _g;
+
+        public LookupEnumerator(Grouping<TKey, TElement>? lastGrouping)
+        {
+            _lastGrouping = lastGrouping;
+            _g = lastGrouping;
+        }
+
+        // the groupings are a ring through _next from the last added, so enumeration starts at the first
+        private static LookupEnumerator<TKey, TElement> Create(in Lookup<TKey, TElement> lookup)
+            => new(lookup._lastGrouping?._next);
+
+        private Grouping<TKey, TElement>? _current;
+
+        public bool MoveNext()
+        {
+            if (_g == null)
                 return false;
-            }
 
-            current = _resultSelector(_g.Key, _g);
-
+            _current = _g;
             _g = _g._next;
             if (_g == _lastGrouping)
                 _g = null;
@@ -59,24 +144,29 @@ namespace Cistern.ValueLinq.Nodes
             return true;
         }
 
+        public System.Linq.IGrouping<TKey, TElement> Current => _current!;
+
+        static TBuilt IPullEnumerator<System.Linq.IGrouping<TKey, TElement>>.Rebuild<TOwnNode, TBuilt, TBuilder>(in TOwnNode node, in TBuilder builder)
+            => throw new InvalidOperationException();
+
         public void Dispose() => _g = _lastGrouping = null;
     }
-
 
     [DebuggerDisplay("Count = {Count}")]
     internal abstract partial class Lookup<TKey, TElement>
         : INode<System.Linq.IGrouping<TKey, TElement>>
         , System.Linq.ILookup<TKey, TElement>
-        , IValueEnumerable<System.Linq.IGrouping<TKey, TElement>>
+        , ICollection<System.Linq.IGrouping<TKey, TElement>>
+        , IReadOnlyCollection<System.Linq.IGrouping<TKey, TElement>>
     {
-        GroupingArrayPool<TElement> _poolOrNull;
+        GroupingArrayPool<TElement>? _poolOrNull;
 
-        internal GroupingInternal<TKey, TElement>[] _groupings;
-        internal GroupingInternal<TKey, TElement> _lastGrouping;
+        internal GroupingInternal<TKey, TElement>?[] _groupings;
+        internal GroupingInternal<TKey, TElement>? _lastGrouping;
 
         internal Lookup()
         {
-            _groupings = new GroupingInternal<TKey, TElement>[7];
+            _groupings = new GroupingInternal<TKey, TElement>?[7];
             _poolOrNull = null; // Initialize lazily, as only required for larger groupings
         }
 
@@ -86,26 +176,65 @@ namespace Cistern.ValueLinq.Nodes
         public int Count { get; protected set; }
 
         public IEnumerable<TElement> this[TKey key] =>
-            GetGrouping(key, create: false) ?? Containers.InstanceOfEmpty<TElement>.AsEnumerable;
+            GetGrouping(key, create: false) ?? Containers.CisternEmpty.InstanceOf<TElement>.AsEnumerable;
 
         public bool Contains(TKey key) => GetGrouping(key, create: false) != null;
+
+        // a read-only collection of the groupings, as System.Linq's lookup is, so a consumer reads its Count and copies it
+        bool ICollection<System.Linq.IGrouping<TKey, TElement>>.IsReadOnly => true;
+
+        void ICollection<System.Linq.IGrouping<TKey, TElement>>.Add(System.Linq.IGrouping<TKey, TElement> item) => ThrowHelper.ThrowNotSupportedException();
+
+        void ICollection<System.Linq.IGrouping<TKey, TElement>>.Clear() => ThrowHelper.ThrowNotSupportedException();
+
+        bool ICollection<System.Linq.IGrouping<TKey, TElement>>.Remove(System.Linq.IGrouping<TKey, TElement> item)
+        {
+            ThrowHelper.ThrowNotSupportedException();
+
+            return false;
+        }
+
+        bool ICollection<System.Linq.IGrouping<TKey, TElement>>.Contains(System.Linq.IGrouping<TKey, TElement> item)
+        {
+            ArgumentNullException.ThrowIfNull(item);
+
+            return GetGrouping(item.Key, create: false) is {} grouping
+                && grouping == item;
+        }
+
+        void ICollection<System.Linq.IGrouping<TKey, TElement>>.CopyTo(System.Linq.IGrouping<TKey, TElement>[] array, int arrayIndex)
+        {
+            ArgumentNullException.ThrowIfNull(array);
+            ArgumentOutOfRangeException.ThrowIfNegative(arrayIndex);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(arrayIndex, array.Length);
+            ArgumentOutOfRangeException.ThrowIfLessThan(array.Length - arrayIndex, Count, nameof(arrayIndex));
+
+            var g = _lastGrouping;
+            if (g == null)
+                return;
+
+            do
+            {
+                g = g._next;
+                array[arrayIndex] = g;
+                ++arrayIndex;
+            }
+            while (g != _lastGrouping);
+        }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
             => ((IEnumerable<System.Linq.IGrouping<TKey, TElement>>)this).GetEnumerator();
 
         IEnumerator<System.Linq.IGrouping<TKey, TElement>> IEnumerable<System.Linq.IGrouping<TKey, TElement>>.GetEnumerator() =>
-            new PullEnumeratorToIEnumerator<System.Linq.IGrouping<TKey, TElement>, LookupEnumerator<TKey, TElement>>(new(_lastGrouping?._next));
+            new PullEnumerator<LookupEnumerator<TKey, TElement>, System.Linq.IGrouping<TKey, TElement>>(new LookupEnumerator<TKey, TElement>(_lastGrouping?._next));
 
-        ValueEnumerator<System.Linq.IGrouping<TKey, TElement>> IValueEnumerable<System.Linq.IGrouping<TKey, TElement>>.GetEnumerator() =>
-            new(new PullEnumerator<LookupEnumerator<TKey, TElement>, System.Linq.IGrouping<TKey, TElement>>(new(_lastGrouping?._next)));
+        internal abstract GroupingInternal<TKey, TElement>? GetGrouping(TKey key, bool create);
 
-        internal abstract GroupingInternal<TKey, TElement> GetGrouping(TKey key, bool create);
-
-        private GroupingInternal<TKey, TElement>[] Resize()
+        private GroupingInternal<TKey, TElement>?[] Resize()
         {
             int newSize = checked((Count * 2) + 1);
-            GroupingInternal<TKey, TElement>[] newGroupings = new GroupingInternal<TKey, TElement>[newSize];
-            GroupingInternal<TKey, TElement> g = _lastGrouping;
+            GroupingInternal<TKey, TElement>?[] newGroupings = new GroupingInternal<TKey, TElement>?[newSize];
+            GroupingInternal<TKey, TElement> g = _lastGrouping!;
             do
             {
                 g = g._next;
@@ -146,28 +275,15 @@ namespace Cistern.ValueLinq.Nodes
             return g;
         }
 
-        public TResult CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum) where TPushEnumerator : IPushEnumerator<System.Linq.IGrouping<TKey, TElement>> =>
-            GroupByNode.FastEnumerate<TKey, TElement, TResult, TPushEnumerator>(this, fenum);
+        public TPushResult CreateViaPush<TPushResult, TPushEnumerator, TPushFiller>(in ChainOptions options, in TPushFiller filler)
+            where TPushEnumerator : IPushEnumerator<System.Linq.IGrouping<TKey, TElement>>
+            where TPushFiller : IPushFiller<TPushEnumerator>, allows ref struct =>
+            FastEnumerate<TKey, TElement, TPushResult, TPushEnumerator>(this, PushFiller.Fill<TPushEnumerator, TPushFiller>(in filler));
 
         public void GetCountInformation(out CountInformation info)
             => info = new CountInformation(Count, Count > 0);
 
-        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
-        {
-            var enumerator = new LookupEnumerator<TKey, TElement>(_lastGrouping?._next);
-            return nodes.CreateObject<CreationType, System.Linq.IGrouping<TKey, TElement>, LookupEnumerator<TKey, TElement>>(ref enumerator);
-        }
-
-        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Nodes>(ref Nodes nodes, ref Enumerator enumerator)
-            => throw new NotSupportedException();
-
-        bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation)
-        {
-            creation = default;
-            return false;
-        }
-
-        bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
+        bool INode.TryPushOptimization<TRequest, TRequestResult>(in TRequest request, [MaybeNullWhen(false)] out TRequestResult result)
         {
             result = default;
             return false;
@@ -175,17 +291,18 @@ namespace Cistern.ValueLinq.Nodes
     }
 
     [DebuggerDisplay("Count = {Count}")]
+    [DebuggerTypeProxy(typeof(SystemLinq_LookupDebugView<,>))]
     internal sealed partial class LookupWithComparer<TKey, TElement> : Lookup<TKey, TElement>
     {
         private readonly IEqualityComparer<TKey> _comparer;
 
-        private GroupingInternal<TKey, TElement> _last;
+        [AllowNull] private GroupingInternal<TKey, TElement> _last;
         private bool _same;
 
         internal LookupWithComparer(IEqualityComparer<TKey> comparer) =>
             _comparer = comparer;
 
-        internal sealed override GroupingInternal<TKey, TElement> GetGrouping(TKey key, bool create)
+        internal sealed override GroupingInternal<TKey, TElement>? GetGrouping(TKey key, bool create)
         {
             if (_same && _comparer.Equals(_last._key, key))
             {
@@ -193,7 +310,7 @@ namespace Cistern.ValueLinq.Nodes
             }
 
             int hashCode = (key == null) ? 0 : _comparer.GetHashCode(key) & 0x7FFFFFFF;
-            GroupingInternal<TKey, TElement> g = _groupings[hashCode % _groupings.Length];
+            GroupingInternal<TKey, TElement>? g = _groupings[hashCode % _groupings.Length];
             while (true)
             {
                 if (g == null)
@@ -215,14 +332,15 @@ namespace Cistern.ValueLinq.Nodes
     }
 
     [DebuggerDisplay("Count = {Count}")]
+    [DebuggerTypeProxy(typeof(SystemLinq_LookupDebugView<,>))]
     internal sealed partial class LookupDefaultComparer<TKey, TElement> : Lookup<TKey, TElement>
     {
         private readonly EqualityComparer<TKey> _comparer = EqualityComparer<TKey>.Default;
 
-        private GroupingInternal<TKey, TElement> _last;
+        [AllowNull] private GroupingInternal<TKey, TElement> _last;
         private bool _same;
 
-        internal sealed override GroupingInternal<TKey, TElement> GetGrouping(TKey key, bool create)
+        internal sealed override GroupingInternal<TKey, TElement>? GetGrouping(TKey key, bool create)
         {
             if (_same && _comparer.Equals(_last._key, key))
             {
@@ -230,7 +348,7 @@ namespace Cistern.ValueLinq.Nodes
             }
 
             int hashCode = (key == null) ? 0 : _comparer.GetHashCode(key) & 0x7FFFFFFF;
-            GroupingInternal<TKey, TElement> g = _groupings[hashCode % _groupings.Length];
+            GroupingInternal<TKey, TElement>? g = _groupings[hashCode % _groupings.Length];
             while (true)
             {
                 if (g == null)
@@ -252,43 +370,30 @@ namespace Cistern.ValueLinq.Nodes
     }
 
     [DebuggerDisplay("Key = {Key}")]
-    //    [DebuggerTypeProxy(typeof(SystemLinq_GroupingDebugView<,>))]
+    [DebuggerTypeProxy(typeof(SystemLinq_GroupingDebugView<,>))]
     internal class GroupingInternal<TKey, TElement>
         : Grouping<TKey, TElement>
         , INode<TElement>
     {
         internal GroupingInternal(Lookup<TKey, TElement> owner) : base(owner) { }
 
-        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes) =>
+        TPushResult INode<TElement>.CreateViaPush<TPushResult, TPushEnumerator, TPushFiller>(in ChainOptions options, in TPushFiller filler) =>
             this._count switch
             {
-                0 => EmptyNode.Create<TElement, TNodes, CreationType>(ref nodes),
-                1 => ReturnNode.Create<TElement, CreationType, TNodes>(_element, ref nodes),
-                var count => ArrayNode.Create<TElement, TNodes, CreationType>(_elementsOrNull, 0, count, ref nodes)
-            };
-
-        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Nodes>(ref Nodes nodes, ref Enumerator enumerator)
-            => throw new InvalidOperationException();
-        bool INode.TryPullOptimization<TRequest, TResult, Nodes>(in TRequest request, ref Nodes nodes, out TResult creation)
-            => throw new InvalidOperationException();
-
-        TResult INode<TElement>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum) =>
-            this._count switch
-            {
-                0 => EmptyNode.ExecutePush<TElement, TResult, TPushEnumerator>(fenum),
-                1 => ReturnNode.ExecutePush<TElement, TResult, TPushEnumerator>(_element, fenum),
-                var count => MemoryNode.ExecutePush<TElement, TResult, TPushEnumerator>(_elementsOrNull.AsMemory(0, count), fenum)
+                0 => CisternEmpty.ExecutePush<TElement, TPushResult, TPushEnumerator>(PushFiller.Fill<TPushEnumerator, TPushFiller>(in filler)),
+                1 => CisternReturn.ExecutePush<TElement, TPushResult, TPushEnumerator>(_element, PushFiller.Fill<TPushEnumerator, TPushFiller>(in filler)),
+                var count => SystemMemory.ExecutePush<TElement, TPushResult, TPushEnumerator>(_elementsOrNull.AsMemory(0, count), PushFiller.Fill<TPushEnumerator, TPushFiller>(in filler))
             };
 
         public void GetCountInformation(out CountInformation info) =>
             info = new CountInformation(_count, true);
 
-        bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result) =>
+        bool INode.TryPushOptimization<TRequest, TRequestResult>(in TRequest request, [MaybeNullWhen(false)] out TRequestResult result) =>
             this._count switch
             {
-                0 => EmptyNode.TryPushOptimization<TElement, TRequest, TResult>(in request, out result),
-                1 => ReturnNode.TryPushOptimization<TElement, TRequest, TResult>(_element, in request, out result),
-                var count => MemoryNode.TryPushOptimization<TElement, TRequest, TResult>(_elementsOrNull.AsMemory(0, count), in request, out result)
+                0 => new CisternEmpty.Node<TElement>().TryPushOptimization<TRequest, TRequestResult>(in request, out result),
+                1 => new CisternReturn.Node<TElement>(_element).TryPushOptimization<TRequest, TRequestResult>(in request, out result),
+                var count => new SystemMemory.Node<TElement>(_elementsOrNull.AsMemory(0, count)).TryPushOptimization<TRequest, TRequestResult>(in request, out result)
             };
     }
 
@@ -299,29 +404,29 @@ namespace Cistern.ValueLinq.Nodes
     // To limit the damage, the toolchain makes this type appear in a hidden assembly.
     // (This is also why it is no longer a nested type of Lookup<,>).
     [DebuggerDisplay("Key = {Key}")]
-//    [DebuggerTypeProxy(typeof(SystemLinq_GroupingDebugView<,>))]
+    [DebuggerTypeProxy(typeof(SystemLinq_GroupingDebugView<,>))]
     public abstract class Grouping<TKey, TElement>
         : System.Linq.IGrouping<TKey, TElement>
         , IList<TElement>
     {
-        internal TKey _key;
+        [AllowNull] internal TKey _key;
         internal int _hashCode;
 
         Lookup<TKey, TElement> _owner;
         internal int _count;
         /// <summary>
         /// for single elements buckets we don't allocate a seperate array, rather we use
-        /// this slot to store the value. 
+        /// this slot to store the value.
         /// NB. _element is only valid when _count = 1
         /// </summary>
-        internal TElement _element;
+        [AllowNull] internal TElement _element;
         /// <summary>
         /// NB. _elementArray is not valid when _count = 1
         /// </summary>
-        internal TElement[] _elementsOrNull;
+        [AllowNull] internal TElement[] _elementsOrNull;
 
-        internal GroupingInternal<TKey, TElement> _hashNext;
-        internal GroupingInternal<TKey, TElement> _next;
+        internal GroupingInternal<TKey, TElement>? _hashNext;
+        [AllowNull] internal GroupingInternal<TKey, TElement> _next;
 
         internal Grouping(Lookup<TKey, TElement> owner)
         {
@@ -355,6 +460,19 @@ namespace Cistern.ValueLinq.Nodes
             }
         }
 
+        internal ReadOnlySpan<TElement> Elements
+        {
+            get
+            {
+                var elements =
+                    _count == 1
+                        ? new ReadOnlySpan<TElement>(in _element)
+                        : _elementsOrNull.AsSpan(0, _count);
+
+                return elements;
+            }
+        }
+
         private void Trim()
         {
             if (_elementsOrNull != null && _elementsOrNull.Length != _count)
@@ -363,19 +481,51 @@ namespace Cistern.ValueLinq.Nodes
             }
         }
 
-        public IEnumerator<TElement> GetEnumerator()
+        public IEnumerator<TElement> GetEnumerator() => new Enumerator(this);
+
+        // resettable, as System.Linq's grouping enumerator is
+        sealed class Enumerator
+            : IEnumerator<TElement>
         {
-            if (_count == 1)
+            private readonly Grouping<TKey, TElement> _grouping;
+            private int _index;
+            [AllowNull] private TElement _current;
+
+            public Enumerator(Grouping<TKey, TElement> grouping)
             {
-                yield return _element;
+                _grouping = grouping;
+                _index = -1;
+                _current = default;
             }
-            else
+
+            public TElement Current => _current;
+
+            object? System.Collections.IEnumerator.Current => _current;
+
+            public void Dispose() { }
+
+            public bool MoveNext()
             {
-                for (int i = 0; i < _count; i++)
+                var next = _index + 1;
+                var found = next < _grouping._count;
+                if (found)
                 {
-                    yield return _elementsOrNull[i];
+                    _index = next;
+                    _current =
+                        _grouping._count == 1
+                            ? _grouping._element
+                            : _grouping._elementsOrNull[next];
                 }
+                else
+                {
+                    _index = _grouping._count;
+                    _current = default;
+                }
+
+                return found;
             }
+
+            public void Reset() => (_index, _current) = (-1, default);
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
@@ -460,6 +610,7 @@ namespace Cistern.ValueLinq.Nodes
             }
         }
     }
+
     internal sealed class GroupingArrayPool<TElement>
     {
         const int MinLength = 4; // relates to MinShift
@@ -467,15 +618,15 @@ namespace Cistern.ValueLinq.Nodes
 
         const int Buckets = 4;
 
-        private (TElement[], TElement[]) _bucket_1;
-        private (TElement[], TElement[]) _bucket_2;
-        private (TElement[], TElement[]) _bucket_3;
-        private (TElement[], TElement[]) _bucket_4;
+        private (TElement[]?, TElement[]?) _bucket_1;
+        private (TElement[]?, TElement[]?) _bucket_2;
+        private (TElement[]?, TElement[]?) _bucket_3;
+        private (TElement[]?, TElement[]?) _bucket_4;
 
-        private GroupingArrayPool<TElement> _nextPool;
+        private GroupingArrayPool<TElement>? _nextPool;
         private GroupingArrayPool<TElement> NextPool => _nextPool ?? (_nextPool = new GroupingArrayPool<TElement>());
 
-        private static void TryPush(ref (TElement[], TElement[]) store, TElement[] toStore)
+        private static void TryPush(ref (TElement[]?, TElement[]?) store, TElement[] toStore)
         {
             if (store.Item2 != null)
                 return;
@@ -486,7 +637,7 @@ namespace Cistern.ValueLinq.Nodes
             store.Item1 = toStore;
         }
 
-        private static TElement[] TryPop(ref (TElement[], TElement[]) store)
+        private static TElement[]? TryPop(ref (TElement[]?, TElement[]?) store)
         {
             var head = store.Item1;
 
@@ -499,7 +650,7 @@ namespace Cistern.ValueLinq.Nodes
             return head;
         }
 
-        private static TElement[] Upgrade(ref (TElement[], TElement[]) pushStore, ref (TElement[], TElement[]) popStore, TElement[] currentElements)
+        private static TElement[] Upgrade(ref (TElement[]?, TElement[]?) pushStore, ref (TElement[]?, TElement[]?) popStore, TElement[] currentElements)
         {
             var newElements = TryPop(ref popStore);
             if (newElements == null)
@@ -543,276 +694,28 @@ namespace Cistern.ValueLinq.Nodes
         public TElement[] Alloc() => TryPop(ref _bucket_1) ?? new TElement[MinLength];
     }
 
-
-
-    public struct GroupByNode<TSource, TKey, NodeT>
-        : INode<System.Linq.IGrouping<TKey, TSource>>
-        where NodeT : INode<TSource>
+    internal sealed class SystemLinq_LookupDebugView<TKey, TElement>
     {
-        private NodeT _nodeT;
-        private Func<TSource, TKey> _keySelector;
-        private IEqualityComparer<TKey> _comparer;
+        private readonly Lookup<TKey, TElement> _lookup;
+        private System.Linq.IGrouping<TKey, TElement>[]? _cachedGroupings;
 
-        public void GetCountInformation(out CountInformation info) => info = new CountInformation();
+        public SystemLinq_LookupDebugView(Lookup<TKey, TElement> lookup) => _lookup = lookup;
 
-        public GroupByNode(in NodeT nodeT, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer)
-        {
-            if (keySelector == null)
-                throw new ArgumentNullException(nameof(keySelector));
-
-            (_nodeT, _keySelector, _comparer) = (nodeT, keySelector, comparer);
-        }
-
-        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
-        {
-            var lookup = _nodeT.CreateViaPush<Lookup<TKey, TSource>, ToLookup<TSource, TKey>>(new ToLookup<TSource, TKey>(_comparer, _keySelector));
-            var enumerator = new LookupEnumerator<TKey, TSource>(lookup._lastGrouping?._next);
-            return nodes.CreateObject<CreationType, System.Linq.IGrouping<TKey, TSource>, LookupEnumerator<TKey, TSource>>(ref enumerator);
-        }
-
-        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
-            => throw new InvalidOperationException();
-
-        bool INode.TryPullOptimization<TRequest, CreationType, Tail>(in TRequest request, ref Tail tail, out CreationType creation)
-        {
-            creation = default;
-            return false;
-        }
-
-        bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
-        {
-            result = default;
-            return false;
-        }
-
-        TResult INode<System.Linq.IGrouping<TKey, TSource>>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
-        {
-            var lookup = _nodeT.CreateViaPush<Lookup<TKey, TSource>, ToLookup<TSource, TKey>>(new ToLookup<TSource, TKey>(_comparer, _keySelector));
-            return GroupByNode.FastEnumerate<TKey, TSource, TResult, TPushEnumerator>(lookup, fenum);
-        }
+        [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+        public System.Linq.IGrouping<TKey, TElement>[] Groupings =>
+            _cachedGroupings ??= System.Linq.Enumerable.ToArray((IEnumerable<System.Linq.IGrouping<TKey, TElement>>)_lookup);
     }
 
-    public struct GroupByNode<TSource, TKey, TElement, NodeT>
-        : INode<System.Linq.IGrouping<TKey, TElement>>
-        where NodeT : INode<TSource>
+    internal sealed class SystemLinq_GroupingDebugView<TKey, TElement>
     {
-        private NodeT _nodeT;
-        private Func<TSource, TKey> _keySelector;
-        private Func<TSource, TElement> _elementSelector;
-        private IEqualityComparer<TKey> _comparer;
+        private readonly Grouping<TKey, TElement> _grouping;
+        private TElement[]? _cachedValues;
 
-        public void GetCountInformation(out CountInformation info) => info = new CountInformation();
+        public SystemLinq_GroupingDebugView(Grouping<TKey, TElement> grouping) => _grouping = grouping;
 
-        public GroupByNode(in NodeT nodeT, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, IEqualityComparer<TKey> comparer)
-        {
-            if (keySelector == null)
-                throw new ArgumentNullException(nameof(keySelector));
-            if (elementSelector == null)
-                throw new ArgumentNullException(nameof(elementSelector));
+        public TKey Key => _grouping.Key;
 
-            (_nodeT, _keySelector, _elementSelector, _comparer) = (nodeT, keySelector, elementSelector, comparer);
-        }
-
-        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
-        {
-            var lookup = _nodeT.CreateViaPush<Lookup<TKey, TElement>, ToLookup<TSource, TKey, TElement>>(new ToLookup<TSource, TKey, TElement>(_comparer, _keySelector, _elementSelector));
-            var enumerator = new LookupEnumerator<TKey, TElement>(lookup._lastGrouping?._next);
-            return nodes.CreateObject<CreationType, System.Linq.IGrouping<TKey, TElement>, LookupEnumerator<TKey, TElement>>(ref enumerator);
-        }
-
-        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
-            => throw new InvalidOperationException();
-
-        bool INode.TryPullOptimization<TRequest, CreationType, Tail>(in TRequest request, ref Tail tail, out CreationType creation)
-        {
-            creation = default;
-            return false;
-        }
-
-        bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result)
-        {
-            result = default;
-            return false;
-        }
-
-        TResult INode<System.Linq.IGrouping<TKey, TElement>>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum)
-        {
-            var lookup = _nodeT.CreateViaPush<Lookup<TKey, TElement>, ToLookup<TSource, TKey, TElement>>(new ToLookup<TSource, TKey, TElement>(_comparer, _keySelector, _elementSelector));
-            return GroupByNode.FastEnumerate<TKey, TElement, TResult, TPushEnumerator>(lookup, fenum);
-        }
-    }
-
-    public struct GroupByResultNode<TSource, TKey, TResult, NodeT>
-        : INode<TResult>
-        where NodeT : INode<TSource>
-    {
-        private NodeT _nodeT;
-        private Func<TSource, TKey> _keySelector;
-        private Func<TKey, IEnumerable<TSource>, TResult> _resultSelector;
-        private IEqualityComparer<TKey> _comparer;
-
-        public void GetCountInformation(out CountInformation info) => info = new CountInformation();
-
-        public GroupByResultNode(in NodeT nodeT, Func<TSource, TKey> keySelector, Func<TKey, IEnumerable<TSource>, TResult> resultSelector, IEqualityComparer<TKey> comparer)
-        {
-            if (keySelector == null)
-                throw new ArgumentNullException(nameof(keySelector));
-            if (resultSelector == null)
-                throw new ArgumentNullException(nameof(resultSelector));
-
-            (_nodeT, _keySelector, _resultSelector, _comparer) = (nodeT, keySelector, resultSelector, comparer);
-        }
-
-        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
-        {
-            var lookup = _nodeT.CreateViaPush<Lookup<TKey, TSource>, ToLookup<TSource, TKey>>(new ToLookup<TSource, TKey>(_comparer, _keySelector));
-            var enumerator = new LookupResultEnumerator<TKey, TSource, TResult>(_resultSelector, lookup._lastGrouping?._next); // why start with _next? to get same result as System.Linq...
-            return nodes.CreateObject<CreationType, TResult, LookupResultEnumerator<TKey, TSource, TResult>>(ref enumerator);
-        }
-
-        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
-            => throw new InvalidOperationException();
-
-        bool INode.TryPullOptimization<TRequest, CreationType, Tail>(in TRequest request, ref Tail tail, out CreationType creation)
-        {
-            creation = default;
-            return false;
-        }
-
-        bool INode.TryPushOptimization<TRequest, TPushResult>(in TRequest request, out TPushResult result)
-        {
-            result = default;
-            return false;
-        }
-
-        TPushResult INode<TResult>.CreateViaPush<TPushResult, TPushEnumerator>(in TPushEnumerator fenum)
-        {
-            var lookup = _nodeT.CreateViaPush<Lookup<TKey, TSource>, ToLookup<TSource, TKey>>(new ToLookup<TSource, TKey>(_comparer, _keySelector));
-            return GroupByResultNode.FastEnumerate<TKey, TSource, TResult, TPushResult, TPushEnumerator>(lookup, _resultSelector, fenum);
-        }
-    }
-
-    public struct GroupByResultNode<TSource, TKey, TElement, TResult, NodeT>
-        : INode<TResult>
-        where NodeT : INode<TSource>
-    {
-        private NodeT _nodeT;
-        private Func<TSource, TKey> _keySelector;
-        private Func<TSource, TElement> _elementSelector;
-        private Func<TKey, IEnumerable<TElement>, TResult> _resultSelector;
-        private IEqualityComparer<TKey> _comparer;
-
-        public void GetCountInformation(out CountInformation info) => info = new CountInformation();
-
-        public GroupByResultNode(in NodeT nodeT, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, Func<TKey, IEnumerable<TElement>, TResult> resultSelector, IEqualityComparer<TKey> comparer)
-        {
-            if (keySelector == null)
-                throw new ArgumentNullException(nameof(keySelector));
-            if (elementSelector == null)
-                throw new ArgumentNullException(nameof(elementSelector));
-            if (resultSelector == null)
-                throw new ArgumentNullException(nameof(resultSelector));
-
-            (_nodeT, _keySelector, _elementSelector, _resultSelector, _comparer) = (nodeT, keySelector, elementSelector, resultSelector, comparer);
-        }
-
-        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
-        {
-            var lookup = _nodeT.CreateViaPush<Lookup<TKey, TElement>, ToLookup<TSource, TKey, TElement>>(new ToLookup<TSource, TKey, TElement>(_comparer, _keySelector, _elementSelector));
-            var enumerator = new LookupResultEnumerator<TKey, TElement, TResult>(_resultSelector, lookup._lastGrouping?._next); // why start with _next? to get same result as System.Linq...
-            return nodes.CreateObject<CreationType, TResult, LookupResultEnumerator<TKey, TElement, TResult>>(ref enumerator);
-        }
-
-        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
-            => throw new InvalidOperationException();
-
-        bool INode.TryPullOptimization<TRequest, CreationType, Tail>(in TRequest request, ref Tail tail, out CreationType creation)
-        {
-            creation = default;
-            return false;
-        }
-
-        bool INode.TryPushOptimization<TRequest, TPushResult>(in TRequest request, out TPushResult result)
-        {
-            result = default;
-            return false;
-        }
-
-        TPushResult INode<TResult>.CreateViaPush<TPushResult, TPushEnumerator>(in TPushEnumerator fenum)
-        {
-            var lookup = _nodeT.CreateViaPush<Lookup<TKey, TElement>, ToLookup<TSource, TKey, TElement>>(new ToLookup<TSource, TKey, TElement>(_comparer, _keySelector, _elementSelector));
-            return GroupByResultNode.FastEnumerate<TKey, TElement, TResult, TPushResult, TPushEnumerator>(lookup, _resultSelector, fenum);
-        }
-    }
-
-    static class GroupByNode
-    {
-        public static Lookup<TKey, TElement> CreateLookup<TElement, TKey>(IEqualityComparer<TKey> comparer)
-        {
-            var lookup = new LookupWithComparer<TKey, TElement>(comparer ?? EqualityComparer<TKey>.Default);
-            return lookup;
-        }
-
-        internal static TResult FastEnumerate<TKey, TElement, TResult, TPushEnumerator>(Lookup<TKey, TElement> lookup, TPushEnumerator fenum)
-            where TPushEnumerator : IPushEnumerator<System.Linq.IGrouping<TKey, TElement>>
-        {
-            try
-            {
-                Loop(lookup, ref fenum);
-                return fenum.GetResult<TResult>();
-            }
-            finally
-            {
-                fenum.Dispose();
-            }
-        }
-
-        private static void Loop<TKey, TElement, TPushEnumerator>(Lookup<TKey, TElement> lookup, ref TPushEnumerator fenum)
-            where TPushEnumerator : IPushEnumerator<System.Linq.IGrouping<TKey, TElement>>
-        {
-            var last = lookup._lastGrouping?._next;
-            var current = last;
-            if (current != null)
-            {
-                do
-                {
-                    if (!fenum.ProcessNext(current))
-                        break;
-                    current = current._next;
-                } while (current != last);
-            }
-        }
-    }
-    static class GroupByResultNode
-    {
-        internal static TResultx FastEnumerate<TKey, TElement, TResult, TResultx, TPushEnumerator>(Lookup<TKey, TElement> lookup, Func<TKey, IEnumerable<TElement>, TResult> resultSelector, TPushEnumerator fenum)
-            where TPushEnumerator : IPushEnumerator<TResult>
-        {
-            try
-            {
-                Loop(lookup, resultSelector, ref fenum);
-                return fenum.GetResult<TResultx>();
-            }
-            finally
-            {
-                fenum.Dispose();
-            }
-        }
-
-        private static void Loop<TKey, TElement, TResult, TPushEnumerator>(Lookup<TKey, TElement> lookup, Func<TKey, IEnumerable<TElement>, TResult> resultSelector, ref TPushEnumerator fenum)
-            where TPushEnumerator : IPushEnumerator<TResult>
-        {
-            var last = lookup._lastGrouping?._next;
-            var current = last;
-            if (current != null)
-            {
-                do
-                {
-                    if (!fenum.ProcessNext(resultSelector(current.Key, current)))
-                        break;
-                    current = current._next;
-                } while (current != last);
-            }
-        }
+        [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+        public TElement[] Values => _cachedValues ??= System.Linq.Enumerable.ToArray((IEnumerable<TElement>)_grouping);
     }
 }

@@ -1,72 +1,62 @@
 ﻿using Cistern.ValueLinq.Maths;
 using System;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 
 namespace Cistern.ValueLinq.Aggregation
 {
-    struct Sum<T, Accumulator, Quotient, Math>
+    [Aggregator]
+    partial struct Sum<T, TAccumulator>
         : IPushEnumerator<T>
-        where T : struct
-        where Accumulator : struct
-        where Quotient : struct
-        where Math : struct, IMathsOperations<T, Accumulator, Quotient>
+        where T : struct, INumber<T>
+        where TAccumulator : struct, INumber<TAccumulator>
     {
-        static Math math = default;
-
         private SIMDOptions _options;
-        private Accumulator sum;
+        private TAccumulator sum;
 
-        public Sum(SIMDOptions options) => (_options, sum) = (options, math.Zero);
-
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request)
+        public Sum(SIMDOptions options)
         {
-            if (typeof(TRequest) == typeof(Containers.GetSpan<TObject, T>))
-            {
-                var getSpan = (Containers.GetSpan<TObject, T>)(object)request;
-                return ProcessBatch(getSpan(obj));
-            }
-            return BatchProcessResult.Unavailable;
+            _options = options;
+            sum = TAccumulator.Zero;
         }
 
-        private BatchProcessResult ProcessBatch(ReadOnlySpan<T> span)
-            => SIMD.Sum<T, Accumulator, Quotient, Math>(span, _options, ref sum);
+        static BatchKinds IPushEnumerator<T>.AllowBatchesWhen => BatchKinds.Container | BatchKinds.Forwarder | BatchKinds.ColdSpan;
 
-        public void Dispose() { }
-        public TResult GetResult<TResult>() => (TResult)(object)GetResult();
+        bool IPushEnumerator<T>.ProcessBatch(scoped ref Batch<T> batch) => ProcessSpan(batch.GetSpan());
 
-        public T GetResult() => math.Cast(sum);
+        private bool ProcessSpan(ReadOnlySpan<T> span)
+            => SIMD.Sum(span, _options, ref sum);
+
+        public TPushResult GetResult<TPushResult>() => (TPushResult)(object)GetResult();
+
+        public T GetResult() => T.CreateChecked(sum);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ProcessNext(T input)
         {
-            sum = math.Add(sum, input);
+            sum = checked(sum + TAccumulator.CreateChecked(input));
             return true;
         }
     }
 
-    struct SumNullable<T, Accumulator, Quotient, Math>
+    [Aggregator]
+    partial struct SumNullable<T, TAccumulator>
         : IPushEnumerator<T?>
-        where T : struct
-        where Accumulator : struct
-        where Quotient : struct
-        where Math : struct, IMathsOperations<T, Accumulator, Quotient>
+        where T : struct, INumber<T>
+        where TAccumulator : struct, INumber<TAccumulator>
     {
-        static Math math = default;
+        private TAccumulator sum;
 
-        private Accumulator sum;
+        public SumNullable(bool _) => sum = TAccumulator.Zero;
 
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
-        public void Dispose() { }
-        public SumNullable(bool _) => sum = math.Zero;
+        public TPushResult GetResult<TPushResult>() => (TPushResult)(object)GetResult();
 
-        public TResult GetResult<TResult>() => (TResult)(object)GetResult();
-
-        public T GetResult() => math.Cast(sum);
+        public T GetResult() => T.CreateChecked(sum);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ProcessNext(T? input)
         {
-            sum = math.Add(sum, input);
+            sum = checked(sum + TAccumulator.CreateChecked(input.GetValueOrDefault()));
             return true;
         }
     }

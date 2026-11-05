@@ -2,16 +2,15 @@
 
 namespace Cistern.ValueLinq.Aggregation
 {
-    struct ForEachForward<T>
+    [Aggregator]
+    readonly partial struct ForEachForward<T>
         : IPushEnumerator<T>
     {
-        private Action<T> _func;
+        private readonly Action<T> _func;
 
         public ForEachForward(Action<T> func) => (_func) = (func);
 
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
-        public void Dispose() { }
-        TResult IPushEnumerator<T>.GetResult<TResult>() => default;
+        TPushResult IPushEnumerator<T>.GetResult<TPushResult>() => Impl.ResultCast<TPushResult?, TPushResult>(default);
 
         bool IPushEnumerator<T>.ProcessNext(T input)
         {
@@ -20,17 +19,20 @@ namespace Cistern.ValueLinq.Aggregation
         }
     }
 
-    struct ForEachForwardRef<T, U>
+    [Aggregator]
+    partial struct ForEachForwardRef<T, U>
         : IPushEnumerator<U>
     {
         private T _state;
         private RefAction<T, U> _func;
 
-        public ForEachForwardRef(T seed, RefAction<T, U> func) => (_state, _func) = (seed, func);
+        public ForEachForwardRef(T seed, RefAction<T, U> func)
+        {
+            _state = seed;
+            _func = func;
+        }
 
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
-        public void Dispose() { }
-        TResult IPushEnumerator<U>.GetResult<TResult>() => (TResult)(object)GetResult();
+        TPushResult IPushEnumerator<U>.GetResult<TPushResult>() => Impl.ResultCast<T, TPushResult>(GetResult());
         public T GetResult() => _state;
 
         bool IPushEnumerator<U>.ProcessNext(U input)
@@ -41,18 +43,21 @@ namespace Cistern.ValueLinq.Aggregation
         }
     }
 
-    struct ValueForeachForwardRef<T, U, RefAction>
+    [Aggregator]
+    partial struct ValueForeachForwardRef<T, U, RefAction>
         : IPushEnumerator<U>
         where RefAction : IRefAction<T, U>
     {
         private T _state;
         private RefAction _func;
 
-        public ValueForeachForwardRef(T seed, RefAction func) => (_state, _func) = (seed, func);
+        public ValueForeachForwardRef(T seed, RefAction func)
+        {
+            _state = seed;
+            _func = func;
+        }
 
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
-        public void Dispose() { }
-        TResult IPushEnumerator<U>.GetResult<TResult>() => (TResult)(object)GetResult();
+        TPushResult IPushEnumerator<U>.GetResult<TPushResult>() => Impl.ResultCast<T, TPushResult>(GetResult());
         public T GetResult() => _state;
 
         bool IPushEnumerator<U>.ProcessNext(U input)

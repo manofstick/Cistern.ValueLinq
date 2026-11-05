@@ -1,87 +1,84 @@
 ﻿using Cistern.ValueLinq.Maths;
 using System;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 
 namespace Cistern.ValueLinq.Aggregation
 {
-    struct Average<T, Accumulator, Quotient, Math>
+    [Aggregator]
+    partial struct Average<T, TAccumulator, TQuotient>
         : IPushEnumerator<T>
-        where T : struct
-        where Accumulator : struct
-        where Quotient : struct
-        where Math : struct, IMathsOperations<T, Accumulator, Quotient>
+        where T : struct, INumber<T>
+        where TAccumulator : struct, INumber<TAccumulator>
+        where TQuotient : struct, INumber<TQuotient>
     {
-        static Math math = default;
-
         private SIMDOptions _options;
-        private Accumulator sum;
+        private TAccumulator sum;
         private long counter;
 
-        public Average(SIMDOptions options) => (sum, counter, _options) = (math.Zero, 0, options);
-
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request)
+        public Average(SIMDOptions options)
         {
-            if (typeof(TRequest) == typeof(Containers.GetSpan<TObject, T>))
-            {
-                var getSpan = (Containers.GetSpan<TObject, T>)(object)request;
-                return ProcessBatch(getSpan(obj));
-            }
-            return BatchProcessResult.Unavailable;
+            sum = TAccumulator.Zero;
+            counter = 0;
+            _options = options;
         }
 
-        private BatchProcessResult ProcessBatch(ReadOnlySpan<T> span)
-            => SIMD.Average<T, Accumulator, Quotient, Math>(span, _options, ref sum, ref counter);
+        static BatchKinds IPushEnumerator<T>.AllowBatchesWhen => BatchKinds.Container | BatchKinds.Forwarder | BatchKinds.ColdSpan;
 
-        public void Dispose() { }
-        public TResult GetResult<TResult>() => (TResult)(object)GetResult();
+        bool IPushEnumerator<T>.ProcessBatch(scoped ref Batch<T> batch) => ProcessSpan(batch.GetSpan());
 
-        public Quotient GetResult()
+        private bool ProcessSpan(ReadOnlySpan<T> span)
+            => SIMD.Average(span, _options, ref sum, ref counter);
+
+        public TPushResult GetResult<TPushResult>() => (TPushResult)(object)GetResult();
+
+        public TQuotient GetResult()
         {
             if (counter == 0)
             {
                 ThrowHelper.ThrowNoElementsException();
             }
 
-            return math.DivLong(sum, counter);
+            return Number.Divide<TAccumulator, TQuotient>(sum, counter);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ProcessNext(T input)
         {
-            sum = math.Add(sum, input);
+            sum = checked(sum + TAccumulator.CreateChecked(input));
             ++counter;
             return true;
         }
     }
 
-    struct AverageNullable<T, Accumulator, Quotient, Math>
+    [Aggregator]
+    partial struct AverageNullable<T, TAccumulator, TQuotient>
         : IPushEnumerator<T?>
-        where T : struct
-        where Accumulator : struct
-        where Quotient : struct
-        where Math : struct, IMathsOperations<T, Accumulator, Quotient>
+        where T : struct, INumber<T>
+        where TAccumulator : struct, INumber<TAccumulator>
+        where TQuotient : struct, INumber<TQuotient>
     {
-        static Math math = default;
-
-        private Accumulator sum;
+        private TAccumulator sum;
         private long counter;
 
-        public AverageNullable(bool _) => (sum, counter) = (math.Zero, 0);
+        public AverageNullable(bool _)
+        {
+            sum = TAccumulator.Zero;
+            counter = 0;
+        }
 
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
-        public void Dispose() { }
-        public TResult GetResult<TResult>() => (TResult)(object)GetResult();
+        public TPushResult GetResult<TPushResult>() => Impl.ResultCast<TQuotient?, TPushResult>(GetResult());
 
-        internal Quotient? GetResult() =>
-            counter == 0 
+        internal TQuotient? GetResult() =>
+            counter == 0
                 ? null
-                : math.DivLong(sum, counter);
+                : Number.Divide<TAccumulator, TQuotient>(sum, counter);
 
         public bool ProcessNext(T? input)
         {
             if (input.HasValue)
             {
-                sum = math.Add(sum, input);
+                sum = checked(sum + TAccumulator.CreateChecked(input.GetValueOrDefault()));
                 ++counter;
             }
 

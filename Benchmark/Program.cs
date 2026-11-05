@@ -1,4 +1,5 @@
 ﻿using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Running;
 using Cistern.ValueLinq;
 using Microsoft.Diagnostics.Tracing.Parsers.Clr;
@@ -8,6 +9,7 @@ using System;
 //using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 
 namespace Cistern.Benchmarks
 {
@@ -232,6 +234,89 @@ namespace Cistern.Benchmarks
             Fork.ArrayWhereSelectFork3.SanityCheck();
             Fork.ArrayFork3Optimized.SanityCheck();
 
+            Synthetic.Pipeline.SanityCheck();
+            Synthetic.SelectManyWhereSum.SanityCheck();
+            Synthetic.WhereToArray.SanityCheck();
+            Synthetic.WhereToList.SanityCheck();
+            Synthetic.JoinShapes.SanityCheck();
+            Synthetic.JoinShapesSingleCall.SanityCheck();
+            Synthetic.SelectManyEnumerableSum.SanityCheck();
+            Synthetic.SelectManyChainSum.SanityCheck();
+            Synthetic.SelectManyChainCount.SanityCheck();
+            Synthetic.SelectManyResultSelectorSum.SanityCheck();
+            Synthetic.SelectManyResultSelectorWhereSum.SanityCheck();
+            Synthetic.AppendPrepend.SanityCheck();
+            Synthetic.ConcatWrapped.SanityCheck();
+            Synthetic.ForeachChains.SanityCheck();
+            Synthetic.DeepChainEnumerator.SanityCheck();
+            Synthetic.DeepChainSum.SanityCheck();
+
+            Coverage.SelectSum.SanityCheck();
+            Coverage.WhereSum.SanityCheck();
+            Coverage.WhereSelectSum.SanityCheck();
+            Coverage.SelectWhereSum.SanityCheck();
+            Coverage.SelectSelectSum.SanityCheck();
+            Coverage.WhereWhereSum.SanityCheck();
+            Coverage.SelectDoubleSum.SanityCheck();
+            Coverage.SelectIndexSum.SanityCheck();
+            Coverage.WhereIndexSum.SanityCheck();
+            Coverage.SelectToArray.SanityCheck();
+            Coverage.SelectToList.SanityCheck();
+            Coverage.ToArray.SanityCheck();
+            Coverage.SkipTakeSum.SanityCheck();
+            Coverage.TakeWhileSum.SanityCheck();
+            Coverage.SkipWhileSum.SanityCheck();
+            Coverage.ReverseToArray.SanityCheck();
+            Coverage.OrderByToArray.SanityCheck();
+            Coverage.GroupByCount.SanityCheck();
+            Coverage.DistinctCount.SanityCheck();
+            Coverage.ExceptCount.SanityCheck();
+            Coverage.ConcatSum.SanityCheck();
+            Coverage.ZipSum.SanityCheck();
+            Coverage.AggregateSum.SanityCheck();
+            Coverage.AnyPredicate.SanityCheck();
+            Coverage.AllPredicate.SanityCheck();
+            Coverage.CountPredicate.SanityCheck();
+            Coverage.Contains.SanityCheck();
+            Coverage.FirstOrDefaultPredicate.SanityCheck();
+            Coverage.Last.SanityCheck();
+            Coverage.ElementAt.SanityCheck();
+            Coverage.ToDictionaryCount.SanityCheck();
+            Coverage.ToHashSetCount.SanityCheck();
+            Coverage.ToLookupCount.SanityCheck();
+            Coverage.MinInt.SanityCheck();
+            Coverage.AverageInt.SanityCheck();
+            Coverage.OfTypeSum.SanityCheck();
+            Coverage.CastSum.SanityCheck();
+            Coverage.WhereSelectForeach.SanityCheck();
+
+            Parity.A.SanityCheck();
+            Parity.B1.SanityCheck();
+            Parity.B2.SanityCheck();
+            Parity.B3.SanityCheck();
+            Parity.B4.SanityCheck();
+            Parity.B5.SanityCheck();
+            Parity.B6.SanityCheck();
+            Parity.B7.SanityCheck();
+            Parity.B8.SanityCheck();
+            Parity.B9.SanityCheck();
+            Parity.B10.SanityCheck();
+            Parity.B11.SanityCheck();
+            Parity.C.SanityCheck();
+            Parity.D.SanityCheck();
+            Parity.E.SanityCheck();
+            Parity.F.SanityCheck();
+
+            Toub.NetCore20.SanityCheck();
+            Toub.NetCore30.SanityCheck();
+            Toub.Net5.SanityCheck();
+            Toub.Net6.SanityCheck();
+            Toub.Net7.SanityCheck();
+            Toub.Net8.SanityCheck();
+            Toub.Net9.SanityCheck();
+            Toub.Net10.SanityCheck();
+            Toub.Net11.SanityCheck();
+
             //var t = new Thing();
             //for (var j = 0; j < 10; ++j)
             //{
@@ -240,7 +325,9 @@ namespace Cistern.Benchmarks
             //    Console.Write('.');
             //}
 
-            var summary = BenchmarkRunner.Run<Int.Average>();
+            // Out of process (BenchmarkDotNet's default) each benchmark case runs in a process of its own, so Dynamic PGO
+            // trained by one case never reaches another; --inProcess shares one process across them.
+            BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
         }
     }
 }

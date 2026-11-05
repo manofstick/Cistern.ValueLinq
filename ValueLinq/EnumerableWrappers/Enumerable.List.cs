@@ -10,64 +10,77 @@ namespace Cistern.ValueLinq
     {
         public static bool Any<TSource>(this List<TSource> source) => source.Count() > 0;
 
-        public static TSource Last<TSource>(this List<TSource> source) => source[source.Count - 1];
-        public static TSource LastOrDefault<TSource>(this List<TSource> source) => source.Count == 0 ? default : source[source.Count - 1];
+        public static TSource Last<TSource>(this List<TSource> source) =>
+            (source ?? throw new ArgumentNullException(nameof(source))) switch
+            {
+                { Count: 0 } => throw new InvalidOperationException(Properties.SR.NoElements),
+                var list => list[^1],
+            };
+
+        public static TSource Last<TSource>(this List<TSource> source, Func<TSource, bool> predicate) => source.OfList().Last(predicate);
+        public static TSource? LastOrDefault<TSource>(this List<TSource> source) =>
+            (source ?? throw new ArgumentNullException(nameof(source))) switch
+            {
+                { Count: 0 } => default,
+                var list => list[^1],
+            };
+
+        public static TSource? LastOrDefault<TSource>(this List<TSource> source, Func<TSource, bool> predicate) => source.OfList().LastOrDefault(predicate);
+        public static TSource LastOrDefault<TSource>(this List<TSource> source, TSource defaultValue) =>
+            (source ?? throw new ArgumentNullException(nameof(source))) switch
+            {
+                { Count: 0 } => defaultValue,
+                var list => list[^1],
+            };
+
+        public static TSource LastOrDefault<TSource>(this List<TSource> source, Func<TSource, bool> predicate, TSource defaultValue) => source.OfList().LastOrDefault(predicate, defaultValue);
+
+        public static bool SequenceEqual<TSource>(this List<TSource> first, IEnumerable<TSource> second) => SequenceEqual(first, second, null);
+
+        public static bool SequenceEqual<TSource>(this List<TSource> first, IEnumerable<TSource> second, IEqualityComparer<TSource>? comparer)
+        {
+            if (first == null)
+                throw new ArgumentNullException(nameof(first));
+
+            if (!Enumerable.IsCisternChain(second))
+                return System.Linq.Enumerable.SequenceEqual(first, second, comparer);
+
+            var equal = first.OfList().SequenceEqual(second, comparer);
+
+            return equal;
+        }
 
         public static List<T> ToList<T>(this List<T> source) => new (source);
 
-        public static int Count<T>(this List<T> inner) => inner.Count;
+        public static int Count<T>(this List<T> source) => (source ?? throw new ArgumentNullException(nameof(source))).Count;
 
-        public static ValueEnumerable<TResult, SelectManyNode<TResult, EnumerableNode<TResult>, SelectNode<TSource, EnumerableNode<TResult>, ListNode<TSource>>>> SelectMany<TSource, TResult>(this List<TSource> source, Func<TSource, IEnumerable<TResult>> selector)
+        public static long LongCount<T>(this List<T> source) => (source ?? throw new ArgumentNullException(nameof(source))).Count;
+
+        public static bool TryGetNonEnumeratedCount<T>(this List<T> source, out int count)
         {
-            if (selector == null)
-                throw new ArgumentNullException(nameof(selector));
-
-            return new(new(new(new(source), source => new(selector(source)))));
+            count = (source ?? throw new ArgumentNullException(nameof(source))).Count;
+            return true;
         }
 
-        public static ValueEnumerable<TResult, SelectManyNode<TResult, EnumerableNode<TResult>, SelectIdxNode<TSource, EnumerableNode<TResult>, ListNode<TSource>>>> SelectMany<TSource, TResult>(this List<TSource> source, Func<TSource, int, IEnumerable<TResult>> selector)
-        {
-            if (selector == null)
-                throw new ArgumentNullException(nameof(selector));
+        public static ValueEnumerable<T, Nodes.AppendPrepend.Node<T, SystemList.Node<T>>, Nodes.AppendPrepend.Pull<T, SystemList.Node<T>, SystemList.Pull<T>>> Append<T>(this List<T> source, T element) => new (NodeImpl.Append<T, SystemList.Node<T>>(Enumerable.ToNode(source), element));
+        public static ValueEnumerable<T, Nodes.AppendPrepend.Node<T, SystemList.Node<T>>, Nodes.AppendPrepend.Pull<T, SystemList.Node<T>, SystemList.Pull<T>>> Prepend<T>(this List<T> source, T element) => new (NodeImpl.Prepend<T, SystemList.Node<T>>(Enumerable.ToNode(source), element));
 
-            return new(new(new(new(source), (source, idx) => new(selector(source, idx)))));
-        }
+        public static TSource ElementAt<TSource>(this List<TSource> source, int index) => (source ?? throw new ArgumentNullException(nameof(source)))[index];
+        public static TSource? ElementAtOrDefault<TSource>(this List<TSource> source, int index) => (uint)index < (uint)(source ?? throw new ArgumentNullException(nameof(source))).Count ? source[index] : default;
 
-        //public static ValueEnumerable<TResult, SelectManyNode<TSource, TResult, ListNode<TSource>, EnumerableNode<TResult>>> SelectMany<TSource, TResult>(this List<TSource> source, Func<TSource, IEnumerable<TResult>> selector)
-        //{
-        //    if (selector == null)
-        //        throw new ArgumentNullException(nameof(selector));
+        public static (U, V) Fork<T, U, V>(this List<T> source, Func<ValueEnumerable<T, Aggregation.Fork<T>, Aggregation.ForkEnumerator<T>>, U> t2u, Func<ValueEnumerable<T, Aggregation.Fork<T>, Aggregation.ForkEnumerator<T>>, V> t2v)
+            => NodeImpl.Fork(new SystemList.Node<T>(source), t2u, t2v);
+        public static (U, V, W) Fork<T, U, V, W>(this List<T> source, Func<ValueEnumerable<T, Aggregation.Fork<T>, Aggregation.ForkEnumerator<T>>, U> t2u, Func<ValueEnumerable<T, Aggregation.Fork<T>, Aggregation.ForkEnumerator<T>>, V> t2v, Func<ValueEnumerable<T, Aggregation.Fork<T>, Aggregation.ForkEnumerator<T>>, W> t2w)
+            => NodeImpl.Fork(new SystemList.Node<T>(source), t2u, t2v, t2w);
 
-        //    return source.OfList().SelectMany(src => selector(src).OfEnumerable());
-        //}
+        public static ValueEnumerable<System.Linq.IGrouping<TKey, TSource>, Nodes.GroupBy.Node<TSource, TKey, SystemList.Node<TSource>>, Nodes.GroupBy.Pull<TSource, TKey, SystemList.Node<TSource>>> GroupBy<TSource, TKey>(this List<TSource> source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey>? comparer = null)
+        => new(NodeImpl.GroupBy(new SystemList.Node<TSource>(source), keySelector, comparer));
+        public static ValueEnumerable<System.Linq.IGrouping<TKey, TElement>, Nodes.GroupBy.Node<TSource, TKey, TElement, SystemList.Node<TSource>>, Nodes.GroupBy.Pull<TSource, TKey, TElement, SystemList.Node<TSource>>> GroupBy<TSource, TKey, TElement>(this List<TSource> source, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, IEqualityComparer<TKey>? comparer = null)
+            => new(NodeImpl.GroupBy(new SystemList.Node<TSource>(source), keySelector, elementSelector, comparer));
 
-        //public static ValueEnumerable<TResult, SelectManyNode<TSource, TResult, ListNode<TSource>, NodeU>> SelectMany<TSource, TResult, NodeU>(this List<TSource> source, Func<TSource, ValueEnumerable<TResult, NodeU>> selector)
-        //    where NodeU : INode<TResult>
-        //{
-        //    if (selector == null)
-        //        throw new ArgumentNullException(nameof(selector));
-
-        //    return source.OfList().SelectMany(selector);
-        //}
-
-        public static IEnumerable<T> Concat<T>(this List<T> first, List<T> second) => new ValueEnumerable<T, ConcatNode<T, ListNode<T>, ListNode<T>>>(NodeImpl.Concat<T, ListNode<T>, ListNode<T>>(Enumerable.ToNode(first), Enumerable.ToNode(second)));
-
-        public static TSource ElementAt<TSource>(this List<TSource> source, int index) => source[index];
-        public static TSource ElementAtOrDefault<TSource>(this List<TSource> source, int index) => index >= source.Count ? default : source[index];
-
-        public static (U, V) Fork<T, U, V>(this List<T> source, Func<ValueEnumerable<T, Aggregation.Fork<T>>, U> t2u, Func<ValueEnumerable<T, Aggregation.Fork<T>>, V> t2v)
-            => NodeImpl.Fork(new ListNode<T>(source), t2u, t2v);
-        public static (U, V, W) Fork<T, U, V, W>(this List<T> source, Func<ValueEnumerable<T, Aggregation.Fork<T>>, U> t2u, Func<ValueEnumerable<T, Aggregation.Fork<T>>, V> t2v, Func<ValueEnumerable<T, Aggregation.Fork<T>>, W> t2w)
-            => NodeImpl.Fork(new ListNode<T>(source), t2u, t2v, t2w);
-
-        public static ValueEnumerable<System.Linq.IGrouping<TKey, TSource>, GroupByNode<TSource, TKey, ListNode<TSource>>> GroupBy<TSource, TKey>(this List<TSource> source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer = null)
-        => new(NodeImpl.GroupBy(new ListNode<TSource>(source), keySelector, comparer));
-        public static ValueEnumerable<System.Linq.IGrouping<TKey, TElement>, GroupByNode<TSource, TKey, TElement, ListNode<TSource>>> GroupBy<TSource, TKey, TElement>(this List<TSource> source, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, IEqualityComparer<TKey> comparer = null)
-            => new(NodeImpl.GroupBy(new ListNode<TSource>(source), keySelector, elementSelector, comparer));
-
-        public static ValueEnumerable<TResult, GroupByResultNode<TSource, TKey, TResult, ListNode<TSource>>> GroupBy<TSource, TKey, TResult>(this List<TSource> source, Func<TSource, TKey> keySelector, Func<TKey, IEnumerable<TSource>, TResult> resultSelector, IEqualityComparer<TKey> comparer = null)
-            => new(NodeImpl.GroupBy(new ListNode<TSource>(source), keySelector, resultSelector, comparer));
-        public static ValueEnumerable<TResult, GroupByResultNode<TSource, TKey, TElement, TResult, ListNode<TSource>>> GroupBy<TSource, TKey, TElement, TResult>(this List<TSource> source, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, Func<TKey, IEnumerable<TElement>, TResult> resultSelector, IEqualityComparer<TKey> comparer = null)
-            => new(NodeImpl.GroupBy(new ListNode<TSource>(source), keySelector, elementSelector, resultSelector, comparer));
+        public static ValueEnumerable<TResult, Nodes.GroupByResult.Node<TSource, TKey, TResult, SystemList.Node<TSource>>, Nodes.GroupByResult.Pull<TSource, TKey, TResult, SystemList.Node<TSource>>> GroupBy<TSource, TKey, TResult>(this List<TSource> source, Func<TSource, TKey> keySelector, Func<TKey, IEnumerable<TSource>, TResult> resultSelector, IEqualityComparer<TKey>? comparer = null)
+            => new(NodeImpl.GroupBy(new SystemList.Node<TSource>(source), keySelector, resultSelector, comparer));
+        public static ValueEnumerable<TResult, Nodes.GroupByResult.Node<TSource, TKey, TElement, TResult, SystemList.Node<TSource>>, Nodes.GroupByResult.Pull<TSource, TKey, TElement, TResult, SystemList.Node<TSource>>> GroupBy<TSource, TKey, TElement, TResult>(this List<TSource> source, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, Func<TKey, IEnumerable<TElement>, TResult> resultSelector, IEqualityComparer<TKey>? comparer = null)
+            => new(NodeImpl.GroupBy(new SystemList.Node<TSource>(source), keySelector, elementSelector, resultSelector, comparer));
     }
 }

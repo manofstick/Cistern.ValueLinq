@@ -1,6 +1,5 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System;
 using System.Collections.Generic;
@@ -21,14 +20,14 @@ namespace Linqs.Tests
         [Fact]
         public void FirstMultipleTruePredicateResult()
         {
-            Assert.Equal(10, Enumerable.Range(1, 99).OrderBy<int, int>(i => i).First(x => x % 10 == 0));
+            Assert.Equal(10, Enumerable.Range(1, 99).OrderBy(i => i).First(x => x % 10 == 0));
             Assert.Equal(100, Enumerable.Range(1, 999).Concat(Enumerable.Range(1001, 3)).OrderByDescending(i => i.ToString().Length).ThenBy(i => i).First(x => x % 10 == 0));
         }
 
         [Fact]
         public void FirstOrDefaultMultipleTruePredicateResult()
         {
-            Assert.Equal(10, Enumerable.Range(1, 99).OrderBy<int, int>(i => i).FirstOrDefault(x => x % 10 == 0));
+            Assert.Equal(10, Enumerable.Range(1, 99).OrderBy(i => i).FirstOrDefault(x => x % 10 == 0));
             Assert.Equal(100, Enumerable.Range(1, 999).Concat(Enumerable.Range(1001, 3)).OrderByDescending(i => i.ToString().Length).ThenBy(i => i).FirstOrDefault(x => x % 10 == 0));
         }
 
@@ -41,42 +40,42 @@ namespace Linqs.Tests
         [Fact]
         public void FirstEmptyOrderedEnumerable()
         {
-            Assert.Throws<InvalidOperationException>(() => Enumerable.Empty<int>().OrderBy<int, int>(i => i).First());
-            Assert.Throws<InvalidOperationException>(() => Enumerable.Empty<int>().OrderBy<int, int>(i => i).First(x => true));
+            Assert.Throws<InvalidOperationException>(() => Enumerable.Empty<int>().OrderBy(i => i).First());
+            Assert.Throws<InvalidOperationException>(() => Enumerable.Empty<int>().OrderBy(i => i).First(x => true));
         }
 
         [Fact]
         public void FirstOrDefaultNoTruePredicateResult()
         {
-            Assert.Equal(0, Enumerable.Range(1, 99).OrderBy<int, int>(i => i).FirstOrDefault(x => x > 1000));
+            Assert.Equal(0, Enumerable.Range(1, 99).OrderBy(i => i).FirstOrDefault(x => x > 1000));
         }
 
         [Fact]
         public void FirstOrDefaultEmptyOrderedEnumerable()
         {
-            Assert.Equal(0, Enumerable.Empty<int>().OrderBy<int, int>(i => i).FirstOrDefault());
-            Assert.Equal(0, Enumerable.Empty<int>().OrderBy<int, int>(i => i).FirstOrDefault(x => true));
+            Assert.Equal(0, Enumerable.Empty<int>().OrderBy(i => i).FirstOrDefault());
+            Assert.Equal(0, Enumerable.Empty<int>().OrderBy(i => i).FirstOrDefault(x => true));
         }
 
         [Fact]
         public void Last()
         {
             Assert.Equal(10, Enumerable.Range(1, 99).Reverse().OrderByDescending(i => i).Last(x => x % 10 == 0));
-            Assert.Equal(100, Enumerable.Range(1, 999).Concat(Enumerable.Range(1001, 3)).Reverse().OrderBy<int, int>(i => i.ToString().Length).ThenByDescending(i => i).Last(x => x % 10 == 0));
-            Assert.Equal(10, Enumerable.Range(1, 10).OrderBy<int, int>(i => 1).Last());
+            Assert.Equal(100, Enumerable.Range(1, 999).Concat(Enumerable.Range(1001, 3)).Reverse().OrderBy(i => i.ToString().Length).ThenByDescending(i => i).Last(x => x % 10 == 0));
+            Assert.Equal(10, Enumerable.Range(1, 10).OrderBy(i => 1).Last());
         }
 
         [Fact]
         public void LastMultipleTruePredicateResult()
         {
-            Assert.Equal(90, Enumerable.Range(1, 99).OrderBy<int, int>(i => i).Last(x => x % 10 == 0));
+            Assert.Equal(90, Enumerable.Range(1, 99).OrderBy(i => i).Last(x => x % 10 == 0));
             Assert.Equal(90, Enumerable.Range(1, 999).Concat(Enumerable.Range(1001, 3)).OrderByDescending(i => i.ToString().Length).ThenBy(i => i).Last(x => x % 10 == 0));
         }
 
         [Fact]
         public void LastOrDefaultMultipleTruePredicateResult()
         {
-            Assert.Equal(90, Enumerable.Range(1, 99).OrderBy<int, int>(i => i).LastOrDefault(x => x % 10 == 0));
+            Assert.Equal(90, Enumerable.Range(1, 99).OrderBy(i => i).LastOrDefault(x => x % 10 == 0));
             Assert.Equal(90, Enumerable.Range(1, 999).Concat(Enumerable.Range(1001, 3)).OrderByDescending(i => i.ToString().Length).ThenBy(i => i).LastOrDefault(x => x % 10 == 0));
         }
 
@@ -89,21 +88,21 @@ namespace Linqs.Tests
         [Fact]
         public void LastEmptyOrderedEnumerable()
         {
-            Assert.Throws<InvalidOperationException>(() => Enumerable.Empty<int>().OrderBy<int, int>(i => i).Last());
-            Assert.Throws<InvalidOperationException>(() => Enumerable.Empty<int>().OrderBy<int, int>(i => i).Last(x => true));
+            Assert.Throws<InvalidOperationException>(() => Enumerable.Empty<int>().OrderBy(i => i).Last());
+            Assert.Throws<InvalidOperationException>(() => Enumerable.Empty<int>().OrderBy(i => i).Last(x => true));
         }
 
         [Fact]
         public void LastOrDefaultNoTruePredicateResult()
         {
-            Assert.Equal(0, Enumerable.Range(1, 99).OrderBy<int, int>(i => i).LastOrDefault(x => x > 1000));
+            Assert.Equal(0, Enumerable.Range(1, 99).OrderBy(i => i).LastOrDefault(x => x > 1000));
         }
 
         [Fact]
         public void LastOrDefaultEmptyOrderedEnumerable()
         {
-            Assert.Equal(0, Enumerable.Empty<int>().OrderBy<int, int>(i => i).LastOrDefault());
-            Assert.Equal(0, Enumerable.Empty<int>().OrderBy<int, int>(i => i).LastOrDefault(x => true));
+            Assert.Equal(0, Enumerable.Empty<int>().OrderBy(i => i).LastOrDefault());
+            Assert.Equal(0, Enumerable.Empty<int>().OrderBy(i => i).LastOrDefault(x => true));
         }
 
         [Fact]
@@ -116,7 +115,7 @@ namespace Linqs.Tests
             Assert.Empty(ordered.Take(0));
             Assert.Empty(ordered.Take(-1));
             Assert.Empty(ordered.Take(int.MinValue));
-            Assert.Equal(new int[] { 0 }, ordered.Take(1));
+            Assert.Equal([0], ordered.Take(1));
             Assert.Equal(Enumerable.Range(0, 100), ordered.Take(101));
             Assert.Equal(Enumerable.Range(0, 100), ordered.Take(int.MaxValue));
             Assert.Equal(Enumerable.Range(0, 100), ordered.Take(100));
@@ -154,7 +153,7 @@ namespace Linqs.Tests
             Assert.Equal(Enumerable.Range(0, 100), ordered.Skip(0));
             Assert.Equal(Enumerable.Range(0, 100), ordered.Skip(-1));
             Assert.Equal(Enumerable.Range(0, 100), ordered.Skip(int.MinValue));
-            Assert.Equal(new int[] { 99 }, ordered.Skip(99));
+            Assert.Equal([99], ordered.Skip(99));
             Assert.Empty(ordered.Skip(101));
             Assert.Empty(ordered.Skip(int.MaxValue));
             Assert.Empty(ordered.Skip(100));
@@ -233,11 +232,10 @@ namespace Linqs.Tests
             Assert.Equal(Enumerable.Range(10, 1), ordered.Take(11).Skip(10));
         }
 
-        [Fact(Skip="CISTERN TBD. Currently thorws OutOfMemory")]
-        //[SkipOnTargetFramework(~TargetFrameworkMonikers.Netcoreapp, "This fails with an OOM, as it iterates through the large array. See https://github.com/dotnet/corefx/pull/6821.")]
+        [Fact]
         public void TakeAndSkip_DoesntIterateRangeUnlessNecessary()
         {
-            Assert.Empty(Enumerable.Range(0, int.MaxValue).Take(int.MaxValue).OrderBy<int, int>(i => i).Skip(int.MaxValue - 4).Skip(15));
+            Assert.Empty(Enumerable.Range(0, int.MaxValue).Take(int.MaxValue).OrderBy(i => i).Skip(int.MaxValue - 4).Skip(15));
         }
 
         [Fact]
@@ -345,10 +343,10 @@ namespace Linqs.Tests
         [Fact]
         public void SkipTakesOnlyOne()
         {
-            Assert.Equal(new[] { 1 }, Enumerable.Range(1, 10).Shuffle().OrderBy(i => i).Take(1));
-            Assert.Equal(new[] { 2 }, Enumerable.Range(1, 10).Shuffle().OrderBy(i => i).Skip(1).Take(1));
-            Assert.Equal(new[] { 3 }, Enumerable.Range(1, 10).Shuffle().OrderBy(i => i).Take(3).Skip(2));
-            Assert.Equal(new[] { 1 }, Enumerable.Range(1, 10).Shuffle().OrderBy(i => i).Take(3).Take(1));
+            Assert.Equal([1], Enumerable.Range(1, 10).Shuffle().OrderBy(i => i).Take(1));
+            Assert.Equal([2], Enumerable.Range(1, 10).Shuffle().OrderBy(i => i).Skip(1).Take(1));
+            Assert.Equal([3], Enumerable.Range(1, 10).Shuffle().OrderBy(i => i).Take(3).Skip(2));
+            Assert.Equal([1], Enumerable.Range(1, 10).Shuffle().OrderBy(i => i).Take(3).Take(1));
         }
 
         [Fact]
@@ -409,7 +407,7 @@ namespace Linqs.Tests
         [Fact]
         public void EnumeratorDoesntContinue()
         {
-            var enumerator = NumberRangeGuaranteedNotCollectionType(0, 3).Shuffle().OrderBy(i => i).Skip(1).GetEnumerator();
+            using var enumerator = NumberRangeGuaranteedNotCollectionType(0, 3).Shuffle().OrderBy(i => i).Skip(1).GetEnumerator();
             while (enumerator.MoveNext()) { }
             Assert.False(enumerator.MoveNext());
         }
@@ -417,16 +415,18 @@ namespace Linqs.Tests
         [Fact]
         public void Select()
         {
-            Assert.Equal(new[] { 0, 2, 4, 6, 8 }, Enumerable.Range(-1, 8).Shuffle().OrderBy(i => i).Skip(1).Take(5).Select(i => i * 2));
+            Assert.Equal([0, 2, 4, 6, 8], Enumerable.Range(-1, 8).Shuffle().OrderBy(i => i).Skip(1).Take(5).Select(i => i * 2));
         }
 
         [Fact(Skip = "CISTERN.VALUELINQ: Can't cast an enumerable to an enumerator")]
         public void SelectForcedToEnumeratorDoesntEnumerate()
         {
+#if !CISTERN_VALUELINQ
             var iterator = Enumerable.Range(-1, 8).Shuffle().OrderBy(i => i).Skip(1).Take(5).Select(i => i * 2);
             // Don't insist on this behaviour, but check it's correct if it happens
-            //var en = iterator as IEnumerator<int>;
-            //Assert.False(en != null && en.MoveNext());
+            var en = iterator as IEnumerator<int>;
+            Assert.False(en is not null && en.MoveNext());
+#endif
         }
 
         [Fact]
@@ -442,7 +442,11 @@ namespace Linqs.Tests
         [Fact]
         public void SelectFirst()
         {
-            var source = (IEnumerable<int>)Enumerable.Range(0, 9).Shuffle().OrderBy(i => i).Skip(1).Take(5).Select(i => i * 2);
+#if CISTERN_VALUELINQ
+            IEnumerable<int> source = Enumerable.Range(0, 9).Shuffle().OrderBy(i => i).Skip(1).Take(5).Select(i => i * 2);
+#else
+            var source = Enumerable.Range(0, 9).Shuffle().OrderBy(i => i).Skip(1).Take(5).Select(i => i * 2);
+#endif
             Assert.Equal(2, source.First());
             Assert.Equal(2, source.FirstOrDefault());
             source = source.Skip(20);
@@ -453,7 +457,11 @@ namespace Linqs.Tests
         [Fact]
         public void SelectLast()
         {
-            var source = (IEnumerable<int>)Enumerable.Range(0, 9).Shuffle().OrderBy(i => i).Skip(1).Take(5).Select(i => i * 2);
+#if CISTERN_VALUELINQ
+            IEnumerable<int> source = Enumerable.Range(0, 9).Shuffle().OrderBy(i => i).Skip(1).Take(5).Select(i => i * 2);
+#else
+            var source = Enumerable.Range(0, 9).Shuffle().OrderBy(i => i).Skip(1).Take(5).Select(i => i * 2);
+#endif
             Assert.Equal(10, source.Last());
             Assert.Equal(10, source.LastOrDefault());
             source = source.Skip(20);

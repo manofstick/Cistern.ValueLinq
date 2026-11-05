@@ -1,6 +1,5 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System;
 using System.Collections.Generic;
@@ -39,14 +38,14 @@ namespace Linqs.Tests
 
         public static IEnumerable<object[]> NullableFloat_TestData()
         {
-            yield return new object[] { new float?[0], null };
-            yield return new object[] { new float?[] { float.MinValue }, float.MinValue };
-            yield return new object[] { new float?[] { 0f, 0f, 0f, 0f, 0f }, 0f };
+            yield return [new float?[0], null];
+            yield return [new float?[] { float.MinValue }, float.MinValue];
+            yield return [new float?[] { 0f, 0f, 0f, 0f, 0f }, 0f];
 
-            yield return new object[] { new float?[] { 5.5f, 0, null, null, null, 15.5f, 40.5f, null, null, -23.5f }, 7.6f };
+            yield return [new float?[] { 5.5f, 0, null, null, null, 15.5f, 40.5f, null, null, -23.5f }, 7.6f];
 
-            yield return new object[] { new float?[] { null, null, null, null, 45f }, 45f };
-            yield return new object[] { new float?[] { null, null, null, null, null }, null };
+            yield return [new float?[] { null, null, null, null, 45f }, 45f];
+            yield return [new float?[] { null, null, null, null, null }, null];
         }
 
         [Theory]
@@ -95,10 +94,17 @@ namespace Linqs.Tests
         [Fact]
         public void Int_EmptySource_ThrowsInvalidOperationException()
         {
-            int[] source = new int[0];
-
-            Assert.Throws<InvalidOperationException>(() => source.Average());
-            Assert.Throws<InvalidOperationException>(() => source.Average(i => i));
+            foreach (IEnumerable<int> source in new IEnumerable<int>[]
+            {
+                Array.Empty<int>(),
+                new List<int>(),
+                [],
+                new TestEnumerable<int>([])
+            })
+            {
+                Assert.Throws<InvalidOperationException>(() => source.Average());
+                Assert.Throws<InvalidOperationException>(() => source.Average(i => i));
+            }
         }
 
         [Fact]
@@ -117,24 +123,39 @@ namespace Linqs.Tests
 
         public static IEnumerable<object[]> Int_TestData()
         {
-            yield return new object[] { new int[] { 5 }, 5 };
-            yield return new object[] { new int[] { 0, 0, 0, 0, 0 }, 0 };
-            yield return new object[] { new int[] { 5, -10, 15, 40, 28 }, 15.6 };
+            yield return [new int[] { 5 }, 5];
+            yield return [new int[] { 0, 0, 0, 0, 0 }, 0];
+            yield return [new int[] { 5, -10, 15, 40, 28 }, 15.6];
+
+            for (int i = 1; i <= 33; i++)
+            {
+                int sum = 0;
+                for (int c = 1; c <= i; c++) sum += c;
+                double expected = (double)sum / i;
+
+                yield return [Enumerable.Range(1, i).Shuffle(), expected];
+            }
         }
 
         [Theory]
         [MemberData(nameof(Int_TestData))]
-        public void Int(int[] source, double expected)
+        public void Int(IEnumerable<int> source, double expected)
         {
-            Assert.Equal(expected, source.Average());
-            Assert.Equal(expected, source.Average(x => x));
+            Assert.All(CreateSources(source), source =>
+            {
+                Assert.Equal(expected, source.Average());
+                Assert.Equal(expected, source.Average(x => x));
+            });
         }
 
         [Theory, MemberData(nameof(Int_TestData))]
-        public void IntRunOnce(int[] source, double expected)
+        public void IntRunOnce(IEnumerable<int> source, double expected)
         {
-            Assert.Equal(expected, source.RunOnce().Average());
-            Assert.Equal(expected, source.RunOnce().Average(x => x));
+            Assert.All(CreateSources(source), source =>
+            {
+                Assert.Equal(expected, source.RunOnce().Average());
+                Assert.Equal(expected, source.RunOnce().Average(x => x));
+            });
         }
 
         [Fact]
@@ -153,20 +174,23 @@ namespace Linqs.Tests
 
         public static IEnumerable<object[]> NullableInt_TestData()
         {
-            yield return new object[] { new int?[0], null };
-            yield return new object[] { new int?[] { -5 }, -5.0 };
-            yield return new object[] { new int?[] { 0, 0, 0, 0, 0 }, 0.0 };
-            yield return new object[] { new int?[] { 5, -10, null, null, null, 15, 40, 28, null, null }, 15.6 };
-            yield return new object[] { new int?[] { null, null, null, null, 50 }, 50.0 };
-            yield return new object[] { new int?[] { null, null, null, null, null }, null };
+            yield return [new int?[0], null];
+            yield return [new int?[] { -5 }, -5.0];
+            yield return [new int?[] { 0, 0, 0, 0, 0 }, 0.0];
+            yield return [new int?[] { 5, -10, null, null, null, 15, 40, 28, null, null }, 15.6];
+            yield return [new int?[] { null, null, null, null, 50 }, 50.0];
+            yield return [new int?[] { null, null, null, null, null }, null];
         }
 
         [Theory]
         [MemberData(nameof(NullableInt_TestData))]
         public void NullableInt(int?[] source, double? expected)
         {
-            Assert.Equal(expected, source.Average());
-            Assert.Equal(expected, source.Average(x => x));
+            Assert.All(CreateSources(source), source =>
+            {
+                Assert.Equal(expected, source.Average());
+                Assert.Equal(expected, source.Average(x => x));
+            });
         }
 
         [Fact]
@@ -200,10 +224,17 @@ namespace Linqs.Tests
         [Fact]
         public void Long_EmptySource_ThrowsInvalidOperationException()
         {
-            long[] source = new long[0];
-
-            Assert.Throws<InvalidOperationException>(() => source.Average());
-            Assert.Throws<InvalidOperationException>(() => source.Average(i => i));
+            foreach (IEnumerable<long> source in new IEnumerable<long>[]
+            {
+                Array.Empty<long>(),
+                new List<long>(),
+                [],
+                new TestEnumerable<long>([])
+            })
+            {
+                Assert.Throws<InvalidOperationException>(() => source.Average());
+                Assert.Throws<InvalidOperationException>(() => source.Average(i => i));
+            }
         }
 
         [Fact]
@@ -222,17 +253,29 @@ namespace Linqs.Tests
 
         public static IEnumerable<object[]> Long_TestData()
         {
-            yield return new object[] { new long[] { long.MaxValue }, long.MaxValue };
-            yield return new object[] { new long[] { 0, 0, 0, 0, 0 }, 0 };
-            yield return new object[] { new long[] { 5, -10, 15, 40, 28 }, 15.6 };
+            yield return [new long[] { long.MaxValue }, long.MaxValue];
+            yield return [new long[] { 0, 0, 0, 0, 0 }, 0];
+            yield return [new long[] { 5, -10, 15, 40, 28 }, 15.6];
+
+            for (int i = 1; i <= 33; i++)
+            {
+                int sum = 0;
+                for (int c = 1; c <= i; c++) sum += c;
+                double expected = (double)sum / i;
+
+                yield return [Enumerable.Range(1, i).Select(i => (long)i).Shuffle(), expected];
+            }
         }
 
         [Theory]
         [MemberData(nameof(Long_TestData))]
-        public void Long(long[] source, double expected)
+        public void Long(IEnumerable<long> source, double expected)
         {
-            Assert.Equal(expected, source.Average());
-            Assert.Equal(expected, source.Average(x => x));
+            Assert.All(CreateSources(source), source =>
+            {
+                Assert.Equal(expected, source.Average());
+                Assert.Equal(expected, source.Average(x => x));
+            });
         }
 
         [Fact]
@@ -252,27 +295,30 @@ namespace Linqs.Tests
         [Fact]
         public void Long_SumTooLarge_ThrowsOverflowException()
         {
-            long[] source = new long[] { long.MaxValue, long.MaxValue };
+            long[] source = [long.MaxValue, long.MaxValue];
 
             Assert.Throws<OverflowException>(() => source.Average());
         }
 
         public static IEnumerable<object[]> NullableLong_TestData()
         {
-            yield return new object[] { new long?[0], null };
-            yield return new object[] { new long?[] { long.MaxValue }, (double)long.MaxValue };
-            yield return new object[] { new long?[] { 0, 0, 0, 0, 0 }, 0.0 };
-            yield return new object[] { new long?[] { 5, -10, null, null, null, 15, 40, 28, null, null }, 15.6 };
-            yield return new object[] { new long?[] { null, null, null, null, 50 }, 50.0 };
-            yield return new object[] { new long?[] { null, null, null, null, null }, null };
+            yield return [new long?[0], null];
+            yield return [new long?[] { long.MaxValue }, (double)long.MaxValue];
+            yield return [new long?[] { 0, 0, 0, 0, 0 }, 0.0];
+            yield return [new long?[] { 5, -10, null, null, null, 15, 40, 28, null, null }, 15.6];
+            yield return [new long?[] { null, null, null, null, 50 }, 50.0];
+            yield return [new long?[] { null, null, null, null, null }, null];
         }
 
         [Theory]
         [MemberData(nameof(NullableLong_TestData))]
         public void NullableLong(long?[] source, double? expected)
         {
-            Assert.Equal(expected, source.Average());
-            Assert.Equal(expected, source.Average(x => x));
+            Assert.All(CreateSources(source), source =>
+            {
+                Assert.Equal(expected, source.Average());
+                Assert.Equal(expected, source.Average(x => x));
+            });
         }
 
         [Fact]
@@ -306,10 +352,17 @@ namespace Linqs.Tests
         [Fact]
         public void Double_EmptySource_ThrowsInvalidOperationException()
         {
-            double[] source = new double[0];
-
-            Assert.Throws<InvalidOperationException>(() => source.Average());
-            Assert.Throws<InvalidOperationException>(() => source.Average(i => i));
+            foreach (IEnumerable<double> source in new IEnumerable<double>[]
+            {
+                Array.Empty<double>(),
+                new List<double>(),
+                [],
+                new TestEnumerable<double>([])
+            })
+            {
+                Assert.Throws<InvalidOperationException>(() => source.Average());
+                Assert.Throws<InvalidOperationException>(() => source.Average(i => i));
+            }
         }
 
         [Fact]
@@ -328,18 +381,30 @@ namespace Linqs.Tests
 
         public static IEnumerable<object[]> Double_TestData()
         {
-            yield return new object[] { new double[] { double.MaxValue }, double.MaxValue };
-            yield return new object[] { new double[] { 0.0, 0.0, 0.0, 0.0, 0.0 }, 0 };
-            yield return new object[] { new double[] { 5.5, -10, 15.5, 40.5, 28.5 }, 16 };
-            yield return new object[] { new double[] { 5.58, double.NaN, 30, 4.55, 19.38 }, double.NaN };
+            yield return [new double[] { double.MaxValue }, double.MaxValue];
+            yield return [new double[] { 0.0, 0.0, 0.0, 0.0, 0.0 }, 0];
+            yield return [new double[] { 5.5, -10, 15.5, 40.5, 28.5 }, 16];
+            yield return [new double[] { 5.58, double.NaN, 30, 4.55, 19.38 }, double.NaN];
+
+            for (int i = 1; i <= 33; i++)
+            {
+                int sum = 0;
+                for (int c = 1; c <= i; c++) sum += c;
+                double expected = (double)sum / i;
+
+                yield return [Enumerable.Range(1, i).Select(i => (double)i).Shuffle(), expected];
+            }
         }
 
         [Theory]
         [MemberData(nameof(Double_TestData))]
-        public void Average_Double(double[] source, double expected)
+        public void Average_Double(IEnumerable<double> source, double expected)
         {
-            Assert.Equal(expected, source.Average());
-            Assert.Equal(expected, source.Average(x => x));
+            Assert.All(CreateSources(source), source =>
+            {
+                Assert.Equal(expected, source.Average());
+                Assert.Equal(expected, source.Average(x => x));
+            });
         }
 
         [Fact]
@@ -358,21 +423,24 @@ namespace Linqs.Tests
 
         public static IEnumerable<object[]> NullableDouble_TestData()
         {
-            yield return new object[] { new double?[0], null };
-            yield return new object[] { new double?[] { double.MinValue }, double.MinValue };
-            yield return new object[] { new double?[] { 0, 0, 0, 0, 0 }, 0.0 };
-            yield return new object[] { new double?[] { 5.5, 0, null, null, null, 15.5, 40.5, null, null, -23.5 }, 7.6 };
-            yield return new object[] { new double?[] { null, null, null, null, 45 }, 45.0 };
-            yield return new object[] { new double?[] { -23.5, 0, double.NaN, 54.3, 0.56 }, double.NaN };
-            yield return new object[] { new double?[] { null, null, null, null, null }, null };
+            yield return [new double?[0], null];
+            yield return [new double?[] { double.MinValue }, double.MinValue];
+            yield return [new double?[] { 0, 0, 0, 0, 0 }, 0.0];
+            yield return [new double?[] { 5.5, 0, null, null, null, 15.5, 40.5, null, null, -23.5 }, 7.6];
+            yield return [new double?[] { null, null, null, null, 45 }, 45.0];
+            yield return [new double?[] { -23.5, 0, double.NaN, 54.3, 0.56 }, double.NaN];
+            yield return [new double?[] { null, null, null, null, null }, null];
         }
 
         [Theory]
         [MemberData(nameof(NullableDouble_TestData))]
         public void NullableDouble(double?[] source, double? expected)
         {
-            Assert.Equal(expected, source.Average());
-            Assert.Equal(expected, source.Average(x => x));
+            Assert.All(CreateSources(source), source =>
+            {
+                Assert.Equal(expected, source.Average());
+                Assert.Equal(expected, source.Average(x => x));
+            });
         }
 
         [Fact]
@@ -406,10 +474,17 @@ namespace Linqs.Tests
         [Fact]
         public void Decimal_EmptySource_ThrowsInvalidOperationException()
         {
-            decimal[] source = new decimal[0];
-
-            Assert.Throws<InvalidOperationException>(() => source.Average());
-            Assert.Throws<InvalidOperationException>(() => source.Average(i => i));
+            foreach (IEnumerable<decimal> source in new IEnumerable<decimal>[]
+            {
+                Array.Empty<decimal>(),
+                new List<decimal>(),
+                [],
+                new TestEnumerable<decimal>([])
+            })
+            {
+                Assert.Throws<InvalidOperationException>(() => source.Average());
+                Assert.Throws<InvalidOperationException>(() => source.Average(i => i));
+            }
         }
 
         [Fact]
@@ -428,17 +503,29 @@ namespace Linqs.Tests
 
         public static IEnumerable<object[]> Decimal_TestData()
         {
-            yield return new object[] { new decimal[] { decimal.MaxValue }, decimal.MaxValue };
-            yield return new object[] { new decimal[] { 0.0m, 0.0m, 0.0m, 0.0m, 0.0m }, 0 };
-            yield return new object[] { new decimal[] { 5.5m, -10m, 15.5m, 40.5m, 28.5m }, 16 };
+            yield return [new decimal[] { decimal.MaxValue }, decimal.MaxValue];
+            yield return [new decimal[] { 0.0m, 0.0m, 0.0m, 0.0m, 0.0m }, 0];
+            yield return [new decimal[] { 5.5m, -10m, 15.5m, 40.5m, 28.5m }, 16];
+
+            for (int i = 1; i <= 33; i++)
+            {
+                int sum = 0;
+                for (int c = 1; c <= i; c++) sum += c;
+                decimal expected = (decimal)sum / i;
+
+                yield return [Enumerable.Range(1, i).Select(i => (decimal)i).Shuffle(), expected];
+            }
         }
 
         [Theory]
         [MemberData(nameof(Decimal_TestData))]
-        public void Decimal(decimal[] source, decimal expected)
+        public void Decimal(IEnumerable<decimal> source, decimal expected)
         {
-            Assert.Equal(expected, source.Average());
-            Assert.Equal(expected, source.Average(x => x));
+            Assert.All(CreateSources(source), source =>
+            {
+                Assert.Equal(expected, source.Average());
+                Assert.Equal(expected, source.Average(x => x));
+            });
         }
 
         [Fact]
@@ -457,20 +544,23 @@ namespace Linqs.Tests
 
         public static IEnumerable<object[]> NullableDecimal_TestData()
         {
-            yield return new object[] { new decimal?[0], null };
-            yield return new object[] { new decimal?[] { decimal.MinValue }, decimal.MinValue };
-            yield return new object[] { new decimal?[] { 0m, 0m, 0m, 0m, 0m }, 0m };
-            yield return new object[] { new decimal?[] { 5.5m, 0, null, null, null, 15.5m, 40.5m, null, null, -23.5m }, 7.6m };
-            yield return new object[] { new decimal?[] { null, null, null, null, 45m }, 45m };
-            yield return new object[] { new decimal?[] { null, null, null, null, null }, null };
+            yield return [new decimal?[0], null];
+            yield return [new decimal?[] { decimal.MinValue }, decimal.MinValue];
+            yield return [new decimal?[] { 0m, 0m, 0m, 0m, 0m }, 0m];
+            yield return [new decimal?[] { 5.5m, 0, null, null, null, 15.5m, 40.5m, null, null, -23.5m }, 7.6m];
+            yield return [new decimal?[] { null, null, null, null, 45m }, 45m];
+            yield return [new decimal?[] { null, null, null, null, null }, null];
         }
 
         [Theory]
         [MemberData(nameof(NullableDecimal_TestData))]
         public void NullableDecimal(decimal?[] source, decimal? expected)
         {
-            Assert.Equal(expected, source.Average());
-            Assert.Equal(expected, source.Average(x => x));
+            Assert.All(CreateSources(source), source =>
+            {
+                Assert.Equal(expected, source.Average());
+                Assert.Equal(expected, source.Average(x => x));
+            });
         }
 
         [Fact]
@@ -504,7 +594,7 @@ namespace Linqs.Tests
         [Fact]
         public void NullableDecimal_SumTooLarge_ThrowsOverflowException()
         {
-            decimal?[] source = new decimal?[] { decimal.MaxValue, decimal.MaxValue };
+            decimal?[] source = [decimal.MaxValue, decimal.MaxValue];
 
             Assert.Throws<OverflowException>(() => source.Average());
         }
@@ -512,10 +602,17 @@ namespace Linqs.Tests
         [Fact]
         public void Float_EmptySource_ThrowsInvalidOperationException()
         {
-            float[] source = new float[0];
-
-            Assert.Throws<InvalidOperationException>(() => source.Average());
-            Assert.Throws<InvalidOperationException>(() => source.Average(i => i));
+            foreach (IEnumerable<float> source in new IEnumerable<float>[]
+            {
+                Array.Empty<float>(),
+                new List<float>(),
+                [],
+                new TestEnumerable<float>([])
+            })
+            {
+                Assert.Throws<InvalidOperationException>(() => source.Average());
+                Assert.Throws<InvalidOperationException>(() => source.Average(i => i));
+            }
         }
 
         [Fact]
@@ -534,17 +631,29 @@ namespace Linqs.Tests
 
         public static IEnumerable<object[]> Float_TestData()
         {
-            yield return new object[] { new float[] { float.MaxValue }, float.MaxValue };
-            yield return new object[] { new float[] { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f }, 0f };
-            yield return new object[] { new float[] { 5.5f, -10f, 15.5f, 40.5f, 28.5f }, 16f };
+            yield return [new float[] { float.MaxValue }, float.MaxValue];
+            yield return [new float[] { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f }, 0f];
+            yield return [new float[] { 5.5f, -10f, 15.5f, 40.5f, 28.5f }, 16f];
+
+            for (int i = 1; i <= 33; i++)
+            {
+                int sum = 0;
+                for (int c = 1; c <= i; c++) sum += c;
+                float expected = (float)sum / i;
+
+                yield return [Enumerable.Range(1, i).Select(i => (float)i).Shuffle(), expected];
+            }
         }
 
         [Theory]
         [MemberData(nameof(Float_TestData))]
-        public void Float(float[] source, float expected)
+        public void Float(IEnumerable<float> source, float expected)
         {
-            Assert.Equal(expected, source.Average());
-            Assert.Equal(expected, source.Average(x => x));
+            Assert.All(CreateSources(source), source =>
+            {
+                Assert.Equal(expected, source.Average());
+                Assert.Equal(expected, source.Average(x => x));
+            });
         }
 
         [Fact]

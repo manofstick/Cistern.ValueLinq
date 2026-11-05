@@ -1,6 +1,5 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System;
 using System.Collections;
@@ -20,10 +19,10 @@ namespace Linqs.Tests
     public static class TestExtensions
     {
         public static IEnumerable<T> RunOnce<T>(this IEnumerable<T> source) =>
-            source == null ? null : (source as IList<T>)?.RunOnce() ?? new RunOnceEnumerable<T>(source);
+            source is null ? null : (source as IList<T>)?.RunOnce() ?? new RunOnceEnumerable<T>(source);
 
         public static IEnumerable<T> RunOnce<T>(this IList<T> source)
-            => source == null ? null : new RunOnceList<T>(source);
+            => source is null ? null : new RunOnceList<T>(source);
 
         private class RunOnceEnumerable<T> : IEnumerable<T>
         {
@@ -48,7 +47,7 @@ namespace Linqs.Tests
         private class RunOnceList<T> : IList<T>
         {
             private readonly IList<T> _source;
-            private readonly HashSet<int> _called = new HashSet<int>();
+            private readonly HashSet<int> _called = [];
 
             private void AssertAll()
             {

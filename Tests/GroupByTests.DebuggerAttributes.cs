@@ -1,6 +1,5 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System;
 using System.Collections.Generic;
@@ -20,7 +19,7 @@ namespace Linqs.Tests
 {
     public partial class GroupByTests : EnumerableTests
     {
-        [Theory]
+        [ConditionalTheory(typeof(PlatformDetection), nameof(PlatformDetection.IsDebuggerTypeProxyAttributeSupported))]
         [MemberData(nameof(DebuggerAttributesValid_Data))]
         public void DebuggerAttributesValid<TKey, TElement>(System.Linq.IGrouping<TKey, TElement> grouping, string keyString)
         {
@@ -47,15 +46,16 @@ namespace Linqs.Tests
             Assert.Equal(grouping, values);
             Assert.Same(values, valuesProperty.GetValue(proxyObject)); // The result should be cached, as Grouping is immutable.
         }
+
         public static IEnumerable<object[]> DebuggerAttributesValid_Data()
         {
-            IEnumerable<int> source = new[] { 1 };
-            yield return new object[] { source.GroupBy(i => i).Single(), "1" };
-            yield return new object[] { source.GroupBy(i => i.ToString(), i => i).Single(), @"""1""" };
-            yield return new object[] { source.GroupBy(i => TimeSpan.FromSeconds(i), i => i).Single(), "{00:00:01}" };
+            IEnumerable<int> source = [1];
+            yield return [source.GroupBy(i => i).Single(), "1"];
+            yield return [source.GroupBy(i => i.ToString(), i => i).Single(), @"""1"""];
+            yield return [source.GroupBy(i => TimeSpan.FromSeconds(i), i => i).Single(), "{00:00:01}"];
 
-            yield return new object[] { new string[] { null }.GroupBy(x => x).Single(), "null" };
-            yield return new object[] { new int?[] { null }.GroupBy(x => x).Single(), "null" };
+            yield return [new string[] { null }.GroupBy(x => x).Single(), "null"];
+            yield return [new int?[] { null }.GroupBy(x => x).Single(), "null"];
         }
     }
 }

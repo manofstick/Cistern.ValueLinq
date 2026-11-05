@@ -5,17 +5,31 @@ using System.Collections.Generic;
 
 namespace Cistern.ValueLinq.Aggregation
 {
-    struct Contains<T>
+    [Aggregator]
+    partial struct Contains<T>
         : IPushEnumerator<T>
     {
         private T _value;
         private bool _contains;
 
-        public Contains(T value) => (_value, _contains) = (value, false);
+        public Contains(T value)
+        {
+            _value = value;
+            _contains = false;
+        }
 
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
-        public void Dispose() { }
-        TResult IPushEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
+        // the span's own search, vectorised for a bitwise-equatable type, as System.Linq searches an array or list
+        static BatchKinds IPushEnumerator<T>.AllowBatchesWhen => BatchKinds.Container | BatchKinds.Forwarder;
+        bool IPushEnumerator<T>.ProcessBatch(scoped ref Batch<T> batch)
+        {
+            var span = batch.GetSpan();
+            if (span.IndexOf(_value, null) < 0)
+                return true;
+
+            _contains = true;
+            return false;
+        }
+        TPushResult IPushEnumerator<T>.GetResult<TPushResult>() => (TPushResult)(object)GetResult();
         public bool GetResult() => _contains;
 
         bool IPushEnumerator<T>.ProcessNext(T input)
@@ -29,18 +43,33 @@ namespace Cistern.ValueLinq.Aggregation
         }
     }
 
-    struct ContainsByComparer<T>
+    [Aggregator]
+    partial struct ContainsByComparer<T>
         : IPushEnumerator<T>
     {
         private IEqualityComparer<T> _comparer;
         private T _value;
         private bool _contains;
 
-        public ContainsByComparer(IEqualityComparer<T> comparer, T value) => (_comparer, _value, _contains) = (comparer ?? EqualityComparer<T>.Default, value, false);
+        public ContainsByComparer(IEqualityComparer<T>? comparer, T value)
+        {
+            _comparer = comparer ?? EqualityComparer<T>.Default;
+            _value = value;
+            _contains = false;
+        }
 
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
-        public void Dispose() { }
-        TResult IPushEnumerator<T>.GetResult<TResult>() => (TResult)(object)GetResult();
+        // the span's own search, which takes the vectorised path when the comparer is the default
+        static BatchKinds IPushEnumerator<T>.AllowBatchesWhen => BatchKinds.Container | BatchKinds.Forwarder;
+        bool IPushEnumerator<T>.ProcessBatch(scoped ref Batch<T> batch)
+        {
+            var span = batch.GetSpan();
+            if (span.IndexOf(_value, _comparer) < 0)
+                return true;
+
+            _contains = true;
+            return false;
+        }
+        TPushResult IPushEnumerator<T>.GetResult<TPushResult>() => (TPushResult)(object)GetResult();
         public bool GetResult() => _contains;
 
         bool IPushEnumerator<T>.ProcessNext(T input)

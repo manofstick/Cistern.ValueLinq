@@ -1,6 +1,5 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System;
 using System.Collections.Generic;
@@ -58,35 +57,35 @@ namespace Linqs.Tests
         [Fact]
         public void OuterEmptyInnerNonEmpty()
         {
-            CustomerRec[] outer = { };
-            OrderRec[] inner = new []
-            {
+            CustomerRec[] outer = [];
+            OrderRec[] inner =
+            [
                 new OrderRec{ orderID = 45321, custID = 98022, total = 50 },
                 new OrderRec{ orderID = 97865, custID = 32103, total = 25 }
-            };
+            ];
             Assert.Empty(outer.Join(inner, e => e.custID, e => e.custID, createJoinRec));
         }
 
         [Fact]
         public void FirstOuterMatchesLastInnerLastOuterMatchesFirstInnerSameNumberElements()
         {
-            CustomerRec[] outer = new []
-            {
+            CustomerRec[] outer =
+            [
                 new CustomerRec{ name = "Prakash", custID = 98022 },
                 new CustomerRec{ name = "Tim", custID = 99021 },
                 new CustomerRec{ name = "Robert", custID = 99022 }
-            };
-            OrderRec[] inner = new []
-            {
+            ];
+            OrderRec[] inner =
+            [
                 new OrderRec{ orderID = 45321, custID = 99022, total = 50 },
                 new OrderRec{ orderID = 43421, custID = 29022, total = 20 },
                 new OrderRec{ orderID = 95421, custID = 98022, total = 9 }
-            };
-            JoinRec[] expected = new []
-            {
+            ];
+            JoinRec[] expected =
+            [
                 new JoinRec{ name = "Prakash", orderID = 95421, total = 9 },
                 new JoinRec{ name = "Robert", orderID = 45321, total = 50 }
-            };
+            ];
 
             Assert.Equal(expected, outer.Join(inner, e => e.custID, e => e.custID, createJoinRec));
         }
@@ -94,18 +93,18 @@ namespace Linqs.Tests
         [Fact]
         public void NullComparer()
         {
-            CustomerRec[] outer = new []
-            {
+            CustomerRec[] outer =
+            [
                 new CustomerRec{ name = "Prakash", custID = 98022 },
                 new CustomerRec{ name = "Tim", custID = 99021 },
                 new CustomerRec{ name = "Robert", custID = 99022 }
-            };
-            AnagramRec[] inner = new []
-            {
+            ];
+            AnagramRec[] inner =
+            [
                 new AnagramRec{ name = "miT", orderID = 43455, total = 10 },
                 new AnagramRec{ name = "Prakash", orderID = 323232, total = 9 }
-            };
-            JoinRec[] expected = new [] { new JoinRec{ name = "Prakash", orderID = 323232, total = 9 } };
+            ];
+            JoinRec[] expected = [new JoinRec{ name = "Prakash", orderID = 323232, total = 9 }];
 
             Assert.Equal(expected, outer.Join(inner, e => e.name, e => e.name, createJoinRec, null));
         }
@@ -113,22 +112,22 @@ namespace Linqs.Tests
         [Fact]
         public void CustomComparer()
         {
-            CustomerRec[] outer = new []
-            {
+            CustomerRec[] outer =
+            [
                 new CustomerRec{ name = "Prakash", custID = 98022 },
                 new CustomerRec{ name = "Tim", custID = 99021 },
                 new CustomerRec{ name = "Robert", custID = 99022 }
-            };
-            AnagramRec[] inner = new []
-            {
+            ];
+            AnagramRec[] inner =
+            [
                 new AnagramRec{ name = "miT", orderID = 43455, total = 10 },
                 new AnagramRec{ name = "Prakash", orderID = 323232, total = 9 }
-            };
-            JoinRec[] expected = new []
-            {
+            ];
+            JoinRec[] expected =
+            [
                 new JoinRec{ name = "Prakash", orderID = 323232, total = 9 },
                 new JoinRec{ name = "Tim", orderID = 43455, total = 10 }
-            };
+            ];
 
             Assert.Equal(expected, outer.Join(inner, e => e.name, e => e.name, createJoinRec, new AnagramEqualityComparer()));
         }
@@ -137,11 +136,11 @@ namespace Linqs.Tests
         public void OuterNull()
         {
             CustomerRec[] outer = null;
-            AnagramRec[] inner = new []
-            {
+            AnagramRec[] inner =
+            [
                 new AnagramRec{ name = "miT", orderID = 43455, total = 10 },
                 new AnagramRec{ name = "Prakash", orderID = 323232, total = 9 }
-            };
+            ];
 
             AssertExtensions.Throws<ArgumentNullException>("outer", () => outer.Join(inner, e => e.name, e => e.name, createJoinRec, new AnagramEqualityComparer()));
         }
@@ -149,12 +148,12 @@ namespace Linqs.Tests
         [Fact]
         public void InnerNull()
         {
-            CustomerRec[] outer = new []
-            {
+            CustomerRec[] outer =
+            [
                 new CustomerRec{ name = "Prakash", custID = 98022 },
                 new CustomerRec{ name = "Tim", custID = 99021 },
                 new CustomerRec{ name = "Robert", custID = 99022 }
-            };
+            ];
             AnagramRec[] inner = null;
 
             AssertExtensions.Throws<ArgumentNullException>("inner", () => outer.Join(inner, e => e.name, e => e.name, createJoinRec, new AnagramEqualityComparer()));
@@ -163,17 +162,17 @@ namespace Linqs.Tests
         [Fact]
         public void OuterKeySelectorNull()
         {
-            CustomerRec[] outer = new []
-            {
+            CustomerRec[] outer =
+            [
                 new CustomerRec{ name = "Prakash", custID = 98022 },
                 new CustomerRec{ name = "Tim", custID = 99021 },
                 new CustomerRec{ name = "Robert", custID = 99022 }
-            };
-            AnagramRec[] inner = new []
-            {
+            ];
+            AnagramRec[] inner =
+            [
                 new AnagramRec{ name = "miT", orderID = 43455, total = 10 },
                 new AnagramRec{ name = "Prakash", orderID = 323232, total = 9 }
-            };
+            ];
 
             AssertExtensions.Throws<ArgumentNullException>("outerKeySelector", () => outer.Join(inner, null, e => e.name, createJoinRec, new AnagramEqualityComparer()));
         }
@@ -181,17 +180,17 @@ namespace Linqs.Tests
         [Fact]
         public void InnerKeySelectorNull()
         {
-            CustomerRec[] outer = new []
-            {
+            CustomerRec[] outer =
+            [
                 new CustomerRec{ name = "Prakash", custID = 98022 },
                 new CustomerRec{ name = "Tim", custID = 99021 },
                 new CustomerRec{ name = "Robert", custID = 99022 }
-            };
-            AnagramRec[] inner = new []
-            {
+            ];
+            AnagramRec[] inner =
+            [
                 new AnagramRec{ name = "miT", orderID = 43455, total = 10 },
                 new AnagramRec{ name = "Prakash", orderID = 323232, total = 9 }
-            };
+            ];
 
             AssertExtensions.Throws<ArgumentNullException>("innerKeySelector", () => outer.Join(inner, e => e.name, null, createJoinRec, new AnagramEqualityComparer()));
         }
@@ -199,17 +198,17 @@ namespace Linqs.Tests
         [Fact]
         public void ResultSelectorNull()
         {
-            CustomerRec[] outer = new []
-            {
+            CustomerRec[] outer =
+            [
                 new CustomerRec{ name = "Prakash", custID = 98022 },
                 new CustomerRec{ name = "Tim", custID = 99021 },
                 new CustomerRec{ name = "Robert", custID = 99022 }
-            };
-            AnagramRec[] inner = new []
-            {
+            ];
+            AnagramRec[] inner =
+            [
                 new AnagramRec{ name = "miT", orderID = 43455, total = 10 },
                 new AnagramRec{ name = "Prakash", orderID = 323232, total = 9 }
-            };
+            ];
 
             AssertExtensions.Throws<ArgumentNullException>("resultSelector", () => outer.Join(inner, e => e.name, e => e.name, (Func<CustomerRec, AnagramRec, JoinRec>)null, new AnagramEqualityComparer()));
         }
@@ -218,11 +217,11 @@ namespace Linqs.Tests
         public void OuterNullNoComparer()
         {
             CustomerRec[] outer = null;
-            AnagramRec[] inner = new[]
-            {
+            AnagramRec[] inner =
+            [
                 new AnagramRec{ name = "miT", orderID = 43455, total = 10 },
                 new AnagramRec{ name = "Prakash", orderID = 323232, total = 9 }
-            };
+            ];
 
             AssertExtensions.Throws<ArgumentNullException>("outer", () => outer.Join(inner, e => e.name, e => e.name, createJoinRec));
         }
@@ -230,12 +229,12 @@ namespace Linqs.Tests
         [Fact]
         public void InnerNullNoComparer()
         {
-            CustomerRec[] outer = new[]
-            {
+            CustomerRec[] outer =
+            [
                 new CustomerRec{ name = "Prakash", custID = 98022 },
                 new CustomerRec{ name = "Tim", custID = 99021 },
                 new CustomerRec{ name = "Robert", custID = 99022 }
-            };
+            ];
             AnagramRec[] inner = null;
 
             AssertExtensions.Throws<ArgumentNullException>("inner", () => outer.Join(inner, e => e.name, e => e.name, createJoinRec));
@@ -244,17 +243,17 @@ namespace Linqs.Tests
         [Fact]
         public void OuterKeySelectorNullNoComparer()
         {
-            CustomerRec[] outer = new[]
-            {
+            CustomerRec[] outer =
+            [
                 new CustomerRec{ name = "Prakash", custID = 98022 },
                 new CustomerRec{ name = "Tim", custID = 99021 },
                 new CustomerRec{ name = "Robert", custID = 99022 }
-            };
-            AnagramRec[] inner = new[]
-            {
+            ];
+            AnagramRec[] inner =
+            [
                 new AnagramRec{ name = "miT", orderID = 43455, total = 10 },
                 new AnagramRec{ name = "Prakash", orderID = 323232, total = 9 }
-            };
+            ];
 
             AssertExtensions.Throws<ArgumentNullException>("outerKeySelector", () => outer.Join(inner, null, e => e.name, createJoinRec));
         }
@@ -262,17 +261,17 @@ namespace Linqs.Tests
         [Fact]
         public void InnerKeySelectorNullNoComparer()
         {
-            CustomerRec[] outer = new[]
-            {
+            CustomerRec[] outer =
+            [
                 new CustomerRec{ name = "Prakash", custID = 98022 },
                 new CustomerRec{ name = "Tim", custID = 99021 },
                 new CustomerRec{ name = "Robert", custID = 99022 }
-            };
-            AnagramRec[] inner = new[]
-            {
+            ];
+            AnagramRec[] inner =
+            [
                 new AnagramRec{ name = "miT", orderID = 43455, total = 10 },
                 new AnagramRec{ name = "Prakash", orderID = 323232, total = 9 }
-            };
+            ];
 
             AssertExtensions.Throws<ArgumentNullException>("innerKeySelector", () => outer.Join(inner, e => e.name, null, createJoinRec));
         }
@@ -280,17 +279,17 @@ namespace Linqs.Tests
         [Fact]
         public void ResultSelectorNullNoComparer()
         {
-            CustomerRec[] outer = new[]
-            {
+            CustomerRec[] outer =
+            [
                 new CustomerRec{ name = "Prakash", custID = 98022 },
                 new CustomerRec{ name = "Tim", custID = 99021 },
                 new CustomerRec{ name = "Robert", custID = 99022 }
-            };
-            AnagramRec[] inner = new[]
-            {
+            ];
+            AnagramRec[] inner =
+            [
                 new AnagramRec{ name = "miT", orderID = 43455, total = 10 },
                 new AnagramRec{ name = "Prakash", orderID = 323232, total = 9 }
-            };
+            ];
 
             AssertExtensions.Throws<ArgumentNullException>("resultSelector", () => outer.Join(inner, e => e.name, e => e.name, (Func<CustomerRec, AnagramRec, JoinRec>)null));
         }
@@ -298,9 +297,9 @@ namespace Linqs.Tests
         [Fact]
         public void SkipsNullElements()
         {
-            string[] outer = new [] { null, string.Empty };
-            string[] inner = new [] { null, string.Empty };
-            string[] expected = new [] { string.Empty };
+            string[] outer = [null, string.Empty];
+            string[] inner = [null, string.Empty];
+            string[] expected = [string.Empty];
 
             Assert.Equal(expected, outer.Join(inner, e => e, e => e, (x, y) => y, EqualityComparer<string>.Default));
         }
@@ -308,21 +307,21 @@ namespace Linqs.Tests
         [Fact]
         public void OuterNonEmptyInnerEmpty()
         {
-            CustomerRec[] outer = new []
-            {
+            CustomerRec[] outer =
+            [
                 new CustomerRec{ name = "Tim", custID = 43434 },
                 new CustomerRec{ name = "Bob", custID = 34093 }
-            };
-            OrderRec[] inner = { };
+            ];
+            OrderRec[] inner = [];
             Assert.Empty(outer.Join(inner, e => e.custID, e => e.custID, createJoinRec));
         }
 
         [Fact]
         public void SingleElementEachAndMatches()
         {
-            CustomerRec[] outer = new [] { new CustomerRec { name = "Prakash", custID = 98022 } };
-            OrderRec[] inner = new [] { new OrderRec { orderID = 45321, custID = 98022, total = 50 } };
-            JoinRec[] expected = new [] { new JoinRec { name = "Prakash", orderID = 45321, total = 50 } };
+            CustomerRec[] outer = [new CustomerRec { name = "Prakash", custID = 98022 }];
+            OrderRec[] inner = [new OrderRec { orderID = 45321, custID = 98022, total = 50 }];
+            JoinRec[] expected = [new JoinRec { name = "Prakash", orderID = 45321, total = 50 }];
 
             Assert.Equal(expected, outer.Join(inner, e => e.custID, e => e.custID, createJoinRec));
         }
@@ -330,44 +329,45 @@ namespace Linqs.Tests
         [Fact]
         public void SingleElementEachAndDoesntMatch()
         {
-            CustomerRec[] outer = new [] { new CustomerRec { name = "Prakash", custID = 98922 } };
-            OrderRec[] inner = new [] { new OrderRec { orderID = 45321, custID = 98022, total = 50 } };
+            CustomerRec[] outer = [new CustomerRec { name = "Prakash", custID = 98922 }];
+            OrderRec[] inner = [new OrderRec { orderID = 45321, custID = 98022, total = 50 }];
             Assert.Empty(outer.Join(inner, e => e.custID, e => e.custID, createJoinRec));
         }
 
         [Fact]
         public void SelectorsReturnNull()
         {
-            int?[] inner = { null, null, null };
-            int?[] outer = { null, null };
+            int?[] outer = [null, null];
+            int?[] inner = [null, null, null];
+
             Assert.Empty(outer.Join(inner, e => e, e => e, (x, y) => x));
         }
 
         [Fact]
         public void InnerSameKeyMoreThanOneElementAndMatches()
         {
-            CustomerRec[] outer = new []
-            {
+            CustomerRec[] outer =
+            [
                 new CustomerRec{ name = "Prakash", custID = 98022 },
                 new CustomerRec{ name = "Tim", custID = 99021 },
                 new CustomerRec{ name = "Robert", custID = 99022 }
-            };
-            OrderRec[] inner = new []
-            {
+            ];
+            OrderRec[] inner =
+            [
                 new OrderRec{ orderID = 45321, custID = 98022, total = 50 },
                 new OrderRec{ orderID = 45421, custID = 98022, total = 10 },
                 new OrderRec{ orderID = 43421, custID = 99022, total = 20 },
                 new OrderRec{ orderID = 85421, custID = 98022, total = 18 },
                 new OrderRec{ orderID = 95421, custID = 99021, total = 9 }
-            };
-            JoinRec[] expected = new []
-            {
+            ];
+            JoinRec[] expected =
+            [
                 new JoinRec{ name = "Prakash", orderID = 45321, total = 50 },
                 new JoinRec{ name = "Prakash", orderID = 45421, total = 10 },
                 new JoinRec{ name = "Prakash", orderID = 85421, total = 18 },
                 new JoinRec{ name = "Tim", orderID = 95421, total = 9 },
                 new JoinRec{ name = "Robert", orderID = 43421, total = 20 }
-            };
+            ];
 
             Assert.Equal(expected, outer.Join(inner, e => e.custID, e => e.custID, createJoinRec));
         }
@@ -375,26 +375,26 @@ namespace Linqs.Tests
         [Fact]
         public void OuterSameKeyMoreThanOneElementAndMatches()
         {
-            CustomerRec[] outer = new []
-            {
+            CustomerRec[] outer =
+            [
                 new CustomerRec{ name = "Prakash", custID = 98022 },
                 new CustomerRec{ name = "Bob", custID = 99022 },
                 new CustomerRec{ name = "Tim", custID = 99021 },
                 new CustomerRec{ name = "Robert", custID = 99022 }
-            };
-            OrderRec[] inner = new []
-            {
+            ];
+            OrderRec[] inner =
+            [
                 new OrderRec{ orderID = 45321, custID = 98022, total = 50 },
                 new OrderRec{ orderID = 43421, custID = 99022, total = 20 },
                 new OrderRec{ orderID = 95421, custID = 99021, total = 9 }
-            };
-            JoinRec[] expected = new []
-            {
+            ];
+            JoinRec[] expected =
+            [
                 new JoinRec{ name = "Prakash", orderID = 45321, total = 50 },
                 new JoinRec{ name = "Bob", orderID = 43421, total = 20 },
                 new JoinRec{ name = "Tim", orderID = 95421, total = 9 },
                 new JoinRec{ name = "Robert", orderID = 43421, total = 20 }
-            };
+            ];
 
             Assert.Equal(expected, outer.Join(inner, e => e.custID, e => e.custID, createJoinRec));
         }
@@ -402,29 +402,151 @@ namespace Linqs.Tests
         [Fact]
         public void NoMatches()
         {
-            CustomerRec[] outer = new []
-            {
+            CustomerRec[] outer =
+            [
                 new CustomerRec{ name = "Prakash", custID = 98022 },
                 new CustomerRec{ name = "Bob", custID = 99022 },
                 new CustomerRec{ name = "Tim", custID = 99021 },
                 new CustomerRec{ name = "Robert", custID = 99022 }
-            };
-            OrderRec[] inner = new []
-            {
+            ];
+            OrderRec[] inner =
+            [
                 new OrderRec{ orderID = 45321, custID = 18022, total = 50 },
                 new OrderRec{ orderID = 43421, custID = 29022, total = 20 },
                 new OrderRec{ orderID = 95421, custID = 39021, total = 9 }
-            };
+            ];
             Assert.Empty(outer.Join(inner, e => e.custID, e => e.custID, createJoinRec));
         }
 
-        [Fact]
+        [Fact(Skip = "CISTERN.VALUELINQ: Can't cast an enumerable to an enumerator")]
         public void ForcedToEnumeratorDoesntEnumerate()
         {
+#if !CISTERN_VALUELINQ
             var iterator = NumberRangeGuaranteedNotCollectionType(0, 3).Join(Enumerable.Empty<int>(), i => i, i => i, (o, i) => i);
             // Don't insist on this behaviour, but check it's correct if it happens
             var en = iterator as IEnumerator<int>;
-            Assert.False(en != null && en.MoveNext());
+            Assert.False(en is not null && en.MoveNext());
+#endif
+        }
+
+        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        public void TupleJoin_Basic()
+        {
+#if !CISTERN_VALUELINQ
+            CustomerRec[] outer =
+            [
+                new CustomerRec{ name = "Prakash", custID = 98022 },
+                new CustomerRec{ name = "Tim", custID = 99021 },
+                new CustomerRec{ name = "Robert", custID = 99022 }
+            ];
+            OrderRec[] inner =
+            [
+                new OrderRec{ orderID = 45321, custID = 99022, total = 50 },
+                new OrderRec{ orderID = 43421, custID = 29022, total = 20 },
+                new OrderRec{ orderID = 95421, custID = 98022, total = 9 }
+            ];
+
+            var result = outer.Join(inner, o => o.custID, i => i.custID);
+
+            var expected = outer.Join(inner, o => o.custID, i => i.custID, (o, i) => (Outer: o, Inner: i));
+
+            Assert.Equal(expected, result);
+#endif
+        }
+
+        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        public void TupleJoin_EmptyOuter()
+        {
+#if !CISTERN_VALUELINQ
+            CustomerRec[] outer = [];
+            OrderRec[] inner =
+            [
+                new OrderRec{ orderID = 45321, custID = 98022, total = 50 }
+            ];
+
+            Assert.Empty(outer.Join(inner, o => o.custID, i => i.custID));
+#endif
+        }
+
+        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        public void TupleJoin_EmptyInner()
+        {
+#if !CISTERN_VALUELINQ
+            CustomerRec[] outer =
+            [
+                new CustomerRec{ name = "Prakash", custID = 98022 }
+            ];
+            OrderRec[] inner = [];
+
+            Assert.Empty(outer.Join(inner, o => o.custID, i => i.custID));
+#endif
+        }
+
+        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        public void TupleJoin_WithComparer()
+        {
+#if !CISTERN_VALUELINQ
+            CustomerRec[] outer =
+            [
+                new CustomerRec{ name = "Prakash", custID = 98022 },
+                new CustomerRec{ name = "Tim", custID = 99021 }
+            ];
+            AnagramRec[] inner =
+            [
+                new AnagramRec{ name = "miT", orderID = 43455, total = 10 },
+                new AnagramRec{ name = "Prakash", orderID = 323232, total = 9 }
+            ];
+
+            var result = outer.Join(inner, o => o.name, i => i.name, new AnagramEqualityComparer());
+
+            Assert.Equal(2, result.Count());
+            Assert.Contains(result, r => r.Outer.name == "Prakash" && r.Inner.name == "Prakash");
+            Assert.Contains(result, r => r.Outer.name == "Tim" && r.Inner.name == "miT");
+#endif
+        }
+
+        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        public void TupleJoin_OuterNull()
+        {
+#if !CISTERN_VALUELINQ
+            CustomerRec[] outer = null;
+            OrderRec[] inner = [new OrderRec{ orderID = 45321, custID = 98022, total = 50 }];
+
+            AssertExtensions.Throws<ArgumentNullException>("outer", () => outer.Join(inner, o => o.custID, i => i.custID));
+#endif
+        }
+
+        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        public void TupleJoin_InnerNull()
+        {
+#if !CISTERN_VALUELINQ
+            CustomerRec[] outer = [new CustomerRec{ name = "Prakash", custID = 98022 }];
+            OrderRec[] inner = null;
+
+            AssertExtensions.Throws<ArgumentNullException>("inner", () => outer.Join(inner, o => o.custID, i => i.custID));
+#endif
+        }
+
+        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        public void TupleJoin_OuterKeySelectorNull()
+        {
+#if !CISTERN_VALUELINQ
+            CustomerRec[] outer = [new CustomerRec{ name = "Prakash", custID = 98022 }];
+            OrderRec[] inner = [new OrderRec{ orderID = 45321, custID = 98022, total = 50 }];
+
+            AssertExtensions.Throws<ArgumentNullException>("outerKeySelector", () => outer.Join(inner, (Func<CustomerRec, int>)null, i => i.custID));
+#endif
+        }
+
+        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        public void TupleJoin_InnerKeySelectorNull()
+        {
+#if !CISTERN_VALUELINQ
+            CustomerRec[] outer = [new CustomerRec{ name = "Prakash", custID = 98022 }];
+            OrderRec[] inner = [new OrderRec{ orderID = 45321, custID = 98022, total = 50 }];
+
+            AssertExtensions.Throws<ArgumentNullException>("innerKeySelector", () => outer.Join(inner, o => o.custID, (Func<OrderRec, int>)null));
+#endif
         }
     }
 }

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <RootNamespace>Cistern.Benchmarks</RootNamespace>
   </PropertyGroup>
 
@@ -15,12 +15,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
+    <!-- Reports\Report.cs is a file-based program (dotnet run Report.cs), compiled on its own; the folder is listed, not built. -->
+    <Compile Remove="Reports\**" />
+    <None Include="Reports\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.16.0-preview.2" />
     <PackageReference Include="Cistern.Linq" Version="0.1.1" />
     <PackageReference Include="LinqAF" Version="3.0.0" />
-    <PackageReference Include="NetFabric.Hyperlinq" Version="3.0.0-beta26" />
-    <PackageReference Include="StructLinq.BCL" Version="0.20.3" />
-    <PackageReference Include="System.Collections.Immutable" Version="1.7.1" />
+    <PackageReference Include="NetFabric.Hyperlinq" Version="3.0.0-beta48" />
+    <PackageReference Include="StructLinq.BCL" Version="0.25.3" />
+    <PackageReference Include="ZLinq" Version="1.6.1" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,10 +1,12 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using Xunit;
+using Xunit.Sdk;
 
 #if CISTERN_LINQ
 using Cistern.Linq;
@@ -20,7 +22,7 @@ namespace Linqs.Tests
     {
         protected class TestCollection<T> : ICollection<T>
         {
-            public T[] Items = new T[0];
+            public T[] Items;
             public int CountTouched = 0;
             public int CopyToTouched = 0;
             public TestCollection(T[] items) { Items = items; }
@@ -36,9 +38,25 @@ namespace Linqs.Tests
             IEnumerator IEnumerable.GetEnumerator() => Items.GetEnumerator();
         }
 
+        protected class TestNonGenericCollection<T> : ICollection, IEnumerable<T>
+        {
+            public T[] Items;
+            public int CountTouched = 0;
+
+            public TestNonGenericCollection(T[] items) => Items = items;
+
+            public virtual int Count { get { CountTouched++; return Items.Length; } }
+            public bool IsSynchronized => false;
+            public object SyncRoot => this;
+            public void CopyTo(Array array, int index) => throw new NotImplementedException();
+
+            public IEnumerator<T> GetEnumerator() => ((IEnumerable<T>)Items).GetEnumerator();
+            IEnumerator IEnumerable.GetEnumerator() => Items.GetEnumerator();
+        }
+
         protected class TestEnumerable<T> : IEnumerable<T>
         {
-            public T[] Items = new T[0];
+            public T[] Items;
             public TestEnumerable(T[] items) { Items = items; }
 
             public IEnumerator<T> GetEnumerator() => ((IEnumerable<T>)Items).GetEnumerator();
@@ -47,7 +65,7 @@ namespace Linqs.Tests
 
         protected class TestReadOnlyCollection<T> : IReadOnlyCollection<T>
         {
-            public T[] Items = new T[0];
+            public T[] Items;
             public int CountTouched = 0;
             public TestReadOnlyCollection(T[] items) { Items = items; }
 
@@ -80,7 +98,7 @@ namespace Linqs.Tests
             public bool Equals(string x, string y)
             {
                 if (ReferenceEquals(x, y)) return true;
-                if (x == null | y == null) return false;
+                if (x is null | y is null) return false;
                 int length = x.Length;
                 if (length != y.Length) return false;
                 using (var en = x.OrderBy(i => i).GetEnumerator())
@@ -96,7 +114,7 @@ namespace Linqs.Tests
 
             public int GetHashCode(string obj)
             {
-                if (obj == null) return 0;
+                if (obj is null) return 0;
                 int hash = obj.Length;
                 foreach (char c in obj)
                     hash ^= c;
@@ -236,6 +254,29 @@ namespace Linqs.Tests
             return source is ICollection<T> ? ForceNotCollection(source) : new List<T>(source);
         }
 
+        protected static T[] Repeat<T>(Func<int, T> factory, int count)
+        {
+            T[] results = new T[count];
+            for (int index = 0; index < results.Length; index++)
+            {
+                results[index] = factory(index);
+            }
+
+            return results;
+        }
+
+        protected static IEnumerable<T> ListPartitionOrEmpty<T>(IList<T> source) // Or Empty
+        {
+            var listPartition = source.Skip(0);
+            return listPartition;
+        }
+
+        protected static IEnumerable<T> EnumerablePartitionOrEmpty<T>(IEnumerable<T> source) // Or Empty
+        {
+            var enumerablePartition = ForceNotCollection(source).Skip(0);
+            return enumerablePartition;
+        }
+
         protected struct StringWithIntArray
         {
             public string name { get; set; }
@@ -263,7 +304,11 @@ namespace Linqs.Tests
                 ContainsWorker = item => false;
                 RemoveWorker = item => false;
                 CopyToWorker = (array, arrayIndex) => { };
+#if CISTERN_VALUELINQ
                 GetEnumeratorWorker = () => ((IEnumerable<T>)Enumerable.Empty<T>()).GetEnumerator();
+#else
+                GetEnumeratorWorker = () => Enumerable.Empty<T>().GetEnumerator();
+#endif
                 NonGenericGetEnumeratorWorker = () => GetEnumeratorWorker();
             }
 
@@ -278,22 +323,99 @@ namespace Linqs.Tests
             IEnumerator IEnumerable.GetEnumerator() => NonGenericGetEnumeratorWorker();
         }
 
-        protected static List<Func<IEnumerable<T>, IEnumerable<T>>> IdentityTransforms<T>()
+        protected static IEnumerable<IEnumerable<T>> CreateSources<T>(IEnumerable<T> source)
         {
-            // All of these transforms should take an enumerable and produce
-            // another enumerable with the same contents.
-            return new List<Func<IEnumerable<T>, IEnumerable<T>>>
+            foreach (Func<IEnumerable<T>, IEnumerable<T>> t in IdentityTransforms<T>())
             {
-                e => e,
-                e => e.ToArray(),
-                e => e.ToList(),
+                yield return t(source);
+            }
+        }
+
+        protected static IEnumerable<Func<IEnumerable<T>, IEnumerable<T>>> IdentityTransforms<T>()
+        {
+            // Various collection types all representing the same source.
+            List<Func<IEnumerable<T>, IEnumerable<T>>> sources =
+            [
+                e => e, // original
+                e => e.ToArray(), // T[]
+                e => e.ToList(), // List<T>
+                e => new ReadOnlyCollection<T>(e.ToArray()), // IList<T> that's not List<T>/T[]
+                e => new TestCollection<T>(e.ToArray()), // ICollection<T> that's not IList<T>
+                e => new TestReadOnlyCollection<T>(e.ToArray()), // IReadOnlyCollection<T> that's not ICollection<T>
+                e => ForceNotCollection(e), // IEnumerable<T> with no other interfaces
+            ];
+            if (typeof(T) == typeof(char))
+            {
+                sources.Add(e => (IEnumerable<T>)(object)string.Concat((IEnumerable<char>)(object)e)); // string
+            }
+
+            // Various transforms that all yield the same elements as the source.
+            List<Func<IEnumerable<T>, IEnumerable<T>>> transforms =
+            [
+                // Append
+                e =>
+                {
+                    T[] values = e.ToArray();
+#if CISTERN_VALUELINQ
+                    return values.Length == 0 ? [] : (IEnumerable<T>)values[0..^1].Append(values[^1]);
+#else
+                    return values.Length == 0 ? [] : values[0..^1].Append(values[^1]);
+#endif
+                },
+
+                // Concat
+                e => e.Concat(ForceNotCollection<T>([])),
+                e => ForceNotCollection<T>([]).Concat(e),
+
+                // Prepend
+                e =>
+                {
+                    T[] values = e.ToArray();
+#if CISTERN_VALUELINQ
+                    return values.Length == 0 ? [] : (IEnumerable<T>)values[1..].Prepend(values[0]);
+#else
+                    return values.Length == 0 ? [] : values[1..].Prepend(values[0]);
+#endif
+                },
+
+                // Reverse
+                e => e.Reverse().Reverse(),
+
+                // Select
                 e => e.Select(i => i),
-                e => e.Concat(Array.Empty<T>()),
-                e => ForceNotCollection(e),
-                e => e.Concat(ForceNotCollection(Array.Empty<T>())),
+
+                // SelectMany
+                e => e.SelectMany<T, T>(i => [i]),
+
+                // Take
+                e => e.Take(int.MaxValue),
+                e => e.TakeLast(int.MaxValue),
+                e => e.TakeWhile(i => true),
+
+                // Skip
+                e => e.SkipWhile(i => false),
+
+                // Where
                 e => e.Where(i => true),
-                e => ForceNotCollection(e).Skip(0)
-            };
+            ];
+
+            foreach (Func<IEnumerable<T>, IEnumerable<T>> source in sources)
+            {
+                // Yield the source itself.
+                yield return source;
+
+                foreach (Func<IEnumerable<T>, IEnumerable<T>> transform in transforms)
+                {
+                    // Yield a single transform on the source
+                    yield return e => transform(source(e));
+
+                    foreach (Func<IEnumerable<T>, IEnumerable<T>> transform2 in transforms)
+                    {
+                        // Yield a second transform on the first transform on the source.
+                        yield return e => transform2(transform(source(e)));
+                    }
+                }
+            }
         }
 
         protected sealed class DelegateIterator<TSource> : IEnumerable<TSource>, IEnumerator<TSource>
@@ -337,6 +459,65 @@ namespace Linqs.Tests
             void IEnumerator.Reset() => _reset();
 
             void IDisposable.Dispose() => _dispose();
+        }
+
+        protected sealed class DisposeTrackingList<T> : IList<T>, IReadOnlyList<T>
+        {
+            private readonly List<T> _list;
+            private int _disposeCalls;
+
+            public DisposeTrackingList(T[] items)
+            {
+                _list = [.. items];
+            }
+
+            public int DisposeCalls => _disposeCalls;
+
+            public T this[int index]
+            {
+                get => _list[index];
+                set => _list[index] = value;
+            }
+
+            public int Count => _list.Count;
+
+            public bool IsReadOnly => false;
+
+            public void Add(T item) => _list.Add(item);
+            public void Clear() => _list.Clear();
+            public bool Contains(T item) => _list.Contains(item);
+            public void CopyTo(T[] array, int arrayIndex) => _list.CopyTo(array, arrayIndex);
+            public int IndexOf(T item) => _list.IndexOf(item);
+            public void Insert(int index, T item) => _list.Insert(index, item);
+            public bool Remove(T item) => _list.Remove(item);
+            public void RemoveAt(int index) => _list.RemoveAt(index);
+
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+            public IEnumerator<T> GetEnumerator() => new DisposeTrackingEnumerator(this);
+
+            private sealed class DisposeTrackingEnumerator : IEnumerator<T>
+            {
+                private readonly DisposeTrackingList<T> _parent;
+                private readonly IEnumerator<T> _enumerator;
+
+                public DisposeTrackingEnumerator(DisposeTrackingList<T> parent)
+                {
+                    _parent = parent;
+                    _enumerator = parent._list.GetEnumerator();
+                }
+
+                public T Current => _enumerator.Current;
+                object? IEnumerator.Current => Current;
+                public bool MoveNext() => _enumerator.MoveNext();
+                public void Reset() => throw new NotSupportedException();
+
+                public void Dispose()
+                {
+                    _parent._disposeCalls++;
+                    _enumerator.Dispose();
+                }
+            }
         }
     }
 }

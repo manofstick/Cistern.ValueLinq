@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // In SDK-style projects such as this one, several assembly attributes that were historically
@@ -15,5 +16,7 @@ using System.Runtime.InteropServices;
 // The following GUID is for the ID of the typelib if this project is exposed to COM.
 
 [assembly: Guid("15aa0269-d7c7-4e45-a8e3-bbc5f77df6c3")]
+
+[assembly: InternalsVisibleTo("Cistern.ValueLinq.Tests")]
 
 [module: System.Runtime.CompilerServices.SkipLocalsInit]

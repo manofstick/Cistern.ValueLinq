@@ -1,11 +1,13 @@
 ﻿using Cistern.ValueLinq.Maths;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 
 namespace Cistern.ValueLinq.Aggregation
 {
-    struct Min<T>
+    [Aggregator]
+    partial struct Min<T>
         : IPushEnumerator<T>
     {
         private static IComparer<T> comparer =
@@ -13,16 +15,33 @@ namespace Cistern.ValueLinq.Aggregation
                 ? (IComparer<T>)StringComparer.CurrentCulture
                 : Comparer<T>.Default;
 
-        private T result;
+        private T? result;
         private bool noData;
 
-        public Min(bool _) => (noData, result) = (true, default);
+        public Min(bool _)
+        {
+            noData = true;
+            result = default;
+        }
 
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
-        public void Dispose() { }
-        public TResult GetResult<TResult>() => (TResult)(object)GetResult();
-        
-        public T GetResult()
+        // a reference type with no SIMD path is left to the element loop
+        static BatchKinds IPushEnumerator<T>.AllowBatchesWhen =>
+            SIMD.HasExtremum<T>() || default(T) != null
+                ? BatchKinds.Container | BatchKinds.Forwarder | BatchKinds.ColdSpan
+                : BatchKinds.None;
+
+        bool IPushEnumerator<T>.ProcessBatch(scoped ref Batch<T> batch)
+        {
+            var span = batch.GetSpan();
+            if (SIMD.HasExtremum<T>())
+                return SIMD.Extremum(span, least: true, ref result!, ref noData);
+
+            return DefaultComparerExtremum.Min(span, ref result!, ref noData);
+        }
+
+        public TPushResult GetResult<TPushResult>() => Impl.ResultCast<T?, TPushResult>(GetResult());
+
+        public T? GetResult()
         {
             if (noData && default(T) != null)
                 ThrowHelper.ThrowNoElementsException();
@@ -37,6 +56,11 @@ namespace Cistern.ValueLinq.Aggregation
                 noData = false;
                 result = input;
             }
+            else if (default(T) != null)
+            {
+                if (Comparer<T>.Default.Compare(input, result!) < 0)
+                    result = input;
+            }
             else
             {
                 if (result == null || (input != null && comparer.Compare(input, result) < 0))
@@ -46,35 +70,161 @@ namespace Cistern.ValueLinq.Aggregation
         }
     }
 
-    struct Min<T, Accumulator, Quotient, Math>
-        : IPushEnumerator<T>
-        where T : struct
-        where Accumulator : struct
-        where Quotient : struct
-        where Math : struct, IMathsOperations<T, Accumulator, Quotient>
+    // a value type compared through Comparer<T>.Default called directly, which the JIT devirtualizes and inlines, as
+    // System.Linq compares one; the span runs from locals: Docs/BatchFromLocalCopy.md, "The fix"
+    static class DefaultComparerExtremum
     {
-        static Math math = default;
+        internal static bool Min<T>(ReadOnlySpan<T> span, ref T result, ref bool noData)
+        {
+            if (span.IsEmpty)
+                return true;
 
+            var local = result;
+            var i = 0;
+            if (noData)
+            {
+                noData = false;
+                local = span[0];
+                i = 1;
+            }
+
+            for (; i < span.Length; ++i)
+            {
+                if (Comparer<T>.Default.Compare(span[i], local) < 0)
+                    local = span[i];
+            }
+
+            result = local;
+
+            return true;
+        }
+
+        internal static bool Max<T>(ReadOnlySpan<T> span, ref T result, ref bool noData)
+        {
+            if (span.IsEmpty)
+                return true;
+
+            var local = result;
+            var i = 0;
+            if (noData)
+            {
+                noData = false;
+                local = span[0];
+                i = 1;
+            }
+
+            for (; i < span.Length; ++i)
+            {
+                if (Comparer<T>.Default.Compare(span[i], local) > 0)
+                    local = span[i];
+            }
+
+            result = local;
+
+            return true;
+        }
+    }
+
+    // float and double stay off SIMD.Min: Vector.Min returns -0.0 for a -0.0 and a +0.0, where Comparer<T>.Default
+    // ties them and keeps the first, as System.Linq's comparer form does
+    [Aggregator]
+    partial struct MinComparer<T>
+        : IPushEnumerator<T>
+    {
+        private readonly IComparer<T> _comparer;
+        private T? _result;
+        private bool _noData;
+
+        public MinComparer(IComparer<T>? comparer)
+        {
+            _comparer = comparer ?? Comparer<T>.Default;
+            _result = default;
+            _noData = true;
+        }
+
+        static BatchKinds IPushEnumerator<T>.AllowBatchesWhen => BatchKinds.Container | BatchKinds.Forwarder | BatchKinds.ColdSpan;
+
+        // the span runs from locals: Docs/BatchFromLocalCopy.md, "The fix"
+        bool IPushEnumerator<T>.ProcessBatch(scoped ref Batch<T> batch)
+        {
+            var span = batch.GetSpan();
+            if (SIMD.HasExtremum<T>() && ReferenceEquals(_comparer, Comparer<T>.Default))
+                return SIMD.Extremum(span, least: true, ref _result!, ref _noData);
+
+            if (span.IsEmpty)
+                return true;
+
+            var comparer = _comparer;
+            var result = _result;
+            var i = 0;
+
+            if (_noData)
+            {
+                _noData = false;
+                result = span[0];
+                i = 1;
+            }
+
+            for (; i < span.Length; ++i)
+            {
+                var input = span[i];
+                if (result == null || (input != null && comparer.Compare(input, result) < 0))
+                    result = input;
+            }
+
+            _result = result;
+
+            return true;
+        }
+
+        public TPushResult GetResult<TPushResult>() => Impl.ResultCast<T?, TPushResult>(GetResult());
+
+        public T? GetResult()
+        {
+            if (_noData && default(T) != null)
+                ThrowHelper.ThrowNoElementsException();
+
+            return _result;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool ProcessNext(T input)
+        {
+            if (_noData)
+            {
+                _noData = false;
+                _result = input;
+            }
+            else if (_result == null || (input != null && _comparer.Compare(input, _result) < 0))
+            {
+                _result = input;
+            }
+
+            return true;
+        }
+    }
+
+    [Aggregator]
+    partial struct MinNumber<T>
+        : IPushEnumerator<T>
+        where T : struct, INumber<T>
+    {
         private T _result;
         private bool _noData;
 
-        public Min(bool _) => (_noData, _result) = (true, math.MinInit);
-
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request)
+        public MinNumber(bool _)
         {
-            if (typeof(TRequest) == typeof(Containers.GetSpan<TObject, T>))
-            {
-                var getSpan = (Containers.GetSpan<TObject, T>)(object)request;
-                return ProcessBatch(getSpan(obj));
-            }
-            return BatchProcessResult.Unavailable;
+            _noData = true;
+            _result = default;
         }
 
-        private BatchProcessResult ProcessBatch(ReadOnlySpan<T> source)
-            => SIMD.Min<T, Accumulator, Quotient, Math>(source, ref _result, ref _noData);
+        static BatchKinds IPushEnumerator<T>.AllowBatchesWhen => BatchKinds.Container | BatchKinds.Forwarder | BatchKinds.ColdSpan;
+        bool IPushEnumerator<T>.ProcessBatch(scoped ref Batch<T> batch) => ProcessSpan(batch.GetSpan());
 
-        public void Dispose() { }
-        public TResult GetResult<TResult>() => (TResult)(object)GetResult();
+        private bool ProcessSpan(ReadOnlySpan<T> source)
+            => SIMD.Min(source, ref _result, ref _noData);
+
+        public TPushResult GetResult<TPushResult>() => (TPushResult)(object)GetResult();
         public T GetResult()
         {
             if (_noData)
@@ -85,35 +235,36 @@ namespace Cistern.ValueLinq.Aggregation
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ProcessNext(T input)
         {
-            _noData = false;
-            if (math.IsNaN(input))
+            if (_noData || input < _result)
             {
-                _result = math.NaN;
+                _noData = false;
+                _result = input;
+                return !T.IsNaN(input);
+            }
+            if (T.IsNaN(input))
+            {
+                _result = input;
                 return false;
             }
-            if (math.LessThan(input, _result))
-                _result = input;
             return true;
         }
     }
 
-    struct MinNullable<T, Accumulator, Quotient, Math>
+    [Aggregator]
+    partial struct MinNumberNullable<T>
         : IPushEnumerator<T?>
-        where T : struct
-        where Accumulator : struct
-        where Quotient : struct
-        where Math : struct, IMathsOperations<T, Accumulator, Quotient>
+        where T : struct, INumber<T>
     {
-        static Math math = default;
-
         private T result;
         private bool noData;
 
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
-        public void Dispose() { }
-        public MinNullable(bool _) => (noData, result) = (true, math.MinInit);
+        public MinNumberNullable(bool _)
+        {
+            noData = true;
+            result = default;
+        }
 
-        public TResult GetResult<TResult>() => (TResult)(object)GetResult();
+        public TPushResult GetResult<TPushResult>() => Impl.ResultCast<T?, TPushResult>(GetResult());
 
         public T? GetResult() => noData ? (T?)null : result;
 
@@ -122,14 +273,18 @@ namespace Cistern.ValueLinq.Aggregation
         {
             if (input.HasValue)
             {
-                noData = false;
-                if (math.IsNaN(input.Value))
+                var value = input.GetValueOrDefault();
+                if (noData || value < result)
                 {
-                    result = math.NaN;
+                    noData = false;
+                    result = value;
+                    return !T.IsNaN(value);
+                }
+                if (T.IsNaN(value))
+                {
+                    result = value;
                     return false;
                 }
-                if (math.LessThan(input.Value, result))
-                    result = input.Value;
             }
             return true;
         }

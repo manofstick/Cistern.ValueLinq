@@ -40,6 +40,7 @@ namespace Cistern.ValueLinq
                 case ExceptionArgument.index: return nameof(ExceptionArgument.index);
                 case ExceptionArgument.inner: return nameof(ExceptionArgument.inner);
                 case ExceptionArgument.innerKeySelector: return nameof(ExceptionArgument.innerKeySelector);
+                case ExceptionArgument.key: return nameof(ExceptionArgument.key);
                 case ExceptionArgument.keySelector: return nameof(ExceptionArgument.keySelector);
                 case ExceptionArgument.outer: return nameof(ExceptionArgument.outer);
                 case ExceptionArgument.outerKeySelector: return nameof(ExceptionArgument.outerKeySelector);
@@ -72,6 +73,7 @@ namespace Cistern.ValueLinq
         index,
         inner,
         innerKeySelector,
+        key,
         keySelector,
         outer,
         outerKeySelector,

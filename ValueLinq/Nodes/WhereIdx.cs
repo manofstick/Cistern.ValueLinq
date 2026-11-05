@@ -1,82 +1,29 @@
-﻿using Cistern.ValueLinq.Containers;
+﻿namespace Cistern.ValueLinq.Nodes;
+
+using Cistern.ValueLinq.Containers;
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 
-namespace Cistern.ValueLinq.Nodes
+public static partial class WhereIdx
 {
-    struct WhereIdxNodeEnumerator<TIn, TInEnumerator>
-        : IPullEnumerator<TIn>
-        where TInEnumerator : IPullEnumerator<TIn>
-    {
-        private TInEnumerator _enumerator;
-        private Func<TIn, int, bool> _filter;
-        private int _idx;
-
-        public WhereIdxNodeEnumerator(in TInEnumerator enumerator, Func<TIn, int, bool> filter) => (_enumerator, _filter, _idx) = (enumerator, filter, 0);
-
-        public void Dispose() => _enumerator.Dispose();
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryGetNext(out TIn current)
-        {
-            while(_enumerator.TryGetNext(out current))
-            {
-                if (_filter(current, _idx++))
-                    return true;
-            }
-            return false;
-        }
-    }
-
-    public struct WhereIdxNode<T, NodeT>
+    [Operator]
+    public partial struct Node<T, NodeT>
         : INode<T>
         where NodeT : INode<T>
     {
-        private NodeT _nodeT;
-        private Func<T, int, bool> _filter;
+        internal NodeT _nodeT;
+        [Propagate] internal Func<T, int, bool> _predicate;
 
         public void GetCountInformation(out CountInformation info)
         {
             _nodeT.GetCountInformation(out info);
             info.ActualLengthIsMaximumLength &= info.MaximumLength == 0;
         }
-
-        public WhereIdxNode(in NodeT nodeT, Func<T, int, bool> predicate) => (_nodeT, _filter) = (nodeT, predicate);
-
-        CreationType INode.CreateViaPullDescend<CreationType, TNodes>(ref TNodes nodes)
-            => Nodes<CreationType>.Descend(ref _nodeT, in this, in nodes);
-
-        CreationType INode.CreateViaPullAscent<CreationType, EnumeratorElement, Enumerator, Tail>(ref Tail tail, ref Enumerator enumerator)
-        {
-            var nextEnumerator = new WhereIdxNodeEnumerator<EnumeratorElement, Enumerator>(in enumerator, (Func<EnumeratorElement, int, bool>)(object)_filter);
-            return tail.CreateObject<CreationType, EnumeratorElement, WhereIdxNodeEnumerator<EnumeratorElement, Enumerator>>(ref nextEnumerator);
-        }
-
-        bool INode.TryPullOptimization<TRequest, CreationType, Tail>(in TRequest request, ref Tail tail, out CreationType creation)
-        {
-            creation = default;
-            return false;
-        }
-
-        bool INode.TryPushOptimization<TRequest, TResult>(in TRequest request, out TResult result) { result = default; return false; }
-        TResult INode<T>.CreateViaPush<TResult, TPushEnumerator>(in TPushEnumerator fenum) =>
-            _nodeT.CreateViaPush<TResult, WhereIdxFoward<T, TPushEnumerator>>(new WhereIdxFoward<T, TPushEnumerator>(fenum, _filter));
     }
 
-    struct WhereIdxFoward<T, Next>
-        : IPushEnumerator<T>
-        where Next : IPushEnumerator<T>
+    partial struct Push<T, Next>
     {
-        Next _next;
-        Func<T, int, bool> _predicate;
         int _idx;
-
-        public WhereIdxFoward(in Next prior, Func<T, int, bool> predicate) => (_next, _predicate, _idx) = (prior, predicate, 0);
-
-        public BatchProcessResult TryProcessBatch<TObject, TRequest>(TObject obj, in TRequest request) => BatchProcessResult.Unavailable;
-        public void Dispose() => _next.Dispose();
-        public TResult GetResult<TResult>() => _next.GetResult<TResult>();
 
         public bool ProcessNext(T input)
         {
@@ -84,5 +31,28 @@ namespace Cistern.ValueLinq.Nodes
                 return _next.ProcessNext(input);
             return true;
         }
+    }
+
+    public partial struct Pull<T, NodeT, TInEnumerator>
+    {
+        int _idx;
+
+        [AllowNull] private T _current;
+
+        public bool MoveNext()
+        {
+            while (_enumerator.MoveNext())
+            {
+                var current = _enumerator.Current;
+                if (_predicate(current, _idx++))
+                {
+                    _current = current;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public T Current => _current;
     }
 }

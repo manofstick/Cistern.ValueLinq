@@ -8,7 +8,7 @@ namespace Cistern.Benchmarks.ImmutableArray
     partial class WhereSelectToList
     {
         [Benchmark]
-        public List<double> HyperLinq() => _double.AsSpan().Where(x => x > 0).Select(x => x + 1).ToList();
+        public List<double> HyperLinq() => _double.AsSpan().AsValueEnumerable().Where(x => x > 0).Select(x => x + 1).ToList();
     }
 #endif
 }

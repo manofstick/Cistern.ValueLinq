@@ -1,19 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
-#if CISTERN_LINQ
-using Cistern.Linq;
-#elif CISTERN_VALUELINQ
-using Cistern.ValueLinq;
-#else
-using System.Linq;
-#endif
-
-namespace Linqs.Tests.TestUtilities
+namespace Xunit
 {
+    // Stand-in for the runtime repo's attribute of the same name, which marks a test for its outer-loop runs only.
     class OuterLoopAttribute : Attribute
     {
+        public OuterLoopAttribute() { }
         public OuterLoopAttribute(string ignore) { }
     }
 }

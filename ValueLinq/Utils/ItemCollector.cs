@@ -10,19 +10,23 @@ namespace Cistern.ValueLinq.Utils
         void Free(T[] array);
     }
 
-    struct ArrayPoolAllocator<T>
+    readonly struct ArrayPoolAllocator<T>
         : IArrayAllocator<T>
     {
-        ArrayPool<T> _pool;
-        bool _cleanBuffers;
+        readonly ArrayPool<T> _pool;
+        readonly bool _cleanBuffers;
 
-        public ArrayPoolAllocator(ArrayPool<T> pool, bool cleanBuffers) => (_pool, _cleanBuffers) = (pool, cleanBuffers);
+        public ArrayPoolAllocator(ArrayPool<T> pool, bool cleanBuffers)
+        {
+            _pool = pool;
+            _cleanBuffers = cleanBuffers;
+        }
 
         public T[] Alloc(int minimumSize) => _pool.Rent(minimumSize);
         public void Free(T[] array) => _pool.Return(array, _cleanBuffers);
     }
 
-    struct GarbageCollectedAllocator<T>
+    readonly struct GarbageCollectedAllocator<T>
         : IArrayAllocator<T>
     {
         public T[] Alloc(int size) => new T[size];
@@ -38,13 +42,13 @@ namespace Cistern.ValueLinq.Utils
 
         Allocator _allocator;
 
-        T[] _0000_0010, _0000_0020, _0000_0040, _0000_0080;
-        T[] _0000_0100, _0000_0200, _0000_0400, _0000_0800;
-        T[] _0000_1000, _0000_2000, _0000_4000, _0000_8000;
-        T[] _0001_0000, _0002_0000, _0004_0000, _0008_0000;
-        T[] _0010_0000, _0020_0000, _0040_0000, _0080_0000;
-        T[] _0100_0000, _0200_0000, _0400_0000, _0800_0000;
-        T[] _1000_0000, _2000_0000, _4000_0000;
+        T[]? _0000_0010, _0000_0020, _0000_0040, _0000_0080;
+        T[]? _0000_0100, _0000_0200, _0000_0400, _0000_0800;
+        T[]? _0000_1000, _0000_2000, _0000_4000, _0000_8000;
+        T[]? _0001_0000, _0002_0000, _0004_0000, _0008_0000;
+        T[]? _0010_0000, _0020_0000, _0040_0000, _0080_0000;
+        T[]? _0100_0000, _0200_0000, _0400_0000, _0800_0000;
+        T[]? _1000_0000, _2000_0000, _4000_0000;
 
         T[] _current;
         int _currentIdx;
@@ -89,7 +93,7 @@ namespace Cistern.ValueLinq.Utils
             return false;
         }
 
-        private void Rent(ref T[] array, int size)
+        private void Rent(ref T[]? array, int size)
         {
             array = _allocator.Alloc(size);
 
@@ -140,7 +144,7 @@ namespace Cistern.ValueLinq.Utils
             }
         }
 
-        private bool Return(ref T[] _array)
+        private bool Return(ref T[]? _array)
         {
             if (_array == null)
                 return false;
@@ -181,56 +185,59 @@ namespace Cistern.ValueLinq.Utils
             }
         }
 
-        public void CopyTo(T[] array, int arrayIndex)
+        public void CopyTo(Span<T> destination)
         {
             var remaining = Count;
+            if (remaining == 0)
+                return;
+
+            var offset = 0;
 
             var _ = true
-                && DoCopy(array, ref arrayIndex, _0000_0010, ref remaining)
-                && DoCopy(array, ref arrayIndex, _0000_0020, ref remaining)
-                && DoCopy(array, ref arrayIndex, _0000_0040, ref remaining)
-                && DoCopy(array, ref arrayIndex, _0000_0080, ref remaining)
+                && DoCopy(destination, ref offset,_0000_0010, ref remaining)
+                && DoCopy(destination, ref offset,_0000_0020, ref remaining)
+                && DoCopy(destination, ref offset,_0000_0040, ref remaining)
+                && DoCopy(destination, ref offset,_0000_0080, ref remaining)
 
-                && DoCopy(array, ref arrayIndex, _0000_0100, ref remaining)
-                && DoCopy(array, ref arrayIndex, _0000_0200, ref remaining)
-                && DoCopy(array, ref arrayIndex, _0000_0400, ref remaining)
-                && DoCopy(array, ref arrayIndex, _0000_0800, ref remaining)
+                && DoCopy(destination, ref offset,_0000_0100, ref remaining)
+                && DoCopy(destination, ref offset,_0000_0200, ref remaining)
+                && DoCopy(destination, ref offset,_0000_0400, ref remaining)
+                && DoCopy(destination, ref offset,_0000_0800, ref remaining)
 
-                && DoCopy(array, ref arrayIndex, _0000_1000, ref remaining)
-                && DoCopy(array, ref arrayIndex, _0000_2000, ref remaining)
-                && DoCopy(array, ref arrayIndex, _0000_4000, ref remaining)
-                && DoCopy(array, ref arrayIndex, _0000_8000, ref remaining)
+                && DoCopy(destination, ref offset,_0000_1000, ref remaining)
+                && DoCopy(destination, ref offset,_0000_2000, ref remaining)
+                && DoCopy(destination, ref offset,_0000_4000, ref remaining)
+                && DoCopy(destination, ref offset,_0000_8000, ref remaining)
 
-                && DoCopy(array, ref arrayIndex, _0001_0000, ref remaining)
-                && DoCopy(array, ref arrayIndex, _0002_0000, ref remaining)
-                && DoCopy(array, ref arrayIndex, _0004_0000, ref remaining)
-                && DoCopy(array, ref arrayIndex, _0008_0000, ref remaining)
+                && DoCopy(destination, ref offset,_0001_0000, ref remaining)
+                && DoCopy(destination, ref offset,_0002_0000, ref remaining)
+                && DoCopy(destination, ref offset,_0004_0000, ref remaining)
+                && DoCopy(destination, ref offset,_0008_0000, ref remaining)
 
-                && DoCopy(array, ref arrayIndex, _0010_0000, ref remaining)
-                && DoCopy(array, ref arrayIndex, _0020_0000, ref remaining)
-                && DoCopy(array, ref arrayIndex, _0040_0000, ref remaining)
-                && DoCopy(array, ref arrayIndex, _0080_0000, ref remaining)
+                && DoCopy(destination, ref offset,_0010_0000, ref remaining)
+                && DoCopy(destination, ref offset,_0020_0000, ref remaining)
+                && DoCopy(destination, ref offset,_0040_0000, ref remaining)
+                && DoCopy(destination, ref offset,_0080_0000, ref remaining)
 
-                && DoCopy(array, ref arrayIndex, _0100_0000, ref remaining)
-                && DoCopy(array, ref arrayIndex, _0200_0000, ref remaining)
-                && DoCopy(array, ref arrayIndex, _0400_0000, ref remaining)
-                && DoCopy(array, ref arrayIndex, _0800_0000, ref remaining)
+                && DoCopy(destination, ref offset,_0100_0000, ref remaining)
+                && DoCopy(destination, ref offset,_0200_0000, ref remaining)
+                && DoCopy(destination, ref offset,_0400_0000, ref remaining)
+                && DoCopy(destination, ref offset,_0800_0000, ref remaining)
 
-                && DoCopy(array, ref arrayIndex, _1000_0000, ref remaining)
-                && DoCopy(array, ref arrayIndex, _2000_0000, ref remaining)
-                && DoCopy(array, ref arrayIndex, _4000_0000, ref remaining)
+                && DoCopy(destination, ref offset,_1000_0000, ref remaining)
+                && DoCopy(destination, ref offset,_2000_0000, ref remaining)
+                && DoCopy(destination, ref offset,_4000_0000, ref remaining)
             ;
 
-            static bool DoCopy(T[] dst, ref int arrayIndex, T[] src, ref int remaining)
+            static bool DoCopy(Span<T> destination, ref int offset, T[]? src, ref int remaining)
             {
-                var toCopy = Math.Min(src.Length, remaining);
+                var toCopy = Math.Min(src!.Length, remaining);
 
-                var srcSpan = new Span<T>(src, 0, toCopy);
-                var dstSpan = new Span<T>(dst, arrayIndex, dst.Length - arrayIndex);
-                srcSpan.CopyTo(dstSpan);
+                var srcSpan = new ReadOnlySpan<T>(src, 0, toCopy);
+                srcSpan.CopyTo(destination[offset..]);
 
                 remaining -= toCopy;
-                arrayIndex += toCopy;
+                offset += toCopy;
 
                 return remaining > 0;
             }
@@ -247,11 +254,12 @@ namespace Cistern.ValueLinq.Utils
                 var current = _current;
                 for (var i = 0; i < current.Length; ++i)
                 {
-                    if (!enumerator.TryGetNext(out current[i]))
+                    if (!enumerator.MoveNext())
                     {
                         _currentIdx = i;
                         return;
                     }
+                    current[i] = enumerator.Current;
                 }
 
                 if (_arrayIdx == KNOWN_SIZE)

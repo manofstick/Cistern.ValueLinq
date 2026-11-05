@@ -1,0 +1,318 @@
+﻿using System;
+using System.Collections.Generic;
+using Xunit;
+
+namespace Cistern.ValueLinq.Tests
+{
+    public class MinByKey
+    {
+        private const int Threw = int.MinValue;
+
+        private static readonly IComparer<int> Descending = Comparer<int>.Create((x, y) => y.CompareTo(x));
+
+        private static int[] Scrambled(int count)
+        {
+            var items = new int[count];
+            for (var i = 0; i < count; ++i)
+                items[i] = (i * 37 + 11) % 101 + i / 101 * 1000;
+
+            return items;
+        }
+
+        private static IEnumerable<T> Iterate<T>(T[] items)
+        {
+            foreach (var item in items)
+                yield return item;
+        }
+
+        private static int Outcome(Func<int> call)
+        {
+            try
+            {
+                return call();
+            }
+            catch (InvalidOperationException)
+            {
+                return Threw;
+            }
+        }
+
+        private static T Pulled<T, TKey>(IEnumerable<T> source, Func<T, TKey> keySelector, IComparer<TKey> comparer)
+        {
+            comparer ??= Comparer<TKey>.Default;
+
+            var found = false;
+            T value = default;
+            TKey key = default;
+
+            foreach (var item in source)
+            {
+                var nextKey = keySelector(item);
+                if (!found)
+                {
+                    found = true;
+                    value = item;
+                    key = nextKey;
+                }
+                else if (nextKey != null
+                    && (key == null || comparer.Compare(nextKey, key) < 0))
+                {
+                    value = item;
+                    key = nextKey;
+                }
+            }
+
+            if (!found
+                && default(T) != null)
+            {
+                throw new InvalidOperationException();
+            }
+
+            return value;
+        }
+
+        private static int LastDigit(int x) => x % 10;
+
+        public static IEnumerable<object[]> Lengths() => [[0], [1], [2], [7], [10], [1001]];
+
+        [Theory]
+        [MemberData(nameof(Lengths))]
+        public void EveryCollectionShapeAnswersTheMinimum(int length)
+        {
+            var array = Scrambled(length);
+            var list = new List<int>(array);
+            ReadOnlyMemory<int> memory = array;
+            IEnumerable<int> enumerable = Iterate(array);
+
+            foreach (var comparer in new[] { null, Comparer<int>.Default, Descending })
+            {
+                var expected = Outcome(() => Pulled(array, LastDigit, comparer));
+
+                Assert.Equal(expected, Outcome(() => array.MinBy(LastDigit, comparer)));
+                Assert.Equal(expected, Outcome(() => list.MinBy(LastDigit, comparer)));
+                Assert.Equal(expected, Outcome(() => memory.MinBy(LastDigit, comparer)));
+                Assert.Equal(expected, Outcome(() => enumerable.MinBy(LastDigit, comparer)));
+                Assert.Equal(expected, Outcome(() => ((IEnumerable<int>)array).MinBy(LastDigit, comparer)));
+                Assert.Equal(expected, Outcome(() => ((IEnumerable<int>)list).MinBy(LastDigit, comparer)));
+            }
+
+            var withoutComparer = Outcome(() => Pulled(array, LastDigit, Comparer<int>.Default));
+
+            Assert.Equal(withoutComparer, Outcome(() => array.MinBy(LastDigit)));
+            Assert.Equal(withoutComparer, Outcome(() => list.MinBy(LastDigit)));
+            Assert.Equal(withoutComparer, Outcome(() => memory.MinBy(LastDigit)));
+            Assert.Equal(withoutComparer, Outcome(() => enumerable.MinBy(LastDigit)));
+            Assert.Equal(withoutComparer, Outcome(() => array.Select(x => x).MinBy(LastDigit)));
+        }
+
+        [Theory]
+        [MemberData(nameof(Lengths))]
+        public void ValueEnumerablePushAgreesWithPull(int length)
+        {
+            var array = Scrambled(length);
+
+            foreach (var comparer in new[] { null, Descending })
+            {
+                var selected = array.Select(x => x * 3);
+                Assert.Equal(Outcome(() => Pulled(selected, LastDigit, comparer)), Outcome(() => selected.MinBy(LastDigit, comparer)));
+
+                var filtered = array.Where(x => x % 5 != 4);
+                Assert.Equal(Outcome(() => Pulled(filtered, LastDigit, comparer)), Outcome(() => filtered.MinBy(LastDigit, comparer)));
+
+                var iterated = Iterate(array).Select(x => x + 1).Where(x => x % 2 == 0);
+                Assert.Equal(Outcome(() => Pulled(iterated, LastDigit, comparer)), Outcome(() => iterated.MinBy(LastDigit, comparer)));
+
+                var ranged = Enumerable.Range(5, length);
+                Assert.Equal(Outcome(() => Pulled(ranged, LastDigit, comparer)), Outcome(() => ranged.MinBy(LastDigit, comparer)));
+
+                var ordered = Scrambled(length).OrderByDescending(x => x);
+                Assert.Equal(Outcome(() => Pulled(ordered, LastDigit, comparer)), Outcome(() => ordered.MinBy(LastDigit, comparer)));
+
+                var concatenated = array.Select(x => x).Concat(Scrambled(length / 2).Select(x => x - 7));
+                Assert.Equal(Outcome(() => Pulled(concatenated, LastDigit, comparer)), Outcome(() => concatenated.MinBy(LastDigit, comparer)));
+            }
+        }
+
+        [Fact]
+        public void TiesKeepTheFirstElement()
+        {
+            var items = new[] { 23, 41, 3, 13, 31, 33 };
+
+            Assert.Equal(41, items.MinBy(LastDigit));
+            Assert.Equal(41, Iterate(items).MinBy(LastDigit));
+            Assert.Equal(41, items.Select(x => x).MinBy(LastDigit));
+            Assert.Equal(41, new List<int>(items).MinBy(LastDigit));
+            Assert.Equal(41, new[] { 23, 41, 3 }.Select(x => x).Concat(new[] { 13, 31, 33 }.Select(x => x)).MinBy(LastDigit));
+
+            var allTie = Comparer<int>.Create((_, _) => 0);
+
+            Assert.Equal(23, items.MinBy(LastDigit, allTie));
+            Assert.Equal(23, Iterate(items).MinBy(LastDigit, allTie));
+            Assert.Equal(3, Array.Empty<int>().Select(x => x).Concat(new[] { 3, 13 }.Select(x => x)).MinBy(LastDigit, allTie));
+        }
+
+        [Fact]
+        public void KeySelectorAndComparerAreCalledAsSystemLinqCallsThem()
+        {
+            var items = new[] { 5, 2, 8, 1, 9 };
+            var selected = new List<int>();
+            var compared = new List<(int, int)>();
+            var recordingComparer = Comparer<int>.Create(recordingCompare);
+
+            (int, int)[] expected = [(20, 50), (80, 20), (10, 20), (90, 10)];
+
+            check(() => items.MinBy(recordingKey, recordingComparer));
+            check(() => Iterate(items).MinBy(recordingKey, recordingComparer));
+            check(() => items.Select(x => x).MinBy(recordingKey, recordingComparer));
+            check(() => new List<int>(items).MinBy(recordingKey, recordingComparer));
+            check(() => new[] { 5, 2 }.Select(x => x).Concat(new[] { 8, 1, 9 }.Select(x => x)).MinBy(recordingKey, recordingComparer));
+            check(() => Array.Empty<int>().Select(x => x).Concat(new[] { 5, 2, 8, 1, 9 }.Select(x => x)).MinBy(recordingKey, recordingComparer));
+
+            int recordingKey(int x)
+            {
+                selected.Add(x);
+
+                return x * 10;
+            }
+
+            int recordingCompare(int x, int y)
+            {
+                compared.Add((x, y));
+
+                return x.CompareTo(y);
+            }
+
+            void check(Func<int> call)
+            {
+                selected.Clear();
+                compared.Clear();
+
+                Assert.Equal(1, call());
+                Assert.Equal(items, selected);
+                Assert.Equal(expected, compared);
+            }
+        }
+
+        [Fact]
+        public void NullKeysAreSkippedAndNeverCompared()
+        {
+            var strict = Comparer<string>.Create(strictCompare);
+            var items = new[] { 3, 9, 5, 6, 8, 2, 12 };
+
+            Assert.Equal(8, items.MinBy(keyOf, strict));
+            Assert.Equal(8, Iterate(items).MinBy(keyOf, strict));
+            Assert.Equal(8, items.Select(x => x).MinBy(keyOf, strict));
+            Assert.Equal(8, new[] { 3, 9 }.Select(x => x).Concat(new[] { 5, 6, 8, 2, 12 }.Select(x => x)).MinBy(keyOf, strict));
+
+            var allNull = new[] { 3, 6, 9 };
+
+            Assert.Equal(3, allNull.MinBy(keyOf, strict));
+            Assert.Equal(3, Iterate(allNull).MinBy(keyOf, strict));
+            Assert.Equal(3, allNull.Select(x => x).MinBy(keyOf, strict));
+            Assert.Equal(3, new[] { 3 }.Select(x => x).Concat(new[] { 6, 9 }.Select(x => x)).MinBy(keyOf, strict));
+
+            var strictNullable = Comparer<int?>.Create(strictNullableCompare);
+
+            int?[] nullables = [null, 4, null, 2, 7];
+
+            Assert.Equal(2, nullables.MinBy(x => x, strictNullable));
+            Assert.Equal(2, Iterate(nullables).MinBy(x => x, strictNullable));
+            Assert.Null(new int?[] { null, null }.MinBy(x => x, strictNullable));
+
+            static int strictCompare(string x, string y)
+            {
+                Assert.NotNull(x);
+                Assert.NotNull(y);
+
+                return string.CompareOrdinal(x, y);
+            }
+
+            static string keyOf(int x)
+            {
+                string key =
+                    x % 3 == 0
+                        ? null
+                        : $"{x % 7}";
+
+                return key;
+            }
+
+            static int strictNullableCompare(int? x, int? y)
+            {
+                Assert.True(x.HasValue);
+                Assert.True(y.HasValue);
+
+                return x.Value.CompareTo(y.Value);
+            }
+        }
+
+        [Fact]
+        public void EmptySources()
+        {
+            Assert.Throws<InvalidOperationException>(() => Array.Empty<int>().MinBy(LastDigit));
+            Assert.Throws<InvalidOperationException>(() => new List<int>().MinBy(LastDigit, Descending));
+            Assert.Throws<InvalidOperationException>(() => ReadOnlyMemory<int>.Empty.MinBy(LastDigit));
+            Assert.Throws<InvalidOperationException>(() => Iterate(Array.Empty<int>()).MinBy(LastDigit));
+            Assert.Throws<InvalidOperationException>(() => Enumerable.Range(0, 0).MinBy(LastDigit));
+            Assert.Throws<InvalidOperationException>(() => Scrambled(10).Where(x => x < 0).MinBy(LastDigit, comparer: null));
+
+            Assert.Null(Array.Empty<string>().MinBy(s => s.Length));
+            Assert.Null(Iterate(Array.Empty<string>()).MinBy(s => s.Length));
+            Assert.Null(Array.Empty<int?>().Select(x => x).MinBy(x => x));
+        }
+
+        [Fact]
+        public void NullArgumentsThrow()
+        {
+            Assert.Throws<ArgumentNullException>("source", () => ((int[])null).MinBy(LastDigit));
+            Assert.Throws<ArgumentNullException>("source", () => ((List<int>)null).MinBy(LastDigit, Descending));
+            Assert.Throws<ArgumentNullException>("source", () => ((IEnumerable<int>)null).MinBy(LastDigit));
+
+            Assert.Throws<ArgumentNullException>("keySelector", () => Array.Empty<int>().MinBy((Func<int, int>)null));
+            Assert.Throws<ArgumentNullException>("keySelector", () => Iterate(Array.Empty<int>()).MinBy((Func<int, int>)null, Descending));
+            Assert.Throws<ArgumentNullException>("keySelector", () => Enumerable.Range(0, 0).MinBy((Func<int, int>)null));
+            Assert.Throws<ArgumentNullException>("keySelector", () => Enumerable.Range(0, 3).Select(x => x).MinBy((Func<int, int>)null, Descending));
+        }
+
+        private sealed class Tracked
+        {
+            public int Disposed;
+
+            public IEnumerable<int> Iterate(int count)
+            {
+                try
+                {
+                    for (var i = 0; i < count; ++i)
+                        yield return i;
+                }
+                finally
+                {
+                    ++Disposed;
+                }
+            }
+        }
+
+        [Fact]
+        public void SourceIsDisposedWhenTheKeySelectorThrows()
+        {
+            var tracked = new Tracked();
+
+            Assert.Throws<DivideByZeroException>(() => tracked.Iterate(10).MinBy(throwing));
+            Assert.Equal(1, tracked.Disposed);
+
+            Assert.Throws<DivideByZeroException>(() => tracked.Iterate(10).Select(x => x).MinBy(throwing));
+            Assert.Equal(2, tracked.Disposed);
+
+            Assert.Equal(2, tracked.Iterate(3).MinBy(throwing));
+            Assert.Equal(3, tracked.Disposed);
+
+            static int throwing(int x)
+            {
+                if (x == 4)
+                    throw new DivideByZeroException();
+
+                return -x;
+            }
+        }
+    }
+}
