@@ -41,7 +41,28 @@ public static partial class OrderBy
             _nodeT.GetCountInformation(out info);
         }
 
-        internal SystemArray.Node<TElement> Materialize(in ChainOptions options) => new(GetOrderedArray());
+        // pulled, the ordering lives only as long as the enumeration, so it is buffered in a rented array its enumerator
+        // returns
+        internal PooledBuffer.Node<TElement> Materialize(in ChainOptions options) => new(GetOrderedPooled());
+
+        // GetOrderedArray into a rented array, for an ordering that does not outlive the call or the enumeration
+        private PooledArray<TElement> GetOrderedPooled()
+        {
+            if (!SortsElementsThemselves()
+             && Optimizations.AsSpanSource.TryGet<TElement, NodeT>(ref _nodeT, out var source))
+            {
+                var elements = source.GetSpan();
+                var gathered = elements.Length == 0
+                    ? PooledArray<TElement>.Owned(Array.Empty<TElement>())
+                    : PooledArray<TElement>.Rent(elements.Length, null, false);
+                GatherInto(elements, 0, gathered.Span);
+                return gathered;
+            }
+
+            var sorted = NodeImpl.ToPooledArrayByRef<TElement, NodeT>(ref _nodeT, null, false);
+            SortInPlace(sorted.Span);
+            return sorted;
+        }
 
         // the elements are read where the source holds them when it has a span, and gathered from there into the result;
         // otherwise from a copy of the source, which is sorted in place. A key selector that writes into a source list
@@ -332,28 +353,9 @@ public static partial class OrderBy
             return true;
         }
 
-        // the ordering lives only as long as the push, so it is buffered in a rented array, built as GetOrderedArray builds
-        // its own
+        // the ordering lives only as long as the push, so it is buffered in a rented array
         TPushResult INode<TElement>.CreateViaPush<TPushResult, TPushEnumerator, TPushFiller>(in ChainOptions options, in TPushFiller filler)
-        {
-            PooledArray<TElement> sorted;
-            if (!SortsElementsThemselves()
-             && Optimizations.AsSpanSource.TryGet<TElement, NodeT>(ref _nodeT, out var source))
-            {
-                var elements = source.GetSpan();
-                sorted = elements.Length == 0
-                    ? PooledArray<TElement>.Owned(Array.Empty<TElement>())
-                    : PooledArray<TElement>.Rent(elements.Length, null, false);
-                GatherInto(elements, 0, sorted.Span);
-            }
-            else
-            {
-                sorted = NodeImpl.ToPooledArrayByRef<TElement, NodeT>(ref _nodeT, null, false);
-                SortInPlace(sorted.Span);
-            }
-
-            return SystemArray.ExecutePush<TElement, TPushResult, TPushEnumerator>(sorted, PushFiller.Fill<TPushEnumerator, TPushFiller>(in filler));
-        }
+            => SystemArray.ExecutePush<TElement, TPushResult, TPushEnumerator>(GetOrderedPooled(), PushFiller.Fill<TPushEnumerator, TPushFiller>(in filler));
     }
 
     // sorted on the first MoveNext, as System.Linq's OrderBy sorts, so a string key compares under the culture current
@@ -372,7 +374,7 @@ public static partial class OrderBy
         }
 
         private Node<TElement, KeySelectors, NodeT> _node;
-        private SystemArray.Pull<TElement> _enumerator;
+        private PooledBuffer.Pull<TElement> _enumerator;
         private State _state;
 
         private Pull(in Node<TElement, KeySelectors, NodeT> node)
@@ -402,7 +404,7 @@ public static partial class OrderBy
             {
                 var sorted = _node.Materialize(default);
 
-                _enumerator = Helper.CreatePull<SystemArray.Node<TElement>, SystemArray.Pull<TElement>>(in sorted);
+                _enumerator = Helper.CreatePull<PooledBuffer.Node<TElement>, PooledBuffer.Pull<TElement>>(in sorted);
                 _state = State.Sorted;
             }
 
@@ -415,7 +417,11 @@ public static partial class OrderBy
 
         public TElement Current => _enumerator.Current;
 
-        public void Dispose() => (_node, _enumerator, _state) = (default, default, State.Disposed);
+        public void Dispose()
+        {
+            _enumerator.Dispose();
+            (_node, _enumerator, _state) = (default, default, State.Disposed);
+        }
     }
 
     internal static class Identity<TElement>

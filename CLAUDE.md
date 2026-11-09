@@ -1,4 +1,4 @@
-# Cistern.ValueLinq
+﻿# Cistern.ValueLinq
 
 A LINQ implementation built on value-type pipelines: operators are structs composed at compile time, so a query
 allocates nothing unless it has to. `using Cistern.ValueLinq;` in place of `System.Linq` is the whole migration.
@@ -195,9 +195,10 @@ operator's other types after, named through the class from outside (`Nodes.Group
   needing type parameters beyond the node's and its source enumerator declares its own constraints; a `Push` field of
   type `ChainOptions` is filled from the push's options.
 - An operator that materialises its source into another node and runs as that node from then on (Reverse into a
-  `SystemArray.Node<T>`) holds `[Materialized] Node<...>`, declaring its fields and `Materialize(in ChainOptions)`,
-  and `Pull<...>`, declaring one field, that node's enumerator. Its `Rebuild` is the identity, as the chain below was
-  run to materialise. Its request methods answer what it can without materialising.
+  `PooledBuffer.Node<T>`, a buffer rented for the one enumeration) holds `[Materialized] Node<...>`, declaring its
+  fields and `Materialize(in ChainOptions)`, and `Pull<...>`, declaring one field, that node's enumerator. Its `Rebuild`
+  is the identity, as the chain below was run to materialise. Its request methods answer what it can without
+  materialising.
 - A hand-written forwarder (a partial struct named `...Push` with a `Fill` returning `ref` to its downstream) takes
   `[Forwarder]`; any other pull enumerator takes `[Puller]` and writes its state, `MoveNext`, `Current` and, if it
   enumerates a node, a private static `Create(in TNode node)`. `IPullEnumerator` has no default members, so an

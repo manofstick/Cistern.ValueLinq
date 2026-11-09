@@ -1,4 +1,4 @@
-# Optimizations
+﻿# Optimizations
 
 Candidate performance work, with the measurement that motivates each. Ratios are against the hand-coded loop
 in the matching benchmark on .NET 11 RC2, short job, in-process (see `CLAUDE.md` for the run recipe and its
@@ -62,6 +62,17 @@ The `Func<TSource, int, IEnumerable<TResult>>` overloads (`Transforms.tt`, built
 wrap the selector in a lambda, so each query allocates a closure and a delegate (80 B), as do the result-selector
 overloads' pairing of each source element with its inner sequence. The non-indexed overloads use `ValueSelectNode` with
 the `EnumerableNodeSelector` functor; the indexed ones need an indexed `ValueSelect` node first.
+
+## Buffers still allocated where ZLinq rents
+
+What Reverse, Shuffle and OrderBy buffer for a push or a `foreach` is rented. Still allocated, from the Parity and Toub
+reports:
+
+- A window of a buffering node (`OrderBy().Skip(n).Take(m)`, `Reverse().Take(m)`) builds its elements in an array of
+  its own, which `BufferedWindow` pushes, pulls or copies out with `ToArray`. Pushed or pulled it could be rented as
+  the whole ordering is; `ToArray` copies it a second time where it could be the result.
+- Distinct and Union allocate their set (B74, B77, A21, Toub Net6 N01: up to 130 KB where ZLinq allocates under 100 B).
+  The set lives only as long as the push, so a set over pooled storage would remove it.
 
 ## Results
 

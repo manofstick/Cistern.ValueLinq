@@ -34,7 +34,16 @@ public static partial class Shuffle
             _nodeT.GetCountInformation(out info);
         }
 
-        internal SystemArray.Node<T> Materialize(in ChainOptions options) => new(GetShuffledArray());
+        // pulled, the permutation lives only as long as the enumeration, so it is buffered in a rented array its
+        // enumerator returns
+        internal PooledBuffer.Node<T> Materialize(in ChainOptions options) => new(GetShuffledPooled());
+
+        private PooledArray<T> GetShuffledPooled()
+        {
+            var shuffled = NodeImpl.ToPooledArrayByRef<T, NodeT>(ref _nodeT, null, false);
+            Random.Shared.Shuffle(shuffled.Span);
+            return shuffled;
+        }
 
         // the array is this node's own (a source that holds an array answers ToArray with a copy), so the shuffle is
         // in place
@@ -47,11 +56,7 @@ public static partial class Shuffle
 
         // the permutation lives only as long as the push, so it is buffered in a rented array
         TPushResult INode<T>.CreateViaPush<TPushResult, TPushEnumerator, TPushFiller>(in ChainOptions options, in TPushFiller filler)
-        {
-            var shuffled = NodeImpl.ToPooledArrayByRef<T, NodeT>(ref _nodeT, null, false);
-            Random.Shared.Shuffle(shuffled.Span);
-            return SystemArray.ExecutePush<T, TPushResult, TPushEnumerator>(shuffled, PushFiller.Fill<TPushEnumerator, TPushFiller>(in filler));
-        }
+            => SystemArray.ExecutePush<T, TPushResult, TPushEnumerator>(GetShuffledPooled(), PushFiller.Fill<TPushEnumerator, TPushFiller>(in filler));
 
         private bool Count(in Optimizations.Count request, out int response) =>
             BufferedWindow.Count<T, NodeT>(in _nodeT, in request, out response);
@@ -206,7 +211,7 @@ public static partial class Shuffle
     public partial struct Pull<T, NodeT>
         : Optimizations.IPullOptimizationMergeSkipTake<T>
     {
-        private SystemArray.Pull<T> _enumerator;
+        private PooledBuffer.Pull<T> _enumerator;
 
         private static bool MergeSkipTake<TOwnNode, TBuilt, TBuilder>(in Optimizations.MergeSkipTake request, in TOwnNode node, in TBuilder builder, [MaybeNullWhen(false)] out TBuilt built)
             where TBuilder : IChainBuilder<T, TBuilt>, allows ref struct

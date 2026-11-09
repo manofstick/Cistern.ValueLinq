@@ -268,6 +268,7 @@ namespace Cistern.Benchmarks
             Coverage.SkipWhileSum.SanityCheck();
             Coverage.ReverseToArray.SanityCheck();
             Coverage.OrderByToArray.SanityCheck();
+            Coverage.OrderByForeach.SanityCheck();
             Coverage.GroupByCount.SanityCheck();
             Coverage.DistinctCount.SanityCheck();
             Coverage.ExceptCount.SanityCheck();

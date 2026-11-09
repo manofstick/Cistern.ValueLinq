@@ -64,7 +64,10 @@ Generics do the work that a hand-written loop does by knowing the source type.
   A test skipped for Cistern carries a `CISTERN.VALUELINQ` reason. The skips are summarised under [Skipped tests](#skipped-tests).
 - **Allocation.** A chain is a value on the stack. An aggregation over an array, a `List<T>`, a span or a `Range`
   allocates nothing beyond its result. Working buffers that do not outlive the call (the `ToArray` and `ToList` builders,
-  a collection copied out to be read as a span) are rented from the shared pool.
+  a collection copied out to be read as a span, what Reverse, Shuffle and OrderBy buffer for a push) are rented from
+  the shared pool. So is what they buffer for a `foreach`, held through one small object shared by every copy of the
+  enumerator, so the buffer goes back to the pool once
+  ([Copies and rented buffers](ValueLinq/Docs/PullProtocol.md#copies-and-rented-buffers)).
 - **Two execution models, both typed.** Aggregations push. `foreach` pulls. Each is compiled from the same nodes, and
   neither erases the chain's type.
 - **Cross-operator optimisation.** Nodes answer requests from the nodes above them (`Count`, `CopyTo`, `SkipTake`,

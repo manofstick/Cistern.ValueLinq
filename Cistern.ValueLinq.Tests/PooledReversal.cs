@@ -5,9 +5,10 @@ using Xunit;
 
 namespace Cistern.ValueLinq.Tests
 {
-    // A Reverse pushed buffers its reversal in an array rented from its pool for the push alone: the array goes back
-    // once, whether the push runs to the end, is stopped early or is thrown out of, and the elements pushed are the
-    // reversal's.
+    // A Reverse buffers its reversal in an array rented from its pool for one push or one enumeration: the array goes
+    // back once, whether the run goes to the end, is stopped early or is thrown out of, and the elements are the
+    // reversal's. Copies of an enumerator share the rental: it goes back once however many of them are disposed, and a
+    // copy pulled after another was disposed ends rather than read the returned array.
     public class PooledReversal
     {
         private sealed class CountingPool : ArrayPool<int>
@@ -34,7 +35,7 @@ namespace Cistern.ValueLinq.Tests
             }
         }
 
-        private const int Length = 100;
+        private const int Length = 1000;
 
         private static IEnumerable<int> Iterate()
         {
@@ -102,6 +103,110 @@ namespace Cistern.ValueLinq.Tests
             pool = new CountingPool();
             Assert.Throws<InvalidOperationException>(() => Iterate().Select(x => x).Reverse(arrayPoolInfo: (pool, false)).Select(x => x == Length / 2 ? throw new InvalidOperationException() : x).Sum());
             pool.AssertAllReturned();
+        }
+
+        [Fact]
+        public void Enumerated()
+        {
+            var pool = new CountingPool();
+            var reversed = new List<int>();
+
+            foreach (var x in Counted(pool, x => x))
+                reversed.Add(x);
+
+            Assert.Equal(System.Linq.Enumerable.Reverse(Values()), reversed);
+            pool.AssertAllReturned();
+
+            pool = new CountingPool();
+            reversed.Clear();
+            foreach (var x in Iterate().Select(x => x).Reverse(arrayPoolInfo: (pool, false)))
+                reversed.Add(x);
+
+            Assert.Equal(System.Linq.Enumerable.Reverse(Values()), reversed);
+            pool.AssertAllReturned();
+        }
+
+        [Fact]
+        public void EnumeratedAsIEnumerable()
+        {
+            var pool = new CountingPool();
+            IEnumerable<int> reversal = Counted(pool, x => x);
+
+            Assert.Equal(System.Linq.Enumerable.Reverse(Values()), System.Linq.Enumerable.ToList(reversal));
+            pool.AssertAllReturned();
+
+            pool = new CountingPool();
+            reversal = Counted(pool, x => x);
+            using (var enumerator = reversal.GetEnumerator())
+            {
+                Assert.True(enumerator.MoveNext());
+                Assert.Equal(Length - 1, enumerator.Current);
+            }
+            pool.AssertAllReturned();
+        }
+
+        [Fact]
+        public void EnumerationStoppedEarly()
+        {
+            var pool = new CountingPool();
+
+            foreach (var x in Counted(pool, x => x))
+            {
+                if (x == Length - 3)
+                    break;
+            }
+
+            pool.AssertAllReturned();
+        }
+
+        [Fact]
+        public void EnumerationThrownOutOf()
+        {
+            var pool = new CountingPool();
+
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                foreach (var x in Counted(pool, x => x))
+                {
+                    if (x == Length / 2)
+                        throw new InvalidOperationException();
+                }
+            });
+
+            pool.AssertAllReturned();
+        }
+
+        [Fact]
+        public void CopiedEnumerators_ReturnTheRentalOnce()
+        {
+            var pool = new CountingPool();
+
+            var enumerator = Counted(pool, x => x).GetEnumerator();
+            Assert.True(enumerator.MoveNext());
+            Assert.True(enumerator.MoveNext());
+            var copy = enumerator;
+
+            enumerator.Dispose();
+            Assert.False(copy.MoveNext());
+            copy.Dispose();
+
+            pool.AssertAllReturned();
+        }
+
+        [Fact]
+        public void CopiedOrderedEnumerator_EndsOnceAnotherIsDisposed()
+        {
+            var enumerator = Values().OrderBy(x => -x).GetEnumerator();
+            Assert.True(enumerator.MoveNext());
+            Assert.Equal(Length - 1, enumerator.Current);
+            var copy = enumerator;
+
+            Assert.True(copy.MoveNext());
+            Assert.Equal(Length - 2, copy.Current);
+
+            enumerator.Dispose();
+            Assert.False(copy.MoveNext());
+            copy.Dispose();
         }
     }
 }

@@ -46,7 +46,16 @@ public static partial class Reverse
             _nodeT.GetCountInformation(out info);
         }
 
-        internal SystemArray.Node<T> Materialize(in ChainOptions options) => new(GetReversedArray());
+        // pulled, the reversal lives only as long as the enumeration, so it is buffered in a rented array its enumerator
+        // returns
+        internal PooledBuffer.Node<T> Materialize(in ChainOptions options) => new(GetReversedPooled());
+
+        private PooledArray<T> GetReversedPooled()
+        {
+            var reversed = NodeImpl.ToPooledArrayByRef<T, NodeT>(ref _nodeT, _arrayPool, _cleanBuffers);
+            reversed.Span.Reverse();
+            return reversed;
+        }
 
         internal T[] GetReversedArray()
         {
@@ -191,16 +200,14 @@ public static partial class Reverse
                 return node.CreateViaPush<TPushResult, TPushEnumerator, TPushFiller>(in options, in filler);
 
             // the reversal lives only as long as the push, so it is buffered in a rented array
-            var reversed = NodeImpl.ToPooledArrayByRef<T, NodeT>(ref _nodeT, _arrayPool, _cleanBuffers);
-            reversed.Span.Reverse();
-            return SystemArray.ExecutePush<T, TPushResult, TPushEnumerator>(reversed, PushFiller.Fill<TPushEnumerator, TPushFiller>(in filler));
+            return SystemArray.ExecutePush<T, TPushResult, TPushEnumerator>(GetReversedPooled(), PushFiller.Fill<TPushEnumerator, TPushFiller>(in filler));
         }
     }
 
     public partial struct Pull<T, NodeT>
         : Optimizations.IPullOptimizationMergeSkipTake<T>
     {
-        private SystemArray.Pull<T> _enumerator;
+        private PooledBuffer.Pull<T> _enumerator;
 
         private static bool MergeSkipTake<TOwnNode, TBuilt, TBuilder>(in Optimizations.MergeSkipTake request, in TOwnNode node, in TBuilder builder, [MaybeNullWhen(false)] out TBuilt built)
             where TBuilder : IChainBuilder<T, TBuilt>, allows ref struct

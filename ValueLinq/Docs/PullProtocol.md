@@ -1,4 +1,4 @@
-# The pull protocol
+﻿# The pull protocol
 
 What an `IPullEnumerator<T>` may expect of whoever pulls it, and what it owes in return. Every enumerator in a chain is
 both: it is pulled by the one above and pulls the one below.
@@ -36,6 +36,22 @@ does not inline there (the path is rarely run, and a `Dispose` holding a `try`/`
 the call takes the enumerator's address, which keeps the whole chain's state in memory, so every step of the loop loads
 and stores each counter instead of keeping it in a register. Measured on net11 RC2, a `foreach` over a `Select` of an
 array ran in less than half the time without it.
+
+## Copies and rented buffers
+
+`ValueEnumerator` is a public mutable struct, so a caller holding one by hand can copy it, and every copy holds the
+same references: an `IEnumerable<T>` source's enumerator, Zip's second, SelectMany's inner. Copying one is not
+supported, and the protocol does not make it safe: disposing one copy disposes what the others still pull. `foreach`
+never copies the enumerator it holds, and `PullEnumerator` is a class, so neither meets the problem.
+
+A buffer rented from the pool would make the same misuse harm code that did nothing wrong. A copy's `Dispose` would
+return the array while another copy still reads it, or return it a second time, and the pool would then lend it out
+twice. So a buffering node pulled (Reverse, Shuffle, OrderBy) holds its rented buffer through a `PooledBuffer.Lease`,
+one small object every copy shares. The array goes back once, at the first `Dispose`, and a copy pulled after that
+ends. The lease is the one allocation, against a buffer the length of the source; a buffer under 1 KB, for which renting
+and the lease cost more than they save, is allocated as before and has no lease. The harm of a copy then stays with
+the copy, which at worst reads one element of an array lent out again, between its `MoveNext` and its `Current`.
+A buffer that never leaves the call (a push's, a selection's) needs none of this and is rented and returned in place.
 
 ## TryPushRest
 
