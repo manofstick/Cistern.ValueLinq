@@ -146,29 +146,31 @@ The full results are in two reports. Click through to see every entry, with link
 Both ran on .NET 11 RC2, one process per case, and were written up by
 [`Benchmark/Reports/Report.cs`](Benchmark/Reports/README.md).
 
-The tables below are from the Parity suite, over sources of 10,000 elements. The multiple after each System.Linq and
-ZLinq time is that library's time divided by Cistern's. Below each time is the memory the call allocated.
+The tables below are entries of the Parity suite, over sources of 10,000 elements, rerun on .NET 11 RC3 on a 12th Gen
+Intel Core i5-1240P under Linux, with two launches of 10 warmup and 20 measured iterations each. The reports and the
+counts drawn from the whole suite are from the earlier RC2 run on other hardware. The multiple after each System.Linq
+and ZLinq time is that library's time divided by Cistern's. Below each time is the memory the call allocated.
 
 | Query | Cistern | System.Linq | ZLinq |
 |---|--:|--:|--:|
-| [`object[]`<br>`.OfType<string>()`<br>`.Select(s => s.Length)`<br>`.Sum()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/A/Benchmark.CisternValueLinq.cs#L38-L42) | **20.0 µs**<br><br>0 B | 62.5 µs (3.1×)<br><br>104 B | 35.8 µs (1.8×)<br><br>0 B |
-| [`List<int>`<br>`.Skip(n/4)`<br>`.Take(n/2)`<br>`.Select(f)`<br>`.Sum()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/A/Benchmark.CisternValueLinq.cs#L66-L71) | **2.77 µs**<br><br>0 B | 15.1 µs (5.5×)<br><br>152 B | 5.54 µs (2.0×)<br><br>0 B |
-| [`List<int>`<br>`.Concat(List<int>)`<br>`… ×7`<br>`.Sum()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/A/Benchmark.CisternValueLinq.cs#L140-L149) | **0.76 µs**<br><br>32 B | 26.0 µs (34×)<br><br>760 B | 32.2 µs (42×)<br><br>0 B |
-| [`int[]`<br>`.Append(…) ×4`<br>`.Prepend(…) ×4`<br>`.Sum()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/A/Benchmark.CisternValueLinq.cs#L152-L162) | **1.01 µs**<br><br>1,008 B | 34.0 µs (34×)<br><br>976 B | 17.6 µs (17×)<br><br>0 B |
-| [`IEnumerable<int>`<br>`.TakeLast(10)`<br>`.ToArray()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/E/Benchmark.CisternValueLinq.cs#L96-L99) | **24.0 µs**<br><br>224 B | 73.5 µs (3.1×)<br><br>376 B | 53.8 µs (2.2×)<br><br>104 B |
-| [`iterator`<br>`.Concat(Collection<int>)`<br>`.Concat(Collection<int>)`<br>`.ToArray()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/F/Benchmark.CisternValueLinq.cs#L48-L52) | **3.20 µs**<br><br>78.9 KB | 48.2 µs (15×)<br><br>78.4 KB | 93.4 µs (29×)<br><br>78.2 KB |
-| [`int[]`<br>`.OrderBy(k)`<br>`.Select(f)`<br>`.First()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/A/Benchmark.CisternValueLinq.cs#L45-L49) | **7.35 µs**<br><br>0 B | 10.3 µs (1.4×)<br><br>144 B | 846 µs (115×)<br><br>128 B |
-| [`int[]`<br>`.OrderBy(k)`<br>`.Skip(100)`<br>`.Take(10)`<br>`.ToArray()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/A/Benchmark.CisternValueLinq.cs#L118-L123) | **93.8 µs**<br><br>200 B | 138 µs (1.5×)<br><br>120,408 B | 126 µs (1.3×)<br><br>224 B |
-| [`foreach over int[]`<br>`.OrderBy(k)`<br>`.Skip(100)`<br>`.Take(100)`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/B5/Benchmark.CisternValueLinq.cs#L96-L102) | **29.2 µs**<br><br>536 B | 34.3 µs (1.2×)<br><br>120,344 B | 33.4 µs (1.1×)<br><br>160 B |
+| [`object[]`<br>`.OfType<string>()`<br>`.Select(s => s.Length)`<br>`.Sum()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/A/Benchmark.CisternValueLinq.cs#L38-L42) | **18.3 µs**<br><br>0 B | 67.6 µs (3.7×)<br><br>104 B | 20.7 µs (1.1×)<br><br>0 B
+| [`List<int>`<br>`.Skip(n/4)`<br>`.Take(n/2)`<br>`.Select(f)`<br>`.Sum()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/A/Benchmark.CisternValueLinq.cs#L66-L71) | **1.41 µs**<br><br>0 B | 8.43 µs (6.0×)<br><br>152 B | 5.40 µs (3.8×)<br><br>0 B
+| [`List<int>`<br>`.Concat(List<int>)`<br>`… ×7`<br>`.Sum()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/A/Benchmark.CisternValueLinq.cs#L140-L149) | **0.72 µs**<br><br>32 B | 17.4 µs (24×)<br><br>760 B | 12.6 µs (18×)<br><br>0 B
+| [`int[]`<br>`.Append(…) ×4`<br>`.Prepend(…) ×4`<br>`.Sum()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/A/Benchmark.CisternValueLinq.cs#L152-L162) | **1.02 µs**<br><br>1,008 B | 19.5 µs (19×)<br><br>976 B | 20.5 µs (20×)<br><br>0 B
+| [`IEnumerable<int>`<br>`.TakeLast(10)`<br>`.ToArray()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/E/Benchmark.CisternValueLinq.cs#L96-L99) | **14.7 µs**<br><br>224 B | 33.4 µs (2.3×)<br><br>376 B | 41.8 µs (2.8×)<br><br>104 B
+| [`iterator`<br>`.Concat(Collection<int>)`<br>`.Concat(Collection<int>)`<br>`.ToArray()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/F/Benchmark.CisternValueLinq.cs#L48-L52) | **3.71 µs**<br><br>78.9 KB | 32.0 µs (8.6×)<br><br>78.4 KB | 41.7 µs (11×)<br><br>78.2 KB
+| [`int[]`<br>`.OrderBy(k)`<br>`.Select(f)`<br>`.First()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/A/Benchmark.CisternValueLinq.cs#L45-L49) | **5.86 µs**<br><br>0 B | 11.0 µs (1.9×)<br><br>144 B | 826 µs (141×)<br><br>128 B
+| [`int[]`<br>`.OrderBy(k)`<br>`.Skip(100)`<br>`.Take(10)`<br>`.ToArray()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/A/Benchmark.CisternValueLinq.cs#L118-L123) | **81.3 µs**<br><br>200 B | 114 µs (1.4×)<br><br>120,408 B | 97.4 µs (1.2×)<br><br>224 B
+| [`foreach over int[]`<br>`.OrderBy(k)`<br>`.Skip(100)`<br>`.Take(100)`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/B5/Benchmark.CisternValueLinq.cs#L96-L102) | **19.6 µs**<br><br>536 B | 25.8 µs (1.3×)<br><br>120,344 B | 25.1 µs (1.3×)<br><br>160 B
 
 The largest gaps are differences of algorithm rather than of constant factor: the slower library does work that the
 answer does not need.
 
 | Query | Cistern | System.Linq | ZLinq | |
 |---|--:|--:|--:|---|
-| [`double[]`<br>`.Min()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/E/Benchmark.CisternValueLinq.cs#L11-L13) | **6.3 ns**<br><br>0 B | 12,466 ns (1,980×)<br><br>0 B | 12,937 ns (2,055×)<br><br>0 B | A `NaN` at index 10. Cistern returns on reaching it. |
-| [`List<int>`<br>`.Append(1)`<br>`.Skip(100)`<br>`.Take(n/2)`<br>`.Last()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/B3/Benchmark.CisternValueLinq.cs#L64-L69) | 10.8 ns<br><br>0 B | 15,420 ns (1,426×)<br><br>208 B | **8.7 ns** (0.80×)<br><br>0 B | Cistern and ZLinq index the last element. System.Linq enumerates. |
-| [`int[]`<br>`.OrderBy(k)`<br>`.Contains(x)`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/B5/Benchmark.CisternValueLinq.cs#L210-L213) | **64.0 ns**<br><br>0 B | 76.1 ns (1.2×)<br><br>88 B | 874,844 ns (13,663×)<br><br>128 B | Cistern and System.Linq search the source without sorting it. ZLinq sorts. |
+| [`double[]`<br>`.Min()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/E/Benchmark.CisternValueLinq.cs#L11-L13) | **3.9 ns**<br><br>0 B | 13,008 ns (3,348×)<br><br>0 B | 12,243 ns (3,151×)<br><br>0 B | A `NaN` at index 10. Cistern returns on reaching it. |
+| [`List<int>`<br>`.Append(1)`<br>`.Skip(100)`<br>`.Take(n/2)`<br>`.Last()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/B3/Benchmark.CisternValueLinq.cs#L64-L69) | 5.6 ns<br><br>0 B | 9,115 ns (1,622×)<br><br>208 B | **5.5 ns** (0.97×)<br><br>0 B | Cistern and ZLinq index the last element. System.Linq enumerates. |
+| [`int[]`<br>`.OrderBy(k)`<br>`.Contains(x)`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/B5/Benchmark.CisternValueLinq.cs#L210-L213) | **67.4 ns**<br><br>0 B | 79.7 ns (1.2×)<br><br>88 B | 802,571 ns (11,913×)<br><br>128 B | Cistern and System.Linq search the source without sorting it. ZLinq sorts. |
 
 The two tables show where Cistern is clearly ahead, and not every result is like this. Across all 379 Parity entries:
 
@@ -186,17 +188,17 @@ a few nanoseconds that System.Linq's single type test, or ZLinq's constant-folde
 
 | Query | Cistern | System.Linq | ZLinq |
 |---|--:|--:|--:|
-| [`IEnumerable<int> (a HashSet<int>)`<br>`.Count()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/C/Benchmark.CisternValueLinq.cs#L10-L12) | 4.6 ns<br><br>0 B | **0.8 ns** (0.18×)<br><br>0 B | 4.7 ns (1.0×)<br><br>0 B |
-| [`List<int>`<br>`.Concat(List<int>)`<br>`.Count()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/B6/Benchmark.CisternValueLinq.cs#L41-L44) | 11.0 ns<br><br>0 B | 9.5 ns (0.87×)<br><br>56 B | **1.3 ns** (0.12×)<br><br>0 B |
+| [`IEnumerable<int> (a HashSet<int>)`<br>`.Count()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/C/Benchmark.CisternValueLinq.cs#L10-L12) | 3.0 ns<br><br>0 B | **1.4 ns** (0.48×)<br><br>0 B | 3.1 ns (1.1×)<br><br>0 B
+| [`List<int>`<br>`.Concat(List<int>)`<br>`.Count()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/B6/Benchmark.CisternValueLinq.cs#L41-L44) | 8.9 ns<br><br>0 B | 12.0 ns (1.3×)<br><br>56 B | **1.7 ns** (0.20×)<br><br>0 B
 
 At microsecond scale the differences are smaller, apart from `Shuffle`, where the method differs:
 
 | Query | Cistern | System.Linq | ZLinq | |
 |---|--:|--:|--:|---|
-| [`int[]`<br>`.ToLookup(k)`<br>`.Count`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/B11/Benchmark.CisternValueLinq.cs#L142-L145) | 62.4 µs<br><br>113.7 KB | 55.8 µs (0.89×)<br><br>127.1 KB | **43.6 µs** (0.70×) |<br><br>126.3 KB |
-| [`iterator`<br>`.Reverse()`<br>`.ToArray()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/B8/Benchmark.CisternValueLinq.cs#L86-L89) | 16.6 µs<br><br>39.1 KB | **13.0 µs** (0.79×)<br><br>39.2 KB | 26.0 µs (1.6×) |<br><br>39.2 KB |
-| [`List<int>`<br>`.Where(f)`<br>`.ToArray()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/D/Benchmark.CisternValueLinq.cs#L216-L219) | 27.0 µs<br><br>19.5 KB | **22.1 µs** (0.82×)<br><br>19.6 KB | 29.7 µs (1.1×) |<br><br>19.5 KB |
-| [`int[]`<br>`.Shuffle()`<br>`.ToArray()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/B9/Benchmark.CisternValueLinq.cs#L91-L94) | 87.1 µs<br><br>39.1 KB | 93.7 µs (1.1×)<br><br>39.1 KB | **19.5 µs** (0.22×)<br><br>39.1 KB | ZLinq has its own generator and a batched Fisher–Yates ([dotnet/runtime#111015](https://github.com/dotnet/runtime/pull/111015), unbiased, not adopted by .NET). System.Linq and Cistern use `Random.Shared`. |
+| [`int[]`<br>`.ToLookup(k)`<br>`.Count`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/B11/Benchmark.CisternValueLinq.cs#L142-L145) | 61.9 µs<br><br>113.7 KB | 59.4 µs (0.96×)<br><br>127.1 KB | **45.0 µs** (0.73×)<br><br>126.3 KB | |
+| [`iterator`<br>`.Reverse()`<br>`.ToArray()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/B8/Benchmark.CisternValueLinq.cs#L86-L89) | 14.8 µs<br><br>39.1 KB | **11.6 µs** (0.78×)<br><br>39.2 KB | 23.7 µs (1.6×)<br><br>39.2 KB | |
+| [`List<int>`<br>`.Where(f)`<br>`.ToArray()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/D/Benchmark.CisternValueLinq.cs#L216-L219) | 26.5 µs<br><br>19.5 KB | **21.8 µs** (0.82×)<br><br>19.6 KB | 25.1 µs (0.95×)<br><br>19.5 KB | |
+| [`int[]`<br>`.Shuffle()`<br>`.ToArray()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/B9/Benchmark.CisternValueLinq.cs#L91-L94) | 27.8 µs<br><br>39.1 KB | 28.2 µs (1.0×)<br><br>39.1 KB | **15.3 µs** (0.55×)<br><br>39.1 KB | ZLinq has its own generator and a batched Fisher–Yates ([dotnet/runtime#111015](https://github.com/dotnet/runtime/pull/111015), unbiased, not adopted by .NET). System.Linq and Cistern use `Random.Shared`. |
 
 The full results are kept as HTML in [`Benchmark/Reports/Results/`](Benchmark/Reports/Results) and published
 through the links above. [`Benchmark/Reports/`](Benchmark/Reports/README.md) describes how to reproduce them. The Toub suite
