@@ -1,6 +1,7 @@
 ﻿namespace Cistern.ValueLinq.Nodes;
 
 using Cistern.ValueLinq.Chain;
+using Cistern.ValueLinq.Utils;
 using Cistern.ValueLinq.Containers;
 using System;
 using System.Buffers;
@@ -42,6 +43,14 @@ public static partial class Shuffle
             var array = NodeImpl.ToArrayByRef<T, NodeT>(ref _nodeT, null, null, false);
             Random.Shared.Shuffle(array);
             return array;
+        }
+
+        // the permutation lives only as long as the push, so it is buffered in a rented array
+        TPushResult INode<T>.CreateViaPush<TPushResult, TPushEnumerator, TPushFiller>(in ChainOptions options, in TPushFiller filler)
+        {
+            var shuffled = NodeImpl.ToPooledArrayByRef<T, NodeT>(ref _nodeT, null, false);
+            Random.Shared.Shuffle(shuffled.Span);
+            return SystemArray.ExecutePush<T, TPushResult, TPushEnumerator>(shuffled, PushFiller.Fill<TPushEnumerator, TPushFiller>(in filler));
         }
 
         private bool Count(in Optimizations.Count request, out int response) =>

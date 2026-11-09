@@ -184,6 +184,50 @@ namespace Cistern.ValueLinq.Aggregation
         }
     }
 
+    // NodeImpl.ToPooledArrayByRef's push: the result is a rented array rather than one of exactly the count
+    [Aggregator]
+    partial struct ToPooledArrayForward<T>
+        : IPushEnumerator<T>
+    {
+        SegmentedArrayBuilder<T> _builder;
+        readonly ArrayPool<T>? _pool;
+        readonly bool _cleanBuffers;
+
+        public ToPooledArrayForward(ArrayPool<T>? pool, bool cleanBuffers)
+        {
+            _builder = new SegmentedArrayBuilder<T>();
+            _pool = pool;
+            _cleanBuffers = cleanBuffers;
+        }
+
+        static BatchKinds IPushEnumerator<T>.AllowBatchesWhen => BatchKinds.Container | BatchKinds.Forwarder | BatchKinds.ColdCopy;
+
+        bool IPushEnumerator<T>.ProcessBatch(scoped ref Batch<T> batch)
+        {
+            _builder.AddRange(ref batch);
+            return true;
+        }
+
+        public void Dispose() => _builder.Dispose();
+
+        TPushResult IPushEnumerator<T>.GetResult<TPushResult>()
+        {
+            var count = _builder.Count;
+            if (count == 0)
+                return Impl.ResultCast<PooledArray<T>, TPushResult>(PooledArray<T>.Owned(Array.Empty<T>()));
+
+            var rented = PooledArray<T>.Rent(count, _pool, _cleanBuffers);
+            _builder.CopyTo(rented.Array);
+            return Impl.ResultCast<PooledArray<T>, TPushResult>(rented);
+        }
+
+        public bool ProcessNext(T input)
+        {
+            _builder.Add(input);
+            return true;
+        }
+    }
+
     // a Concat's ToArray or ToList: the parts between its head and its tail are pushed into the builder, and once they
     // have run the result is finished here, the head and tail counted, the result sized, and the head, the builder and
     // the tail written into it, so the builder's 384 bytes are never copied out of the push

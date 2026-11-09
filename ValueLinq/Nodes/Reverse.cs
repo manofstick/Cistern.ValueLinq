@@ -1,6 +1,7 @@
 ﻿namespace Cistern.ValueLinq.Nodes;
 
 using Cistern.ValueLinq.Chain;
+using Cistern.ValueLinq.Utils;
 using Cistern.ValueLinq.Containers;
 using System;
 using System.Buffers;
@@ -17,6 +18,7 @@ public static partial class Reverse
         , Optimizations.IOptimizationCount
         , Optimizations.IOptimizationElementAt<T>
         , Optimizations.IOptimizationToArray<T>
+        , Optimizations.IOptimizationCopyTo<T>
         , Optimizations.IOptimizationSkipTake<T>
         , Optimizations.IOptimizationAny
         , Optimizations.IOptimizationContains<T>
@@ -106,6 +108,21 @@ public static partial class Reverse
             return true;
         }
 
+        // the dry run is the source's; the source is copied into the destination and reversed there, as GetReversedArray
+        // reverses its own array
+        private bool CopyTo(in Optimizations.CopyTo<T> request, out int response)
+        {
+            if (Forward(in request, out response))
+                return true;
+
+            if (request.IsDryRun)
+                return Optimizations.CopyTo.TryGetCount<T, NodeT>(ref _nodeT, out response);
+
+            response = Optimizations.CopyTo.Copy<T, NodeT>(ref _nodeT, in request);
+            request.Span.Slice(0, response).Reverse();
+            return true;
+        }
+
         ReadOnlyMemory<T> IBuffered<T>.GetWindow(long skip, long take) => BufferedWindow.Slice(GetReversedArray(), skip, take);
 
         bool IBuffered<T>.TryContains(long skip, long take, T value, out bool found) => TryContains(skip, take, value, out found);
@@ -173,7 +190,10 @@ public static partial class Reverse
             if (Optimizations.Reverse.Try<T, NodeT>(ref _nodeT, out var node))
                 return node.CreateViaPush<TPushResult, TPushEnumerator, TPushFiller>(in options, in filler);
 
-            return Materialize(in options).CreateViaPush<TPushResult, TPushEnumerator, TPushFiller>(in options, in filler);
+            // the reversal lives only as long as the push, so it is buffered in a rented array
+            var reversed = NodeImpl.ToPooledArrayByRef<T, NodeT>(ref _nodeT, _arrayPool, _cleanBuffers);
+            reversed.Span.Reverse();
+            return SystemArray.ExecutePush<T, TPushResult, TPushEnumerator>(reversed, PushFiller.Fill<TPushEnumerator, TPushFiller>(in filler));
         }
     }
 

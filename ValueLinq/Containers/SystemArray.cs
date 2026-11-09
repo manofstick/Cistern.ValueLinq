@@ -1,6 +1,7 @@
 ﻿namespace Cistern.ValueLinq.Containers;
 
 using Cistern.ValueLinq.Chain;
+using Cistern.ValueLinq.Utils;
 using System;
 
 // An array held as itself: pushed as a span where the chain takes one, else looped by index.
@@ -148,6 +149,42 @@ public static partial class SystemArray
         }
         finally
         {
+            fenum.Dispose();
+        }
+    }
+
+    // a buffer a node built for this push alone (Reverse's, Shuffle's, OrderBy's), written as the array's push is; it is
+    // returned to its pool once the loop ends, by exception too, before anything else is called on the chain
+    internal static TResult ExecutePush<TSource, TResult, TPushEnumerator>(PooledArray<TSource> source, TPushEnumerator fenum)
+        where TPushEnumerator : IPushEnumerator<TSource>
+    {
+        var released = false;
+        try
+        {
+            ReadOnlySpan<TSource> span = source.Span;
+            if (span.Length < 8
+             || !TPushEnumerator.AllowBatchesWhen.Takes(BatchKinds.Container))
+            {
+                for (var i = 0; i < span.Length; ++i)
+                {
+                    if (!fenum.ProcessNext(span[i]))
+                        break;
+                }
+            }
+            else
+            {
+                var batch = new Batch<TSource>(span, BatchKinds.Container);
+                _ = fenum.ProcessBatch(ref batch);
+            }
+
+            released = true;
+            source.Return();
+            return fenum.GetResult<TResult>();
+        }
+        finally
+        {
+            if (!released)
+                source.Return();
             fenum.Dispose();
         }
     }

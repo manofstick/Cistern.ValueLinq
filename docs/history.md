@@ -39,14 +39,16 @@ The value-type version moved the chain onto the stack. Each operator became a st
 source, so that the JIT, which compiles a separate specialisation for every struct instantiation, could see and inline
 the whole pipeline.
 
-The public face of a query is a single struct, `ValueEnumerable<TSource, TNode, TEnumerator>`, which carries the
-chain's type through each extension method in the manner of a monad: each operator takes a `ValueEnumerable` and
-returns a `ValueEnumerable` over a larger type. The container has been here since October 2020.
+The public face of a query is a single struct, `ValueEnumerable`, which carries the chain's type through each
+extension method in the manner of a monad: each operator takes a `ValueEnumerable` and returns a `ValueEnumerable` over
+a larger type. The container has been here since October 2020, as `ValueEnumerable<TSource, TNode>`: it carried the
+node chain only, and `foreach` was handed a `ValueEnumerator<TSource>` built from the nodes at run time. It became
+`ValueEnumerable<TSource, TNode, TEnumerator>` in the .NET 11 rework.
 
 Over its history the library added:
 
-- the typed pull chain: each node's enumerator type carried alongside the node type, so `foreach` is handed the whole
-  chain by value;
+- the typed pull chain (in the .NET 11 rework): each node's enumerator type carried alongside the node type, so
+  `foreach` is handed the whole chain by value;
 - request-based cross-node optimisation (`Count`, `CopyTo`, `SkipTake`, `ElementAt`, …);
 - batches: spans handed down a push chain whole, so the aggregator can vectorise;
 - in-place filling of the push chain, so a chain is built where it runs rather than copied into place;
@@ -77,7 +79,7 @@ A project's date is its first commit, or for ZLinq the writing of its present de
 | Feb 2019 | [StructLinq](https://github.com/reegeek/StructLinq) | Struct enumerables through generic specialisation, struct functions in place of delegates, and `ref` access to elements. |
 | Aug 2019 | **[Cistern.Linq](https://github.com/manofstick/Cistern.Linq)** | Composed push chains; a drop-in replacement for `System.Linq`. |
 | Mar 2020 | [NoAlloq](https://github.com/VictorNicollet/NoAlloq) | LINQ over `Span<T>` as `ref struct`s, with buffers supplied by the caller. |
-| Oct 2020 | **Cistern.ValueLinq** | Struct nodes in a `ValueEnumerable` container; push and typed pull from the same nodes. |
+| Oct 2020 | **Cistern.ValueLinq** | Struct nodes in a `ValueEnumerable` container, pushed through and pulled from the same nodes. |
 | Oct 2022 | [LinqGen](https://github.com/cathei/LinqGen) | A source generator emitting specialised, non-generic code per query, aimed at AOT and Unity. |
-| Feb/Mar 2025 | [ZLinq](https://github.com/Cysharp/ZLinq) | A design similar to the pull side of Cistern.ValueLinq: a `ValueEnumerable` container carrying a chain of struct enumerators. Drop-in through a generator, with SIMD, and LINQ to Span and to trees. |
-| Nov 2026 | **Cistern.ValueLinq** | Surface complete: the full `System.Linq` surface on .NET 11, validated against the corefx suite. |
+| Feb/Mar 2025 | [ZLinq](https://github.com/Cysharp/ZLinq) | A `ValueEnumerable` container carrying a chain of struct enumerators, as Cistern.ValueLinq's pull side has since come to. Drop-in through a generator, with SIMD, and LINQ to Span and to trees. |
+| Nov 2026 | **Cistern.ValueLinq** | Surface complete: the full `System.Linq` surface on .NET 11, validated against the corefx suite, and the pull chain typed through the container. |

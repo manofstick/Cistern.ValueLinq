@@ -90,6 +90,32 @@ namespace Cistern.ValueLinq.Tests
             }
         }
 
+        // a counted source is copied by the reversal into the destination and reversed there: into a list, as a part of a
+        // Concat, and as the copy a stable ordering sorts, whose ties keep the reversed order
+        [Theory]
+        [InlineData(0)]
+        [InlineData(1)]
+        [InlineData(10)]
+        [InlineData(100)]
+        public void CopiedReversal_MatchesTheReversal(int length)
+        {
+            var values = new int[length];
+            for (var i = 0; i < length; ++i)
+                values[i] = i * 3 + 1;
+            var reversed = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Reverse(values));
+            var parity = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.OrderBy(reversed, x => x % 2));
+
+            var set = new HashSet<int>(values);
+            Assert.Equal(reversed, set.Reverse().ToList());
+            Assert.Equal([0, .. reversed, 0], new[] { 0 }.Concat(set.Reverse()).Concat(new[] { 0 }).ToArray());
+            Assert.Equal(parity, set.Reverse().OrderBy(x => x % 2).ToArray());
+            Assert.Equal(parity, set.Reverse().OrderBy(x => x % 2).ToList());
+
+            var range = Enumerable.Range(0, length).Select(i => i * 3 + 1);
+            Assert.Equal(reversed, range.Reverse().ToList());
+            Assert.Equal(parity, range.Reverse().OrderBy(x => x % 2).ToList());
+        }
+
         [Fact]
         public void Contains_UsesTheSourcesLookup()
         {

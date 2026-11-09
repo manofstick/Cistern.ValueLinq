@@ -175,6 +175,29 @@ namespace Cistern.ValueLinq
             return ToArrayWithoutOptimizationCheck(ref inner, maybeMaxCountForStackBasedPath ?? 64, arrayPool, cleanBuffers);
         }
 
+        // ToArrayByRef for a buffer that does not outlive the call: a counted source is copied into a rented array rather
+        // than one of its own length, and one pushed is rented into from the builder. An answer making an array of its
+        // own (a ToArray, a MaterialiseArray) is taken as it is, as the copy into a rented array would cost more than
+        // the allocation it saves. A source that throws leaves its rented array to the GC.
+        internal static PooledArray<T> ToPooledArrayByRef<T, Inner>(ref Inner inner, ArrayPool<T>? pool, bool cleanBuffers)
+                where Inner : INode<T>
+        {
+            if (Optimizations.CopyTo.TryGetCount<T, Inner>(ref inner, out var count))
+            {
+                if (count == 0)
+                    return PooledArray<T>.Owned(Array.Empty<T>());
+
+                var rented = PooledArray<T>.Rent(count, pool, cleanBuffers);
+                return rented.WithCount(Optimizations.CopyTo.Copy<T, Inner>(ref inner, new Optimizations.CopyTo<T>(rented.Array)));
+            }
+
+            if (Optimizations.ToArray.Try<T, Inner>(ref inner, out var array)
+             || inner.TryPushOptimization<Optimizations.MaterialiseArray, T[]>(default(Optimizations.MaterialiseArray), out array))
+                return PooledArray<T>.Owned(array);
+
+            return inner.CreateViaPush<PooledArray<T>, ToPooledArrayForward<T>, Construct<ToPooledArrayForward<T>, ToPooledArrayForward<T>.Args>>(default(ChainOptions), new Construct<ToPooledArrayForward<T>, ToPooledArrayForward<T>.Args>(new ToPooledArrayForward<T>.Args(pool, cleanBuffers)));
+        }
+
         // the node is taken by value, as by First and Last: a copy made of an `in` node is read back with one wide load
         // over the caller's narrower stores
         internal static T[] ToArray<T, Inner>(Inner inner, int? maybeMaxCountForStackBasedPath, ArrayPool<T>? arrayPool, bool cleanBuffers)

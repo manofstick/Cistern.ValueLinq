@@ -1,6 +1,7 @@
 ﻿namespace Cistern.ValueLinq.Nodes;
 
 using Cistern.ValueLinq.Chain;
+using Cistern.ValueLinq.Utils;
 using Cistern.ValueLinq.Containers;
 using Cistern.ValueLinq.Maths;
 using System;
@@ -83,16 +84,27 @@ public static partial class OrderBy
         // only the window's elements are put in order, as System.Linq's partial sort does, and only they are gathered
         private ReadOnlyMemory<TElement> GetOrderedWindow(long skip, long take)
         {
-            var elements = Elements();
+            var elements = Elements(out var copy);
             var start = (int)Math.Min(skip, elements.Length);
             var length = (int)Math.Min(take, elements.Length - start);
-            return length > 0 ? Gather(elements, start, length) : ReadOnlyMemory<TElement>.Empty;
+            var window = length > 0 ? Gather(elements, start, length) : ReadOnlyMemory<TElement>.Empty;
+            copy.Return();
+            return window;
         }
 
-        private ReadOnlySpan<TElement> Elements() =>
-            Optimizations.AsSpanSource.TryGet<TElement, NodeT>(ref _nodeT, out var source)
-                ? source.GetSpan()
-                : NodeImpl.ToArrayByRef<TElement, NodeT>(ref _nodeT, null, null, false);
+        // the elements are only read, where the source holds them or from a copy rented for the call, which the caller
+        // returns
+        private ReadOnlySpan<TElement> Elements(out PooledArray<TElement> copy)
+        {
+            if (Optimizations.AsSpanSource.TryGet<TElement, NodeT>(ref _nodeT, out var source))
+            {
+                copy = default;
+                return source.GetSpan();
+            }
+
+            copy = NodeImpl.ToPooledArrayByRef<TElement, NodeT>(ref _nodeT, null, false);
+            return copy.Span;
+        }
 
         // equal elements of an implicitly stable type are bit-identical, so an unstable sort of the elements themselves
         // gives the stable order, as System.Linq's Order sorts them; a window keeps the partial sort
@@ -281,15 +293,10 @@ public static partial class OrderBy
                 return true;
             }
 
-            var elements = Elements();
+            var elements = Elements(out var copy);
             var offset = request.OffsetIn(elements.Length);
-            if (offset < 0)
-            {
-                response = (false, default!);
-                return true;
-            }
-
-            response = (true, ElementAt(elements, offset));
+            response = offset < 0 ? (false, default!) : (true, ElementAt(elements, offset));
+            copy.Return();
             return true;
         }
 
@@ -325,13 +332,27 @@ public static partial class OrderBy
             return true;
         }
 
+        // the ordering lives only as long as the push, so it is buffered in a rented array, built as GetOrderedArray builds
+        // its own
         TPushResult INode<TElement>.CreateViaPush<TPushResult, TPushEnumerator, TPushFiller>(in ChainOptions options, in TPushFiller filler)
         {
-            var sorted = Materialize(in options);
+            PooledArray<TElement> sorted;
+            if (!SortsElementsThemselves()
+             && Optimizations.AsSpanSource.TryGet<TElement, NodeT>(ref _nodeT, out var source))
+            {
+                var elements = source.GetSpan();
+                sorted = elements.Length == 0
+                    ? PooledArray<TElement>.Owned(Array.Empty<TElement>())
+                    : PooledArray<TElement>.Rent(elements.Length, null, false);
+                GatherInto(elements, 0, sorted.Span);
+            }
+            else
+            {
+                sorted = NodeImpl.ToPooledArrayByRef<TElement, NodeT>(ref _nodeT, null, false);
+                SortInPlace(sorted.Span);
+            }
 
-            var result = Helper.CreateViaPush<SystemArray.Node<TElement>, TElement, TPushResult, TPushEnumerator, TPushFiller>(in options, in sorted, in filler);
-
-            return result;
+            return SystemArray.ExecutePush<TElement, TPushResult, TPushEnumerator>(sorted, PushFiller.Fill<TPushEnumerator, TPushFiller>(in filler));
         }
     }
 
