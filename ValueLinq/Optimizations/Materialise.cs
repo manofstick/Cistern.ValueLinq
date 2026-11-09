@@ -3,13 +3,13 @@ using System.Collections.Generic;
 
 namespace Cistern.ValueLinq.Optimizations
 {
-    [Optimization]
+    [PushOptimization]
     internal interface IOptimizationMaterialiseArray<T>
     {
         bool MaterialiseArray(in MaterialiseArray request, [MaybeNullWhen(false)] out T[] response);
     }
 
-    [Optimization]
+    [PushOptimization]
     internal interface IOptimizationMaterialiseList<T>
     {
         bool MaterialiseList(in MaterialiseList request, [MaybeNullWhen(false)] out List<T> response);
@@ -40,13 +40,13 @@ namespace Cistern.ValueLinq.Optimizations
             || typeof(TRequest) == typeof(MaterialiseList);
     }
 
-    [Optimization]
+    [PushOptimization]
     internal interface IOptimizationConcatParts<T>
     {
         bool ConcatParts(in ConcatParts<T> request, out ConcatParts<T> response);
     }
 
-    [Optimization]
+    [PushOptimization]
     internal interface IOptimizationConcatPushRange<T>
     {
         bool ConcatPushRange(in ConcatPushRange<T> request, out bool response);

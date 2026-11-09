@@ -1,6 +1,6 @@
 ﻿namespace Cistern.ValueLinq.Optimizations
 {
-    [Optimization]
+    [PushOptimization]
     internal interface IOptimizationAsRange
     {
         bool AsRange(in AsRange request, out (int Start, int Count) response);

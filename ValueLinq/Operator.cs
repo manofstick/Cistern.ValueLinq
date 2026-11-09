@@ -20,8 +20,9 @@ namespace Cistern.ValueLinq
     /// configuration, of which the fields marked [Propagate] are mirrored into Push and Pull. Push and Pull declare
     /// their own state fields, started by their partial Start, called once the configuration is in place. Written
     /// here: the node's constructor and CreateViaPush where the node does not write its own; TryPushOptimization, from
-    /// the [Optimization] interfaces the node declares, as for an [Answerer]; Push's and Pull's downstream or source
-    /// field, the propagated fields, their construction (Fill, Create), Dispose and GetResult; the filler; the chain builder.
+    /// the [PushOptimization] interfaces the node declares, as for an [Answerer]; Push's and Pull's downstream or
+    /// source field, the propagated fields, their construction (Fill, Create), Dispose and GetResult; the filler; the
+    /// chain builder.
     /// </summary>
     [AttributeUsage(AttributeTargets.Struct)]
     sealed class OperatorAttribute : Attribute
@@ -35,8 +36,8 @@ namespace Cistern.ValueLinq
     /// as that node from then on, written as a static partial class holding its Node and Pull partial structs. The node
     /// declares its fields and Materialize(in ChainOptions), returning the node it becomes; Pull declares one field, that
     /// node's enumerator. Written here: the node's constructor and CreateViaPush (materialise, then push through the
-    /// result) where the node does not write its own; TryPushOptimization, from the [Optimization] interfaces the node
-    /// declares, as for an [Answerer]; Pull's constructor, Create (materialise, then enumerate the result), a
+    /// result) where the node does not write its own; TryPushOptimization, from the [PushOptimization] interfaces the
+    /// node declares, as for an [Answerer]; Pull's constructor, Create (materialise, then enumerate the result), a
     /// RebuildChanges-false Rebuild, and the members that forward to its field.
     /// </summary>
     [AttributeUsage(AttributeTargets.Struct)]
@@ -48,10 +49,11 @@ namespace Cistern.ValueLinq
 
     /// <summary>
     /// On a node written by hand outside the shapes above (a container), a partial struct in a static partial class.
-    /// Written here: TryPushOptimization, as it is for an [Operator] or [Materialized] node, from the [Optimization]
-    /// interfaces the node declares: per interface, the node writes a non-public method of the interface method's name
-    /// and signature, which the generated dispatch calls under a guard on the request's type and the generated explicit
-    /// implementation forwards to. A request no interface answers is declined, or handed to Forward.
+    /// Written here: TryPushOptimization, as it is for an [Operator] or [Materialized] node, from the
+    /// [PushOptimization] interfaces the node declares: per interface, the node writes a non-public method of the
+    /// interface method's name and signature, which the generated dispatch calls under a guard on the request's type
+    /// and the generated explicit implementation forwards to. A request no interface answers is declined, or handed to
+    /// Forward.
     /// </summary>
     [AttributeUsage(AttributeTargets.Struct)]
     sealed class AnswererAttribute : Attribute
@@ -69,7 +71,7 @@ namespace Cistern.ValueLinq
     /// by out and returning whether it answered. A node that declares the interface answers the request.
     /// </summary>
     [AttributeUsage(AttributeTargets.Interface)]
-    sealed class OptimizationAttribute : Attribute { }
+    sealed class PushOptimizationAttribute : Attribute { }
 
     /// <summary>
     /// On a pull enumerator written by hand (one that is not the Pull of an [Operator] or [Materialized] node), a partial

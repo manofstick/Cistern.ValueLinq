@@ -1,6 +1,6 @@
 ﻿namespace Cistern.ValueLinq.Optimizations
 {
-    [Optimization]
+    [PushOptimization]
     internal interface IOptimizationAny
     {
         bool Any(in Any request, out bool response);

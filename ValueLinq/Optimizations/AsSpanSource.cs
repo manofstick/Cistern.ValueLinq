@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace Cistern.ValueLinq.Optimizations
 {
-    [Optimization]
+    [PushOptimization]
     internal interface IOptimizationAsSpanSource<T>
     {
         bool AsSpanSource(in AsSpanSource request, out SpanSource<T> response);

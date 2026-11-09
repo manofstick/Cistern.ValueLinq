@@ -44,7 +44,7 @@ The design hands as much as possible to RyuJIT:
   chain therefore gets its own code, in which each call between operators is a direct call to a known method, and so
   a candidate for inlining.
 - **Constants per type.** Properties the chain asks about are `static abstract` members: `AllowBatchesWhen`
-  (which batches a taker accepts), `AllowInitialise`, and `RebuildChanges` (whether a pull chain can be reshaped).
+  (which batches a taker accepts), `AllowInitialise`, and `RebuildChanges` (whether a pull chain can be recreated).
   `typeof(T) == typeof(int)` tests work the same way. In a specialised method each is a constant, and the branch it
   guards is removed.
 - **Dynamic PGO.** Delegates (`Func<T, U>`) are devirtualised by guarded devirtualisation when one target dominates.
@@ -242,7 +242,7 @@ The rules that keep this safe:
   nothing.
 - `Select` declines a real `Count` and is pushed, running its selector once per element, because `System.Linq` does.
 
-Each request is an interface marked `[Optimization]`, and a node declares the interfaces it answers. The dispatch is
+Each request is an interface marked `[PushOptimization]`, and a node declares the interfaces it answers. The dispatch is
 generated (see [Source generators](generators.md#requests)): one guard per interface on the request's type,
 calling the method directly. Each guard is a type test that folds to a constant in the specialised code.
 

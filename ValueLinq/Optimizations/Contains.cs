@@ -1,6 +1,6 @@
 ﻿namespace Cistern.ValueLinq.Optimizations
 {
-    [Optimization]
+    [PushOptimization]
     internal interface IOptimizationContains<T>
     {
         bool Contains(in Contains<T> request, out bool response);

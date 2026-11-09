@@ -3,7 +3,7 @@ using System;
 
 namespace Cistern.ValueLinq.Optimizations
 {
-    [Optimization]
+    [PushOptimization]
     internal interface IOptimizationSkipTake<T>
     {
         bool SkipTake(in SkipTake request, out NodeContainer<T> response);

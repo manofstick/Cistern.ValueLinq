@@ -5,8 +5,8 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using System.Collections.Immutable;
 using System.Linq;
 
-// an [Optimization] or [PullOptimization] interface is checked where it is declared, so a node or enumerator declaring it
-// is wired from its one method
+// a [PushOptimization] or [PullOptimization] interface is checked where it is declared, so a node or enumerator
+// declaring it is wired from its one method
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class RequestInterfaces : DiagnosticAnalyzer
 {
@@ -27,7 +27,7 @@ public sealed class RequestInterfaces : DiagnosticAnalyzer
         string? failure =
             Requests.IsRequest(type)
                 ? type.TypeKind != TypeKind.Interface
-                    ? $"{type.Name} carries [Optimization], which marks a request's interface"
+                    ? $"{type.Name} carries [PushOptimization], which marks a request's interface"
                 : Requests.Shape(type) is null
                     ? $"{type.Name} is not an interface of one non-generic method taking the request by in and the result by out and returning bool"
                 : null

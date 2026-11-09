@@ -2,7 +2,7 @@
 
 namespace Cistern.ValueLinq.Optimizations
 {
-    [Optimization]
+    [PushOptimization]
     internal interface IOptimizationElementAt<T>
     {
         bool ElementAt(in ElementAt request, out (bool, T) response);

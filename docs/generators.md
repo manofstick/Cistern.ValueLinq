@@ -84,7 +84,7 @@ On the `Node` of a single-source operator written as a static partial class hold
 | Written by hand | Written by the generator |
 |---|---|
 | Node: the source field and configuration fields | the node's constructor, `CreateViaPush` |
-| Node: one method per `[Optimization]` interface declared | `TryPushOptimization` |
+| Node: one method per `[PushOptimization]` interface declared | `TryPushOptimization` |
 | Push: state fields, `ProcessNext`; `AllowBatchesWhen` and `ProcessBatch` where it runs spans | `_next`, the propagated fields, `Fill`, `Initialise`, `Dispose`, `GetResult`, the `Filler` |
 | Pull: state fields, `MoveNext`, `Current` | `_enumerator`, the propagated fields, the constructor, `Create`, `Rebuild`, `Dispose`, the `ChainBuilder` |
 | optional `partial void Start()` on Push or Pull: a non-default start value | its call, once the configuration is in place |
@@ -107,18 +107,18 @@ into an array, for example.
 ### `[Answerer]`
 
 On any other node (a container such as `SystemArray.Node` or `SystemList.Node`). The generator writes only
-`TryPushOptimization`, from the `[Optimization]` interfaces declared. The dispatch is public, so a container built in
-place over another's parts can be asked directly. `Forwards` as for `[Operator]`.
+`TryPushOptimization`, from the `[PushOptimization]` interfaces declared. The dispatch is public, so a container built
+in place over another's parts can be asked directly. `Forwards` as for `[Operator]`.
 
 ## Requests
 
-### `[Optimization]` and `[PullOptimization]`
+### `[PushOptimization]` and `[PullOptimization]`
 
 On a request's interface in [`ValueLinq/Optimizations/`](../ValueLinq/Optimizations). It must have exactly one method,
 named for the request, taking the request by `in` and the result by `out`:
 
 ```csharp
-[Optimization]
+[PushOptimization]
 internal interface IOptimizationCount
 {
     bool Count(in Count request, out int response);
@@ -214,7 +214,7 @@ On a configuration field of an `[Operator]` node. `Push` and `Pull` each get a c
 
 | Id | Reported for |
 |---|---|
-| `CVL0001` | a request interface of the wrong shape; a chain-interface member whose type parameters are not named as the convention requires (`TRequest`, `TPushEnumerator`, `TOwnNode`, …); an operator's own type parameter clashing with those names; a marker interface listed by hand |
+| `CVL0001` | a request interface with the wrong arguments; a chain-interface member whose type parameters are not named as the convention requires (`TRequest`, `TPushEnumerator`, `TOwnNode`, …); an operator's own type parameter clashing with those names; a marker interface listed by hand |
 | `CVL0002` | a hand-written empty `Dispose` on an aggregator, which the generator would write |
 
 The type-parameter naming is enforced because generated code is spliced into hand-written partial declarations, and
@@ -229,5 +229,5 @@ a shared name would collide.
 | `[Answerer]` nodes | 28 |
 | `[Puller]` enumerators | 33 |
 | `[Materialized]` nodes | 4 |
-| `[Optimization]` request interfaces | 17 |
+| `[PushOptimization]` request interfaces | 17 |
 | generated files per build | 167 |

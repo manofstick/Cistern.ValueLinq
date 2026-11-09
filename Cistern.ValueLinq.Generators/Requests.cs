@@ -6,16 +6,16 @@ using System.Linq;
 using System.Text;
 using static Cistern.ValueLinq.Generators.TextHelper;
 
-// a node's TryPushOptimization, from the [Optimization] interfaces it declares: per interface, a guard on the request's
-// type calling the node's own non-public method of the interface method's signature, and the explicit implementation
-// forwarding to that method, which is what ties the hand-written signature to the interface's. The result's type is
-// the one the request's interface names, and every asker names it (Request.Result asserts so); a guard on it as well
-// is not folded where the result is shared code (ToArray's T[], anything over a reference type), and reading the
-// method's generic context for it keeps the dispatch from being inlined into its asker
+// a node's TryPushOptimization, from the [PushOptimization] interfaces it declares: per interface, a guard on the
+// request's type calling the node's own non-public method of the interface method's signature, and the explicit
+// implementation forwarding to that method, which is what ties the hand-written signature to the interface's. The
+// result's type is the one the request's interface names, and every asker names it (Request.Result asserts so); a
+// guard on it as well is not folded where the result is shared code (ToArray's T[], anything over a reference type),
+// and reading the method's generic context for it keeps the dispatch from being inlined into its asker
 static class Requests
 {
     private const string Namespace = "Cistern.ValueLinq.Optimizations";
-    public const string Optimization = "Cistern.ValueLinq.OptimizationAttribute";
+    public const string PushOptimization = "Cistern.ValueLinq.PushOptimizationAttribute";
 
     // the attributes whose Forwards hands an unanswered request to the node's Forward
     private static readonly string[] Forwarding =
@@ -141,7 +141,7 @@ static class Requests
         {
             model.WritesRequests = true;
             model.Failure =
-                $"{node.Name} writes TryPushOptimization, which is generated from the [Optimization] interfaces it declares; it writes only their methods";
+                $"{node.Name} writes TryPushOptimization, which is generated from the [PushOptimization] interfaces it declares; it writes only their methods";
 
             return model;
         }
@@ -248,7 +248,7 @@ static class Requests
             type
             .OriginalDefinition
             .GetAttributes()
-            .Any(attribute => attribute.AttributeClass?.ToDisplayString() == Optimization);
+            .Any(attribute => attribute.AttributeClass?.ToDisplayString() == PushOptimization);
 
         return isRequest;
     }

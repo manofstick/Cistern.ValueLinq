@@ -2,7 +2,7 @@
 
 namespace Cistern.ValueLinq.Optimizations
 {
-    [Optimization]
+    [PushOptimization]
     internal interface IOptimizationLastMatch<T>
     {
         bool LastMatch(in LastMatch<T> request, out (bool, T) response);

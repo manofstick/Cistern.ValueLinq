@@ -90,8 +90,8 @@ outweighs the allocation, which for every other chain costs more than the rebuil
 
 Cross-node requests go through `INode.TryPushOptimization` with a request struct from `ValueLinq/Optimizations/`. A node
 answers the ones it can and returns false otherwise; the asker falls back to the general path. Each request has an
-interface marked `[Optimization]` (`IOptimizationCount`, ...) of one method named for the request, taking it by `in`
-and the result by `out` (`CVL0001` on any other shape). A node declares the interfaces it answers and writes each
+interface marked `[PushOptimization]` (`IOptimizationCount`, ...) of one method named for the request, taking it by `in`
+and the result by `out` (`CVL0001` on any other arguments). A node declares the interfaces it answers and writes each
 method, non-public; the generator writes `TryPushOptimization`, one guard per interface on the request's type calling
 the method directly (a call through the interface copies the node or, in shared code, costs a second dictionary
 lookup), reading and writing through `Optimizations.Request`'s unchecked reinterpretations. The result's type is not
@@ -225,8 +225,8 @@ copy an exception discards; one writing none gets an empty one generated (a hand
 
 ### Generated wrappers
 
-The extension methods over the source shapes are T4 output (`ValueLinq/EnumerableWrappers/*.tt`; `Collections.tth`
-lists the collection shapes), generated into `obj/t4/` by the build and not checked in. `dotnet-t4` compiles a template
+The extension methods over the source types are T4 output (`ValueLinq/EnumerableWrappers/*.tt`; `Collections.tth`
+lists the collection types), generated into `obj/t4/` by the build and not checked in. `dotnet-t4` compiles a template
 with the SDK of the default .NET install, which must therefore exist. An overload that needs hand-written logic is
 removed from the template's table and written in the matching `Enumerable.*.cs` partial. `ValueEnumerable`'s extension
 methods are hand-written in `ValueEnumerable/ValueEnumerable.cs`; `ValueEnumerable/ExtensionFunctions.tt` is commented

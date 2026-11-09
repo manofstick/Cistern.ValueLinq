@@ -1,7 +1,7 @@
 ﻿
 namespace Cistern.ValueLinq.Optimizations
 {
-    [Optimization]
+    [PushOptimization]
     internal interface IOptimizationCount
     {
         bool Count(in Count request, out int response);

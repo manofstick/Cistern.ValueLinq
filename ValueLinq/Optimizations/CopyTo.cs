@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace Cistern.ValueLinq.Optimizations
 {
-    [Optimization]
+    [PushOptimization]
     internal interface IOptimizationCopyTo<T>
     {
         bool CopyTo(in CopyTo<T> request, out int response);

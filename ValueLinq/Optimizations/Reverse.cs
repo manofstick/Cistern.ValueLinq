@@ -1,6 +1,6 @@
 ﻿namespace Cistern.ValueLinq.Optimizations
 {
-    [Optimization]
+    [PushOptimization]
     internal interface IOptimizationReverse<T>
     {
         bool Reverse(in Reverse request, out NodeContainer<T> response);

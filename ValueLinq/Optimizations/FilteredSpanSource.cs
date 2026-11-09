@@ -2,7 +2,7 @@
 
 namespace Cistern.ValueLinq.Optimizations
 {
-    [Optimization]
+    [PushOptimization]
     internal interface IOptimizationFilteredSpanSource<T>
     {
         bool FilteredSpanSource(in FilteredSpanSource request, out (SpanSource<T> Source, Func<T, bool> Predicate) response);

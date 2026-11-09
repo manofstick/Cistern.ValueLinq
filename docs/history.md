@@ -52,7 +52,7 @@ Over its history the library added:
 - request-based cross-node optimisation (`Count`, `CopyTo`, `SkipTake`, `ElementAt`, …);
 - batches: spans handed down a push chain whole, so the aggregator can vectorise;
 - in-place filling of the push chain, so a chain is built where it runs rather than copied into place;
-- chain rebuilding: a pull chain reshaped at run time where a different shape pays (a `Skip` or `Take` merged into
+- chain rebuilding: a pull chain recreated at run time where a different chain pays (a `Skip` or `Take` merged into
   an ordering below it, a deep `Concat` flattened, an `IEnumerable<T>` source replaced by what it holds);
 - Roslyn source generators writing the plumbing of each operator;
 - the corefx `System.Linq` test suite, imported in full and run against Cistern.

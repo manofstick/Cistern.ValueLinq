@@ -2,7 +2,7 @@
 
 namespace Cistern.ValueLinq.Optimizations
 {
-    [Optimization]
+    [PushOptimization]
     internal interface IOptimizationSplitConcat<T>
     {
         bool SplitConcat(in SplitConcat request, out (SystemIEnumerable.Node<T>, SystemIEnumerable.Node<T>) response);

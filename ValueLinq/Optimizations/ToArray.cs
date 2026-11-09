@@ -1,6 +1,6 @@
 ﻿namespace Cistern.ValueLinq.Optimizations
 {
-    [Optimization]
+    [PushOptimization]
     internal interface IOptimizationToArray<T>
     {
         bool ToArray(in ToArray request, [MaybeNullWhen(false)] out T[] response);

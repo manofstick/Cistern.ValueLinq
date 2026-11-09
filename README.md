@@ -5,7 +5,7 @@ LINQ to Objects, built from structs.
 The architecture was designed in [2020](docs/history.md). It has now been filled in, with the assistance of Claude, to
 cover the whole `System.Linq` surface. Improvements to the JIT since then let it run [faster](#benchmarks) than
 `System.Linq` and ZLinq on most of the queries measured. Its architecture, value types throughout, still lets a chain
-be optimised at run time: nodes rewrite each other, and a typed chain is reshaped where a different shape pays.
+be optimised at run time: nodes rewrite each other, and a typed chain is recreated where a different chain pays.
 
 The design pays in full only where the element types are value types. For a reference type the JIT compiles one
 shared implementation over the canonical type (`__Canon`) and looks up the exact types at run time. Calls through
@@ -110,7 +110,7 @@ flowchart RL
 
 ### Overriding the static type where it pays
 
-A statically typed pull chain cannot change shape at run time, but some queries are much cheaper in a different shape.
+A statically typed pull chain cannot change type at run time, but some queries are much cheaper in a different chain.
 `OrderBy(k).Skip(100).Take(10)` only needs the ten elements of the window, not the whole sort. On the pull side,
 `Skip` and `Take` ask the ordering below them whether it can absorb them. The ordering answers by building a
 *buffered window* node, which puts only the window's elements in order. `foreach` is then handed this rebuilt chain in place of
