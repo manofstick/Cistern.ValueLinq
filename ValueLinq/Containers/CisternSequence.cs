@@ -70,7 +70,7 @@ public static partial class CisternSequence
             _length = LengthOf(start, endInclusive, step);
         }
 
-        private Node(T start, T endInclusive, T step, int length)
+        internal Node(T start, T endInclusive, T step, int length)
         {
             _start = start;
             _endInclusive = endInclusive;

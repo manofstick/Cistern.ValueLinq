@@ -13,6 +13,7 @@ public static partial class SystemRange
         , Optimizations.IOptimizationCopyTo<int>
         , Optimizations.IOptimizationContains<int>
         , Optimizations.IOptimizationSkipTake<int>
+        , Optimizations.IOptimizationReverse<int>
         , Optimizations.IOptimizationAsRange
     {
         internal readonly int _start;
@@ -70,6 +71,19 @@ public static partial class SystemRange
             return true;
         }
 
+        private bool Reverse(in Optimizations.Reverse request, out NodeContainer<int> response)
+        {
+            var count = _max - _start + 1;
+
+            response = default;
+            if (count == 0)
+                response.SetEmpty();
+            else
+                response.SetReversedRange(_start, count);
+
+            return true;
+        }
+
         private bool Contains(in Optimizations.Contains<int> request, out bool response)
         {
             response = (uint)(request.Value - _start) < (uint)(_max - _start + 1);
@@ -78,6 +92,24 @@ public static partial class SystemRange
 
         TPushResult INode<int>.CreateViaPush<TPushResult, TPushEnumerator, TPushFiller>(in ChainOptions options, in TPushFiller filler)
                 => ExecutePush<int, TPushResult, TPushEnumerator>(_start, _max, PushFiller.Fill<TPushEnumerator, TPushFiller>(in filler));
+
+        // a range that is not empty, from max down to start
+        internal static TResult ExecuteReversePush<TElement, TResult, TPushEnumerator>(int start, int max, TPushEnumerator fenum)
+            where TPushEnumerator : IPushEnumerator<TElement>
+        {
+            try
+            {
+                // stops on reaching start rather than passing it, which a range starting at int.MinValue cannot
+                var i = max;
+                while (fenum.ProcessNext((TElement)(object)i) && i != start)
+                    --i;
+                return fenum.GetResult<TResult>();
+            }
+            finally
+            {
+                fenum.Dispose();
+            }
+        }
 
         // generic over the element for a range held in a NodeContainer<TElement>, whose TElement is then int
         internal static TResult ExecutePush<TElement, TResult, TPushEnumerator>(int start, int max, TPushEnumerator fenum)

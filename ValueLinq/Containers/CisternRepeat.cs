@@ -15,6 +15,7 @@ public static partial class CisternRepeat
         , Optimizations.IOptimizationSkipTake<T>
         , Optimizations.IOptimizationElementAt<T>
         , Optimizations.IOptimizationContains<T>
+        , Optimizations.IOptimizationReverse<T>
     {
         internal T _element;
         internal int _count;
@@ -68,6 +69,13 @@ public static partial class CisternRepeat
             else
                 response.SetNode(new Node<T>(_element, count));
 
+            return true;
+        }
+
+        private readonly bool Reverse(in Optimizations.Reverse request, out NodeContainer<T> response)
+        {
+            response = default;
+            response.SetNode(this);
             return true;
         }
 

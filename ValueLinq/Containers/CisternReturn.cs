@@ -9,6 +9,7 @@ public static partial class CisternReturn
     [Answerer]
     public partial struct Node<T>
         : INode<T>
+        , Optimizations.IOptimizationReverse<T>
     {
         internal T _element;
 
@@ -16,6 +17,13 @@ public static partial class CisternReturn
             info = new CountInformation(1, true);
 
         public Node(T element) => _element = element;
+
+        private readonly bool Reverse(in Optimizations.Reverse request, out NodeContainer<T> response)
+        {
+            response = default;
+            response.SetNode(this);
+            return true;
+        }
 
         TPushResult INode<T>.CreateViaPush<TPushResult, TPushEnumerator, TPushFiller>(in ChainOptions options, in TPushFiller filler)
             => CisternReturn.ExecutePush<T, TPushResult, TPushEnumerator>(_element, PushFiller.Fill<TPushEnumerator, TPushFiller>(in filler));

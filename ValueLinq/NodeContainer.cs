@@ -17,13 +17,16 @@ enum NodeType : byte
     ReversedListSegment,
     IListSegment,
     IReadOnlyListSegment,
+    ReversedIListSegment,
+    ReversedIReadOnlyListSegment,
     EnumerableSlice,
     Range,
+    ReversedRange,
 }
 
 // The node a request is answered with, held as a tag and the parts the node is rebuilt from on dispatch: one
 // reference (the INode, the array, the List<T>, the IList<T>, the IReadOnlyList<T> or the IEnumerable<T> of a
-// slice) with a start and count, a range's start and count, or a memory. Kept small, with two references, as it is
+// slice) with a start and count, a range's start and count (a reversed one counting down from its last), or a memory. Kept small, with two references, as it is
 // zeroed, copied and returned on every request descent and sits in the frame of whatever inlines one.
 struct NodeContainer<TElement>
 {
@@ -84,6 +87,18 @@ struct NodeContainer<TElement>
         (_reference, _start, _count) = (node._list, node._start, node._count);
     }
 
+    public void SetNode(SystemIList.ReversedNode<TElement> node)
+    {
+        Type = NodeType.ReversedIListSegment;
+        (_reference, _start, _count) = (node._list, node._start, node._count);
+    }
+
+    public void SetNode(SystemIReadOnlyList.ReversedNode<TElement> node)
+    {
+        Type = NodeType.ReversedIReadOnlyListSegment;
+        (_reference, _start, _count) = (node._list, node._start, node._count);
+    }
+
     // a take of all is held as -1; a skip or take past int.MaxValue, which only an unbounded source reaches, is boxed
     public void SetNode(SystemEnumerableSkipTake.Node<TElement> node)
     {
@@ -105,6 +120,13 @@ struct NodeContainer<TElement>
         (_start, _count) = (start, count);
     }
 
+    // the range from start for count, counting down from its last
+    public void SetReversedRange(int start, int count)
+    {
+        Type = NodeType.ReversedRange;
+        (_start, _count) = (start, count);
+    }
+
     // each read as the tag says it is
     private INode<TElement> Node => (INode<TElement>)_reference!;
     private SystemArray.Node<TElement> ArrayNode => new((TElement[])_reference!, true);
@@ -114,8 +136,11 @@ struct NodeContainer<TElement>
     private SystemListSkipTake.ReversedNode<TElement> ReversedListNode => new((List<TElement>)_reference!, _start, _count);
     private SystemIList.Node<TElement> IListSegmentNode => new((IList<TElement>)_reference!, _start, _count);
     private SystemIReadOnlyList.Node<TElement> IReadOnlyListSegmentNode => new((IReadOnlyList<TElement>)_reference!, _start, _count);
+    private SystemIList.ReversedNode<TElement> ReversedIListSegmentNode => new((IList<TElement>)_reference!, _start, _count);
+    private SystemIReadOnlyList.ReversedNode<TElement> ReversedIReadOnlyListSegmentNode => new((IReadOnlyList<TElement>)_reference!, _start, _count);
     private SystemEnumerableSkipTake.Node<TElement> EnumerableSliceNode => new((IEnumerable<TElement>)_reference!, _start, _count < 0 ? long.MaxValue : _count);
     private SystemRange.Node RangeNode => new(_start, _count);
+    private CisternSequence.Node<int> ReversedRangeNode => new(_start + _count - 1, _start, -1, _count);
 
     public bool TryPushOptimization<TRequest, TResult>(in TRequest request, [MaybeNullWhen(false)] out TResult result)
         where TRequest : notnull =>
@@ -130,8 +155,11 @@ struct NodeContainer<TElement>
             NodeType.ReversedListSegment => ReversedListNode.TryPushOptimization<TRequest, TResult>(in request, out result),
             NodeType.IListSegment   => IListSegmentNode.TryPushOptimization<TRequest, TResult>(in request, out result),
             NodeType.IReadOnlyListSegment => IReadOnlyListSegmentNode.TryPushOptimization<TRequest, TResult>(in request, out result),
+            NodeType.ReversedIListSegment => ReversedIListSegmentNode.TryPushOptimization<TRequest, TResult>(in request, out result),
+            NodeType.ReversedIReadOnlyListSegment => ReversedIReadOnlyListSegmentNode.TryPushOptimization<TRequest, TResult>(in request, out result),
             NodeType.EnumerableSlice => EnumerableSliceNode.TryPushOptimization<TRequest, TResult>(in request, out result),
             NodeType.Range          => RangeNode.TryPushOptimization<TRequest, TResult>(in request, out result),
+            NodeType.ReversedRange  => ReversedRangeNode.TryPushOptimization<TRequest, TResult>(in request, out result),
             _ => throw new InvalidOperationException(),
         };
 
@@ -149,8 +177,11 @@ struct NodeContainer<TElement>
             NodeType.ReversedListSegment => ReversedListNode.CreateViaPush<TResult, TPushEnumerator, TFiller>(in options, in filler),
             NodeType.IListSegment   => IListSegmentNode.CreateViaPush<TResult, TPushEnumerator, TFiller>(in options, in filler),
             NodeType.IReadOnlyListSegment => IReadOnlyListSegmentNode.CreateViaPush<TResult, TPushEnumerator, TFiller>(in options, in filler),
+            NodeType.ReversedIListSegment => ReversedIListSegmentNode.CreateViaPush<TResult, TPushEnumerator, TFiller>(in options, in filler),
+            NodeType.ReversedIReadOnlyListSegment => ReversedIReadOnlyListSegmentNode.CreateViaPush<TResult, TPushEnumerator, TFiller>(in options, in filler),
             NodeType.EnumerableSlice => EnumerableSliceNode.CreateViaPush<TResult, TPushEnumerator, TFiller>(in options, in filler),
             NodeType.Range          => SystemRange.Node.ExecutePush<TElement, TResult, TPushEnumerator>(_start, _start + _count - 1, PushFiller.Fill<TPushEnumerator, TFiller>(in filler)),
+            NodeType.ReversedRange  => SystemRange.Node.ExecuteReversePush<TElement, TResult, TPushEnumerator>(_start, _start + _count - 1, PushFiller.Fill<TPushEnumerator, TFiller>(in filler)),
             _ => throw new InvalidOperationException(),
         };
 }
