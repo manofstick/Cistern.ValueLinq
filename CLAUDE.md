@@ -117,6 +117,14 @@ place over another's parts is called directly. A type whose whole answer is a fo
   straitjacket with no principle behind it: System.Linq runs a selector for nothing else it does not have to, so
   `Count` is the one aggregate where the selector's side effects are a promise, and it keeps every `Count` over a
   Select from answering without the Select.
+- `Map` and `Filter` are `Select` and `Where` over a function the caller promises is pure, pushed through the same
+  forwarders, and answer what those must not: Map's `Count` and `Any` from its source alone, any `ElementAt` found in
+  the source and only it projected, a `SkipTake` its source cannot slice by a Skip moved below it, and `Reverse` as the
+  projection over the reversed source; Filter's from-end `ElementAt` scanning from the end, and `Reverse` likewise.
+  `Filter` over an `OrderBy` (also through a `Reverse` above or below it) or a `Shuffle` is typed as that node over the
+  Filter, by overloads on `ValueEnumerable` whose receiver names the reordering node. Over a `Reverse` alone it stays
+  above: whether sinking pays depends on what reads the result (an element access stops at the first match from the
+  end; only a read of every element gains from the smaller buffer), which the type cannot know.
 - A request asked for real is never declined once its dry run has answered, and a node that declines has run nothing:
   one whose answer may run user code (OrderBy's selection) under a node made of parts is asked only once that node has
   settled everything that could make it decline.

@@ -342,6 +342,22 @@ namespace Cistern.ValueLinq
 
             return new Nodes.SelectIdx.Node<T, U, TPrior>(in prior, selector);
         }
+        internal static Nodes.Map.Node<T, U, TPrior> Map<T, U, TPrior>(in TPrior prior, Func<T, U> selector)
+            where TPrior : INode<T>
+        {
+            if (selector == null)
+                throw new ArgumentNullException(nameof(selector));
+
+            return new Nodes.Map.Node<T, U, TPrior>(in prior, selector);
+        }
+        internal static Nodes.Filter.Node<T, TPrior> Filter<T, TPrior>(in TPrior prior, Func<T, bool> predicate)
+            where TPrior : INode<T>
+        {
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
+
+            return new Nodes.Filter.Node<T, TPrior>(in prior, predicate);
+        }
         internal static Nodes.Where.Node<T, TPrior> Where<T, TPrior>(in TPrior prior, Func<T, bool> predicate)
             where TPrior : INode<T>
         {

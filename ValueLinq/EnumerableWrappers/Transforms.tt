@@ -185,6 +185,20 @@
         ),
 
         (
+            Signature  : new Func<string, string>(collection => $"Map<TSource, TResult>(this {collection} source, Func<TSource, TResult> selector)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Map(Enumerable.ToNode(source), selector))"),
+            OutputType : "TResult",
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.Map.Node<TSource, TResult, {collectionNodeName}>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.Map.Pull<TSource, TResult, {collectionNodeName}, {collectionEnumeratorName}>")
+        ),
+        (
+            Signature  : new Func<string, string>(collection => $"Filter<TSource>(this {collection} source, Func<TSource, bool> predicate)"),
+            Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Filter(Enumerable.ToNode(source), predicate))"),
+            OutputType : "TSource",
+            NodeName   : new Func<string, string>(collectionNodeName => $"Nodes.Filter.Node<TSource, {collectionNodeName}>"),
+            EnumeratorName : new Func<string, string, string>((collectionNodeName, collectionEnumeratorName) => $"Nodes.Filter.Pull<TSource, {collectionNodeName}, {collectionEnumeratorName}>")
+        ),
+        (
             Signature  : new Func<string, string>(collection => $"Where<TSource>(this {collection} source, Func<TSource, bool> predicate)"),
             Code       : new Func<string, string>(collectionNodeName => $"new (NodeImpl.Where(Enumerable.ToNode(source), predicate))"),
             OutputType : "TSource",

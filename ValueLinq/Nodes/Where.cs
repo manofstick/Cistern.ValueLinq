@@ -302,7 +302,7 @@ public static partial class Where
         return count;
     }
 
-    partial struct Push<T, Next>
+    internal partial struct Push<T, Next>
     {
         // a cold batch only over a downstream that reads every element, as one does that takes cold
         static BatchKinds IPushEnumerator<T>.AllowBatchesWhen =>

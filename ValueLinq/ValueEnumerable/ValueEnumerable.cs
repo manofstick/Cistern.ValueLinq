@@ -184,6 +184,52 @@ namespace Cistern.ValueLinq
             where TPriorEnumerator : struct, IPullEnumerator<TSource>, INodeEnumerator<TPrior, TPriorEnumerator>
             => new (NodeImpl.Select(in prior.Node, selector));
 
+        /// <summary>
+        /// Select with a pure selector: one with no side effects whose result depends only on its argument, so it is
+        /// run only for the elements a result is made of (never to count, test for any element, or skip).
+        /// </summary>
+        public static ValueEnumerable<U, Nodes.Map.Node<TSource, U, TPrior>, Nodes.Map.Pull<TSource, U, TPrior, TPriorEnumerator>> Map<TSource, U, TPrior, TPriorEnumerator>(in this ValueEnumerable<TSource, TPrior, TPriorEnumerator> prior, Func<TSource, U> selector)
+            where TPrior : INode<TSource>
+            where TPriorEnumerator : struct, IPullEnumerator<TSource>, INodeEnumerator<TPrior, TPriorEnumerator>
+            => new (NodeImpl.Map(in prior.Node, selector));
+
+        /// <summary>
+        /// Where with a pure predicate: one with no side effects whose result depends only on its argument, so it may
+        /// be run in any order (from the end, for a from-end index or a reversal).
+        /// </summary>
+        public static ValueEnumerable<TSource, Nodes.Filter.Node<TSource, TPrior>, Nodes.Filter.Pull<TSource, TPrior, TPriorEnumerator>> Filter<TSource, TPrior, TPriorEnumerator>(in this ValueEnumerable<TSource, TPrior, TPriorEnumerator> prior, Func<TSource, bool> predicate)
+            where TPrior : INode<TSource>
+            where TPriorEnumerator : struct, IPullEnumerator<TSource>, INodeEnumerator<TPrior, TPriorEnumerator>
+            => new (NodeImpl.Filter(in prior.Node, predicate));
+
+        // a pure predicate passes the same elements in any order, so it is applied below a reordering: fewer elements
+        // are buffered, and the reordering's own answers (an ordering's selection, a reversal's mirrored index, a
+        // permutation's single draw) find an element of the result; an ordering's key selector then runs only on the
+        // elements kept
+        public static ValueEnumerable<TSource, Nodes.OrderBy.Node<TSource, TKeySelectors, Nodes.Filter.Node<TSource, TPrior>>, Nodes.OrderBy.Pull<TSource, TKeySelectors, Nodes.Filter.Node<TSource, TPrior>>> Filter<TSource, TKeySelectors, TPrior>(in this ValueEnumerable<TSource, Nodes.OrderBy.Node<TSource, TKeySelectors, TPrior>, Nodes.OrderBy.Pull<TSource, TKeySelectors, TPrior>> prior, Func<TSource, bool> predicate)
+            where TPrior : INode<TSource>
+            where TKeySelectors : Nodes.OrderBy.IKeySelectors<TSource>
+            => new (FilterBelow(in prior.Node, predicate));
+
+        public static ValueEnumerable<TSource, Nodes.OrderBy.Node<TSource, TKeySelectors, Nodes.Reverse.Node<TSource, Nodes.Filter.Node<TSource, TPrior>>>, Nodes.OrderBy.Pull<TSource, TKeySelectors, Nodes.Reverse.Node<TSource, Nodes.Filter.Node<TSource, TPrior>>>> Filter<TSource, TKeySelectors, TPrior>(in this ValueEnumerable<TSource, Nodes.OrderBy.Node<TSource, TKeySelectors, Nodes.Reverse.Node<TSource, TPrior>>, Nodes.OrderBy.Pull<TSource, TKeySelectors, Nodes.Reverse.Node<TSource, TPrior>>> prior, Func<TSource, bool> predicate)
+            where TPrior : INode<TSource>
+            where TKeySelectors : Nodes.OrderBy.IKeySelectors<TSource>
+            => new (new Nodes.OrderBy.Node<TSource, TKeySelectors, Nodes.Reverse.Node<TSource, Nodes.Filter.Node<TSource, TPrior>>>(prior.Node._nodeT.Over(NodeImpl.Filter(in prior.Node._nodeT._nodeT, predicate)), prior.Node._keySelectors));
+
+        public static ValueEnumerable<TSource, Nodes.Reverse.Node<TSource, Nodes.OrderBy.Node<TSource, TKeySelectors, Nodes.Filter.Node<TSource, TPrior>>>, Nodes.Reverse.Pull<TSource, Nodes.OrderBy.Node<TSource, TKeySelectors, Nodes.Filter.Node<TSource, TPrior>>>> Filter<TSource, TKeySelectors, TPrior>(in this ValueEnumerable<TSource, Nodes.Reverse.Node<TSource, Nodes.OrderBy.Node<TSource, TKeySelectors, TPrior>>, Nodes.Reverse.Pull<TSource, Nodes.OrderBy.Node<TSource, TKeySelectors, TPrior>>> prior, Func<TSource, bool> predicate)
+            where TPrior : INode<TSource>
+            where TKeySelectors : Nodes.OrderBy.IKeySelectors<TSource>
+            => new (prior.Node.Over(FilterBelow(in prior.Node._nodeT, predicate)));
+
+        public static ValueEnumerable<TSource, Nodes.Shuffle.Node<TSource, Nodes.Filter.Node<TSource, TPrior>>, Nodes.Shuffle.Pull<TSource, Nodes.Filter.Node<TSource, TPrior>>> Filter<TSource, TPrior>(in this ValueEnumerable<TSource, Nodes.Shuffle.Node<TSource, TPrior>, Nodes.Shuffle.Pull<TSource, TPrior>> prior, Func<TSource, bool> predicate)
+            where TPrior : INode<TSource>
+            => new (NodeImpl.Shuffle<TSource, Nodes.Filter.Node<TSource, TPrior>>(NodeImpl.Filter(in prior.Node._nodeT, predicate)));
+
+        private static Nodes.OrderBy.Node<TSource, TKeySelectors, Nodes.Filter.Node<TSource, TPrior>> FilterBelow<TSource, TKeySelectors, TPrior>(in Nodes.OrderBy.Node<TSource, TKeySelectors, TPrior> ordering, Func<TSource, bool> predicate)
+            where TPrior : INode<TSource>
+            where TKeySelectors : Nodes.OrderBy.IKeySelectors<TSource>
+            => new (NodeImpl.Filter(in ordering._nodeT, predicate), ordering._keySelectors);
+
         public static ValueEnumerable<TSource, Nodes.Where.Node<TSource, TPrior>, Nodes.Where.Pull<TSource, TPrior, TPriorEnumerator>> Where<TSource, TPrior, TPriorEnumerator>(in this ValueEnumerable<TSource, TPrior, TPriorEnumerator> prior, Func<TSource, bool> predicate)
             where TPrior : INode<TSource>
             where TPriorEnumerator : struct, IPullEnumerator<TSource>, INodeEnumerator<TPrior, TPriorEnumerator>

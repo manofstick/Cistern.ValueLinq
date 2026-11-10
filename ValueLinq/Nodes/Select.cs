@@ -38,18 +38,8 @@ public static partial class Select
             return NodeImpl.TryGetNonEnumeratedCount<T, NodeT>(in _nodeT, out response);
         }
 
-        // over a Where over a span, Where's two passes with the selector run on the survivors
-        private bool ToArray(in Optimizations.ToArray request, [MaybeNullWhen(false)] out U[] response)
-        {
-            if (!Optimizations.FilteredSpanSource.TryGet<T, NodeT>(ref _nodeT, out var filtered))
-            {
-                response = default;
-                return false;
-            }
-
-            response = Where.ToArray(filtered.Source.GetSpan(), filtered.Predicate, _selector);
-            return true;
-        }
+        private bool ToArray(in Optimizations.ToArray request, [MaybeNullWhen(false)] out U[] response) =>
+            FilteredToArray(ref _nodeT, _selector, out response);
 
         // the source finds the element and only it is projected, as System.Linq's Select iterators answer First, Last
         // and ElementAt (an ordering below selects rather than sorts); a source that declines an index from the start
@@ -93,53 +83,71 @@ public static partial class Select
             return true;
         }
 
-        // over a source with a span the copy projects straight into the destination, the selector run once per element
-        // in order, as the push would run it, and as System.Linq's Select fills an array or list of known size
-        private bool CopyTo(in Optimizations.CopyTo<U> request, out int response)
+        private bool CopyTo(in Optimizations.CopyTo<U> request, out int response) =>
+            ProjectedCopyTo(ref _nodeT, _selector, in request, out response);
+    }
+
+    // over a Where over a span, Where's two passes with the selector run on the survivors
+    internal static bool FilteredToArray<T, U, NodeT>(ref NodeT node, Func<T, U> selector, [MaybeNullWhen(false)] out U[] response)
+        where NodeT : INode<T>
+    {
+        if (!Optimizations.FilteredSpanSource.TryGet<T, NodeT>(ref node, out var filtered))
         {
-            if (!Optimizations.AsSpanSource.TryGet<T, NodeT>(ref _nodeT, out var source))
-            {
-                if (typeof(T) == typeof(int))
-                    return CopyRangeTo(in request, out response);
-
-                response = default;
-                return false;
-            }
-
-            var span = source.GetSpan();
-            if (!request.IsDryRun)
-            {
-                var destination = request.Span.Slice(0, span.Length);
-                var selector = _selector;
-                for (var i = 0; i < span.Length; ++i)
-                    destination[i] = selector(span[i]);
-            }
-
-            response = span.Length;
-            return true;
+            response = default;
+            return false;
         }
 
-        // over a range its values are computed in one counted loop rather than pulled from it, as System.Linq's
-        // RangeSelectIterator fills its result
-        private bool CopyRangeTo(in Optimizations.CopyTo<U> request, out int response)
+        response = Where.ToArray(filtered.Source.GetSpan(), filtered.Predicate, selector);
+        return true;
+    }
+
+    // over a source with a span the copy projects straight into the destination, the selector run once per element
+    // in order, as the push would run it, and as System.Linq's Select fills an array or list of known size
+    internal static bool ProjectedCopyTo<T, U, NodeT>(ref NodeT node, Func<T, U> selector, in Optimizations.CopyTo<U> request, out int response)
+        where NodeT : INode<T>
+    {
+        if (!Optimizations.AsSpanSource.TryGet<T, NodeT>(ref node, out var source))
         {
-            if (!Optimizations.AsRange.TryGet(ref _nodeT, out var range))
-            {
-                response = default;
-                return false;
-            }
+            if (typeof(T) == typeof(int))
+                return ProjectedCopyRangeTo(ref node, selector, in request, out response);
 
-            if (!request.IsDryRun)
-            {
-                var destination = request.Span.Slice(0, range.Count);
-                var selector = (Func<int, U>)(object)_selector;
-                for (var i = 0; i < destination.Length; ++i)
-                    destination[i] = selector(range.Start + i);
-            }
-
-            response = range.Count;
-            return true;
+            response = default;
+            return false;
         }
+
+        var span = source.GetSpan();
+        if (!request.IsDryRun)
+        {
+            var destination = request.Span.Slice(0, span.Length);
+            for (var i = 0; i < span.Length; ++i)
+                destination[i] = selector(span[i]);
+        }
+
+        response = span.Length;
+        return true;
+    }
+
+    // over a range its values are computed in one counted loop rather than pulled from it, as System.Linq's
+    // RangeSelectIterator fills its result
+    private static bool ProjectedCopyRangeTo<T, U, NodeT>(ref NodeT node, Func<T, U> selector, in Optimizations.CopyTo<U> request, out int response)
+        where NodeT : INode<T>
+    {
+        if (!Optimizations.AsRange.TryGet(ref node, out var range))
+        {
+            response = default;
+            return false;
+        }
+
+        if (!request.IsDryRun)
+        {
+            var destination = request.Span.Slice(0, range.Count);
+            var intSelector = (Func<int, U>)(object)selector;
+            for (var i = 0; i < destination.Length; ++i)
+                destination[i] = intSelector(range.Start + i);
+        }
+
+        response = range.Count;
+        return true;
     }
 
     // a selector over an aggregator, as the selector overloads of the maths aggregations run it

@@ -201,6 +201,22 @@ outweighs the allocation. For every other chain the allocation costs more than t
 
 The contract between an enumerator and whoever pulls it is in [`PullProtocol.md`](../ValueLinq/Docs/PullProtocol.md).
 
+## Rented buffers
+
+A working buffer that does not outlive the call is rented from `ArrayPool<T>.Shared` rather than allocated: the
+`ToArray` and `ToList` builders' storage, a cold collection copied out to be read as a span, and what Reverse, Shuffle
+and OrderBy buffer. Pushed, a buffering node materialises its source into a rented array and then pushes the array as
+its own source, which the push protocol releases, returning the array, when the loop ends, by an exception or not. A
+source that throws while the array is being filled leaves it to the GC. A buffer of a type holding references is
+cleared as it goes back, so the pool does not keep its elements alive. One under 1 KB is allocated instead, as renting
+and returning it cost more than they save.
+
+Pulled, the buffer has to outlive each `MoveNext`, held in an enumerator struct that a caller can copy, and a copy's
+`Dispose` would return an array the others still read. So a buffering node pulled holds its buffer through a
+`PooledBuffer.Lease`, one small object every copy shares, and the array goes back once, at the first `Dispose`. Why a
+copy is the hazard and what it can still see are in
+[`PullProtocol.md`](../ValueLinq/Docs/PullProtocol.md#copies-and-rented-buffers).
+
 ## Requests
 
 Nodes optimise each other through requests. A request is a struct from
