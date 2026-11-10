@@ -27,7 +27,7 @@ public static partial class Shuffle
         , IBuffered<T>
         where NodeT : INode<T>
     {
-        internal NodeT _nodeT;
+        private NodeT _nodeT;
 
         public void GetCountInformation(out CountInformation info)
         {

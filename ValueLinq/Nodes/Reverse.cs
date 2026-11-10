@@ -25,7 +25,7 @@ public static partial class Reverse
         , IBuffered<T>
         where NodeT : INode<T>
     {
-        internal NodeT _nodeT;
+        private NodeT _nodeT;
 
         // held flat rather than as the nullables the constructor takes: the JIT promotes each of these, so the node is
         // written in place where it is built, where a nullable tuple field is built in a temp and copied whole
@@ -39,18 +39,6 @@ public static partial class Reverse
             _maxCountForStackBasedPath = maybeMaxCountForStackBasedPath ?? 64;
             _arrayPool = arrayPoolInfo?.arrayPool;
             _cleanBuffers = arrayPoolInfo?.cleanBuffers ?? false;
-        }
-
-        // this reversal, with its buffering, over another source
-        internal readonly Node<T, NodeU> Over<NodeU>(in NodeU source)
-            where NodeU : INode<T>
-        {
-            var node = default(Node<T, NodeU>);
-            node._nodeT = source;
-            node._maxCountForStackBasedPath = _maxCountForStackBasedPath;
-            node._arrayPool = _arrayPool;
-            node._cleanBuffers = _cleanBuffers;
-            return node;
         }
 
         public void GetCountInformation(out CountInformation info)
