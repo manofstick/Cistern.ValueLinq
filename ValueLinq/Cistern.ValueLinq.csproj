@@ -5,7 +5,12 @@
     <RootNamespace>Cistern.ValueLinq</RootNamespace>
     <AssemblyName>Cistern.ValueLinq</AssemblyName>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.1.13</Version>
+    <Version>1.0.0-preview.1</Version>
+    <Authors>Paul Westcott</Authors>
+    <Description>LINQ to Objects rebuilt from value types, no need to change any code, except changing one using statement.</Description>
+    <PackageProjectUrl>https://github.com/manofstick/Cistern.ValueLinq</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/manofstick/Cistern.ValueLinq</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>

@@ -1,10 +1,10 @@
 ﻿# Cistern.ValueLinq
 
-LINQ to Objects rebuilt from value types. Switching to it means changing one `using`.
+LINQ to Objects rebuilt from value types, no need to change any code, except changing one using statement.
 
 The architecture was designed in [2020](docs/history.md). It has now been filled in, with the assistance of Claude, to
 cover the whole `System.Linq` surface. Improvements to the JIT since then let it run [faster](#benchmarks) than
-`System.Linq` and ZLinq on most of the queries measured. Its architecture, value types throughout, still lets a chain
+`System.Linq` and [ZLinq](https://github.com/Cysharp/ZLinq) on most of the queries measured. Its architecture, value types throughout, still lets a chain
 be optimised at run time: nodes rewrite each other, and a typed chain is recreated where a different chain pays.
 
 The design pays in full only where the element types are value types. For a reference type the JIT compiles one
