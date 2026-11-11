@@ -141,4 +141,12 @@ public static partial class LeftJoin
             return table;
         }
     }
+
+    public readonly struct PairSelector<TOuter, TInner>
+        : Zip.ISelector<TOuter, TInner, (TOuter Outer, TInner? Inner)>
+    {
+        static bool Zip.ISelector<TOuter, TInner, (TOuter Outer, TInner? Inner)>.PotentialSideEffects => false;
+
+        (TOuter Outer, TInner? Inner) Zip.ISelector<TOuter, TInner, (TOuter Outer, TInner? Inner)>.Invoke(TOuter outer, TInner inner) => (outer, inner);
+    }
 }

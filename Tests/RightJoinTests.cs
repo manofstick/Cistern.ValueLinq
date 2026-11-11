@@ -471,10 +471,9 @@ namespace Linqs.Tests
 #endif
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        [Fact]
         public void TupleRightJoin_Basic()
         {
-#if !CISTERN_VALUELINQ
             string[] outer = ["prakash", "tim"];
             string[] inner = ["prakash", "robert", "unknown"];
 
@@ -488,13 +487,11 @@ namespace Linqs.Tests
             ];
 
             Assert.Equal(expected, result);
-#endif
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        [Fact]
         public void TupleRightJoin_EmptyOuter()
         {
-#if !CISTERN_VALUELINQ
             string[] outer = [];
             string[] inner = ["prakash"];
 
@@ -502,24 +499,20 @@ namespace Linqs.Tests
             Assert.Single(result);
             Assert.Null(result[0].Outer);
             Assert.Equal("prakash", result[0].Inner);
-#endif
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        [Fact]
         public void TupleRightJoin_EmptyInner()
         {
-#if !CISTERN_VALUELINQ
             string[] outer = ["Prakash"];
             string[] inner = Array.Empty<string>();
 
             Assert.Empty(outer.RightJoin(inner, o => o, i => i));
-#endif
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        [Fact]
         public void TupleRightJoin_WithComparer()
         {
-#if !CISTERN_VALUELINQ
             CustomerRec[] outer =
             [
                 new CustomerRec{ name = "Tim", custID = 99021 }
@@ -535,51 +528,42 @@ namespace Linqs.Tests
             Assert.Equal(2, result.Count);
             Assert.Contains(result, r => r.Outer.name == "Tim" && r.Inner.name == "miT");
             Assert.Contains(result, r => r.Outer.name == null && r.Inner.name == "Prakash");
-#endif
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        [Fact]
         public void TupleRightJoin_OuterNull()
         {
-#if !CISTERN_VALUELINQ
             CustomerRec[] outer = null;
             OrderRec[] inner = [new OrderRec{ orderID = 45321, custID = 98022, total = 50 }];
 
             AssertExtensions.Throws<ArgumentNullException>("outer", () => outer.RightJoin(inner, o => o.custID, i => i.custID));
-#endif
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        [Fact]
         public void TupleRightJoin_InnerNull()
         {
-#if !CISTERN_VALUELINQ
             CustomerRec[] outer = [new CustomerRec{ name = "Prakash", custID = 98022 }];
             OrderRec[] inner = null;
 
             AssertExtensions.Throws<ArgumentNullException>("inner", () => outer.RightJoin(inner, o => o.custID, i => i.custID));
-#endif
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        [Fact]
         public void TupleRightJoin_OuterKeySelectorNull()
         {
-#if !CISTERN_VALUELINQ
             CustomerRec[] outer = [new CustomerRec{ name = "Prakash", custID = 98022 }];
             OrderRec[] inner = [new OrderRec{ orderID = 45321, custID = 98022, total = 50 }];
 
             AssertExtensions.Throws<ArgumentNullException>("outerKeySelector", () => outer.RightJoin(inner, (Func<CustomerRec, int>)null, i => i.custID));
-#endif
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        [Fact]
         public void TupleRightJoin_InnerKeySelectorNull()
         {
-#if !CISTERN_VALUELINQ
             CustomerRec[] outer = [new CustomerRec{ name = "Prakash", custID = 98022 }];
             OrderRec[] inner = [new OrderRec{ orderID = 45321, custID = 98022, total = 50 }];
 
             AssertExtensions.Throws<ArgumentNullException>("innerKeySelector", () => outer.RightJoin(inner, o => o.custID, (Func<OrderRec, int>)null));
-#endif
         }
     }
 }

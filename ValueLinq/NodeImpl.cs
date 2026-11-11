@@ -1330,6 +1330,23 @@ namespace Cistern.ValueLinq
             return node;
         }
 
+        internal static Nodes.Join.Node<TOuter, TInner, TKey, (TOuter Outer, TInner Inner), TPrior, Nodes.Zip.PairSelector<TOuter, TInner>> Join<TOuter, TInner, TKey, TPrior>(in TPrior prior, IEnumerable<TInner> inner, Func<TOuter, TKey> outerKeySelector, Func<TInner, TKey> innerKeySelector, IEqualityComparer<TKey>? comparer)
+            where TPrior : INode<TOuter>
+        {
+            if (inner == null)
+                throw new ArgumentNullException(nameof(inner));
+            if (outerKeySelector == null)
+                throw new ArgumentNullException(nameof(outerKeySelector));
+            if (innerKeySelector == null)
+                throw new ArgumentNullException(nameof(innerKeySelector));
+
+            var innerNode = new SystemIEnumerable.Node<TInner>(inner);
+
+            var node = new Nodes.Join.Node<TOuter, TInner, TKey, (TOuter Outer, TInner Inner), TPrior, Nodes.Zip.PairSelector<TOuter, TInner>>(in prior, innerNode, outerKeySelector, innerKeySelector, comparer, default);
+
+            return node;
+        }
+
         internal static Nodes.LeftJoin.Node<TOuter, TInner, TKey, TResult, TPrior, SystemIEnumerable.Node<TInner>, Nodes.Zip.FuncSelector<TOuter, TInner, TResult>> LeftJoin<TOuter, TInner, TKey, TResult, TPrior>(in TPrior prior, IEnumerable<TInner> inner, Func<TOuter, TKey> outerKeySelector, Func<TInner, TKey> innerKeySelector, Func<TOuter, TInner?, TResult> resultSelector, IEqualityComparer<TKey>? comparer)
             where TPrior : INode<TOuter>
         {
@@ -1351,6 +1368,24 @@ namespace Cistern.ValueLinq
             return node;
         }
 
+        internal static Nodes.LeftJoin.Node<TOuter, TInner, TKey, (TOuter Outer, TInner? Inner), TPrior, SystemIEnumerable.Node<TInner>, Nodes.LeftJoin.PairSelector<TOuter, TInner>> LeftJoin<TOuter, TInner, TKey, TPrior>(in TPrior prior, IEnumerable<TInner> inner, Func<TOuter, TKey> outerKeySelector, Func<TInner, TKey> innerKeySelector, IEqualityComparer<TKey>? comparer)
+            where TPrior : INode<TOuter>
+        {
+            if (inner == null)
+                throw new ArgumentNullException(nameof(inner));
+            if (outerKeySelector == null)
+                throw new ArgumentNullException(nameof(outerKeySelector));
+            if (innerKeySelector == null)
+                throw new ArgumentNullException(nameof(innerKeySelector));
+
+            var innerNode = new SystemIEnumerable.Node<TInner>(inner);
+            var lookupSource = new Nodes.LeftJoin.LookupSource<TInner, TKey, SystemIEnumerable.Node<TInner>>(in innerNode, innerKeySelector, comparer);
+
+            var node = new Nodes.LeftJoin.Node<TOuter, TInner, TKey, (TOuter Outer, TInner? Inner), TPrior, SystemIEnumerable.Node<TInner>, Nodes.LeftJoin.PairSelector<TOuter, TInner>>(in prior, in lookupSource, outerKeySelector, default);
+
+            return node;
+        }
+
         internal static Nodes.LeftJoin.Node<TInner, TOuter, TKey, TResult, SystemIEnumerable.Node<TInner>, TPrior, Nodes.RightJoin.FuncSelector<TInner, TOuter, TResult>> RightJoin<TOuter, TInner, TKey, TResult, TPrior>(in TPrior prior, IEnumerable<TInner> inner, Func<TOuter, TKey> outerKeySelector, Func<TInner, TKey> innerKeySelector, Func<TOuter?, TInner, TResult> resultSelector, IEqualityComparer<TKey>? comparer)
             where TPrior : INode<TOuter>
         {
@@ -1368,6 +1403,24 @@ namespace Cistern.ValueLinq
             var selector = new Nodes.RightJoin.FuncSelector<TInner, TOuter, TResult>(resultSelector);
 
             var node = new Nodes.LeftJoin.Node<TInner, TOuter, TKey, TResult, SystemIEnumerable.Node<TInner>, TPrior, Nodes.RightJoin.FuncSelector<TInner, TOuter, TResult>>(in innerNode, in lookupSource, innerKeySelector, selector);
+
+            return node;
+        }
+
+        internal static Nodes.LeftJoin.Node<TInner, TOuter, TKey, (TOuter? Outer, TInner Inner), SystemIEnumerable.Node<TInner>, TPrior, Nodes.RightJoin.PairSelector<TInner, TOuter>> RightJoin<TOuter, TInner, TKey, TPrior>(in TPrior prior, IEnumerable<TInner> inner, Func<TOuter, TKey> outerKeySelector, Func<TInner, TKey> innerKeySelector, IEqualityComparer<TKey>? comparer)
+            where TPrior : INode<TOuter>
+        {
+            if (inner == null)
+                throw new ArgumentNullException(nameof(inner));
+            if (outerKeySelector == null)
+                throw new ArgumentNullException(nameof(outerKeySelector));
+            if (innerKeySelector == null)
+                throw new ArgumentNullException(nameof(innerKeySelector));
+
+            var innerNode = new SystemIEnumerable.Node<TInner>(inner);
+            var lookupSource = new Nodes.LeftJoin.LookupSource<TOuter, TKey, TPrior>(in prior, outerKeySelector, comparer);
+
+            var node = new Nodes.LeftJoin.Node<TInner, TOuter, TKey, (TOuter? Outer, TInner Inner), SystemIEnumerable.Node<TInner>, TPrior, Nodes.RightJoin.PairSelector<TInner, TOuter>>(in innerNode, in lookupSource, innerKeySelector, default);
 
             return node;
         }
@@ -1439,6 +1492,10 @@ namespace Cistern.ValueLinq
 
             return node;
         }
+
+        internal static Nodes.GroupJoin.Node<TOuter, TInner, TKey, System.Linq.IGrouping<TOuter, TInner>, TPrior> GroupJoin<TOuter, TInner, TKey, TPrior>(in TPrior prior, IEnumerable<TInner> inner, Func<TOuter, TKey> outerKeySelector, Func<TInner, TKey> innerKeySelector, IEqualityComparer<TKey>? comparer)
+            where TPrior : INode<TOuter>
+            => GroupJoin<TOuter, TInner, TKey, System.Linq.IGrouping<TOuter, TInner>, TPrior>(in prior, inner, outerKeySelector, innerKeySelector, Nodes.GroupJoin.Grouping<TOuter, TInner>.Create, comparer);
 
         internal static Nodes.Except.Node<TSource, TSource, CisternConcat.Node<TSource, TPrior, SystemIEnumerable.Node<TSource>>, Nodes.Except.IdentityKey<TSource>> Union<TSource, TPrior>(in TPrior prior, IEnumerable<TSource> second, IEqualityComparer<TSource>? comparer)
             where TPrior : INode<TSource>

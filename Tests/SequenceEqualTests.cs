@@ -205,7 +205,7 @@ namespace Linqs.Tests
             Assert.False(FlipIsCollection(first).SequenceEqual(FlipIsCollection(second)));
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: fails against System.Linq on .NET 11 RC2 as well")]
+        [Fact(Skip = "CISTERN.VALUELINQ: fails against System.Linq on .NET 11 as well")]
         public void FirstSourceNull()
         {
             int[] first = null;
@@ -214,7 +214,7 @@ namespace Linqs.Tests
             AssertExtensions.Throws<ArgumentNullException>("first", () => first.SequenceEqual(second));
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: fails against System.Linq on .NET 11 RC2 as well")]
+        [Fact(Skip = "CISTERN.VALUELINQ: fails against System.Linq on .NET 11 as well")]
         public void SecondSourceNull()
         {
             int[] first = [];
@@ -223,7 +223,7 @@ namespace Linqs.Tests
             AssertExtensions.Throws<ArgumentNullException>("second", () => first.SequenceEqual(second));
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: fails against System.Linq on .NET 11 RC2 as well")]
+        [Fact(Skip = "CISTERN.VALUELINQ: fails against System.Linq on .NET 11 as well")]
         public void ByteArrays_SpecialCasedButExpectedBehavior()
         {
             AssertExtensions.Throws<ArgumentNullException>("first", () => ((byte[])null).SequenceEqual(new byte[1]));

@@ -95,7 +95,6 @@ namespace Cistern.ValueLinq.Maths
         public static bool Min<T>(ReadOnlySpan<T> source, ref T result, ref bool noData)
             where T : struct, INumber<T>
         {
-#if NET11_0_OR_GREATER
             if (Number<T>.IsIntegral)
             {
                 if (source.IsEmpty)
@@ -109,14 +108,13 @@ namespace Cistern.ValueLinq.Maths
 
                 return true;
             }
-#endif
+
             return MinVector(source, ref result, ref noData);
         }
 
         internal static bool Max<T>(ReadOnlySpan<T> source, ref T result, ref bool noData)
             where T : struct, INumber<T>
         {
-#if NET11_0_OR_GREATER
             if (Number<T>.IsIntegral)
             {
                 if (source.IsEmpty)
@@ -130,7 +128,7 @@ namespace Cistern.ValueLinq.Maths
 
                 return true;
             }
-#endif
+
             return MaxVector(source, ref result, ref noData);
         }
 

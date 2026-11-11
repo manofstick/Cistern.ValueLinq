@@ -416,6 +416,19 @@ namespace Cistern.ValueLinq
             return join;
         }
 
+        public static ValueEnumerable<(TOuter Outer, TInner Inner), Nodes.Join.Node<TOuter, TInner, TKey, (TOuter Outer, TInner Inner), SystemIEnumerable.Node<TOuter>, Nodes.Zip.PairSelector<TOuter, TInner>>, Nodes.Join.Pull<TOuter, TInner, TKey, (TOuter Outer, TInner Inner), SystemIEnumerable.Node<TOuter>, ErasedEnumerator<TOuter, SystemIEnumerable.Node<TOuter>>, Nodes.Zip.PairSelector<TOuter, TInner>>> Join<TOuter, TInner, TKey>(this IEnumerable<TOuter> outer, IEnumerable<TInner> inner, Func<TOuter, TKey> outerKeySelector, Func<TInner, TKey> innerKeySelector, IEqualityComparer<TKey>? comparer = null)
+        {
+            if (outer == null)
+                throw new ArgumentNullException(nameof(outer));
+
+            var join =
+                outer
+                .OfEnumerable()
+                .Join(inner, outerKeySelector, innerKeySelector, comparer);
+
+            return join;
+        }
+
         public static ValueEnumerable<TResult, Nodes.LeftJoin.Node<TOuter, TInner, TKey, TResult, SystemIEnumerable.Node<TOuter>, SystemIEnumerable.Node<TInner>, Nodes.Zip.FuncSelector<TOuter, TInner, TResult>>, Nodes.LeftJoin.Pull<TOuter, TInner, TKey, TResult, SystemIEnumerable.Node<TOuter>, ErasedEnumerator<TOuter, SystemIEnumerable.Node<TOuter>>, SystemIEnumerable.Node<TInner>, Nodes.Zip.FuncSelector<TOuter, TInner, TResult>>> LeftJoin<TOuter, TInner, TKey, TResult>(this IEnumerable<TOuter> outer, IEnumerable<TInner> inner, Func<TOuter, TKey> outerKeySelector, Func<TInner, TKey> innerKeySelector, Func<TOuter, TInner?, TResult> resultSelector, IEqualityComparer<TKey>? comparer = null)
         {
             if (outer == null)
@@ -429,6 +442,19 @@ namespace Cistern.ValueLinq
             return leftJoin;
         }
 
+        public static ValueEnumerable<(TOuter Outer, TInner? Inner), Nodes.LeftJoin.Node<TOuter, TInner, TKey, (TOuter Outer, TInner? Inner), SystemIEnumerable.Node<TOuter>, SystemIEnumerable.Node<TInner>, Nodes.LeftJoin.PairSelector<TOuter, TInner>>, Nodes.LeftJoin.Pull<TOuter, TInner, TKey, (TOuter Outer, TInner? Inner), SystemIEnumerable.Node<TOuter>, ErasedEnumerator<TOuter, SystemIEnumerable.Node<TOuter>>, SystemIEnumerable.Node<TInner>, Nodes.LeftJoin.PairSelector<TOuter, TInner>>> LeftJoin<TOuter, TInner, TKey>(this IEnumerable<TOuter> outer, IEnumerable<TInner> inner, Func<TOuter, TKey> outerKeySelector, Func<TInner, TKey> innerKeySelector, IEqualityComparer<TKey>? comparer = null)
+        {
+            if (outer == null)
+                throw new ArgumentNullException(nameof(outer));
+
+            var leftJoin =
+                outer
+                .OfEnumerable()
+                .LeftJoin(inner, outerKeySelector, innerKeySelector, comparer);
+
+            return leftJoin;
+        }
+
         public static ValueEnumerable<TResult, Nodes.LeftJoin.Node<TInner, TOuter, TKey, TResult, SystemIEnumerable.Node<TInner>, SystemIEnumerable.Node<TOuter>, Nodes.RightJoin.FuncSelector<TInner, TOuter, TResult>>, Nodes.LeftJoin.Pull<TInner, TOuter, TKey, TResult, SystemIEnumerable.Node<TInner>, ErasedEnumerator<TInner, SystemIEnumerable.Node<TInner>>, SystemIEnumerable.Node<TOuter>, Nodes.RightJoin.FuncSelector<TInner, TOuter, TResult>>> RightJoin<TOuter, TInner, TKey, TResult>(this IEnumerable<TOuter> outer, IEnumerable<TInner> inner, Func<TOuter, TKey> outerKeySelector, Func<TInner, TKey> innerKeySelector, Func<TOuter?, TInner, TResult> resultSelector, IEqualityComparer<TKey>? comparer = null)
         {
             if (outer == null)
@@ -438,6 +464,19 @@ namespace Cistern.ValueLinq
                 outer
                 .OfEnumerable()
                 .RightJoin(inner, outerKeySelector, innerKeySelector, resultSelector, comparer);
+
+            return rightJoin;
+        }
+
+        public static ValueEnumerable<(TOuter? Outer, TInner Inner), Nodes.LeftJoin.Node<TInner, TOuter, TKey, (TOuter? Outer, TInner Inner), SystemIEnumerable.Node<TInner>, SystemIEnumerable.Node<TOuter>, Nodes.RightJoin.PairSelector<TInner, TOuter>>, Nodes.LeftJoin.Pull<TInner, TOuter, TKey, (TOuter? Outer, TInner Inner), SystemIEnumerable.Node<TInner>, ErasedEnumerator<TInner, SystemIEnumerable.Node<TInner>>, SystemIEnumerable.Node<TOuter>, Nodes.RightJoin.PairSelector<TInner, TOuter>>> RightJoin<TOuter, TInner, TKey>(this IEnumerable<TOuter> outer, IEnumerable<TInner> inner, Func<TOuter, TKey> outerKeySelector, Func<TInner, TKey> innerKeySelector, IEqualityComparer<TKey>? comparer = null)
+        {
+            if (outer == null)
+                throw new ArgumentNullException(nameof(outer));
+
+            var rightJoin =
+                outer
+                .OfEnumerable()
+                .RightJoin(inner, outerKeySelector, innerKeySelector, comparer);
 
             return rightJoin;
         }
@@ -477,6 +516,19 @@ namespace Cistern.ValueLinq
                 outer
                 .OfEnumerable()
                 .GroupJoin(inner, outerKeySelector, innerKeySelector, resultSelector, comparer);
+
+            return groupJoin;
+        }
+
+        public static ValueEnumerable<System.Linq.IGrouping<TOuter, TInner>, Nodes.GroupJoin.Node<TOuter, TInner, TKey, System.Linq.IGrouping<TOuter, TInner>, SystemIEnumerable.Node<TOuter>>, Nodes.GroupJoin.Pull<TOuter, TInner, TKey, System.Linq.IGrouping<TOuter, TInner>, SystemIEnumerable.Node<TOuter>, ErasedEnumerator<TOuter, SystemIEnumerable.Node<TOuter>>>> GroupJoin<TOuter, TInner, TKey>(this IEnumerable<TOuter> outer, IEnumerable<TInner> inner, Func<TOuter, TKey> outerKeySelector, Func<TInner, TKey> innerKeySelector, IEqualityComparer<TKey>? comparer = null)
+        {
+            if (outer == null)
+                throw new ArgumentNullException(nameof(outer));
+
+            var groupJoin =
+                outer
+                .OfEnumerable()
+                .GroupJoin(inner, outerKeySelector, innerKeySelector, comparer);
 
             return groupJoin;
         }

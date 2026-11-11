@@ -205,6 +205,15 @@ through the links above. [`Benchmark/Reports/`](Benchmark/Reports/README.md) des
 (`Benchmark/Toub/`) imports the LINQ benchmarks from each .NET release's performance post since .NET Core 2.0, at
 the post's sizes.
 
+## A .NET 11 bug worked around
+
+`MemoryExtensions.Sort(keys, items, comparer)`, the overload sorting a second span alongside the first, mis-orders
+more than 16 elements when the comparer is a struct
+([dotnet/runtime#136274](https://github.com/dotnet/runtime/issues/136274)). The fix,
+[dotnet/runtime#136333](https://github.com/dotnet/runtime/pull/136333), is not in the 11.0 release, which still
+mis-orders. `OrderBy` and its relatives therefore sort the index map alone and read the elements through it, rather
+than sorting the elements alongside it.
+
 ## Further reading
 
 - [History](docs/history.md): from F#'s `Seq` through Cistern.Linq to value types.
@@ -215,23 +224,23 @@ the post's sizes.
 
 ## Skipped tests
 
-Of 52,238 test cases in the imported suite, 52,101 pass, none fail, and 137 are skipped.[^tests]
-Apart from nine edge cases of behaviour, the skips test type identity, APIs newer than RC2, or areas outside
+Of 52,238 test cases in the imported suite, 52,135 pass, none fail, and 103 are skipped.[^tests]
+Apart from nine edge cases of behaviour, the skips test type identity, an API not in .NET 11, or areas outside
 Cistern's scope.
 
 | Reason | Skipped |
 |---|--:|
 | Type identity: a result that cannot be cast to an `IEnumerator<T>`, is not an `IOrderedEnumerable<T>`, `IList<T>` or `Lookup`, or is not the same instance as its source or a shared singleton | 69 |
-| A `System.Linq` API added after .NET 11 RC2 | 38 |
 | Behaviour not reproduced: when `GetEnumerator` reaches the source, `ElementAt`'s exception type over an `IList<T>`, how far `Last` over a `Reverse` enumerates, and similar | 9 |
 | Debugger display (`EnumerableDebugView`), not yet done | 6 |
-| Fails against `System.Linq` on .NET 11 RC2 as well | 3 |
+| `Array.CreateFilled`, not in .NET 11 | 4 |
+| Fails against `System.Linq` on .NET 11 as well | 3 |
 | `System.Linq.Queryable`, which is out of scope | 2 |
 | Upstream conditions not met in an ordinary run (stress mode, debugger proxy support, and the like) | 10 |
 
-[^tests]: Counted from `dotnet test Tests/Linqs.Tests.csproj -c Release` on .NET 11 RC2, in which each row of a
-    theory is a test case; the suite has 1,889 test methods. The first six rows are the 127 tests skipped with a
-    `CISTERN.VALUELINQ` reason, the last row upstream's own conditional skips. Separately, 99 passages of test code that
+[^tests]: Counted from `dotnet test Tests/Linqs.Tests.csproj -c Release` on .NET 11.0.0, in which each row of a
+    theory is a test case; the suite has 1,889 test methods. The first six rows are the 93 tests skipped with a
+    `CISTERN.VALUELINQ` reason, the last row upstream's own conditional skips. Separately, 65 passages of test code that
     cannot compile against Cistern's types are excluded under `#if !CISTERN_VALUELINQ`, and 55 compile against a
     different static type under `#if CISTERN_VALUELINQ`.
 

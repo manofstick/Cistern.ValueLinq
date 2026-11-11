@@ -193,4 +193,17 @@ public static partial class GroupJoin
 
         return matches;
     }
+
+    // System.Linq's GroupJoinGrouping: a grouping of its own for each outer element, keyed by it, over its matches
+    internal sealed class Grouping<TOuter, TInner>(TOuter key, IEnumerable<TInner> elements)
+        : System.Linq.IGrouping<TOuter, TInner>
+    {
+        public TOuter Key => key;
+
+        public IEnumerator<TInner> GetEnumerator() => elements.GetEnumerator();
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+
+        internal static System.Linq.IGrouping<TOuter, TInner> Create(TOuter key, IEnumerable<TInner> elements) => new Grouping<TOuter, TInner>(key, elements);
+    }
 }

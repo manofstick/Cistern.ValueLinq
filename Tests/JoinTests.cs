@@ -429,10 +429,9 @@ namespace Linqs.Tests
 #endif
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        [Fact]
         public void TupleJoin_Basic()
         {
-#if !CISTERN_VALUELINQ
             CustomerRec[] outer =
             [
                 new CustomerRec{ name = "Prakash", custID = 98022 },
@@ -451,13 +450,11 @@ namespace Linqs.Tests
             var expected = outer.Join(inner, o => o.custID, i => i.custID, (o, i) => (Outer: o, Inner: i));
 
             Assert.Equal(expected, result);
-#endif
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        [Fact]
         public void TupleJoin_EmptyOuter()
         {
-#if !CISTERN_VALUELINQ
             CustomerRec[] outer = [];
             OrderRec[] inner =
             [
@@ -465,13 +462,11 @@ namespace Linqs.Tests
             ];
 
             Assert.Empty(outer.Join(inner, o => o.custID, i => i.custID));
-#endif
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        [Fact]
         public void TupleJoin_EmptyInner()
         {
-#if !CISTERN_VALUELINQ
             CustomerRec[] outer =
             [
                 new CustomerRec{ name = "Prakash", custID = 98022 }
@@ -479,13 +474,11 @@ namespace Linqs.Tests
             OrderRec[] inner = [];
 
             Assert.Empty(outer.Join(inner, o => o.custID, i => i.custID));
-#endif
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        [Fact]
         public void TupleJoin_WithComparer()
         {
-#if !CISTERN_VALUELINQ
             CustomerRec[] outer =
             [
                 new CustomerRec{ name = "Prakash", custID = 98022 },
@@ -502,51 +495,42 @@ namespace Linqs.Tests
             Assert.Equal(2, result.Count());
             Assert.Contains(result, r => r.Outer.name == "Prakash" && r.Inner.name == "Prakash");
             Assert.Contains(result, r => r.Outer.name == "Tim" && r.Inner.name == "miT");
-#endif
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        [Fact]
         public void TupleJoin_OuterNull()
         {
-#if !CISTERN_VALUELINQ
             CustomerRec[] outer = null;
             OrderRec[] inner = [new OrderRec{ orderID = 45321, custID = 98022, total = 50 }];
 
             AssertExtensions.Throws<ArgumentNullException>("outer", () => outer.Join(inner, o => o.custID, i => i.custID));
-#endif
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        [Fact]
         public void TupleJoin_InnerNull()
         {
-#if !CISTERN_VALUELINQ
             CustomerRec[] outer = [new CustomerRec{ name = "Prakash", custID = 98022 }];
             OrderRec[] inner = null;
 
             AssertExtensions.Throws<ArgumentNullException>("inner", () => outer.Join(inner, o => o.custID, i => i.custID));
-#endif
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        [Fact]
         public void TupleJoin_OuterKeySelectorNull()
         {
-#if !CISTERN_VALUELINQ
             CustomerRec[] outer = [new CustomerRec{ name = "Prakash", custID = 98022 }];
             OrderRec[] inner = [new OrderRec{ orderID = 45321, custID = 98022, total = 50 }];
 
             AssertExtensions.Throws<ArgumentNullException>("outerKeySelector", () => outer.Join(inner, (Func<CustomerRec, int>)null, i => i.custID));
-#endif
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        [Fact]
         public void TupleJoin_InnerKeySelectorNull()
         {
-#if !CISTERN_VALUELINQ
             CustomerRec[] outer = [new CustomerRec{ name = "Prakash", custID = 98022 }];
             OrderRec[] inner = [new OrderRec{ orderID = 45321, custID = 98022, total = 50 }];
 
             AssertExtensions.Throws<ArgumentNullException>("innerKeySelector", () => outer.Join(inner, o => o.custID, (Func<OrderRec, int>)null));
-#endif
         }
     }
 }

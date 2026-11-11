@@ -524,10 +524,9 @@ namespace Linqs.Tests
 #endif
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        [Fact]
         public void GroupJoinWithoutResultSelector_OuterEmptyInnerNonEmpty()
         {
-#if !CISTERN_VALUELINQ
             CustomerRec[] outer = [];
             OrderRec[] inner =
             [
@@ -535,13 +534,11 @@ namespace Linqs.Tests
                 new OrderRec{ orderID = 97865, custID = 32103, total = 25 }
             ];
             Assert.Empty(outer.GroupJoin(inner, e => e.custID, e => e.custID));
-#endif
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        [Fact]
         public void GroupJoinWithoutResultSelector_OuterNonEmptyInnerEmpty()
         {
-#if !CISTERN_VALUELINQ
             CustomerRec[] outer =
             [
                 new CustomerRec{ name = "Tim", custID = 43434 },
@@ -556,13 +553,11 @@ namespace Linqs.Tests
             Assert.Empty(result[0]);
             Assert.Equal(outer[1], result[1].Key);
             Assert.Empty(result[1]);
-#endif
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        [Fact]
         public void GroupJoinWithoutResultSelector_SingleElementEachAndMatches()
         {
-#if !CISTERN_VALUELINQ
             CustomerRec[] outer = [new CustomerRec{ name = "Tim", custID = 43434 }];
             OrderRec[] inner = [new OrderRec{ orderID = 97865, custID = 43434, total = 25 }];
 
@@ -572,13 +567,11 @@ namespace Linqs.Tests
             Assert.Equal(outer[0], result[0].Key);
             Assert.Single(result[0]);
             Assert.Equal(inner[0], result[0].First());
-#endif
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        [Fact]
         public void GroupJoinWithoutResultSelector_InnerSameKeyMoreThanOneElementAndMatches()
         {
-#if !CISTERN_VALUELINQ
             CustomerRec[] outer =
             [
                 new CustomerRec{ name = "Tim", custID = 1234 },
@@ -598,13 +591,11 @@ namespace Linqs.Tests
             Assert.Equal(2, result[0].Count());
             Assert.Equal(outer[1], result[1].Key);
             Assert.Single(result[1]);
-#endif
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        [Fact]
         public void GroupJoinWithoutResultSelector_OuterNull()
         {
-#if !CISTERN_VALUELINQ
             CustomerRec[] outer = null;
             OrderRec[] inner =
             [
@@ -612,13 +603,11 @@ namespace Linqs.Tests
             ];
 
             AssertExtensions.Throws<ArgumentNullException>("outer", () => outer.GroupJoin(inner, e => e.custID, e => e.custID));
-#endif
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        [Fact]
         public void GroupJoinWithoutResultSelector_InnerNull()
         {
-#if !CISTERN_VALUELINQ
             CustomerRec[] outer =
             [
                 new CustomerRec{ name = "Tim", custID = 1234 }
@@ -626,13 +615,11 @@ namespace Linqs.Tests
             OrderRec[] inner = null;
 
             AssertExtensions.Throws<ArgumentNullException>("inner", () => outer.GroupJoin(inner, e => e.custID, e => e.custID));
-#endif
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        [Fact]
         public void GroupJoinWithoutResultSelector_OuterKeySelectorNull()
         {
-#if !CISTERN_VALUELINQ
             CustomerRec[] outer =
             [
                 new CustomerRec{ name = "Tim", custID = 1234 }
@@ -643,13 +630,11 @@ namespace Linqs.Tests
             ];
 
             AssertExtensions.Throws<ArgumentNullException>("outerKeySelector", () => outer.GroupJoin(inner, null, e => e.custID));
-#endif
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        [Fact]
         public void GroupJoinWithoutResultSelector_InnerKeySelectorNull()
         {
-#if !CISTERN_VALUELINQ
             CustomerRec[] outer =
             [
                 new CustomerRec{ name = "Tim", custID = 1234 }
@@ -660,13 +645,11 @@ namespace Linqs.Tests
             ];
 
             AssertExtensions.Throws<ArgumentNullException>("innerKeySelector", () => outer.GroupJoin<CustomerRec, OrderRec, int?>(inner, e => e.custID, null));
-#endif
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        [Fact]
         public void GroupJoinWithoutResultSelector_CanIterateMultipleTimes()
         {
-#if !CISTERN_VALUELINQ
             CustomerRec[] outer =
             [
                 new CustomerRec{ name = "Tim", custID = 1234 }
@@ -685,13 +668,11 @@ namespace Linqs.Tests
             Assert.Single(result[0]);
             Assert.Equal(inner[0], result[0].First());
             Assert.Equal(inner[0], result[0].First());
-#endif
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        [Fact]
         public void GroupJoinWithoutResultSelector_CustomComparer()
         {
-#if !CISTERN_VALUELINQ
             CustomerRec[] outer =
             [
                 new CustomerRec{ name = "Tim", custID = 1234 },
@@ -715,7 +696,6 @@ namespace Linqs.Tests
             Assert.Equal(outer[2], result[2].Key);
             Assert.Single(result[2]);
             Assert.Equal(inner[0], result[2].First());
-#endif
         }
     }
 }

@@ -474,8 +474,9 @@ public static partial class OrderBy
             return false;
         }
 
-        // the index map is sorted alone, not alongside the elements: Span<TKey>.Sort(Span<TValue>, TComparer) returns a
-        // mis-ordered result on .NET 11 RC2 (11.0.0-rc.2.26504.105) when TComparer is a struct
+        // the index map is sorted alone, not alongside the elements: Span<TKey>.Sort(Span<TValue>, TComparer) mis-orders
+        // more than 16 elements when TComparer is a struct (https://github.com/dotnet/runtime/issues/136274); the fix,
+        // dotnet/runtime#136333, is not in the 11.0 release, which still mis-orders
         public void SortIndexes<Comparer>(ReadOnlySpan<TElement> elements, Span<int> indexes, int start, int length, in Comparer comparer)
             where Comparer : IComparer<int>
         {

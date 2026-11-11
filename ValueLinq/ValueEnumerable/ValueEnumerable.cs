@@ -818,15 +818,30 @@ namespace Cistern.ValueLinq
             where OuterNodeEnumerator : struct, IPullEnumerator<TOuter>, INodeEnumerator<OuterNode, OuterNodeEnumerator>
             => new (NodeImpl.Join<TOuter, TInner, TKey, TResult, OuterNode>(in outer.Node, inner, outerKeySelector, innerKeySelector, resultSelector, comparer));
 
+        public static ValueEnumerable<(TOuter Outer, TInner Inner), Nodes.Join.Node<TOuter, TInner, TKey, (TOuter Outer, TInner Inner), OuterNode, Nodes.Zip.PairSelector<TOuter, TInner>>, Nodes.Join.Pull<TOuter, TInner, TKey, (TOuter Outer, TInner Inner), OuterNode, OuterNodeEnumerator, Nodes.Zip.PairSelector<TOuter, TInner>>> Join<TOuter, TInner, TKey, OuterNode, OuterNodeEnumerator>(in this ValueEnumerable<TOuter, OuterNode, OuterNodeEnumerator> outer, IEnumerable<TInner> inner, Func<TOuter, TKey> outerKeySelector, Func<TInner, TKey> innerKeySelector, IEqualityComparer<TKey>? comparer = null)
+            where OuterNode : INode<TOuter>
+            where OuterNodeEnumerator : struct, IPullEnumerator<TOuter>, INodeEnumerator<OuterNode, OuterNodeEnumerator>
+            => new (NodeImpl.Join<TOuter, TInner, TKey, OuterNode>(in outer.Node, inner, outerKeySelector, innerKeySelector, comparer));
+
         public static ValueEnumerable<TResult, Nodes.LeftJoin.Node<TOuter, TInner, TKey, TResult, OuterNode, SystemIEnumerable.Node<TInner>, Nodes.Zip.FuncSelector<TOuter, TInner, TResult>>, Nodes.LeftJoin.Pull<TOuter, TInner, TKey, TResult, OuterNode, OuterNodeEnumerator, SystemIEnumerable.Node<TInner>, Nodes.Zip.FuncSelector<TOuter, TInner, TResult>>> LeftJoin<TOuter, TInner, TKey, TResult, OuterNode, OuterNodeEnumerator>(in this ValueEnumerable<TOuter, OuterNode, OuterNodeEnumerator> outer, IEnumerable<TInner> inner, Func<TOuter, TKey> outerKeySelector, Func<TInner, TKey> innerKeySelector, Func<TOuter, TInner?, TResult> resultSelector, IEqualityComparer<TKey>? comparer = null)
             where OuterNode : INode<TOuter>
             where OuterNodeEnumerator : struct, IPullEnumerator<TOuter>, INodeEnumerator<OuterNode, OuterNodeEnumerator>
             => new (NodeImpl.LeftJoin<TOuter, TInner, TKey, TResult, OuterNode>(in outer.Node, inner, outerKeySelector, innerKeySelector, resultSelector, comparer));
 
+        public static ValueEnumerable<(TOuter Outer, TInner? Inner), Nodes.LeftJoin.Node<TOuter, TInner, TKey, (TOuter Outer, TInner? Inner), OuterNode, SystemIEnumerable.Node<TInner>, Nodes.LeftJoin.PairSelector<TOuter, TInner>>, Nodes.LeftJoin.Pull<TOuter, TInner, TKey, (TOuter Outer, TInner? Inner), OuterNode, OuterNodeEnumerator, SystemIEnumerable.Node<TInner>, Nodes.LeftJoin.PairSelector<TOuter, TInner>>> LeftJoin<TOuter, TInner, TKey, OuterNode, OuterNodeEnumerator>(in this ValueEnumerable<TOuter, OuterNode, OuterNodeEnumerator> outer, IEnumerable<TInner> inner, Func<TOuter, TKey> outerKeySelector, Func<TInner, TKey> innerKeySelector, IEqualityComparer<TKey>? comparer = null)
+            where OuterNode : INode<TOuter>
+            where OuterNodeEnumerator : struct, IPullEnumerator<TOuter>, INodeEnumerator<OuterNode, OuterNodeEnumerator>
+            => new (NodeImpl.LeftJoin<TOuter, TInner, TKey, OuterNode>(in outer.Node, inner, outerKeySelector, innerKeySelector, comparer));
+
         public static ValueEnumerable<TResult, Nodes.LeftJoin.Node<TInner, TOuter, TKey, TResult, SystemIEnumerable.Node<TInner>, OuterNode, Nodes.RightJoin.FuncSelector<TInner, TOuter, TResult>>, Nodes.LeftJoin.Pull<TInner, TOuter, TKey, TResult, SystemIEnumerable.Node<TInner>, ErasedEnumerator<TInner, SystemIEnumerable.Node<TInner>>, OuterNode, Nodes.RightJoin.FuncSelector<TInner, TOuter, TResult>>> RightJoin<TOuter, TInner, TKey, TResult, OuterNode, OuterNodeEnumerator>(in this ValueEnumerable<TOuter, OuterNode, OuterNodeEnumerator> outer, IEnumerable<TInner> inner, Func<TOuter, TKey> outerKeySelector, Func<TInner, TKey> innerKeySelector, Func<TOuter?, TInner, TResult> resultSelector, IEqualityComparer<TKey>? comparer = null)
             where OuterNode : INode<TOuter>
             where OuterNodeEnumerator : struct, IPullEnumerator<TOuter>, INodeEnumerator<OuterNode, OuterNodeEnumerator>
             => new (NodeImpl.RightJoin<TOuter, TInner, TKey, TResult, OuterNode>(in outer.Node, inner, outerKeySelector, innerKeySelector, resultSelector, comparer));
+
+        public static ValueEnumerable<(TOuter? Outer, TInner Inner), Nodes.LeftJoin.Node<TInner, TOuter, TKey, (TOuter? Outer, TInner Inner), SystemIEnumerable.Node<TInner>, OuterNode, Nodes.RightJoin.PairSelector<TInner, TOuter>>, Nodes.LeftJoin.Pull<TInner, TOuter, TKey, (TOuter? Outer, TInner Inner), SystemIEnumerable.Node<TInner>, ErasedEnumerator<TInner, SystemIEnumerable.Node<TInner>>, OuterNode, Nodes.RightJoin.PairSelector<TInner, TOuter>>> RightJoin<TOuter, TInner, TKey, OuterNode, OuterNodeEnumerator>(in this ValueEnumerable<TOuter, OuterNode, OuterNodeEnumerator> outer, IEnumerable<TInner> inner, Func<TOuter, TKey> outerKeySelector, Func<TInner, TKey> innerKeySelector, IEqualityComparer<TKey>? comparer = null)
+            where OuterNode : INode<TOuter>
+            where OuterNodeEnumerator : struct, IPullEnumerator<TOuter>, INodeEnumerator<OuterNode, OuterNodeEnumerator>
+            => new (NodeImpl.RightJoin<TOuter, TInner, TKey, OuterNode>(in outer.Node, inner, outerKeySelector, innerKeySelector, comparer));
 
         public static ValueEnumerable<TResult, Nodes.FullJoin.Node<TOuter, TInner, TKey, TResult, OuterNode, Nodes.Zip.FuncSelector<TOuter, TInner, TResult>>, Nodes.FullJoin.Pull<TOuter, TInner, TKey, TResult, OuterNode, OuterNodeEnumerator, Nodes.Zip.FuncSelector<TOuter, TInner, TResult>>> FullJoin<TOuter, TInner, TKey, TResult, OuterNode, OuterNodeEnumerator>(in this ValueEnumerable<TOuter, OuterNode, OuterNodeEnumerator> outer, IEnumerable<TInner> inner, Func<TOuter, TKey> outerKeySelector, Func<TInner, TKey> innerKeySelector, Func<TOuter?, TInner?, TResult> resultSelector, IEqualityComparer<TKey>? comparer = null)
             where OuterNode : INode<TOuter>
@@ -842,6 +857,11 @@ namespace Cistern.ValueLinq
             where OuterNode : INode<TOuter>
             where OuterNodeEnumerator : struct, IPullEnumerator<TOuter>, INodeEnumerator<OuterNode, OuterNodeEnumerator>
             => new (NodeImpl.GroupJoin<TOuter, TInner, TKey, TResult, OuterNode>(in outer.Node, inner, outerKeySelector, innerKeySelector, resultSelector, comparer));
+
+        public static ValueEnumerable<System.Linq.IGrouping<TOuter, TInner>, Nodes.GroupJoin.Node<TOuter, TInner, TKey, System.Linq.IGrouping<TOuter, TInner>, OuterNode>, Nodes.GroupJoin.Pull<TOuter, TInner, TKey, System.Linq.IGrouping<TOuter, TInner>, OuterNode, OuterNodeEnumerator>> GroupJoin<TOuter, TInner, TKey, OuterNode, OuterNodeEnumerator>(in this ValueEnumerable<TOuter, OuterNode, OuterNodeEnumerator> outer, IEnumerable<TInner> inner, Func<TOuter, TKey> outerKeySelector, Func<TInner, TKey> innerKeySelector, IEqualityComparer<TKey>? comparer = null)
+            where OuterNode : INode<TOuter>
+            where OuterNodeEnumerator : struct, IPullEnumerator<TOuter>, INodeEnumerator<OuterNode, OuterNodeEnumerator>
+            => new (NodeImpl.GroupJoin<TOuter, TInner, TKey, OuterNode>(in outer.Node, inner, outerKeySelector, innerKeySelector, comparer));
 
         public static ValueEnumerable<TSource, Nodes.Except.Node<TSource, TSource, CisternConcat.Node<TSource, InnerNode, SystemIEnumerable.Node<TSource>>, Nodes.Except.IdentityKey<TSource>>, Nodes.Except.Pull<TSource, TSource, CisternConcat.Node<TSource, InnerNode, SystemIEnumerable.Node<TSource>>, CisternConcat.Pull<TSource, InnerNode, SystemIEnumerable.Node<TSource>, InnerNodeEnumerator, ErasedEnumerator<TSource, SystemIEnumerable.Node<TSource>>>, Nodes.Except.IdentityKey<TSource>>> Union<TSource, InnerNode, InnerNodeEnumerator>(in this ValueEnumerable<TSource, InnerNode, InnerNodeEnumerator> first, IEnumerable<TSource> second, IEqualityComparer<TSource>? comparer = null)
             where InnerNode : INode<TSource>

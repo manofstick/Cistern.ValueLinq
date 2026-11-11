@@ -394,7 +394,7 @@ namespace Linqs.Tests
             Assert.Throws<OverflowException>(() => sourceInt.Sum(x => x));
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        [Fact(Skip = "CISTERN.VALUELINQ: uses Array.CreateFilled, not in .NET 11")]
         public void SumOfInt_SourceSumsToOverflowVectorHorizontally_OverflowExceptionThrown()
         {
 #if !CISTERN_VALUELINQ
@@ -413,7 +413,7 @@ namespace Linqs.Tests
 #endif
         }
 
-        [Theory(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        [Theory(Skip = "CISTERN.VALUELINQ: uses Array.CreateFilled, not in .NET 11")]
         [MemberData(nameof(SumOverflowsVerticalVectorLanes))]
         public void SumOfInt_SourceSumsToOverflowVectorVertically_OverflowExceptionThrown(int element, int verticalOffset)
         {
@@ -443,7 +443,7 @@ namespace Linqs.Tests
             Assert.Throws<OverflowException>(() => sourceLong.Sum(x => x));
         }
 
-        [Fact(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        [Fact(Skip = "CISTERN.VALUELINQ: uses Array.CreateFilled, not in .NET 11")]
         public void SumOfLong_SourceSumsToOverflowVectorHorizontally_OverflowExceptionThrown()
         {
 #if !CISTERN_VALUELINQ
@@ -462,7 +462,7 @@ namespace Linqs.Tests
 #endif
         }
 
-        [Theory(Skip = "CISTERN.VALUELINQ: uses a System.Linq API added after .NET 11 RC2")]
+        [Theory(Skip = "CISTERN.VALUELINQ: uses Array.CreateFilled, not in .NET 11")]
         [MemberData(nameof(SumOverflowsVerticalVectorLanes))]
         public void SumOfLong_SourceSumsToOverflowVectorVertically_OverflowExceptionThrown(int element, int verticalOffset)
         {

@@ -11,4 +11,12 @@ public static class RightJoin
 
         TResult Zip.ISelector<TInner, TOuter, TResult>.Invoke(TInner inner, TOuter outer) => resultSelector(outer, inner);
     }
+
+    public readonly struct PairSelector<TInner, TOuter>
+        : Zip.ISelector<TInner, TOuter, (TOuter? Outer, TInner Inner)>
+    {
+        static bool Zip.ISelector<TInner, TOuter, (TOuter? Outer, TInner Inner)>.PotentialSideEffects => false;
+
+        (TOuter? Outer, TInner Inner) Zip.ISelector<TInner, TOuter, (TOuter? Outer, TInner Inner)>.Invoke(TInner inner, TOuter outer) => (outer, inner);
+    }
 }
