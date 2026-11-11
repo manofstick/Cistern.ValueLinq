@@ -1,92 +1,81 @@
 ﻿# Cistern.ValueLinq
 
-LINQ to Objects rebuilt from value types, no need to change any code, except changing one using statement.
+LINQ to Objects, rebuilt out of structs. Change one `using` and your existing queries compile against it untouched:
 
-The architecture was designed in [2020](docs/history.md). It has now been filled in, with the assistance of Claude, to
-cover the whole `System.Linq` surface. Improvements to the JIT since then let it run [faster](#benchmarks) than
-`System.Linq` and [ZLinq](https://github.com/Cysharp/ZLinq) on most of the queries measured. Its architecture, value types throughout, still lets a chain
-be optimised at run time: nodes rewrite each other, and a typed chain is recreated where a different chain pays.
+<pre>
+using <del>System.Linq</del> Cistern.ValueLinq;
+</pre>
 
-The design pays in full only where the element types are value types. For a reference type the JIT compiles one
-shared implementation over the canonical type (`__Canon`) and looks up the exact types at run time. Calls through
-shared code are inlined far less often, and inlining is what the performance here rests on. Sharing gains little in
-return, since each chain is a type of its own and two chains rarely share an instantiation. A future JIT might allow
-unshared code to be requested for chosen types, or let PGO specialise shared code where it runs hot. Neither exists yet.
+It is on NuGet as [Cistern.ValueLinq](https://www.nuget.org/packages/Cistern.ValueLinq), a preview for now, and needs
+.NET 11:
 
-Nearly all of the corefx `System.Linq` test suite runs and passes against it ([skipped tests](#skipped-tests)). That includes `System.Linq`'s
-inconsistencies: whether a selector is run for its side effects or treated as free of them varies from operator to
-operator, and Cistern follows each case.
-
-At the least it is a curiosity. It should also serve the JIT team as a demanding benchmark of generic specialisation
-over value types.
-
-```csharp
-using Cistern.ValueLinq;   // in place of using System.Linq;
+```
+dotnet add package Cistern.ValueLinq --prerelease
 ```
 
-That `using` is the whole migration. The operators keep their names, signatures and results. What changes is the type
-each query is built from. Is this wise? Probably not: it should probably be opt-in, through a function. But this is an
-exercise in what _can_ be done, not necessarily in what should be.
+The operators keep their names, signatures and results. What changes is the type a query is made of: every operator is
+a generic struct wrapping the one before it, so the JIT sees the whole query as a single type and can inline it into
+one loop. On .NET 11 that is enough to run [faster](#benchmarks) than both `System.Linq` and
+[ZLinq](https://github.com/Cysharp/ZLinq) on most of the queries measured.
+
+The architecture dates from [2020](docs/history.md), when it covered a corner of LINQ. Since then the JIT has got a
+good deal better at this kind of code, and with Claude's help the design has been filled in to cover the whole
+`System.Linq` surface. Being structs all the way down hasn't cost it the ability to adapt at run time, either: nodes
+rewrite each other, and a typed chain is rebuilt as a different one where that pays.
+
+It is held to `System.Linq`'s own tests. The corefx suite is imported whole, and of its 52,238 cases all but
+[103](docs/skipped-tests.md) run and every one that runs passes. That means matching `System.Linq`'s inconsistencies too:
+whether a selector is run for its side effects or assumed to have none varies from operator to operator, and Cistern
+follows each case.
+
+Is taking over every query in a file with a `using` wise? Probably not. It should probably be opt-in, through a
+function. But this is an exercise in what _can_ be done, not necessarily in what should be. There is also a real catch,
+which is [reference types](#reference-types). If nothing else the library is a curiosity, and a demanding benchmark of
+generic specialisation over value types that the JIT team may find a use for.
+
+Side by side with the other two:
+
+| | System.Linq | ZLinq | Cistern |
+|---|:-:|:-:|:-:|
+| Existing queries compile unchanged | ✅ | opt-in; [in part](https://github.com/Cysharp/ZLinq#difference-and-limitation) | ✅ |
+| The chain itself allocates nothing | ❌ | ✅ | ✅ |
+| A query is still an `IEnumerable<T>`: store it, return it, hold it across `await` or `yield` | ✅ | ❌ (a `ref struct` from .NET 9) | ✅ |
+| Runs dotnet/runtime's `System.Linq` test suite | ✅ | in part | ✅ |
+| Aggregations are pushed, so each source runs its own loop | ❌ | ❌ | ✅ |
+| Queries directly over a `Span<T>` | ❌ | ✅ (from .NET 9) | ❌ (`ReadOnlyMemory<T>` only) |
 
 [History](docs/history.md) · [Architecture](docs/architecture.md) · [Source generators](docs/generators.md) ·
 [Benchmarks](#benchmarks)
 
 ---
 
-## What it is
+## How it works
 
-Every operator is a generic struct that wraps the struct of the operator before it. A query such as
+Take a query such as
 
 ```csharp
 array.Where(x => x > 0).Select(x => x * 2).Sum()
 ```
 
-is, before `Sum` runs, a single value of the type
+Before `Sum` runs, that is a single value of the type
 
 ```
 Select.Node<int, int, Where.Node<int, SystemArray.Node<int>>>
 ```
 
-The JIT compiles a specialisation of each method for each struct instantiation. The whole chain is therefore known
-when the loop is compiled: the calls between operators are direct, and the inliner can collapse them into one loop.
-Generics do the work that a hand-written loop does by knowing the source type.
+The JIT compiles a separate specialisation of a method for each struct instantiation, so by the time it compiles the
+loop it knows the entire chain. The calls between operators are direct, and the inliner can collapse them into one
+loop. A hand-written loop is fast because its author knew the source type; here the generics know it.
 
-## Properties
-
-- **Compatibility.** The `System.Linq` test suite from dotnet/runtime is imported in full (`Tests/`) and runs against
-  Cistern. Behaviour follows `System.Linq` where it is observable, including where that behaviour is not uniform:
-  - `Count()` over a `Select` runs the selector once per element, as `System.Linq` does, even though no other
-    aggregate runs a selector it does not need.
-  - A `List<T>` is read as a span where `System.Linq` reads it as a span. It is enumerated, and throws when modified
-    mid-enumeration, where `System.Linq` enumerates it.
-  - Selectors run for the elements `System.Linq` runs them for: not for elements a `Skip` passes over in a sliceable
-    source, and not for elements other than the one `First`, `Last` or `ElementAt` returns.
-
-  A test skipped for Cistern carries a `CISTERN.VALUELINQ` reason. The skips are summarised under [Skipped tests](#skipped-tests).
-- **Allocation.** A chain is a value on the stack. An aggregation over an array, a `List<T>`, a span or a `Range`
-  allocates nothing beyond its result. Working buffers that do not outlive the call (the `ToArray` and `ToList` builders,
-  a collection copied out to be read as a span, what Reverse, Shuffle and OrderBy buffer for a push) are rented from
-  the shared pool. So is what they buffer for a `foreach`, held through one small object shared by every copy of the
-  enumerator, so the buffer goes back to the pool once
-  ([Copies and rented buffers](ValueLinq/Docs/PullProtocol.md#copies-and-rented-buffers)).
-- **Two execution models, both typed.** Aggregations push. `foreach` pulls. Each is compiled from the same nodes, and
-  neither erases the chain's type.
-- **Cross-operator optimisation.** Nodes answer requests from the nodes above them (`Count`, `CopyTo`, `SkipTake`,
-  `ElementAt`, …), so `Skip(n)` over a `List<T>` becomes a slice, `Select(f).First()` runs `f` once, and a
-  `Concat` of collections copies each part straight into the result.
-- **`IEnumerable<T>` boundaries.** A Cistern chain handed out as `IEnumerable<T>` and consumed by another Cistern
-  chain is recognised. It is pulled or pushed through its own compiled chain rather than through `IEnumerator<T>` per
-  element. `ToEnumerable()` hands a chain out as an `ICollection<T>` where its length is known without enumerating, so
-  a consumer such as `new List<T>(e)` sizes its storage exactly and fills it with one `CopyTo`.
-
-## Push and pull
+A query then runs in one of two ways, depending on who is asking. Both are compiled from the same nodes, and neither
+erases the chain's type.
 
 ### Push
 
-An aggregation (`Sum`, `ToList`, `First`, `Max`, …) builds a chain of forwarder structs ending in the aggregator,
-then hands it to the source. The source runs its own loop, so an array, a list and a `HashSet<T>` each get the loop
-best suited to them. A source with contiguous storage hands its span to the chain whole, and the aggregator can then
-run a vectorised loop.
+An aggregation (`Sum`, `ToList`, `First`, `Max`, …) builds a chain of forwarder structs ending in the aggregator and
+hands it to the source. The source runs its own loop, which means an array, a list and a `HashSet<T>` each get the
+loop that suits them. A source with contiguous storage hands the chain its span whole, and the aggregator is then free
+to run a vectorised loop over it.
 
 ```mermaid
 flowchart LR
@@ -99,8 +88,8 @@ flowchart LR
 ### Pull
 
 `foreach` pulls. Each operator has a struct enumerator, and `ValueEnumerable<TSource, TNode, TEnumerator>` carries the
-whole enumerator chain's type, so `GetEnumerator` returns the complete chain by value. `MoveNext` is a direct call into
-it. No interface dispatch is involved.
+type of the whole enumerator chain, so `GetEnumerator` returns the complete chain by value and `MoveNext` is a direct
+call into it, with no interface dispatch anywhere.
 
 ```mermaid
 flowchart RL
@@ -109,13 +98,18 @@ flowchart RL
     W -->|"MoveNext()"| S["SystemArray enumerator"]
 ```
 
+### Operators that talk to each other
+
+Nodes answer requests from the nodes above them (`Count`, `CopyTo`, `SkipTake`, `ElementAt`, …). That is how `Skip(n)`
+over a `List<T>` becomes a slice, how `Select(f).First()` runs `f` once, and how a `Concat` of collections copies each
+part straight into its place in the result. A node that can't answer says so, and the query runs the general way.
+
 ### Overriding the static type where it pays
 
-A statically typed pull chain cannot change type at run time, but some queries are much cheaper in a different chain.
-`OrderBy(k).Skip(100).Take(10)` only needs the ten elements of the window, not the whole sort. On the pull side,
-`Skip` and `Take` ask the ordering below them whether it can absorb them. The ordering answers by building a
-*buffered window* node, which puts only the window's elements in order. `foreach` is then handed this rebuilt chain in place of
-the typed one.
+A statically typed pull chain can't change type at run time, yet some queries are far cheaper as a different chain.
+`OrderBy(k).Skip(100).Take(10)` needs ten elements in order, not the whole sort. So on the pull side `Skip` and `Take`
+ask the ordering below them whether it can absorb them, and the ordering answers by building a *buffered window* node
+that puts only the window's elements in order. `foreach` is handed that rebuilt chain in place of the typed one.
 
 ```mermaid
 flowchart LR
@@ -130,27 +124,107 @@ flowchart LR
     typed ==>|"rebuilt at GetEnumerator"| rebuilt
 ```
 
-The push side does the same through its `SkipTake` request.
+The push side gets the same result through its `SkipTake` request.
+
+## What else you get
+
+### The same behaviour as System.Linq
+
+The `System.Linq` test suite from dotnet/runtime is imported in full (`Tests/`) and runs against Cistern. Wherever
+`System.Linq`'s behaviour can be observed, Cistern's matches it, including the places where that behaviour isn't
+uniform:
+
+- `Count()` over a `Select` runs the selector once per element, as `System.Linq` does, even though no other aggregate
+  runs a selector it doesn't need.
+- A `List<T>` is read as a span only where `System.Linq` reads it as one. Where `System.Linq` enumerates it, so does
+  Cistern, and it throws when modified mid-enumeration.
+- Selectors run for the elements `System.Linq` runs them for: not for elements a `Skip` passes over in a sliceable
+  source, and not for elements other than the one `First`, `Last` or `ElementAt` returns.
+
+A test skipped for Cistern carries a `CISTERN.VALUELINQ` reason, and the skips are counted up under
+[Skipped tests](docs/skipped-tests.md).
+
+### Very little garbage
+
+A chain is a value on the stack. An aggregation over an array, a `List<T>`, a `ReadOnlyMemory<T>` or a `Range` allocates nothing
+beyond its result. Working buffers that don't outlive the call are rented from the shared pool: the `ToArray` and
+`ToList` builders, a collection copied out to be read as a span, and whatever Reverse, Shuffle and OrderBy buffer for
+a push. What those three buffer for a `foreach` is rented as well, and held through one small object shared by every
+copy of the enumerator, so the buffer goes back to the pool exactly once
+([Copies and rented buffers](ValueLinq/Docs/PullProtocol.md#copies-and-rented-buffers)).
+
+### `IEnumerable<T>` boundaries that don't forget
+
+A Cistern chain handed out as `IEnumerable<T>` and consumed by another Cistern chain is recognised, and is pulled or
+pushed through its own compiled chain rather than through `IEnumerator<T>` an element at a time. `ToEnumerable()` hands
+a chain out as an `ICollection<T>` where its length is known without enumerating, so a consumer such as
+`new List<T>(e)` sizes its storage exactly and fills it with one `CopyTo`.
+
+## Beyond System.Linq
+
+Matching `System.Linq` exactly has a cost, and a few operators exist only here to buy it back.
+
+### `Map` and `Filter`
+
+`System.Linq` never says whether a selector may have side effects, but its tests pin down when one runs, and Cistern
+keeps to them. `Count()` over a `Select` has to call the selector for every element and throw the results away, since
+somebody's selector might be counting calls. Most selectors are pure, and for those that is wasted work.
+
+`Map` and `Filter` are `Select` and `Where` with a promise attached: the function has no side effects and its result
+depends only on its argument. With that promise a `Map` answers `Count` and `Any` from its source without running
+anything, projects only the one element an `ElementAt` lands on, lets a `Skip` slide beneath it, and reverses by
+projecting the reversed source. A `Filter` can be scanned from the end, for a from-end index or a `Reverse`.
+
+```csharp
+list.Map(x => x * 2).Count()        // list.Count; the lambda never runs
+list.Select(x => x * 2).Count()     // runs the lambda list.Count times, as System.Linq does
+```
+
+Neither is ever moved past another operator. If you want a filter below an ordering, write it there.
+
+### `Fuse`
+
+When one Cistern chain consumes another through an `IEnumerable<T>`, each is compiled once and the boundary between
+them costs a virtual call per element. `Fuse()` removes the boundary: the two chains run as a single push, compiled
+together.
+
+It is opt-in because the price is paid in JIT time. Fused, every distinct pairing of inner and outer chain is a new
+set of methods to compile, and a program that composes many chains through `IEnumerable<T>` can multiply that into
+tens of thousands. Use it on the hot query, not everywhere. `ToEnumerable(EnumerableOptions.Fuse)` makes the same
+choice from the other side, fusing the chain it hands out with whatever is later pushed through it.
+
+## Reference types
+
+The design pays in full only where the element types are value types. For a reference type the JIT compiles one
+shared implementation over the canonical type (`__Canon`) and looks the exact types up at run time. Calls through
+shared code are inlined far less often, and inlining is what all of the performance here rests on. Nor does sharing
+buy much in return: each chain is a type of its own, so two chains rarely share an instantiation anyway.
+
+A future JIT might let unshared code be requested for chosen types, or let PGO specialise shared code where it runs
+hot. Neither exists yet.
 
 ## Benchmarks
 
-The full results are in two reports. Click through to see every entry, with links to each entry's source:
+The full results are in two reports, where every entry links to its source:
 
-- **[Parity suite](https://manofstick.github.io/Cistern.ValueLinq/Benchmark/Reports/Results/parity-report.html)**: 379 entries, from an audit of `System.Linq`'s source, one entry per
-  special case it handles (a source type, an operator pairing, an early exit). Each is written for Cistern,
-  `System.Linq`, ZLinq and a hand-coded loop, and every version's result is checked against `System.Linq`'s. Run with
-  BenchmarkDotNet `--job short`.
-- **[Toub suite](https://manofstick.github.io/Cistern.ValueLinq/Benchmark/Reports/Results/toub-report.html)**: 103 entries, the LINQ benchmarks from Stephen Toub's performance posts for
-  each release from .NET Core 2.0 to .NET 11, at the posts' sizes and data, checked in the same way. Run with
+- **[Parity suite](https://manofstick.github.io/Cistern.ValueLinq/Benchmark/Reports/Results/parity-report.html)**, 379
+  entries. These come from an audit of `System.Linq`'s source, one entry per special case it handles (a source type, an
+  operator pairing, an early exit). Each is written for Cistern, `System.Linq`, ZLinq and a hand-coded loop, and every
+  version's result is checked against `System.Linq`'s. Run with BenchmarkDotNet `--job short`.
+- **[Toub suite](https://manofstick.github.io/Cistern.ValueLinq/Benchmark/Reports/Results/toub-report.html)**, 103
+  entries. These are the LINQ benchmarks from Stephen Toub's performance posts for each release from .NET Core 2.0 to
+  .NET 11 (`Benchmark/Toub/`), at the posts' sizes and data, and checked the same way. Run with
   `--job short --iterationCount 20 --warmupCount 5`.
 
-Both ran on .NET 11 RC2, one process per case, and were written up by
-[`Benchmark/Reports/Report.cs`](Benchmark/Reports/README.md).
+Both reports are a little out of date. They ran on .NET 11 RC2, one process per case, on different hardware from the
+tables below, and I haven't had the compute time to rerun them since. The HTML is kept in
+[`Benchmark/Reports/Results/`](Benchmark/Reports/Results), and [`Benchmark/Reports/`](Benchmark/Reports/README.md)
+describes the program that writes it and how to reproduce the runs.
 
-The tables below are entries of the Parity suite, over sources of 10,000 elements, rerun on .NET 11 RC3 on a 12th Gen
-Intel Core i5-1240P under Linux, with two launches of 10 warmup and 20 measured iterations each. The reports and the
-counts drawn from the whole suite are from the earlier RC2 run on other hardware. The multiple after each System.Linq
-and ZLinq time is that library's time divided by Cistern's. Below each time is the memory the call allocated.
+The tables below are Parity entries over sources of 10,000 elements, rerun on .NET 11 RC3 on a 12th Gen Intel Core
+i5-1240P under Linux, with two launches of 10 warmup and 20 measured iterations each. Any count taken across the
+whole suite comes from the older reports. The multiple after each System.Linq and ZLinq time is that library's time
+divided by Cistern's, and below each time is the memory the call allocated.
 
 | Query | Cistern | System.Linq | ZLinq |
 |---|--:|--:|--:|
@@ -164,8 +238,8 @@ and ZLinq time is that library's time divided by Cistern's. Below each time is t
 | [`int[]`<br>`.OrderBy(k)`<br>`.Skip(100)`<br>`.Take(10)`<br>`.ToArray()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/A/Benchmark.CisternValueLinq.cs#L118-L123) | **81.3 µs**<br><br>200 B | 114 µs (1.4×)<br><br>120,408 B | 97.4 µs (1.2×)<br><br>224 B
 | [`foreach over int[]`<br>`.OrderBy(k)`<br>`.Skip(100)`<br>`.Take(100)`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/B5/Benchmark.CisternValueLinq.cs#L96-L102) | **19.6 µs**<br><br>536 B | 25.8 µs (1.3×)<br><br>120,344 B | 25.1 µs (1.3×)<br><br>160 B
 
-The largest gaps are differences of algorithm rather than of constant factor: the slower library does work that the
-answer does not need.
+The largest gaps aren't constant factors at all. They are differences of algorithm, where the slower library does work
+the answer doesn't need:
 
 | Query | Cistern | System.Linq | ZLinq | |
 |---|--:|--:|--:|---|
@@ -173,7 +247,7 @@ answer does not need.
 | [`List<int>`<br>`.Append(1)`<br>`.Skip(100)`<br>`.Take(n/2)`<br>`.Last()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/B3/Benchmark.CisternValueLinq.cs#L64-L69) | 5.6 ns<br><br>0 B | 9,115 ns (1,622×)<br><br>208 B | **5.5 ns** (0.97×)<br><br>0 B | Cistern and ZLinq index the last element. System.Linq enumerates. |
 | [`int[]`<br>`.OrderBy(k)`<br>`.Contains(x)`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/B5/Benchmark.CisternValueLinq.cs#L210-L213) | **67.4 ns**<br><br>0 B | 79.7 ns (1.2×)<br><br>88 B | 802,571 ns (11,913×)<br><br>128 B | Cistern and System.Linq search the source without sorting it. ZLinq sorts. |
 
-The two tables show where Cistern is clearly ahead, and not every result is like this. Across all 379 Parity entries:
+Those two tables are the flattering ones, and not every result looks like them. Across all 379 Parity entries:
 
 | Cistern against | ahead (≤ 0.9×) | level | behind 1.1–2× | behind ≥ 2× |
 |---|--:|--:|--:|--:|
@@ -183,16 +257,17 @@ The two tables show where Cistern is clearly ahead, and not every result is like
 ### Where Cistern is behind
 
 The weak point is the very small query: an answer that takes constant time (`Count`, `First`, `ElementAt` and the
-like), or one over an empty source. Of the 126 Parity entries that Cistern runs in under 100 ns, System.Linq or ZLinq
-is faster on nearly half (58). Cistern recovers the source's type and builds its chain before answering, which costs
-a few nanoseconds that System.Linq's single type test, or ZLinq's constant-folded answer, does not.
+like), or anything over an empty source. Of the 126 Parity entries that Cistern runs in under 100 ns, System.Linq or
+ZLinq is faster on nearly half (58). Cistern has to recover the source's type and build its chain before it can
+answer, and that costs a few nanoseconds which System.Linq's single type test, or ZLinq's constant-folded answer,
+never spends.
 
 | Query | Cistern | System.Linq | ZLinq |
 |---|--:|--:|--:|
 | [`IEnumerable<int> (a HashSet<int>)`<br>`.Count()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/C/Benchmark.CisternValueLinq.cs#L10-L12) | 3.0 ns<br><br>0 B | **1.4 ns** (0.48×)<br><br>0 B | 3.1 ns (1.1×)<br><br>0 B
 | [`List<int>`<br>`.Concat(List<int>)`<br>`.Count()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/B6/Benchmark.CisternValueLinq.cs#L41-L44) | 8.9 ns<br><br>0 B | 12.0 ns (1.3×)<br><br>56 B | **1.7 ns** (0.20×)<br><br>0 B
 
-At microsecond scale the differences are smaller, apart from `Shuffle`, where the method differs:
+At microsecond scale the gaps are smaller, apart from `Shuffle`, where the method itself differs:
 
 | Query | Cistern | System.Linq | ZLinq | |
 |---|--:|--:|--:|---|
@@ -201,18 +276,14 @@ At microsecond scale the differences are smaller, apart from `Shuffle`, where th
 | [`List<int>`<br>`.Where(f)`<br>`.ToArray()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/D/Benchmark.CisternValueLinq.cs#L216-L219) | 26.5 µs<br><br>19.5 KB | **21.8 µs** (0.82×)<br><br>19.6 KB | 25.1 µs (0.95×)<br><br>19.5 KB | |
 | [`int[]`<br>`.Shuffle()`<br>`.ToArray()`](https://github.com/manofstick/Cistern.ValueLinq/blob/main/Benchmark/Parity/B9/Benchmark.CisternValueLinq.cs#L91-L94) | 27.8 µs<br><br>39.1 KB | 28.2 µs (1.0×)<br><br>39.1 KB | **15.3 µs** (0.55×)<br><br>39.1 KB | ZLinq has its own generator and a batched Fisher–Yates ([dotnet/runtime#111015](https://github.com/dotnet/runtime/pull/111015), unbiased, not adopted by .NET). System.Linq and Cistern use `Random.Shared`. |
 
-The full results are kept as HTML in [`Benchmark/Reports/Results/`](Benchmark/Reports/Results) and published
-through the links above. [`Benchmark/Reports/`](Benchmark/Reports/README.md) describes how to reproduce them. The Toub suite
-(`Benchmark/Toub/`) imports the LINQ benchmarks from each .NET release's performance post since .NET Core 2.0, at
-the post's sizes.
-
 ### The test suite as a workload
 
-The imported corefx suite (52,238 test cases) also builds against `System.Linq`, its files falling back to
-`using System.Linq;` without `CISTERN_VALUELINQ`, so it gives a broad workload of small queries over every operator.
-Each build was run in a process of its own that loaded the test assembly once and ran the whole suite three times
-through xUnit's in-process runner, single-threaded, on .NET 11.0.0 on the same i5-1240P. Every pass of both builds
-passed the same cases and skipped the same 103. Two runs, the second with the order of the builds swapped:
+The imported corefx suite also builds against `System.Linq` (without `CISTERN_VALUELINQ` its files fall back to
+`using System.Linq;`), which makes it a broad workload of small queries over every operator, and a different kind of
+measurement from a benchmark loop. Each build was run in a process of its own that loaded the test assembly once and
+ran the whole suite three times through xUnit's in-process runner, single-threaded, on .NET 11.0.0 on the same
+i5-1240P. Every pass of both builds passed the same cases and skipped the same 103. There were two runs, the second
+with the order of the builds swapped:
 
 | Pass | Cistern | System.Linq |
 |---|--:|--:|
@@ -220,54 +291,34 @@ passed the same cases and skipped the same 103. Two runs, the second with the or
 | 2 | 15.0 s, 15.0 s | 17.1 s, 15.6 s |
 | 3 | 14.8 s, 14.6 s | 16.3 s, 15.6 s |
 
-The first pass carries the JIT: about 8.5 s of it for Cistern against about 5.5 s for `System.Linq`, as each chain
-the suite builds is a type of its own and compiled separately, where `System.Linq`'s operators are shared code. Once
-compiled, Cistern runs the suite 5–10% faster, and most likely while still running mostly tier-0 code: a method is
-recompiled at tier 1, with Dynamic PGO, only once it has been called 30 times, and most of the chains the suite builds
-are each run only a few times, even over three passes. Tier 0 neither optimises nor inlines, and inlining is what
-Cistern's chains rest on, while `System.Linq`'s operators start from the framework's precompiled (ReadyToRun) code.
-Much of each pass is xUnit, the assertions and the theory data, the same in both builds, so the share of the
-difference that is LINQ's is larger than these totals show.
+The first pass carries the JIT, about 8.5 s of it for Cistern against about 5.5 s for `System.Linq`. That is the price
+of every chain being a type of its own: each one the suite builds is compiled separately, where `System.Linq`'s
+operators are shared code.
+
+Once compiled, Cistern runs the suite 5–10% faster, and most likely does so on mostly tier-0 code. A method is
+recompiled at tier 1, with Dynamic PGO, only after it has been called 30 times, and most of the chains the suite builds
+run only a few times each, even over three passes. Tier 0 neither optimises nor inlines, which is everything Cistern's
+chains depend on, while `System.Linq`'s operators start out from the framework's precompiled (ReadyToRun) code. And
+much of each pass is xUnit, the assertions and the theory data, identical in both builds, so LINQ's share of the
+difference is larger than these totals show.
 
 ## A .NET 11 bug worked around
 
-`MemoryExtensions.Sort(keys, items, comparer)`, the overload sorting a second span alongside the first, mis-orders
+`MemoryExtensions.Sort(keys, items, comparer)`, the overload that sorts a second span alongside the first, mis-orders
 more than 16 elements when the comparer is a struct
 ([dotnet/runtime#136274](https://github.com/dotnet/runtime/issues/136274)). The fix,
-[dotnet/runtime#136333](https://github.com/dotnet/runtime/pull/136333), is not in the 11.0 release, which still
-mis-orders. `OrderBy` and its relatives therefore sort the index map alone and read the elements through it, rather
-than sorting the elements alongside it.
+[dotnet/runtime#136333](https://github.com/dotnet/runtime/pull/136333), didn't make the 11.0 release, which still
+mis-orders. So `OrderBy` and its relatives sort the index map alone and read the elements through it, rather than
+sorting the elements alongside.
 
 ## Further reading
 
 - [History](docs/history.md): from F#'s `Seq` through Cistern.Linq to value types.
 - [Architecture](docs/architecture.md): nodes, the push and pull chains, requests, and the role of the JIT.
 - [Source generators](docs/generators.md): the attributes and what they write.
+- [Skipped tests](docs/skipped-tests.md): the 103 corefx cases that don't run, and why.
 - [`ValueLinq/Docs/PullProtocol.md`](ValueLinq/Docs/PullProtocol.md) and
   [`ValueLinq/Docs/BatchFromLocalCopy.md`](ValueLinq/Docs/BatchFromLocalCopy.md): two contracts in detail.
-
-## Skipped tests
-
-Of 52,238 test cases in the imported suite, 52,135 pass, none fail, and 103 are skipped.[^tests]
-Apart from nine edge cases of behaviour, the skips test type identity, an API not in .NET 11, or areas outside
-Cistern's scope.
-
-| Reason | Skipped |
-|---|--:|
-| Type identity: a result that cannot be cast to an `IEnumerator<T>`, is not an `IOrderedEnumerable<T>`, `IList<T>` or `Lookup`, or is not the same instance as its source or a shared singleton | 69 |
-| Behaviour not reproduced: when `GetEnumerator` reaches the source, `ElementAt`'s exception type over an `IList<T>`, how far `Last` over a `Reverse` enumerates, and similar | 9 |
-| Debugger display (`EnumerableDebugView`), not yet done | 6 |
-| `Array.CreateFilled`, not in .NET 11 | 4 |
-| Fails against `System.Linq` on .NET 11 as well | 3 |
-| `System.Linq.Queryable`, which is out of scope | 2 |
-| Upstream conditions not met in an ordinary run (stress mode, debugger proxy support, and the like) | 10 |
-
-[^tests]: Counted from `dotnet test Tests/Linqs.Tests.csproj -c Release` on .NET 11.0.0, in which each row of a
-    theory is a test case; the suite has 1,889 test methods. The first six rows are the 93 tests skipped with a
-    `CISTERN.VALUELINQ` reason, the last row upstream's own conditional skips. Separately, 61 passages of test code that
-    cannot compile against Cistern's types are excluded under `#if !CISTERN_VALUELINQ`, 55 compile against a
-    different static type under `#if CISTERN_VALUELINQ`, and the 4 using `Array.CreateFilled` are under
-    `#if NET12_0_OR_GREATER`.
 
 ## Licence
 
