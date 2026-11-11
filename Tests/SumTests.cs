@@ -397,7 +397,7 @@ namespace Linqs.Tests
         [Fact(Skip = "CISTERN.VALUELINQ: uses Array.CreateFilled, not in .NET 11")]
         public void SumOfInt_SourceSumsToOverflowVectorHorizontally_OverflowExceptionThrown()
         {
-#if !CISTERN_VALUELINQ
+#if NET12_0_OR_GREATER
             int[] sourceInt = Array.CreateFilled(Vector<int>.Count * 4, 0);
             
             for (int i = 0; i < Vector<int>.Count; i++)
@@ -417,7 +417,7 @@ namespace Linqs.Tests
         [MemberData(nameof(SumOverflowsVerticalVectorLanes))]
         public void SumOfInt_SourceSumsToOverflowVectorVertically_OverflowExceptionThrown(int element, int verticalOffset)
         {
-#if !CISTERN_VALUELINQ
+#if NET12_0_OR_GREATER
             int[] sourceInt = Array.CreateFilled(Vector<int>.Count * 6, 0);
 
             sourceInt[element] = int.MaxValue;
@@ -446,7 +446,7 @@ namespace Linqs.Tests
         [Fact(Skip = "CISTERN.VALUELINQ: uses Array.CreateFilled, not in .NET 11")]
         public void SumOfLong_SourceSumsToOverflowVectorHorizontally_OverflowExceptionThrown()
         {
-#if !CISTERN_VALUELINQ
+#if NET12_0_OR_GREATER
             long[] sourceLong = Array.CreateFilled<long>(Vector<long>.Count * 4, 0);
             
             for (int i = 0; i < Vector<long>.Count; i++)
@@ -466,7 +466,7 @@ namespace Linqs.Tests
         [MemberData(nameof(SumOverflowsVerticalVectorLanes))]
         public void SumOfLong_SourceSumsToOverflowVectorVertically_OverflowExceptionThrown(int element, int verticalOffset)
         {
-#if !CISTERN_VALUELINQ
+#if NET12_0_OR_GREATER
             long[] sourceLong = Array.CreateFilled<long>(Vector<long>.Count * 6, 0);
             
             sourceLong[element] = long.MaxValue;

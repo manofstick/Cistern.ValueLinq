@@ -1,6 +1,6 @@
 ﻿# Cistern.ValueLinq
 
-LINQ to Objects, built from structs.
+LINQ to Objects rebuilt from value types. Switching to it means changing one `using`.
 
 The architecture was designed in [2020](docs/history.md). It has now been filled in, with the assistance of Claude, to
 cover the whole `System.Linq` surface. Improvements to the JIT since then let it run [faster](#benchmarks) than
@@ -25,7 +25,8 @@ using Cistern.ValueLinq;   // in place of using System.Linq;
 ```
 
 That `using` is the whole migration. The operators keep their names, signatures and results. What changes is the type
-each query is built from.
+each query is built from. Is this wise? Probably not: it should probably be opt-in, through a function. But this is an
+exercise in what _can_ be done, not necessarily in what should be.
 
 [History](docs/history.md) · [Architecture](docs/architecture.md) · [Source generators](docs/generators.md) ·
 [Benchmarks](#benchmarks)
@@ -205,6 +206,29 @@ through the links above. [`Benchmark/Reports/`](Benchmark/Reports/README.md) des
 (`Benchmark/Toub/`) imports the LINQ benchmarks from each .NET release's performance post since .NET Core 2.0, at
 the post's sizes.
 
+### The test suite as a workload
+
+The imported corefx suite (52,238 test cases) also builds against `System.Linq`, its files falling back to
+`using System.Linq;` without `CISTERN_VALUELINQ`, so it gives a broad workload of small queries over every operator.
+Each build was run in a process of its own that loaded the test assembly once and ran the whole suite three times
+through xUnit's in-process runner, single-threaded, on .NET 11.0.0 on the same i5-1240P. Every pass of both builds
+passed the same cases and skipped the same 103. Two runs, the second with the order of the builds swapped:
+
+| Pass | Cistern | System.Linq |
+|---|--:|--:|
+| 1 (cold) | 23.1 s, 23.2 s | 21.5 s, 21.1 s |
+| 2 | 15.0 s, 15.0 s | 17.1 s, 15.6 s |
+| 3 | 14.8 s, 14.6 s | 16.3 s, 15.6 s |
+
+The first pass carries the JIT: about 8.5 s of it for Cistern against about 5.5 s for `System.Linq`, as each chain
+the suite builds is a type of its own and compiled separately, where `System.Linq`'s operators are shared code. Once
+compiled, Cistern runs the suite 5–10% faster, and most likely while still running mostly tier-0 code: a method is
+recompiled at tier 1, with Dynamic PGO, only once it has been called 30 times, and most of the chains the suite builds
+are each run only a few times, even over three passes. Tier 0 neither optimises nor inlines, and inlining is what
+Cistern's chains rest on, while `System.Linq`'s operators start from the framework's precompiled (ReadyToRun) code.
+Much of each pass is xUnit, the assertions and the theory data, the same in both builds, so the share of the
+difference that is LINQ's is larger than these totals show.
+
 ## A .NET 11 bug worked around
 
 `MemoryExtensions.Sort(keys, items, comparer)`, the overload sorting a second span alongside the first, mis-orders
@@ -240,9 +264,10 @@ Cistern's scope.
 
 [^tests]: Counted from `dotnet test Tests/Linqs.Tests.csproj -c Release` on .NET 11.0.0, in which each row of a
     theory is a test case; the suite has 1,889 test methods. The first six rows are the 93 tests skipped with a
-    `CISTERN.VALUELINQ` reason, the last row upstream's own conditional skips. Separately, 65 passages of test code that
-    cannot compile against Cistern's types are excluded under `#if !CISTERN_VALUELINQ`, and 55 compile against a
-    different static type under `#if CISTERN_VALUELINQ`.
+    `CISTERN.VALUELINQ` reason, the last row upstream's own conditional skips. Separately, 61 passages of test code that
+    cannot compile against Cistern's types are excluded under `#if !CISTERN_VALUELINQ`, 55 compile against a
+    different static type under `#if CISTERN_VALUELINQ`, and the 4 using `Array.CreateFilled` are under
+    `#if NET12_0_OR_GREATER`.
 
 ## Licence
 
